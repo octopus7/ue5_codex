@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "UObject/StrongObjectPtr.h"
 #include "TpsCharacter.generated.h"
 
 class UCameraComponent;
@@ -28,6 +29,8 @@ protected:
     void JumpStarted(const FInputActionValue& Value);
     void JumpCompleted(const FInputActionValue& Value);
 
+    void SetupEnhancedInput();
+
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
     USpringArmComponent* CameraBoom;
@@ -44,16 +47,16 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Input")
     float LookSensitivityPitch = 1.0f;
 
-    // Enhanced Input runtime-created assets
-    UPROPERTY()
-    UInputAction* IA_Move;
+    // Asset-based Enhanced Input references (set in editor/BP)
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta=(AllowPrivateAccess="true"))
+    UInputMappingContext* IMC_TPS = nullptr;
 
-    UPROPERTY()
-    UInputAction* IA_Look;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta=(AllowPrivateAccess="true"))
+    UInputAction* IA_Move = nullptr;
 
-    UPROPERTY()
-    UInputAction* IA_Jump;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta=(AllowPrivateAccess="true"))
+    UInputAction* IA_Look = nullptr;
 
-    UPROPERTY()
-    UInputMappingContext* IMC_TPS;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta=(AllowPrivateAccess="true"))
+    UInputAction* IA_Jump = nullptr;
 };
