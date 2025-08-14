@@ -10,6 +10,7 @@
 #include "InputAction.h"
 #include "InputMappingContext.h"
 #include "InputModifiers.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
 
 ATpsCharacter::ATpsCharacter()
@@ -77,17 +78,11 @@ void ATpsCharacter::BeginPlay()
     Super::BeginPlay();
 
     // Create Enhanced Input actions and mapping context at runtime
-    IA_MoveForward = NewObject<UInputAction>(this, TEXT("IA_MoveForward"));
-    IA_MoveForward->ValueType = EInputActionValueType::Axis1D;
+    IA_Move = NewObject<UInputAction>(this, TEXT("IA_Move"));
+    IA_Move->ValueType = EInputActionValueType::Axis2D;
 
-    IA_MoveRight = NewObject<UInputAction>(this, TEXT("IA_MoveRight"));
-    IA_MoveRight->ValueType = EInputActionValueType::Axis1D;
-
-    IA_LookYaw = NewObject<UInputAction>(this, TEXT("IA_LookYaw"));
-    IA_LookYaw->ValueType = EInputActionValueType::Axis1D;
-
-    IA_LookPitch = NewObject<UInputAction>(this, TEXT("IA_LookPitch"));
-    IA_LookPitch->ValueType = EInputActionValueType::Axis1D;
+    IA_Look = NewObject<UInputAction>(this, TEXT("IA_Look"));
+    IA_Look->ValueType = EInputActionValueType::Axis2D;
 
     IA_Jump = NewObject<UInputAction>(this, TEXT("IA_Jump"));
     IA_Jump->ValueType = EInputActionValueType::Boolean;
@@ -96,29 +91,44 @@ void ATpsCharacter::BeginPlay()
 
     if (IMC_TPS)
     {
-        // Movement WASD
-        IMC_TPS->MapKey(IA_MoveForward, EKeys::W);
+        // Movement as Axis2D using WASD
+        // W -> +X
+        IMC_TPS->MapKey(IA_Move, EKeys::W);
+        // S -> -X
         {
-            // S key with negative scale
-            FEnhancedActionKeyMapping& Map = IMC_TPS->MapKey(IA_MoveForward, EKeys::S);
-            UInputModifierScale* Scale = NewObject<UInputModifierScale>(IMC_TPS);
-            Scale->Scalar = FVector( -1.f, 0.f, 0.f );
+            FEnhancedActionKeyMapping& Map = IMC_TPS->MapKey(IA_Move, EKeys::S);
+            UInputModifierScalar* Scalar = NewObject<UInputModifierScalar>(IMC_TPS);
+            Scalar->Scalar = FVector(-1.f, 1.f, 1.f);
+            Map.Modifiers.Add(Scalar);
+        }
+        // D -> +Y (swizzle X->Y)
+        {
+            FEnhancedActionKeyMapping& Map = IMC_TPS->MapKey(IA_Move, EKeys::D);
+            UInputModifierSwizzleAxis* Swizzle = NewObject<UInputModifierSwizzleAxis>(IMC_TPS);
+            Swizzle->Order = EInputAxisSwizzle::YXZ; // move 1D X into Y
+            Map.Modifiers.Add(Swizzle);
+        }
+        // A -> -Y (swizzle X->Y, then scale -1)
+        {
+            FEnhancedActionKeyMapping& Map = IMC_TPS->MapKey(IA_Move, EKeys::A);
+            UInputModifierSwizzleAxis* Swizzle = NewObject<UInputModifierSwizzleAxis>(IMC_TPS);
+            Swizzle->Order = EInputAxisSwizzle::YXZ;
+            Map.Modifiers.Add(Swizzle);
+            UInputModifierScalar* Scale = NewObject<UInputModifierScalar>(IMC_TPS);
+            Scale->Scalar = FVector(1.f, -1.f, 1.f);
             Map.Modifiers.Add(Scale);
         }
 
-        IMC_TPS->MapKey(IA_MoveRight, EKeys::D);
+        // Look as Axis2D using mouse
+        // MouseX -> +X
+        IMC_TPS->MapKey(IA_Look, EKeys::MouseX);
+        // MouseY -> +Y (swizzle X->Y)
         {
-            FEnhancedActionKeyMapping& Map = IMC_TPS->MapKey(IA_MoveRight, EKeys::A);
-            UInputModifierScale* Scale = NewObject<UInputModifierScale>(IMC_TPS);
-            Scale->Scalar = FVector( -1.f, 0.f, 0.f );
-            Map.Modifiers.Add(Scale);
+            FEnhancedActionKeyMapping& Map = IMC_TPS->MapKey(IA_Look, EKeys::MouseY);
+            UInputModifierSwizzleAxis* Swizzle = NewObject<UInputModifierSwizzleAxis>(IMC_TPS);
+            Swizzle->Order = EInputAxisSwizzle::YXZ;
+            Map.Modifiers.Add(Swizzle);
         }
-
-        // Mouse look
-        IMC_TPS->MapKey(IA_LookYaw, EKeys::MouseX);
-
-        // Invert Y for typical camera if desired; here not inverted
-        IMC_TPS->MapKey(IA_LookPitch, EKeys::MouseY);
 
         // Jump
         IMC_TPS->MapKey(IA_Jump, EKeys::SpaceBar);
@@ -144,49 +154,46 @@ void ATpsCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
     if (UEnhancedInputComponent* EnhancedIC = Cast<UEnhancedInputComponent>(PlayerInputComponent))
     {
-        EnhancedIC->BindAction(IA_MoveForward, ETriggerEvent::Triggered, this, &ATpsCharacter::MoveForward);
-        EnhancedIC->BindAction(IA_MoveRight, ETriggerEvent::Triggered, this, &ATpsCharacter::MoveRight);
-        EnhancedIC->BindAction(IA_LookYaw, ETriggerEvent::Triggered, this, &ATpsCharacter::LookYaw);
-        EnhancedIC->BindAction(IA_LookPitch, ETriggerEvent::Triggered, this, &ATpsCharacter::LookPitch);
+        EnhancedIC->BindAction(IA_Move, ETriggerEvent::Triggered, this, &ATpsCharacter::Move2D);
+        EnhancedIC->BindAction(IA_Look, ETriggerEvent::Triggered, this, &ATpsCharacter::Look2D);
         EnhancedIC->BindAction(IA_Jump, ETriggerEvent::Started, this, &ATpsCharacter::JumpStarted);
         EnhancedIC->BindAction(IA_Jump, ETriggerEvent::Completed, this, &ATpsCharacter::JumpCompleted);
     }
 }
 
-void ATpsCharacter::MoveForward(const FInputActionValue& Value)
+void ATpsCharacter::Move2D(const FInputActionValue& Value)
 {
-    const float Axis = Value.Get<float>();
-    if (Controller && Axis != 0.f)
+    const FVector2D Axis = Value.Get<FVector2D>();
+    if (Controller)
     {
-        const FRotator ControlRot = Controller->GetControlRotation();
-        const FRotator YawRot(0.f, ControlRot.Yaw, 0.f);
-        const FVector Direction = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);
-        AddMovementInput(Direction, Axis);
+        if (!FMath::IsNearlyZero(Axis.X))
+        {
+            const FRotator ControlRot = Controller->GetControlRotation();
+            const FRotator YawRot(0.f, ControlRot.Yaw, 0.f);
+            const FVector Forward = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);
+            AddMovementInput(Forward, Axis.X);
+        }
+        if (!FMath::IsNearlyZero(Axis.Y))
+        {
+            const FRotator ControlRot = Controller->GetControlRotation();
+            const FRotator YawRot(0.f, ControlRot.Yaw, 0.f);
+            const FVector Right = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y);
+            AddMovementInput(Right, Axis.Y);
+        }
     }
 }
 
-void ATpsCharacter::MoveRight(const FInputActionValue& Value)
+void ATpsCharacter::Look2D(const FInputActionValue& Value)
 {
-    const float Axis = Value.Get<float>();
-    if (Controller && Axis != 0.f)
+    const FVector2D Axis = Value.Get<FVector2D>();
+    if (!FMath::IsNearlyZero(Axis.X))
     {
-        const FRotator ControlRot = Controller->GetControlRotation();
-        const FRotator YawRot(0.f, ControlRot.Yaw, 0.f);
-        const FVector Direction = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y);
-        AddMovementInput(Direction, Axis);
+        AddControllerYawInput(Axis.X * LookSensitivityYaw);
     }
-}
-
-void ATpsCharacter::LookYaw(const FInputActionValue& Value)
-{
-    const float Axis = Value.Get<float>();
-    AddControllerYawInput(Axis * LookSensitivityYaw);
-}
-
-void ATpsCharacter::LookPitch(const FInputActionValue& Value)
-{
-    const float Axis = Value.Get<float>();
-    AddControllerPitchInput(Axis * LookSensitivityPitch);
+    if (!FMath::IsNearlyZero(Axis.Y))
+    {
+        AddControllerPitchInput(Axis.Y * LookSensitivityPitch);
+    }
 }
 
 void ATpsCharacter::JumpStarted(const FInputActionValue& /*Value*/)
@@ -198,4 +205,3 @@ void ATpsCharacter::JumpCompleted(const FInputActionValue& /*Value*/)
 {
     StopJumping();
 }
-
