@@ -108,15 +108,15 @@ void ATpsCharacter::Move2D(const FInputActionValue& Value)
     {
         const FRotator ControlRot = Controller->GetControlRotation();
         const FRotator YawRot(0.f, ControlRot.Yaw, 0.f);
-        if (!FMath::IsNearlyZero(Axis.X))
-        {
-            const FVector Forward = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);
-            AddMovementInput(Forward, Axis.X);
-        }
         if (!FMath::IsNearlyZero(Axis.Y))
         {
+            const FVector Forward = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);
+            AddMovementInput(Forward, Axis.Y);
+        }
+        if (!FMath::IsNearlyZero(Axis.X))
+        {
             const FVector Right = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y);
-            AddMovementInput(Right, Axis.Y);
+            AddMovementInput(Right, Axis.X);
         }
     }
 }
