@@ -14,6 +14,8 @@
 
 #include "UObject/ConstructorHelpers.h"
 
+#include "Projectiles/TPSProjectile.h"
+
 ATPSCharacter::ATPSCharacter()
 {
     // Set size for collision capsule
@@ -105,6 +107,11 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
             EIC->BindAction(IA_Jump, ETriggerEvent::Completed, this, &ATPSCharacter::Input_JumpCompleted);
             EIC->BindAction(IA_Jump, ETriggerEvent::Canceled, this, &ATPSCharacter::Input_JumpCompleted);
         }
+
+        if (IA_Fire)
+        {
+            EIC->BindAction(IA_Fire, ETriggerEvent::Started, this, &ATPSCharacter::Input_Fire);
+        }
     }
 }
 
@@ -145,3 +152,29 @@ void ATPSCharacter::Input_JumpCompleted(const FInputActionValue& /*Value*/)
     StopJumping();
 }
 
+void ATPSCharacter::Input_Fire(const FInputActionValue& /*Value*/)
+{
+    if (!ProjectileClass || !FollowCamera)
+    {
+        return;
+    }
+
+    const FVector CamLoc = FollowCamera->GetComponentLocation();
+    const FRotator CamRot = FollowCamera->GetComponentRotation();
+    const FVector ShootDir = CamRot.Vector();
+
+    const FVector MuzzleLoc = CamLoc + ShootDir * MuzzleOffset;
+
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.Owner = this;
+    SpawnParams.Instigator = this;
+    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+    if (UWorld* World = GetWorld())
+    {
+        if (ATPSProjectile* Proj = World->SpawnActor<ATPSProjectile>(ProjectileClass, MuzzleLoc, CamRot, SpawnParams))
+        {
+            Proj->FireInDirection(ShootDir);
+        }
+    }
+}

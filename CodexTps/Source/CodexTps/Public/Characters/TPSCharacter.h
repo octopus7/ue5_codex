@@ -11,6 +11,7 @@ class USpringArmComponent;
 class UInputAction;
 class UInputMappingContext;
 class UStaticMeshComponent;
+class ATPSProjectile;
 
 UCLASS()
 class CODEXTPS_API ATPSCharacter : public ACharacter
@@ -29,6 +30,7 @@ protected:
     void Input_Look(const FInputActionValue& Value);
     void Input_JumpStarted(const FInputActionValue& Value);
     void Input_JumpCompleted(const FInputActionValue& Value);
+    void Input_Fire(const FInputActionValue& Value);
 
 protected:
     // Camera boom (keeps camera behind the character)
@@ -56,6 +58,17 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Actions")
     UInputAction* IA_Jump;
 
+    // Fire
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Actions")
+    UInputAction* IA_Fire;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
+    TSubclassOf<ATPSProjectile> ProjectileClass;
+
+    // Spawn offset from camera along forward
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
+    float MuzzleOffset = 100.f;
+
     // Look sensitivity multipliers (optional tuning)
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Tuning")
     float LookYawScale = 1.0f;
@@ -63,4 +76,3 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Tuning")
     float LookPitchScale = 1.0f;
 };
-
