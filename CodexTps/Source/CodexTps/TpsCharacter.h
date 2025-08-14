@@ -28,6 +28,7 @@ protected:
     void Look2D(const FInputActionValue& Value);
     void JumpStarted(const FInputActionValue& Value);
     void JumpCompleted(const FInputActionValue& Value);
+    void FireStarted(const FInputActionValue& Value);
 
     void SetupEnhancedInput();
 
@@ -50,6 +51,12 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Input")
     bool bInvertLookY = true;
 
+    UPROPERTY(EditDefaultsOnly, Category = "Combat")
+    TSubclassOf<class ASphereProjectile> ProjectileClass;
+
+    UPROPERTY(EditAnywhere, Category = "Combat")
+    FVector MuzzleOffset = FVector(100.f, 0.f, 60.f);
+
     // Asset-based Enhanced Input references (set in editor/BP)
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta=(AllowPrivateAccess="true"))
     UInputMappingContext* IMC_TPS = nullptr;
@@ -62,4 +69,7 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta=(AllowPrivateAccess="true"))
     UInputAction* IA_Jump = nullptr;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta=(AllowPrivateAccess="true"))
+    UInputAction* IA_Fire = nullptr;
 };

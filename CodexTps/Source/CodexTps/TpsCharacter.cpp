@@ -14,6 +14,8 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Engine/Engine.h"
+#include "Kismet/GameplayStatics.h"
+#include "SphereProjectile.h"
 
 ATpsCharacter::ATpsCharacter()
 {
@@ -98,6 +100,10 @@ void ATpsCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
             EIC->BindAction(IA_Jump, ETriggerEvent::Started, this, &ATpsCharacter::JumpStarted);
             EIC->BindAction(IA_Jump, ETriggerEvent::Completed, this, &ATpsCharacter::JumpCompleted);
         }
+        if (IA_Fire)
+        {
+            EIC->BindAction(IA_Fire, ETriggerEvent::Started, this, &ATpsCharacter::FireStarted);
+        }
     }
 }
 
@@ -143,4 +149,39 @@ void ATpsCharacter::JumpStarted(const FInputActionValue& /*Value*/)
 void ATpsCharacter::JumpCompleted(const FInputActionValue& /*Value*/)
 {
     StopJumping();
+}
+
+void ATpsCharacter::FireStarted(const FInputActionValue& /*Value*/)
+{
+    if (!ProjectileClass) return;
+
+    const FVector CameraLocation = FollowCamera ? FollowCamera->GetComponentLocation() : GetPawnViewLocation();
+    const FRotator CameraRotation = FollowCamera ? FollowCamera->GetComponentRotation() : GetControlRotation();
+
+    // Spawn transform: slightly in front of camera, lifted to avoid ground
+    const FVector MuzzleWorldLocation = CameraLocation + CameraRotation.RotateVector(MuzzleOffset);
+    const FRotator MuzzleWorldRotation = CameraRotation;
+
+    FActorSpawnParameters Params;
+    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+    Params.Owner = this;
+    Params.Instigator = this;
+
+    ASphereProjectile* Proj = GetWorld()->SpawnActor<ASphereProjectile>(ProjectileClass, MuzzleWorldLocation, MuzzleWorldRotation, Params);
+    if (!Proj) return;
+
+    // Compute shoot direction: camera aim line
+    FVector ShootDir = MuzzleWorldRotation.Vector();
+
+    // Optional aim trace to refine direction
+    FHitResult Hit;
+    const FVector TraceStart = CameraLocation;
+    const FVector TraceEnd = TraceStart + ShootDir * 10000.f;
+    FCollisionQueryParams QP(SCENE_QUERY_STAT(TPS_AimTrace), false, this);
+    if (GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, QP))
+    {
+        ShootDir = (Hit.ImpactPoint - MuzzleWorldLocation).GetSafeNormal();
+    }
+
+    Proj->FireInDirection(ShootDir);
 }
