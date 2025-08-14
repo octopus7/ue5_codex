@@ -15,6 +15,9 @@
 #include "UObject/ConstructorHelpers.h"
 
 #include "Projectiles/TPSProjectile.h"
+#include "Components/SceneComponent.h"
+#include "Engine/World.h"
+#include "DrawDebugHelpers.h"
 
 ATPSCharacter::ATPSCharacter()
 {
@@ -63,6 +66,11 @@ ATPSCharacter::ATPSCharacter()
     {
         PlaceholderMesh->SetStaticMesh(CubeMesh.Object);
     }
+
+    // Muzzle spawn point attached to character (tweak in editor as needed)
+    MuzzlePoint = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzlePoint"));
+    MuzzlePoint->SetupAttachment(GetCapsuleComponent());
+    MuzzlePoint->SetRelativeLocation(FVector(60.f, 0.f, 40.f));
 }
 
 void ATPSCharacter::BeginPlay()
@@ -154,16 +162,36 @@ void ATPSCharacter::Input_JumpCompleted(const FInputActionValue& /*Value*/)
 
 void ATPSCharacter::Input_Fire(const FInputActionValue& /*Value*/)
 {
-    if (!ProjectileClass || !FollowCamera)
+    if (!ProjectileClass)
     {
         return;
     }
+    // Determine spawn location from character-attached muzzle (fallback to actor front)
+    const FVector CharForward = GetActorForwardVector();
+    const FVector MuzzleLoc = (MuzzlePoint ? MuzzlePoint->GetComponentLocation()
+                                           : GetActorLocation() + CharForward * MuzzleOffset);
 
-    const FVector CamLoc = FollowCamera->GetComponentLocation();
-    const FRotator CamRot = FollowCamera->GetComponentRotation();
-    const FVector ShootDir = CamRot.Vector();
+    // Aim: use camera line trace to find target point, then shoot from muzzle to that point
+    FVector AimPoint = MuzzleLoc + CharForward * FireTraceRange;
+    if (FollowCamera)
+    {
+        const FVector CamLoc = FollowCamera->GetComponentLocation();
+        const FVector CamDir = FollowCamera->GetComponentRotation().Vector();
+        const FVector TraceEnd = CamLoc + CamDir * FireTraceRange;
 
-    const FVector MuzzleLoc = CamLoc + ShootDir * MuzzleOffset;
+        FHitResult Hit;
+        FCollisionQueryParams Params(SCENE_QUERY_STAT(TPS_FireTrace), false, this);
+        if (GetWorld()->LineTraceSingleByChannel(Hit, CamLoc, TraceEnd, ECC_Visibility, Params))
+        {
+            AimPoint = Hit.ImpactPoint;
+        }
+        else
+        {
+            AimPoint = TraceEnd;
+        }
+    }
+
+    const FVector ShootDir = (AimPoint - MuzzleLoc).GetSafeNormal();
 
     FActorSpawnParameters SpawnParams;
     SpawnParams.Owner = this;
@@ -172,7 +200,7 @@ void ATPSCharacter::Input_Fire(const FInputActionValue& /*Value*/)
 
     if (UWorld* World = GetWorld())
     {
-        if (ATPSProjectile* Proj = World->SpawnActor<ATPSProjectile>(ProjectileClass, MuzzleLoc, CamRot, SpawnParams))
+        if (ATPSProjectile* Proj = World->SpawnActor<ATPSProjectile>(ProjectileClass, MuzzleLoc, ShootDir.Rotation(), SpawnParams))
         {
             Proj->FireInDirection(ShootDir);
         }

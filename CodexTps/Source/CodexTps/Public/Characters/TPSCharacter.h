@@ -11,6 +11,7 @@ class USpringArmComponent;
 class UInputAction;
 class UInputMappingContext;
 class UStaticMeshComponent;
+class USceneComponent;
 class ATPSProjectile;
 
 UCLASS()
@@ -68,6 +69,14 @@ protected:
     // Spawn offset from camera along forward
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
     float MuzzleOffset = 100.f;
+
+    // Muzzle spawn point attached to character (adjust in editor)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+    USceneComponent* MuzzlePoint;
+
+    // How far we aim with the camera trace
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
+    float FireTraceRange = 10000.f;
 
     // Look sensitivity multipliers (optional tuning)
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input|Tuning")
