@@ -130,7 +130,8 @@ void ATpsCharacter::Look2D(const FInputActionValue& Value)
     }
     if (!FMath::IsNearlyZero(Axis.Y))
     {
-        AddControllerPitchInput(Axis.Y * LookSensitivityPitch);
+        const float Sign = bInvertLookY ? -1.f : 1.f;
+        AddControllerPitchInput(Axis.Y * LookSensitivityPitch * Sign);
     }
 }
 

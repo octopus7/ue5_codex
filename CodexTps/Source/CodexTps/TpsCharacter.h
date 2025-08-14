@@ -47,6 +47,9 @@ protected:
     UPROPERTY(EditAnywhere, Category = "Input")
     float LookSensitivityPitch = 1.0f;
 
+    UPROPERTY(EditAnywhere, Category = "Input")
+    bool bInvertLookY = true;
+
     // Asset-based Enhanced Input references (set in editor/BP)
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta=(AllowPrivateAccess="true"))
     UInputMappingContext* IMC_TPS = nullptr;
