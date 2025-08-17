@@ -25,6 +25,10 @@ public:
     virtual void OnPossess(APawn* InPawn) override;
     virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
 
+    EEnemyState GetState() const { return State; }
+    UFUNCTION(BlueprintPure, Category="AI")
+    float GetIdleTimeRemaining() const;
+
 protected:
     // Sensing/Combat params
     UPROPERTY(EditAnywhere, Category="Sensing")
@@ -35,6 +39,15 @@ protected:
 
     UPROPERTY(EditAnywhere, Category="Sensing")
     float FOVDegrees = 90.f;
+
+    UPROPERTY(EditAnywhere, Category="Sensing")
+    bool bUseFOV = true;
+
+    UPROPERTY(EditAnywhere, Category="Sensing")
+    bool bUseLineOfSight = true;
+
+    UPROPERTY(EditAnywhere, Category="Sensing")
+    float SightHeightOffset = 50.f;
 
     UPROPERTY(EditAnywhere, Category="Combat")
     float AttackRange = 150.f;
@@ -51,11 +64,15 @@ protected:
     UPROPERTY(EditAnywhere, Category="Debug")
     bool bDrawDebug = false;
 
+    UPROPERTY(EditAnywhere, Category="Debug")
+    float ThinkInterval = 0.2f;
+
 private:
     TWeakObjectPtr<AEnemyConeCharacter> CachedEnemy;
     TWeakObjectPtr<APawn> CachedPlayer;
 
     EEnemyState State = EEnemyState::Idle;
+    bool bInitialChasePending = true;
 
     FTimerHandle ThinkTimerHandle;
     FTimerHandle IdleTimerHandle;
@@ -67,5 +84,9 @@ private:
 
     bool CanSeePlayer(bool bStrict = true) const;
     bool IsPlayerInAttackRange() const;
+
+    void DrawFOVDebug(float Radius, const FColor& Color) const;
+
+    void AcquirePlayer();
 
 };

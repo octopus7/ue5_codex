@@ -21,6 +21,8 @@ public:
 protected:
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaSeconds) override;
+    virtual void PossessedBy(AController* NewController) override;
+    virtual void UnPossessed() override;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
     UStaticMeshComponent* VisualMesh;
 
@@ -36,11 +38,14 @@ protected:
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category="Health")
     int32 CurrentHits = 0;
 
-    // 자동 사망 시간(초). 0이면 자동 사망하지 않음. 기본 5초.
+    // 자동 사망 시간(초). 0이면 자동 사망하지 않음. 기본 0초.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Lifetime", meta=(ClampMin="0.0"))
-    float AutoDeathTime = 5.0f;
+    float AutoDeathTime = 0.0f;
 
     void HandleDeath();
     void UpdateHPText();
     void UpdateLifetimeText();
+
+    UPROPERTY(Transient)
+    class AEnemyAIController* CachedAIController = nullptr;
 };
