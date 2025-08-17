@@ -56,6 +56,12 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
     float ProjectileSpawnOffset = 60.f;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile|Preview")
+    float TrajectoryPreviewTime = 1.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile|Preview")
+    float TrajectorySegmentLength = 120.f;
+
     // Enhanced Input (created at runtime; keep transient so not saved)
     UPROPERTY(Transient)
     UInputMappingContext* DefaultMappingContext = nullptr;

@@ -18,6 +18,9 @@ public:
 
     void InitVelocity(const FVector& Direction);
 
+    UFUNCTION(BlueprintPure, Category="Projectile")
+    float GetInitialSpeed() const;
+
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     USphereComponent* Collision;
@@ -35,4 +38,8 @@ protected:
 
     UFUNCTION()
     void HandleActorHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit);
+
+    UFUNCTION()
+    void HandleComponentHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
+                            UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 };

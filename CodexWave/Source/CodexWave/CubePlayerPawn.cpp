@@ -17,6 +17,7 @@
 #include "WaveProjectile.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/Engine.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 
 ACubePlayerPawn::ACubePlayerPawn()
 {
@@ -294,6 +295,46 @@ void ACubePlayerPawn::Fire(const FInputActionValue& Value)
     if (UWorld* WorldForDebug = GetWorld())
     {
         DrawDebugSphere(WorldForDebug, SpawnLoc, 12.f, 16, FColor::Cyan, false, 1.0f, 0, 1.5f);
+    }
+
+    // Draw predicted trajectory (straight line, no gravity), clipped by first hit
+    if (UWorld* World = GetWorld())
+    {
+        float Speed = 1500.f;
+        if (ProjectileClass)
+        {
+            const AWaveProjectile* Defaults = ProjectileClass->GetDefaultObject<AWaveProjectile>();
+            if (Defaults)
+            {
+                Speed = FMath::Max(Defaults->GetInitialSpeed(), 1.f);
+            }
+        }
+
+        const float MaxDistance = Speed * TrajectoryPreviewTime;
+        const FVector End = SpawnLoc + Dir * MaxDistance;
+
+        FCollisionQueryParams P(SCENE_QUERY_STAT(PreviewTrace), false, this);
+        P.AddIgnoredActor(this);
+        P.bTraceComplex = false;
+        FHitResult Hit;
+        bool bHit = World->LineTraceSingleByChannel(Hit, SpawnLoc, End, ECC_Visibility, P);
+
+        const FVector FinalEnd = bHit ? Hit.ImpactPoint : End;
+        const float TotalDist = (FinalEnd - SpawnLoc).Size();
+        const int32 Steps = FMath::Max(1, FMath::FloorToInt(TotalDist / FMath::Max(10.f, TrajectorySegmentLength)));
+        const float StepLen = TotalDist / Steps;
+        FVector Prev = SpawnLoc;
+        for (int32 i = 1; i <= Steps; ++i)
+        {
+            const FVector Pt = SpawnLoc + Dir * (StepLen * i);
+            DrawDebugLine(World, Prev, Pt, FColor(0, 180, 255), false, 0.8f, 0, 1.5f);
+            DrawDebugSphere(World, Pt, 5.f, 8, FColor(0, 150, 255), false, 0.8f, 0, 0.5f);
+            Prev = Pt;
+        }
+        if (bHit)
+        {
+            DrawDebugSphere(World, FinalEnd, 10.f, 12, FColor::Red, false, 0.8f, 0, 2.f);
+        }
     }
 
     FActorSpawnParameters Params;

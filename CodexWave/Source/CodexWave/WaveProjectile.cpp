@@ -19,10 +19,12 @@ AWaveProjectile::AWaveProjectile()
     Collision->SetGenerateOverlapEvents(true);
     Collision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     Collision->SetCollisionResponseToAllChannels(ECR_Ignore);
-    Collision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+    Collision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
     SetRootComponent(Collision);
 
     Collision->OnComponentBeginOverlap.AddDynamic(this, &AWaveProjectile::OnCollisionOverlap);
+    Collision->SetNotifyRigidBodyCollision(true);
+    Collision->OnComponentHit.AddDynamic(this, &AWaveProjectile::HandleComponentHit);
     OnActorHit.AddDynamic(this, &AWaveProjectile::HandleActorHit);
 
     Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
@@ -56,6 +58,26 @@ void AWaveProjectile::InitVelocity(const FVector& Direction)
         Dir.Normalize();
         ProjectileMovement->Velocity = Dir * ProjectileMovement->InitialSpeed;
     }
+}
+
+void AWaveProjectile::HandleComponentHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
+                                         UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+    if (!OtherActor || OtherActor == this || OtherActor == GetOwner())
+    {
+        return;
+    }
+    if (OtherActor->IsA(AEnemyConeCharacter::StaticClass()))
+    {
+        AController* InstigatorController = GetInstigatorController();
+        UGameplayStatics::ApplyDamage(OtherActor, 1.f, InstigatorController, this, nullptr);
+        Destroy();
+    }
+}
+
+float AWaveProjectile::GetInitialSpeed() const
+{
+    return ProjectileMovement ? ProjectileMovement->InitialSpeed : 0.f;
 }
 
 void AWaveProjectile::OnCollisionOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
