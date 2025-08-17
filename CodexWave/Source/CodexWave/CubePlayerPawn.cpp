@@ -12,7 +12,11 @@
 #include "InputAction.h"
 #include "InputMappingContext.h"
 #include "InputModifiers.h"
+#include "InputTriggers.h"
 #include "InputCoreTypes.h"
+#include "WaveProjectile.h"
+#include "DrawDebugHelpers.h"
+#include "Engine/Engine.h"
 
 ACubePlayerPawn::ACubePlayerPawn()
 {
@@ -55,6 +59,8 @@ ACubePlayerPawn::ACubePlayerPawn()
     AutoPossessPlayer = EAutoReceiveInput::Player0;
 
     // Enhanced Input assets are created at runtime (BeginPlay/ensure), not in constructor
+    // Default projectile class
+    ProjectileClass = AWaveProjectile::StaticClass();
 }
 
 void ACubePlayerPawn::PossessedBy(AController* NewController)
@@ -92,6 +98,16 @@ void ACubePlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
         {
             EIC->BindAction(MoveRightAction, ETriggerEvent::Triggered, this, &ACubePlayerPawn::MoveRight);
             EIC->BindAction(MoveRightAction, ETriggerEvent::Completed, this, &ACubePlayerPawn::MoveRight);
+        }
+
+        if (FireAction)
+        {
+            // Use Triggered with an explicit Pressed trigger on the action
+            EIC->BindAction(FireAction, ETriggerEvent::Triggered, this, &ACubePlayerPawn::Fire);
+            if (GEngine)
+            {
+                GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Green, TEXT("Bind FireAction: Triggered -> Fire()"));
+            }
         }
 
         if (!bMappingApplied)
@@ -165,6 +181,10 @@ void ACubePlayerPawn::BeginPlay()
                     {
                         Subsystem->AddMappingContext(DefaultMappingContext, 0);
                         bMappingApplied = true;
+                        if (GEngine)
+                        {
+                            GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Cyan, TEXT("EnhancedInput: MappingContext added"));
+                        }
                     }
                 }
             }
@@ -177,6 +197,10 @@ void ACubePlayerPawn::EnsureInputAssets()
     if (!DefaultMappingContext)
     {
         DefaultMappingContext = NewObject<UInputMappingContext>(this, TEXT("IMC_Default"));
+        if (GEngine)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Silver, TEXT("Created Default MappingContext"));
+        }
     }
 
     if (!MoveForwardAction)
@@ -210,6 +234,78 @@ void ACubePlayerPawn::EnsureInputAssets()
                 Negate->bX = true; Negate->bY = false; Negate->bZ = false;
                 AMap.Modifiers.Add(Negate);
             }
+        }
+    }
+
+    if (!FireAction)
+    {
+        FireAction = NewObject<UInputAction>(this, TEXT("IA_Fire"));
+        FireAction->ValueType = EInputActionValueType::Boolean;
+        if (UInputTriggerPressed* Pressed = NewObject<UInputTriggerPressed>(FireAction))
+        {
+            FireAction->Triggers.Add(Pressed);
+        }
+        if (DefaultMappingContext)
+        {
+            DefaultMappingContext->MapKey(FireAction, EKeys::SpaceBar);
+            DefaultMappingContext->MapKey(FireAction, EKeys::LeftMouseButton);
+            if (GEngine)
+            {
+                GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Silver, TEXT("Created FireAction + TriggerPressed + mapped Space/LMB"));
+            }
+        }
+    }
+}
+
+void ACubePlayerPawn::Fire(const FInputActionValue& Value)
+{
+    const bool bPressed = Value.Get<bool>();
+    if (GEngine)
+    {
+        FString Msg = FString::Printf(TEXT("Fire() Triggered, pressed=%s"), bPressed ? TEXT("true") : TEXT("false"));
+        GEngine->AddOnScreenDebugMessage(-1, 1.5f, FColor::Yellow, Msg);
+    }
+    // For Triggered event with Pressed trigger, we treat this as pressed regardless of Value
+
+    if (!ProjectileClass)
+    {
+        if (GEngine)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TEXT("No ProjectileClass set"));
+        }
+        return;
+    }
+
+    FVector Dir = GetVelocity();
+    Dir.Z = 0.f;
+    if (Dir.SizeSquared() < KINDA_SMALL_NUMBER)
+    {
+        Dir = GetActorForwardVector();
+        Dir.Z = 0.f;
+    }
+    if (!Dir.Normalize())
+    {
+        Dir = FVector::ForwardVector;
+    }
+
+    const FVector SpawnLoc = GetActorLocation() + Dir * ProjectileSpawnOffset;
+    const FRotator SpawnRot = Dir.Rotation();
+
+    if (UWorld* WorldForDebug = GetWorld())
+    {
+        DrawDebugSphere(WorldForDebug, SpawnLoc, 12.f, 16, FColor::Cyan, false, 1.0f, 0, 1.5f);
+    }
+
+    FActorSpawnParameters Params;
+    Params.Owner = this;
+    Params.Instigator = GetInstigator();
+    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+    if (UWorld* World = GetWorld())
+    {
+        if (AWaveProjectile* P = World->SpawnActor<AWaveProjectile>(ProjectileClass, SpawnLoc, SpawnRot, Params))
+        {
+            P->InitVelocity(Dir);
         }
     }
 }

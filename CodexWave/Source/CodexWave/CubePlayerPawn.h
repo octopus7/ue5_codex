@@ -11,6 +11,7 @@ class UCameraComponent;
 class UFloatingPawnMovement;
 class UInputAction;
 class UInputMappingContext;
+class AWaveProjectile;
 
 UCLASS()
 class CODEXWAVE_API ACubePlayerPawn : public APawn
@@ -45,6 +46,13 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
     float RotationInterpSpeed = 10.f;
 
+    // Projectile
+    UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+    TSubclassOf<AWaveProjectile> ProjectileClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
+    float ProjectileSpawnOffset = 60.f;
+
     // Enhanced Input (created at runtime; keep transient so not saved)
     UPROPERTY(Transient)
     UInputMappingContext* DefaultMappingContext = nullptr;
@@ -55,10 +63,14 @@ protected:
     UPROPERTY(Transient)
     UInputAction* MoveRightAction = nullptr;
 
+    UPROPERTY(Transient)
+    UInputAction* FireAction = nullptr;
+
 protected:
     // Input callbacks
     void MoveForward(const FInputActionValue& Value);
     void MoveRight(const FInputActionValue& Value);
+    void Fire(const FInputActionValue& Value);
 
     virtual UPawnMovementComponent* GetMovementComponent() const override { return (UPawnMovementComponent*)FloatingMovement; }
 
