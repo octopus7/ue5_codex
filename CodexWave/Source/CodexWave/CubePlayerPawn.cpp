@@ -39,7 +39,7 @@ ACubePlayerPawn::ACubePlayerPawn()
     // Top-down spring arm + camera
     SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
     SpringArm->SetupAttachment(MeshComponent);
-    SpringArm->TargetArmLength = 800.f;
+    SpringArm->TargetArmLength = CameraArmLength;
     SpringArm->bDoCollisionTest = false;
     SpringArm->SetUsingAbsoluteRotation(true);
     SpringArm->SetRelativeRotation(FRotator(-60.f, 0.f, 0.f));

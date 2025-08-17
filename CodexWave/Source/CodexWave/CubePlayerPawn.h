@@ -37,6 +37,9 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UCameraComponent* Camera;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+    float CameraArmLength = 1400.f;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
     UFloatingPawnMovement* FloatingMovement;
 
