@@ -15,6 +15,7 @@ public:
 
 protected:
     virtual void BeginPlay() override;
+    virtual void OnConstruction(const FTransform& Transform) override;
 
     UPROPERTY(EditAnywhere, Category="Spawn|Class")
     TSubclassOf<AActor> EnemyClass;
@@ -43,6 +44,16 @@ protected:
     UPROPERTY(EditAnywhere, Category="Debug")
     bool bDrawDebug = true;
 
+    // Visual helpers to confirm placement in level
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Debug")
+    class UArrowComponent* Arrow;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Debug")
+    class UTextRenderComponent* Label;
+
+    UPROPERTY(EditAnywhere, Category="Debug")
+    bool bShowLabelInGame = true;
+
 private:
     FTimerHandle SpawnTimerHandle;
     int32 SpawnedCount = 0;
@@ -50,4 +61,3 @@ private:
     void DoSpawn();
     FVector FindSpawnLocation(const FVector& Center) const;
 };
-

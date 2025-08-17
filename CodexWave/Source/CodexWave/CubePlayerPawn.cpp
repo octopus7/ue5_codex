@@ -298,7 +298,7 @@ void ACubePlayerPawn::Fire(const FInputActionValue& Value)
 
     FActorSpawnParameters Params;
     Params.Owner = this;
-    Params.Instigator = GetInstigator();
+    Params.Instigator = Cast<APawn>(this);
     Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
     if (UWorld* World = GetWorld())

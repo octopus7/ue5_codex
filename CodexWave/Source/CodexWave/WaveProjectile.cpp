@@ -4,6 +4,9 @@
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Engine/CollisionProfile.h"
+#include "Kismet/GameplayStatics.h"
+#include "EnemyConeCharacter.h"
 
 AWaveProjectile::AWaveProjectile()
 {
@@ -11,9 +14,16 @@ AWaveProjectile::AWaveProjectile()
 
     Collision = CreateDefaultSubobject<USphereComponent>(TEXT("Collision"));
     Collision->InitSphereRadius(12.f);
-    Collision->SetCollisionProfileName(TEXT("Projectile"));
+    Collision->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
     Collision->SetSimulatePhysics(false);
+    Collision->SetGenerateOverlapEvents(true);
+    Collision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    Collision->SetCollisionResponseToAllChannels(ECR_Ignore);
+    Collision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
     SetRootComponent(Collision);
+
+    Collision->OnComponentBeginOverlap.AddDynamic(this, &AWaveProjectile::OnCollisionOverlap);
+    OnActorHit.AddDynamic(this, &AWaveProjectile::HandleActorHit);
 
     Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
     Mesh->SetupAttachment(Collision);
@@ -48,3 +58,34 @@ void AWaveProjectile::InitVelocity(const FVector& Direction)
     }
 }
 
+void AWaveProjectile::OnCollisionOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+                                         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+                                         const FHitResult& SweepResult)
+{
+    if (!OtherActor || OtherActor == this || OtherActor == GetOwner())
+    {
+        return;
+    }
+
+    // Only damage our enemy cone for now (임시 스코프)
+    if (OtherActor->IsA(AEnemyConeCharacter::StaticClass()))
+    {
+        AController* InstigatorController = GetInstigatorController();
+        UGameplayStatics::ApplyDamage(OtherActor, 1.f, InstigatorController, this, nullptr);
+        Destroy();
+    }
+}
+
+void AWaveProjectile::HandleActorHit(AActor* SelfActor, AActor* OtherActor, FVector NormalImpulse, const FHitResult& Hit)
+{
+    if (!OtherActor || OtherActor == this || OtherActor == GetOwner())
+    {
+        return;
+    }
+    if (OtherActor->IsA(AEnemyConeCharacter::StaticClass()))
+    {
+        AController* InstigatorController = GetInstigatorController();
+        UGameplayStatics::ApplyDamage(OtherActor, 1.f, InstigatorController, this, nullptr);
+        Destroy();
+    }
+}

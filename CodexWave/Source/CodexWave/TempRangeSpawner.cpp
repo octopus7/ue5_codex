@@ -3,6 +3,8 @@
 #include "EnemyConeCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
+#include "Components/ArrowComponent.h"
+#include "Components/TextRenderComponent.h"
 
 ATempRangeSpawner::ATempRangeSpawner()
 {
@@ -10,6 +12,19 @@ ATempRangeSpawner::ATempRangeSpawner()
 
     // Default enemy class to our cone character
     EnemyClass = AEnemyConeCharacter::StaticClass();
+
+    Arrow = CreateDefaultSubobject<UArrowComponent>(TEXT("Arrow"));
+    Arrow->ArrowColor = FColor(255, 0, 180); // magenta-ish
+    Arrow->ArrowSize = 1.5f;
+    SetRootComponent(Arrow);
+
+    Label = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Label"));
+    Label->SetupAttachment(Arrow);
+    Label->SetText(FText::FromString(TEXT("범위스폰_임시")));
+    Label->SetTextRenderColor(FColor::Purple);
+    Label->SetHorizontalAlignment(EHTA_Center);
+    Label->SetWorldSize(48.f);
+    Label->SetRelativeLocation(FVector(0.f, 0.f, 60.f));
 }
 
 void ATempRangeSpawner::BeginPlay()
@@ -17,6 +32,28 @@ void ATempRangeSpawner::BeginPlay()
     Super::BeginPlay();
 
     GetWorldTimerManager().SetTimer(SpawnTimerHandle, this, &ATempRangeSpawner::DoSpawn, SpawnInterval, true, SpawnInterval);
+}
+
+void ATempRangeSpawner::OnConstruction(const FTransform& Transform)
+{
+    Super::OnConstruction(Transform);
+
+    if (Label)
+    {
+        Label->SetHiddenInGame(!bShowLabelInGame);
+    }
+
+    if (bDrawDebug)
+    {
+        if (UWorld* World = GetWorld())
+        {
+            const FVector C = GetActorLocation();
+            const FColor MinColor = FColor(0, 200, 255);
+            const FColor MaxColor = FColor(0, 120, 255);
+            DrawDebugCircle(World, C, MinDistance, 64, MinColor, false, 2.0f, 0, 2.0f, FVector(1,0,0), FVector(0,1,0), false);
+            DrawDebugCircle(World, C, MaxDistance, 64, MaxColor, false, 2.0f, 0, 2.0f, FVector(1,0,0), FVector(0,1,0), false);
+        }
+    }
 }
 
 void ATempRangeSpawner::DoSpawn()
@@ -96,4 +133,3 @@ FVector ATempRangeSpawner::FindSpawnLocation(const FVector& Center) const
 
     return Location;
 }
-
