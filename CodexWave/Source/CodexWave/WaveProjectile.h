@@ -15,14 +15,13 @@ class CODEXWAVE_API AWaveProjectile : public AActor
 
 public:
     AWaveProjectile();
-
-protected:
-    virtual void BeginPlay() override;
-
     void InitVelocity(const FVector& Direction);
 
     UFUNCTION(BlueprintPure, Category="Projectile")
     float GetInitialSpeed() const;
+
+protected:
+    virtual void BeginPlay() override;
 
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
