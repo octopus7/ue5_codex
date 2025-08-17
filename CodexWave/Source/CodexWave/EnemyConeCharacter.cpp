@@ -35,7 +35,7 @@ AEnemyConeCharacter::AEnemyConeCharacter()
     HPText->SetupAttachment(GetCapsuleComponent());
     HPText->SetHorizontalAlignment(EHorizTextAligment::EHTA_Center);
     HPText->SetVerticalAlignment(EVerticalTextAligment::EVRTA_TextCenter);
-    HPText->SetWorldSize(36.f);
+    HPText->SetWorldSize(108.f);
     HPText->SetTextRenderColor(FColor::White);
     HPText->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
     UpdateHPText();
