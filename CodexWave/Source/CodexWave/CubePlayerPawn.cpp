@@ -16,7 +16,7 @@
 
 ACubePlayerPawn::ACubePlayerPawn()
 {
-    PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bCanEverTick = true;
 
     // Root: Cube mesh
     MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
@@ -50,53 +50,11 @@ ACubePlayerPawn::ACubePlayerPawn()
     // Simple floating movement component for WASD translation
     FloatingMovement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("Movement"));
     FloatingMovement->MaxSpeed = 600.f;
+    FloatingMovement->UpdatedComponent = MeshComponent;
 
     AutoPossessPlayer = EAutoReceiveInput::Player0;
 
-    // Create Enhanced Input assets in-memory
-    DefaultMappingContext = NewObject<UInputMappingContext>(this, TEXT("IMC_Default"));
-
-    MoveForwardAction = NewObject<UInputAction>(this, TEXT("IA_MoveForward"));
-    if (MoveForwardAction)
-    {
-        MoveForwardAction->ValueType = EInputActionValueType::Axis1D;
-    }
-
-    MoveRightAction = NewObject<UInputAction>(this, TEXT("IA_MoveRight"));
-    if (MoveRightAction)
-    {
-        MoveRightAction->ValueType = EInputActionValueType::Axis1D;
-    }
-
-    if (DefaultMappingContext)
-    {
-        // Forward/Back: W (+1), S (-1)
-        if (MoveForwardAction)
-        {
-            DefaultMappingContext->MapKey(MoveForwardAction, EKeys::W);
-
-            FEnhancedActionKeyMapping& SMap = DefaultMappingContext->MapKey(MoveForwardAction, EKeys::S);
-            if (UInputModifierNegate* Negate = NewObject<UInputModifierNegate>(DefaultMappingContext))
-            {
-                // Negate 1D value (X axis of the action value)
-                Negate->bX = true; Negate->bY = false; Negate->bZ = false;
-                SMap.Modifiers.Add(Negate);
-            }
-        }
-
-        // Right/Left: D (+1), A (-1)
-        if (MoveRightAction)
-        {
-            DefaultMappingContext->MapKey(MoveRightAction, EKeys::D);
-
-            FEnhancedActionKeyMapping& AMap = DefaultMappingContext->MapKey(MoveRightAction, EKeys::A);
-            if (UInputModifierNegate* Negate = NewObject<UInputModifierNegate>(DefaultMappingContext))
-            {
-                Negate->bX = true; Negate->bY = false; Negate->bZ = false;
-                AMap.Modifiers.Add(Negate);
-            }
-        }
-    }
+    // Enhanced Input assets are created at runtime (BeginPlay/ensure), not in constructor
 }
 
 void ACubePlayerPawn::PossessedBy(AController* NewController)
@@ -110,10 +68,7 @@ void ACubePlayerPawn::PossessedBy(AController* NewController)
         {
             if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LP))
             {
-                if (DefaultMappingContext)
-                {
-                    Subsystem->AddMappingContext(DefaultMappingContext, /*Priority*/0);
-                }
+                // Mapping is now added in BeginPlay/Setup when assets exist
             }
         }
     }
@@ -122,6 +77,8 @@ void ACubePlayerPawn::PossessedBy(AController* NewController)
 void ACubePlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+    EnsureInputAssets();
 
     if (UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(PlayerInputComponent))
     {
@@ -136,6 +93,24 @@ void ACubePlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
             EIC->BindAction(MoveRightAction, ETriggerEvent::Triggered, this, &ACubePlayerPawn::MoveRight);
             EIC->BindAction(MoveRightAction, ETriggerEvent::Completed, this, &ACubePlayerPawn::MoveRight);
         }
+
+        if (!bMappingApplied)
+        {
+            if (APlayerController* PC = Cast<APlayerController>(GetController()))
+            {
+                if (ULocalPlayer* LP = PC->GetLocalPlayer())
+                {
+                    if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LP))
+                    {
+                        if (DefaultMappingContext)
+                        {
+                            Subsystem->AddMappingContext(DefaultMappingContext, 0);
+                            bMappingApplied = true;
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -149,4 +124,92 @@ void ACubePlayerPawn::MoveRight(const FInputActionValue& Value)
 {
     const float Axis = Value.Get<float>();
     AddMovementInput(FVector::RightVector, Axis);
+}
+
+void ACubePlayerPawn::Tick(float DeltaSeconds)
+{
+    Super::Tick(DeltaSeconds);
+
+    if (!bRotateToMovement)
+    {
+        return;
+    }
+
+    FVector V = GetVelocity();
+    V.Z = 0.f;
+    if (V.SizeSquared() > KINDA_SMALL_NUMBER)
+    {
+        const FRotator Target = V.Rotation();
+        const FRotator Current = GetActorRotation();
+        const FRotator NewRot = FMath::RInterpTo(Current, FRotator(0.f, Target.Yaw, 0.f), DeltaSeconds, RotationInterpSpeed);
+        SetActorRotation(NewRot);
+    }
+}
+
+void ACubePlayerPawn::BeginPlay()
+{
+    Super::BeginPlay();
+
+    EnsureInputAssets();
+
+    // Try adding mapping context here too (covers cases before SetupPlayerInputComponent binds)
+    if (!bMappingApplied)
+    {
+        if (APlayerController* PC = Cast<APlayerController>(GetController()))
+        {
+            if (ULocalPlayer* LP = PC->GetLocalPlayer())
+            {
+                if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LP))
+                {
+                    if (DefaultMappingContext)
+                    {
+                        Subsystem->AddMappingContext(DefaultMappingContext, 0);
+                        bMappingApplied = true;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void ACubePlayerPawn::EnsureInputAssets()
+{
+    if (!DefaultMappingContext)
+    {
+        DefaultMappingContext = NewObject<UInputMappingContext>(this, TEXT("IMC_Default"));
+    }
+
+    if (!MoveForwardAction)
+    {
+        MoveForwardAction = NewObject<UInputAction>(this, TEXT("IA_MoveForward"));
+        MoveForwardAction->ValueType = EInputActionValueType::Axis1D;
+        // Bind W/S
+        if (DefaultMappingContext)
+        {
+            DefaultMappingContext->MapKey(MoveForwardAction, EKeys::W);
+            FEnhancedActionKeyMapping& SMap = DefaultMappingContext->MapKey(MoveForwardAction, EKeys::S);
+            if (UInputModifierNegate* Negate = NewObject<UInputModifierNegate>(DefaultMappingContext))
+            {
+                Negate->bX = true; Negate->bY = false; Negate->bZ = false;
+                SMap.Modifiers.Add(Negate);
+            }
+        }
+    }
+
+    if (!MoveRightAction)
+    {
+        MoveRightAction = NewObject<UInputAction>(this, TEXT("IA_MoveRight"));
+        MoveRightAction->ValueType = EInputActionValueType::Axis1D;
+        // Bind D/A
+        if (DefaultMappingContext)
+        {
+            DefaultMappingContext->MapKey(MoveRightAction, EKeys::D);
+            FEnhancedActionKeyMapping& AMap = DefaultMappingContext->MapKey(MoveRightAction, EKeys::A);
+            if (UInputModifierNegate* Negate = NewObject<UInputModifierNegate>(DefaultMappingContext))
+            {
+                Negate->bX = true; Negate->bY = false; Negate->bZ = false;
+                AMap.Modifiers.Add(Negate);
+            }
+        }
+    }
 }

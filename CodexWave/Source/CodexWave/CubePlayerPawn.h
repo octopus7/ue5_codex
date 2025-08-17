@@ -22,6 +22,8 @@ public:
 
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
     virtual void PossessedBy(AController* NewController) override;
+    virtual void Tick(float DeltaSeconds) override;
+    virtual void BeginPlay() override;
 
 protected:
     // Components
@@ -37,15 +39,21 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
     UFloatingPawnMovement* FloatingMovement;
 
-    // Enhanced Input
-    UPROPERTY()
-    UInputMappingContext* DefaultMappingContext;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+    bool bRotateToMovement = !true;
 
-    UPROPERTY()
-    UInputAction* MoveForwardAction;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+    float RotationInterpSpeed = 10.f;
 
-    UPROPERTY()
-    UInputAction* MoveRightAction;
+    // Enhanced Input (created at runtime; keep transient so not saved)
+    UPROPERTY(Transient)
+    UInputMappingContext* DefaultMappingContext = nullptr;
+
+    UPROPERTY(Transient)
+    UInputAction* MoveForwardAction = nullptr;
+
+    UPROPERTY(Transient)
+    UInputAction* MoveRightAction = nullptr;
 
 protected:
     // Input callbacks
@@ -53,4 +61,7 @@ protected:
     void MoveRight(const FInputActionValue& Value);
 
     virtual UPawnMovementComponent* GetMovementComponent() const override { return (UPawnMovementComponent*)FloatingMovement; }
+
+    void EnsureInputAssets();
+    bool bMappingApplied = false;
 };
