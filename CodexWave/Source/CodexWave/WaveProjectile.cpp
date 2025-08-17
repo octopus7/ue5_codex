@@ -7,6 +7,7 @@
 #include "Engine/CollisionProfile.h"
 #include "Kismet/GameplayStatics.h"
 #include "EnemyConeCharacter.h"
+#include "DrawDebugHelpers.h"
 
 AWaveProjectile::AWaveProjectile()
 {
@@ -20,6 +21,7 @@ AWaveProjectile::AWaveProjectile()
     Collision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     Collision->SetCollisionResponseToAllChannels(ECR_Ignore);
     Collision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+    Collision->BodyInstance.bUseCCD = true; // reduce tunneling at high speed
     SetRootComponent(Collision);
 
     Collision->OnComponentBeginOverlap.AddDynamic(this, &AWaveProjectile::OnCollisionOverlap);
@@ -45,8 +47,24 @@ AWaveProjectile::AWaveProjectile()
     ProjectileMovement->bRotationFollowsVelocity = true;
     ProjectileMovement->bShouldBounce = false;
     ProjectileMovement->bInitialVelocityInLocalSpace = false;
+    ProjectileMovement->SetUpdatedComponent(Collision);
 
     SetLifeSpan(5.f);
+}
+
+void AWaveProjectile::BeginPlay()
+{
+    Super::BeginPlay();
+
+    // Prevent immediate collision with owner/instigator
+    if (AActor* Ow = GetOwner())
+    {
+        Collision->IgnoreActorWhenMoving(Ow, true);
+    }
+    if (APawn* Inst = GetInstigator())
+    {
+        Collision->IgnoreActorWhenMoving(Inst, true);
+    }
 }
 
 void AWaveProjectile::InitVelocity(const FVector& Direction)
@@ -71,6 +89,10 @@ void AWaveProjectile::HandleComponentHit(UPrimitiveComponent* HitComponent, AAct
     {
         AController* InstigatorController = GetInstigatorController();
         UGameplayStatics::ApplyDamage(OtherActor, 1.f, InstigatorController, this, nullptr);
+        if (UWorld* World = GetWorld())
+        {
+            DrawDebugPoint(World, Hit.ImpactPoint, 12.f, FColor::Red, false, 2.0f);
+        }
         Destroy();
     }
 }
