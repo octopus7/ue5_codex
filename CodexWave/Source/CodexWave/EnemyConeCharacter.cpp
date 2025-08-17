@@ -10,7 +10,7 @@
 
 AEnemyConeCharacter::AEnemyConeCharacter()
 {
-    PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bCanEverTick = true;
 
     // Add a visual static mesh (cone) attached to capsule
     VisualMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("VisualMesh"));
@@ -40,6 +40,16 @@ AEnemyConeCharacter::AEnemyConeCharacter()
     HPText->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
     UpdateHPText();
 
+    // Lifetime text above HP (50% size)
+    LifeText = CreateDefaultSubobject<UTextRenderComponent>(TEXT("LifeText"));
+    LifeText->SetupAttachment(GetCapsuleComponent());
+    LifeText->SetHorizontalAlignment(EHorizTextAligment::EHTA_Center);
+    LifeText->SetVerticalAlignment(EVerticalTextAligment::EVRTA_TextCenter);
+    LifeText->SetWorldSize(54.f);
+    LifeText->SetTextRenderColor(FColor::Cyan);
+    LifeText->SetRelativeLocation(FVector(0.f, 0.f, 190.f));
+    LifeText->SetHiddenInGame(true); // will unhide if AutoDeathTime > 0 in BeginPlay
+
     // AI setup
     AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
     AIControllerClass = AEnemyAIController::StaticClass();
@@ -52,6 +62,30 @@ AEnemyConeCharacter::AEnemyConeCharacter()
         MoveComp->RotationRate = FRotator(0.f, 540.f, 0.f);
         MoveComp->bConstrainToPlane = true;
         MoveComp->SetPlaneConstraintNormal(FVector::UpVector);
+    }
+}
+
+void AEnemyConeCharacter::BeginPlay()
+{
+    Super::BeginPlay();
+
+    // 스폰 후 자동 사망 시간 적용 (0이면 비활성)
+    if (AutoDeathTime > 0.f)
+    {
+        SetLifeSpan(AutoDeathTime);
+        if (LifeText)
+        {
+            LifeText->SetHiddenInGame(false);
+            UpdateLifetimeText();
+        }
+    }
+    else
+    {
+        SetLifeSpan(0.f);
+        if (LifeText)
+        {
+            LifeText->SetHiddenInGame(true);
+        }
     }
 }
 
@@ -106,5 +140,31 @@ void AEnemyConeCharacter::UpdateHPText()
     else
     {
         HPText->SetTextRenderColor(FColor::White);
+    }
+}
+
+void AEnemyConeCharacter::UpdateLifetimeText()
+{
+    if (!LifeText)
+    {
+        return;
+    }
+    const float Left = GetLifeSpan();
+    if (Left <= 0.f)
+    {
+        LifeText->SetHiddenInGame(true);
+        return;
+    }
+    LifeText->SetHiddenInGame(false);
+    const int32 Secs = FMath::Max(0, FMath::CeilToInt(Left));
+    LifeText->SetText(FText::AsNumber(Secs));
+}
+
+void AEnemyConeCharacter::Tick(float DeltaSeconds)
+{
+    Super::Tick(DeltaSeconds);
+    if (AutoDeathTime > 0.f)
+    {
+        UpdateLifetimeText();
     }
 }
