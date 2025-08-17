@@ -14,6 +14,9 @@ AEnemyConeCharacter::AEnemyConeCharacter()
     VisualMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("VisualMesh"));
     VisualMesh->SetupAttachment(GetCapsuleComponent());
     VisualMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    // Ensure enemy capsule can overlap with projectile (WorldDynamic)
+    GetCapsuleComponent()->SetGenerateOverlapEvents(true);
+    GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
 
     static ConstructorHelpers::FObjectFinder<UStaticMesh> ConeMesh(TEXT("/Engine/BasicShapes/Cone.Cone"));
     if (ConeMesh.Succeeded())

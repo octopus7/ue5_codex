@@ -18,16 +18,12 @@ AWaveProjectile::AWaveProjectile()
     Collision->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
     Collision->SetSimulatePhysics(false);
     Collision->SetGenerateOverlapEvents(true);
-    Collision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    Collision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     Collision->SetCollisionResponseToAllChannels(ECR_Ignore);
-    Collision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
-    Collision->BodyInstance.bUseCCD = true; // reduce tunneling at high speed
+    Collision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
     SetRootComponent(Collision);
 
     Collision->OnComponentBeginOverlap.AddDynamic(this, &AWaveProjectile::OnCollisionOverlap);
-    Collision->SetNotifyRigidBodyCollision(true);
-    Collision->OnComponentHit.AddDynamic(this, &AWaveProjectile::HandleComponentHit);
-    OnActorHit.AddDynamic(this, &AWaveProjectile::HandleActorHit);
 
     Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
     Mesh->SetupAttachment(Collision);
