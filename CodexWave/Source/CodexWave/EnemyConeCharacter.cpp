@@ -5,6 +5,8 @@
 #include "Components/TextRenderComponent.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Engine/Engine.h"
+#include "EnemyAIController.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 AEnemyConeCharacter::AEnemyConeCharacter()
 {
@@ -37,6 +39,20 @@ AEnemyConeCharacter::AEnemyConeCharacter()
     HPText->SetTextRenderColor(FColor::White);
     HPText->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
     UpdateHPText();
+
+    // AI setup
+    AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+    AIControllerClass = AEnemyAIController::StaticClass();
+
+    // Movement setup
+    bUseControllerRotationYaw = false;
+    if (UCharacterMovementComponent* MoveComp = GetCharacterMovement())
+    {
+        MoveComp->bOrientRotationToMovement = true;
+        MoveComp->RotationRate = FRotator(0.f, 540.f, 0.f);
+        MoveComp->bConstrainToPlane = true;
+        MoveComp->SetPlaneConstraintNormal(FVector::UpVector);
+    }
 }
 
 float AEnemyConeCharacter::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
