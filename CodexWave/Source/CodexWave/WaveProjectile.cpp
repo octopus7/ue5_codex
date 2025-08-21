@@ -7,6 +7,7 @@
 #include "Engine/CollisionProfile.h"
 #include "Kismet/GameplayStatics.h"
 #include "EnemyConeCharacter.h"
+#include "CubePlayerPawn.h"
 #include "DrawDebugHelpers.h"
 
 AWaveProjectile::AWaveProjectile()
@@ -107,12 +108,28 @@ void AWaveProjectile::OnCollisionOverlap(UPrimitiveComponent* OverlappedComponen
         return;
     }
 
-    // Only damage our enemy cone for now (임시 스코프)
+    const APawn* InstPawn = GetInstigator();
+    const bool bFromPlayer = InstPawn && InstPawn->IsA(ACubePlayerPawn::StaticClass());
+    const bool bFromEnemy  = InstPawn && InstPawn->IsA(AEnemyConeCharacter::StaticClass());
+
+    // Player shots damage enemies; enemy shots damage player
     if (OtherActor->IsA(AEnemyConeCharacter::StaticClass()))
     {
-        AController* InstigatorController = GetInstigatorController();
-        UGameplayStatics::ApplyDamage(OtherActor, 1.f, InstigatorController, this, nullptr);
-        Destroy();
+        if (!bFromEnemy)
+        {
+            AController* InstigatorController = GetInstigatorController();
+            UGameplayStatics::ApplyDamage(OtherActor, 1.f, InstigatorController, this, nullptr);
+            Destroy();
+        }
+    }
+    else if (OtherActor->IsA(ACubePlayerPawn::StaticClass()))
+    {
+        if (!bFromPlayer)
+        {
+            AController* InstigatorController = GetInstigatorController();
+            UGameplayStatics::ApplyDamage(OtherActor, 1.f, InstigatorController, this, nullptr);
+            Destroy();
+        }
     }
 }
 
@@ -122,10 +139,26 @@ void AWaveProjectile::HandleActorHit(AActor* SelfActor, AActor* OtherActor, FVec
     {
         return;
     }
+    const APawn* InstPawn = GetInstigator();
+    const bool bFromPlayer = InstPawn && InstPawn->IsA(ACubePlayerPawn::StaticClass());
+    const bool bFromEnemy  = InstPawn && InstPawn->IsA(AEnemyConeCharacter::StaticClass());
+
     if (OtherActor->IsA(AEnemyConeCharacter::StaticClass()))
     {
-        AController* InstigatorController = GetInstigatorController();
-        UGameplayStatics::ApplyDamage(OtherActor, 1.f, InstigatorController, this, nullptr);
-        Destroy();
+        if (!bFromEnemy)
+        {
+            AController* InstigatorController = GetInstigatorController();
+            UGameplayStatics::ApplyDamage(OtherActor, 1.f, InstigatorController, this, nullptr);
+            Destroy();
+        }
+    }
+    else if (OtherActor->IsA(ACubePlayerPawn::StaticClass()))
+    {
+        if (!bFromPlayer)
+        {
+            AController* InstigatorController = GetInstigatorController();
+            UGameplayStatics::ApplyDamage(OtherActor, 1.f, InstigatorController, this, nullptr);
+            Destroy();
+        }
     }
 }

@@ -7,6 +7,7 @@
 #include "Navigation/PathFollowingComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "DrawDebugHelpers.h"
+#include "WaveProjectile.h"
 
 AEnemyAIController::AEnemyAIController()
 {
@@ -123,6 +124,8 @@ void AEnemyAIController::Think()
         }
         // Refresh chase target while chasing
         StartChase();
+        // Attempt attack when in range/LOS with cooldown
+        TryAttack();
         break;
     case EEnemyState::Idle:
     case EEnemyState::Patrol:
@@ -239,13 +242,65 @@ void AEnemyAIController::StartChase()
 
     if (IsPlayerInAttackRange())
     {
-        // Simple attack placeholder: stop and debug
-        StopMovement();
+        // Optional: show feedback; actual attack handled by TryAttack()
         if (bDrawDebug)
         {
-            DrawDebugString(GetWorld(), GetPawn()->GetActorLocation() + FVector(0,0,120), TEXT("Attack!"), nullptr, FColor::Red, 0.2f);
+            DrawDebugString(GetWorld(), GetPawn()->GetActorLocation() + FVector(0,0,120), TEXT("In Range"), nullptr, FColor::Red, 0.2f);
         }
-        // You could ApplyDamage to player here if you add a health system
+    }
+}
+
+void AEnemyAIController::TryAttack()
+{
+    APawn* SelfPawn = GetPawn();
+    APawn* Player = CachedPlayer.Get();
+    if (!SelfPawn || !Player)
+    {
+        return;
+    }
+
+    // Cooldown gate
+    UWorld* World = GetWorld();
+    const float Now = World ? World->TimeSeconds : 0.f;
+    if (Now - LastAttackTime < AttackCooldown)
+    {
+        return;
+    }
+
+    // Require range and LOS
+    if (!IsPlayerInAttackRange() || !CanSeePlayer(true))
+    {
+        return;
+    }
+
+    const FVector SelfLoc = SelfPawn->GetActorLocation();
+    FVector Dir = (Player->GetActorLocation() - SelfLoc);
+    Dir.Z = 0.f;
+    if (!Dir.Normalize())
+    {
+        return;
+    }
+
+    const FVector SpawnLoc = SelfLoc + Dir * ProjectileSpawnOffset + FVector(0,0,40.f);
+    const FRotator SpawnRot = Dir.Rotation();
+
+    FActorSpawnParameters Params;
+    Params.Owner = SelfPawn;
+    Params.Instigator = SelfPawn;
+    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+    if (!AttackProjectileClass)
+    {
+        AttackProjectileClass = AWaveProjectile::StaticClass();
+    }
+
+    if (World && AttackProjectileClass)
+    {
+        if (AWaveProjectile* P = World->SpawnActor<AWaveProjectile>(AttackProjectileClass, SpawnLoc, SpawnRot, Params))
+        {
+            P->InitVelocity(Dir);
+            LastAttackTime = Now;
+        }
     }
 }
 

@@ -18,6 +18,8 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/Engine.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Components/TextRenderComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 ACubePlayerPawn::ACubePlayerPawn()
 {
@@ -28,6 +30,7 @@ ACubePlayerPawn::ACubePlayerPawn()
     SetRootComponent(MeshComponent);
     MeshComponent->SetCollisionProfileName(UCollisionProfile::Pawn_ProfileName);
     MeshComponent->SetSimulatePhysics(false);
+    MeshComponent->SetGenerateOverlapEvents(true);
 
     // Load engine cube mesh
     static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
@@ -51,6 +54,16 @@ ACubePlayerPawn::ACubePlayerPawn()
     Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
     Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
     Camera->bUsePawnControlRotation = false;
+
+    // Hit counter text above head
+    HitText = CreateDefaultSubobject<UTextRenderComponent>(TEXT("HitText"));
+    HitText->SetupAttachment(MeshComponent);
+    HitText->SetHorizontalAlignment(EHorizTextAligment::EHTA_Center);
+    HitText->SetVerticalAlignment(EVerticalTextAligment::EVRTA_TextCenter);
+    HitText->SetWorldSize(90.f);
+    HitText->SetTextRenderColor(FColor::Green);
+    HitText->SetRelativeLocation(FVector(0.f, 0.f, 130.f));
+    HitText->SetHiddenInGame(false);
 
     // Simple floating movement component for WASD translation
     FloatingMovement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("Movement"));
@@ -161,6 +174,17 @@ void ACubePlayerPawn::Tick(float DeltaSeconds)
         const FRotator NewRot = FMath::RInterpTo(Current, FRotator(0.f, Target.Yaw, 0.f), DeltaSeconds, RotationInterpSpeed);
         SetActorRotation(NewRot);
     }
+
+    // Make hit text face the camera
+    if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+    {
+        if (PC->PlayerCameraManager && HitText)
+        {
+            const FRotator CamRot = PC->PlayerCameraManager->GetCameraRotation();
+            const FRotator FaceRot(0.f, CamRot.Yaw + 180.f, 0.f);
+            HitText->SetWorldRotation(FaceRot);
+        }
+    }
 }
 
 void ACubePlayerPawn::BeginPlay()
@@ -168,6 +192,7 @@ void ACubePlayerPawn::BeginPlay()
     Super::BeginPlay();
 
     EnsureInputAssets();
+    UpdateHitText();
 
     // Try adding mapping context here too (covers cases before SetupPlayerInputComponent binds)
     if (!bMappingApplied)
@@ -348,5 +373,38 @@ void ACubePlayerPawn::Fire(const FInputActionValue& Value)
         {
             P->InitVelocity(Dir);
         }
+    }
+}
+
+float ACubePlayerPawn::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+    const float SuperDealt = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+    ReceivedHitCount++;
+    UpdateHitText();
+    if (GEngine)
+    {
+        FString Msg = FString::Printf(TEXT("Player hit! Count=%d"), ReceivedHitCount);
+        GEngine->AddOnScreenDebugMessage(reinterpret_cast<uint64>(this), 1.0f, FColor::Green, Msg);
+    }
+    // No death logic; just count
+    return SuperDealt + DamageAmount;
+}
+
+void ACubePlayerPawn::UpdateHitText()
+{
+    if (!HitText) return;
+    const FString Txt = FString::Printf(TEXT("Hits: %d"), ReceivedHitCount);
+    HitText->SetText(FText::FromString(Txt));
+    if (ReceivedHitCount >= 10)
+    {
+        HitText->SetTextRenderColor(FColor::Red);
+    }
+    else if (ReceivedHitCount >= 5)
+    {
+        HitText->SetTextRenderColor(FColor::Yellow);
+    }
+    else
+    {
+        HitText->SetTextRenderColor(FColor::Green);
     }
 }

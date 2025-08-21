@@ -5,6 +5,7 @@
 #include "EnemyAIController.generated.h"
 
 class AEnemyConeCharacter;
+class AWaveProjectile;
 
 UENUM()
 enum class EEnemyState : uint8
@@ -52,6 +53,15 @@ protected:
     UPROPERTY(EditAnywhere, Category="Combat")
     float AttackRange = 150.f;
 
+    UPROPERTY(EditAnywhere, Category="Combat")
+    float AttackCooldown = 1.0f;
+
+    UPROPERTY(EditAnywhere, Category="Combat")
+    float ProjectileSpawnOffset = 60.f;
+
+    UPROPERTY(EditDefaultsOnly, Category="Combat")
+    TSubclassOf<AWaveProjectile> AttackProjectileClass;
+
     UPROPERTY(EditAnywhere, Category="Patrol")
     float PatrolRadius = 1000.f;
 
@@ -76,11 +86,13 @@ private:
 
     FTimerHandle ThinkTimerHandle;
     FTimerHandle IdleTimerHandle;
+    float LastAttackTime = -10000.f;
 
     void Think();
     void StartIdle(float Duration);
     void StartPatrol();
     void StartChase();
+    void TryAttack();
 
     bool CanSeePlayer(bool bStrict = true) const;
     bool IsPlayerInAttackRange() const;

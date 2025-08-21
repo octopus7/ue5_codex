@@ -12,6 +12,7 @@ class UFloatingPawnMovement;
 class UInputAction;
 class UInputMappingContext;
 class AWaveProjectile;
+class UTextRenderComponent;
 
 UCLASS()
 class CODEXWAVE_API ACubePlayerPawn : public APawn
@@ -25,6 +26,7 @@ public:
     virtual void PossessedBy(AController* NewController) override;
     virtual void Tick(float DeltaSeconds) override;
     virtual void BeginPlay() override;
+    virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 protected:
     // Components
@@ -36,6 +38,9 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UCameraComponent* Camera;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    UTextRenderComponent* HitText;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
     float CameraArmLength = 1400.f;
@@ -62,6 +67,10 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile|Preview")
     float TrajectorySegmentLength = 120.f;
 
+    // Damage tracking (no death)
+    UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Damage")
+    int32 ReceivedHitCount = 0;
+
     // Enhanced Input (created at runtime; keep transient so not saved)
     UPROPERTY(Transient)
     UInputMappingContext* DefaultMappingContext = nullptr;
@@ -85,4 +94,6 @@ protected:
 
     void EnsureInputAssets();
     bool bMappingApplied = false;
+
+    void UpdateHitText();
 };
