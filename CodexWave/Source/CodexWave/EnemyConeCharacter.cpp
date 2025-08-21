@@ -8,6 +8,7 @@
 #include "EnemyAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "DrawDebugHelpers.h"
 
 AEnemyConeCharacter::AEnemyConeCharacter()
 {
@@ -162,14 +163,22 @@ void AEnemyConeCharacter::UpdateHPText()
         StateStr = TEXT("null");
     }
 
-    // Append extra info when Idle: remaining idle seconds (if any)
+    // Append extra info when Idle/Chase
     FString Extra;
-    if (AI && AI->GetState() == EEnemyState::Idle)
+    if (AI)
     {
-        const float LeftIdle = AI->GetIdleTimeRemaining();
-        if (LeftIdle > 0.f)
+        if (AI->GetState() == EEnemyState::Idle)
         {
-            Extra = FString::Printf(TEXT(" (%.1fs)"), LeftIdle);
+            const float LeftIdle = AI->GetIdleTimeRemaining();
+            if (LeftIdle > 0.f)
+            {
+                Extra = FString::Printf(TEXT(" (%.1fs)"), LeftIdle);
+            }
+        }
+        else if (AI->GetState() == EEnemyState::Chase)
+        {
+            const float Rem = AI->GetAttackTimeRemaining();
+            Extra = FString::Printf(TEXT(" (%.1fs)"), Rem);
         }
     }
     const FString Txt = FString::Printf(TEXT("%d | %s%s"), Remaining, *StateStr, *Extra);
@@ -232,6 +241,17 @@ void AEnemyConeCharacter::Tick(float DeltaSeconds)
             {
                 LifeText->SetWorldRotation(FaceRot);
             }
+        }
+    }
+
+    // 플레이어까지 디버그 라인(핑크) 표시
+    if (bDrawPlayerLine)
+    {
+        if (APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0))
+        {
+            const FVector From = GetActorLocation() + FVector(0, 0, 50.f);
+            const FVector To   = PlayerPawn->GetActorLocation() + FVector(0, 0, 50.f);
+            DrawDebugLine(GetWorld(), From, To, FColor(255, 0, 180), false, 0.f, 0, 2.0f);
         }
     }
 }

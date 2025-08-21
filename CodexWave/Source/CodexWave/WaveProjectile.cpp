@@ -22,9 +22,12 @@ AWaveProjectile::AWaveProjectile()
     Collision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     Collision->SetCollisionResponseToAllChannels(ECR_Ignore);
     Collision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+    Collision->SetNotifyRigidBodyCollision(true); // enable hit events for blocking responses
     SetRootComponent(Collision);
 
     Collision->OnComponentBeginOverlap.AddDynamic(this, &AWaveProjectile::OnCollisionOverlap);
+    Collision->OnComponentHit.AddDynamic(this, &AWaveProjectile::HandleComponentHit);
+    OnActorHit.AddDynamic(this, &AWaveProjectile::HandleActorHit);
 
     Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
     Mesh->SetupAttachment(Collision);
@@ -82,15 +85,35 @@ void AWaveProjectile::HandleComponentHit(UPrimitiveComponent* HitComponent, AAct
     {
         return;
     }
+    const APawn* InstPawn = GetInstigator();
+    const bool bFromPlayer = InstPawn && InstPawn->IsA(ACubePlayerPawn::StaticClass());
+    const bool bFromEnemy  = InstPawn && InstPawn->IsA(AEnemyConeCharacter::StaticClass());
+
     if (OtherActor->IsA(AEnemyConeCharacter::StaticClass()))
     {
-        AController* InstigatorController = GetInstigatorController();
-        UGameplayStatics::ApplyDamage(OtherActor, 1.f, InstigatorController, this, nullptr);
-        if (UWorld* World = GetWorld())
+        if (!bFromEnemy)
         {
-            DrawDebugPoint(World, Hit.ImpactPoint, 12.f, FColor::Red, false, 2.0f);
+            AController* InstigatorController = GetInstigatorController();
+            UGameplayStatics::ApplyDamage(OtherActor, 1.f, InstigatorController, this, nullptr);
+            if (UWorld* World = GetWorld())
+            {
+                DrawDebugPoint(World, Hit.ImpactPoint, 12.f, FColor::Red, false, 2.0f);
+            }
+            Destroy();
         }
-        Destroy();
+    }
+    else if (OtherActor->IsA(ACubePlayerPawn::StaticClass()))
+    {
+        if (!bFromPlayer)
+        {
+            AController* InstigatorController = GetInstigatorController();
+            UGameplayStatics::ApplyDamage(OtherActor, 1.f, InstigatorController, this, nullptr);
+            if (UWorld* World = GetWorld())
+            {
+                DrawDebugPoint(World, Hit.ImpactPoint, 12.f, FColor::Magenta, false, 2.0f);
+            }
+            Destroy();
+        }
     }
 }
 

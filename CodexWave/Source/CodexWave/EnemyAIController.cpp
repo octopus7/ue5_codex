@@ -92,7 +92,8 @@ bool AEnemyAIController::IsPlayerInAttackRange() const
     {
         return false;
     }
-    return FVector::Dist2D(Player->GetActorLocation(), SelfPawn->GetActorLocation()) <= AttackRange;
+    const float Range = GetEffectiveAttackRange();
+    return FVector::Dist2D(Player->GetActorLocation(), SelfPawn->GetActorLocation()) <= Range;
 }
 
 void AEnemyAIController::Think()
@@ -152,6 +153,11 @@ void AEnemyAIController::Think()
             {
                 DrawFOVDebug(SightRadius, FColor(0, 255, 0));
                 DrawFOVDebug(LoseSightRadius, FColor(255, 215, 0)); // gold-ish
+            }
+            if (bShowAttackFailReason && !LastAttackFailReason.IsEmpty())
+            {
+                const FVector Loc = SelfPawn->GetActorLocation() + FVector(0,0,AttackDebugTextZOffset);
+                DrawDebugString(GetWorld(), Loc, LastAttackFailReason, nullptr, FColor(255, 0, 180), ThinkInterval*1.1f, false);
             }
         }
     }
@@ -238,7 +244,7 @@ void AEnemyAIController::StartChase()
     }
 
     State = EEnemyState::Chase;
-    MoveToActor(Player, /*AcceptanceRadius*/ AttackRange * 0.8f, true);
+    MoveToActor(Player, /*AcceptanceRadius*/ GetEffectiveAttackRange() * 0.8f, true);
 
     if (IsPlayerInAttackRange())
     {
@@ -256,6 +262,7 @@ void AEnemyAIController::TryAttack()
     APawn* Player = CachedPlayer.Get();
     if (!SelfPawn || !Player)
     {
+        LastAttackFailReason = TEXT("No pawn/player");
         return;
     }
 
@@ -264,12 +271,26 @@ void AEnemyAIController::TryAttack()
     const float Now = World ? World->TimeSeconds : 0.f;
     if (Now - LastAttackTime < AttackCooldown)
     {
+        const float Rem = FMath::Max(0.f, AttackCooldown - (Now - LastAttackTime));
+        LastAttackFailReason = FString::Printf(TEXT("Cooldown %.1fs"), Rem);
         return;
     }
 
     // Require range and LOS
-    if (!IsPlayerInAttackRange() || !CanSeePlayer(true))
+    const bool bInRange = IsPlayerInAttackRange();
+    const bool bLOS = CanSeePlayer(true);
+    if (!bInRange || !bLOS)
     {
+        if (!bInRange)
+        {
+            const float Dist = FVector::Dist2D(Player->GetActorLocation(), SelfPawn->GetActorLocation());
+            const float Range = GetEffectiveAttackRange();
+            LastAttackFailReason = FString::Printf(TEXT("Out of range %.0f/%.0f"), Dist, Range);
+        }
+        else if (!bLOS)
+        {
+            LastAttackFailReason = TEXT("No LOS/FOV");
+        }
         return;
     }
 
@@ -278,6 +299,7 @@ void AEnemyAIController::TryAttack()
     Dir.Z = 0.f;
     if (!Dir.Normalize())
     {
+        LastAttackFailReason = TEXT("Bad dir");
         return;
     }
 
@@ -300,6 +322,7 @@ void AEnemyAIController::TryAttack()
         {
             P->InitVelocity(Dir);
             LastAttackTime = Now;
+            LastAttackFailReason.Empty();
         }
     }
 }
@@ -324,4 +347,19 @@ float AEnemyAIController::GetIdleTimeRemaining() const
         return 0.f;
     }
     return const_cast<AEnemyAIController*>(this)->GetWorldTimerManager().GetTimerRemaining(const_cast<AEnemyAIController*>(this)->IdleTimerHandle);
+}
+
+float AEnemyAIController::GetAttackTimeRemaining() const
+{
+    const UWorld* World = GetWorld();
+    const float Now = World ? World->TimeSeconds : 0.f;
+    const float Elapsed = Now - LastAttackTime;
+    const float Remaining = AttackCooldown - Elapsed;
+    return Remaining > 0.f ? Remaining : 0.f;
+}
+
+float AEnemyAIController::GetEffectiveAttackRange() const
+{
+    // 추적 유지 거리(LoseSightRadius)의 절반을 공격 사거리로 사용
+    return LoseSightRadius * 0.5f;
 }

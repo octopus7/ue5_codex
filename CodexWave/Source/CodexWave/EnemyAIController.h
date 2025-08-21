@@ -30,6 +30,12 @@ public:
     UFUNCTION(BlueprintPure, Category="AI")
     float GetIdleTimeRemaining() const;
 
+    UFUNCTION(BlueprintPure, Category="Combat")
+    float GetAttackTimeRemaining() const;
+
+    UFUNCTION(BlueprintPure, Category="Combat")
+    float GetEffectiveAttackRange() const; // 추적 가능 거리의 절반 사용
+
 protected:
     // Sensing/Combat params
     UPROPERTY(EditAnywhere, Category="Sensing")
@@ -72,10 +78,16 @@ protected:
     float IdleTimeMax = 3.0f;
 
     UPROPERTY(EditAnywhere, Category="Debug")
-    bool bDrawDebug = false;
+    bool bDrawDebug = true;
 
     UPROPERTY(EditAnywhere, Category="Debug")
     float ThinkInterval = 0.2f;
+
+    UPROPERTY(EditAnywhere, Category="Debug")
+    bool bShowAttackFailReason = true;
+
+    UPROPERTY(EditAnywhere, Category="Debug")
+    float AttackDebugTextZOffset = 60.f;
 
 private:
     TWeakObjectPtr<AEnemyConeCharacter> CachedEnemy;
@@ -87,6 +99,7 @@ private:
     FTimerHandle ThinkTimerHandle;
     FTimerHandle IdleTimerHandle;
     float LastAttackTime = -10000.f;
+    FString LastAttackFailReason;
 
     void Think();
     void StartIdle(float Duration);
@@ -100,5 +113,9 @@ private:
     void DrawFOVDebug(float Radius, const FColor& Color) const;
 
     void AcquirePlayer();
+
+public:
+    UFUNCTION(BlueprintPure, Category="Combat")
+    FString GetLastAttackFailReason() const { return LastAttackFailReason; }
 
 };
