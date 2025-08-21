@@ -303,7 +303,9 @@ void AEnemyAIController::TryAttack()
         return;
     }
 
-    const FVector SpawnLoc = SelfLoc + Dir * ProjectileSpawnOffset + FVector(0,0,40.f);
+    const FVector SpawnXY = SelfLoc + Dir * ProjectileSpawnOffset;
+    const float SpawnZ = Player->GetActorLocation().Z + 40.f; // 플레이어 높이에 맞춰 발사 Z 정렬
+    const FVector SpawnLoc(SpawnXY.X, SpawnXY.Y, SpawnZ);
     const FRotator SpawnRot = Dir.Rotation();
 
     FActorSpawnParameters Params;

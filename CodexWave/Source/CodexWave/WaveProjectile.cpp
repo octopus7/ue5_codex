@@ -15,7 +15,7 @@ AWaveProjectile::AWaveProjectile()
     PrimaryActorTick.bCanEverTick = false;
 
     Collision = CreateDefaultSubobject<USphereComponent>(TEXT("Collision"));
-    Collision->InitSphereRadius(12.f);
+    Collision->InitSphereRadius(20.f); // 반경 확대로 스치기 완화
     Collision->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
     Collision->SetSimulatePhysics(false);
     Collision->SetGenerateOverlapEvents(true);
