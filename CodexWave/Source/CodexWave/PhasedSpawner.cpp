@@ -148,6 +148,21 @@ void APhasedSpawner::SpawnPhase(const FSpawnPhase& Phase)
         return;
     }
 
+    // 페이즈별 고정 스폰 포인트가 있는지 모아서 확인
+    TArray<FVector> FixedPoints;
+    FixedPoints.Reserve(Phase.SpawnPointActors.Num() + Phase.SpawnLocations.Num());
+    for (AActor* P : Phase.SpawnPointActors)
+    {
+        if (IsValid(P))
+        {
+            FixedPoints.Add(P->GetActorLocation());
+        }
+    }
+    for (const FVector& L : Phase.SpawnLocations)
+    {
+        FixedPoints.Add(L);
+    }
+
     for (const FPhaseSpawnEntry& Entry : Phase.Entries)
     {
         if (!Entry.EnemyClass || Entry.Count <= 0)
@@ -157,7 +172,29 @@ void APhasedSpawner::SpawnPhase(const FSpawnPhase& Phase)
 
         for (int32 i = 0; i < Entry.Count; ++i)
         {
-            const FVector SpawnLoc = FindSpawnLocation(CenterLoc);
+            FVector SpawnLoc;
+            if (FixedPoints.Num() > 0)
+            {
+                const int32 Index = (i % FixedPoints.Num());
+                SpawnLoc = FixedPoints[Index];
+                // 지정 포인트도 지면에 맞추고 싶다면 전역 옵션을 그대로 적용
+                if (bAlignToGround)
+                {
+                    // FindSpawnLocation의 지면 정렬 부분을 재사용하기 위해 Center는 무시하고 수직 트레이스만 수행
+                    FVector Start = SpawnLoc + FVector(0, 0, 1000.f);
+                    FVector End = SpawnLoc - FVector(0, 0, 2000.f);
+                    FHitResult Hit;
+                    FCollisionQueryParams Params(SCENE_QUERY_STAT(PhasedSpawnerTrace), false, this);
+                    if (World->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+                    {
+                        SpawnLoc = Hit.ImpactPoint + FVector(0, 0, 2.f);
+                    }
+                }
+            }
+            else
+            {
+                SpawnLoc = FindSpawnLocation(CenterLoc);
+            }
 
             FRotator SpawnRot = FRotator::ZeroRotator;
             if (CenterActor)

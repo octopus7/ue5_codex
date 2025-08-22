@@ -32,6 +32,16 @@ struct FSpawnPhase
     // 이 페이즈에서 동시에 스폰할 묶음들
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Phase")
     TArray<FPhaseSpawnEntry> Entries;
+
+    // (선택) 이 페이즈에서 사용할 고정 스폰 위치들
+    // - 하나라도 지정되면 기본 랜덤 스폰 대신 이 위치들을 순환하여 사용
+    // - SpawnPointActors: 레벨에 배치된 액터(예: TargetPoint)를 지정해 그 위치에서 스폰
+    // - SpawnLocations: 직접 좌표를 지정 (에디터에서 핀으로 위치 지정 가능)
+    UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="Phase|SpawnPoints")
+    TArray<AActor*> SpawnPointActors;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Phase|SpawnPoints", meta=(MakeEditWidget))
+    TArray<FVector> SpawnLocations;
 };
 
 // 단계별 그룹 스폰: 각 페이즈의 적을 동시 스폰, 모두 처치 시 다음 페이즈 진행
@@ -122,4 +132,3 @@ protected:
     UFUNCTION()
     void HandleSpawnedDestroyed(AActor* DestroyedActor);
 };
-
