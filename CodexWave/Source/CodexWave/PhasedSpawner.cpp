@@ -57,6 +57,42 @@ void APhasedSpawner::OnConstruction(const FTransform& Transform)
             const FColor MaxColor = FColor(0, 120, 255);
             DrawDebugCircle(World, C, MinDistance, 64, MinColor, false, 2.0f, 0, 2.0f, FVector(1,0,0), FVector(0,1,0), false);
             DrawDebugCircle(World, C, MaxDistance, 64, MaxColor, false, 2.0f, 0, 2.0f, FVector(1,0,0), FVector(0,1,0), false);
+
+            // 페이즈별 스폰 포인트 마커
+            static const TArray<FColor> PhaseColors = {
+                FColor::Green,
+                FColor::Yellow,
+                FColor::Red,
+                FColor::Cyan,
+                FColor::Orange,
+                FColor::Magenta
+            };
+
+            for (int32 PhaseIdx = 0; PhaseIdx < Phases.Num(); ++PhaseIdx)
+            {
+                const FSpawnPhase& Phase = Phases[PhaseIdx];
+                const FColor PColor = PhaseColors[PhaseIdx % PhaseColors.Num()];
+                int32 MarkerIdx = 0;
+
+                // Actor 포인트들
+                for (AActor* P : Phase.SpawnPointActors)
+                {
+                    if (!IsValid(P)) continue;
+                    const FVector Loc = P->GetActorLocation();
+                    DrawDebugSphere(World, Loc, 28.f, 12, PColor, false, 2.0f, 0, 2.0f);
+                    const FString Txt = FString::Printf(TEXT("P%d A%d"), PhaseIdx + 1, ++MarkerIdx);
+                    DrawDebugString(World, Loc + FVector(0,0,36.f), Txt, nullptr, PColor, 2.0f, false);
+                }
+
+                // 직접 좌표 포인트들
+                for (int32 i = 0; i < Phase.SpawnLocations.Num(); ++i)
+                {
+                    const FVector Loc = Phase.SpawnLocations[i];
+                    DrawDebugBox(World, Loc, FVector(18.f), PColor, false, 2.0f, 0, 2.0f);
+                    const FString Txt = FString::Printf(TEXT("P%d L%d"), PhaseIdx + 1, i + 1);
+                    DrawDebugString(World, Loc + FVector(0,0,36.f), Txt, nullptr, PColor, 2.0f, false);
+                }
+            }
         }
     }
 
