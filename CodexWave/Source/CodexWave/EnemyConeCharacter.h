@@ -49,7 +49,5 @@ protected:
     UPROPERTY(Transient)
     class AEnemyAIController* CachedAIController = nullptr;
 
-    // 플레이어까지 디버그 라인 표시 여부(핑크)
-    UPROPERTY(EditAnywhere, Category="Debug")
-    bool bDrawPlayerLine = true;
+    // (제거됨) 플레이어까지 핑크 디버그 라인 표시 옵션
 };

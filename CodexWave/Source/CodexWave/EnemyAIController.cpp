@@ -143,17 +143,15 @@ void AEnemyAIController::Think()
     {
         if (APawn* SelfPawn = GetPawn())
         {
-            if (APawn* Player = CachedPlayer.Get())
-            {
-                const bool bLOS = CanSeePlayer(true);
-                const FColor Col = bLOS ? FColor::Green : FColor::Red;
-                DrawDebugLine(GetWorld(), SelfPawn->GetActorLocation()+FVector(0,0,SightHeightOffset), Player->GetActorLocation()+FVector(0,0,SightHeightOffset), Col, false, ThinkInterval*1.1f, 0, 1.5f);
-            }
+            // 매 틱 갱신: 상태별로 부채꼴 색/반경 표시
             if (bUseFOV)
             {
-                DrawFOVDebug(SightRadius, FColor(0, 255, 0));
-                DrawFOVDebug(LoseSightRadius, FColor(255, 215, 0)); // gold-ish
+                const bool bChasing = (State == EEnemyState::Chase);
+                const float Radius = bChasing ? LoseSightRadius : SightRadius;
+                const FColor Col = bChasing ? FColor(255, 165, 0) : FColor::Green;
+                DrawFOVDebug(Radius, Col);
             }
+            // 필요 시 공격 실패 이유 텍스트만 유지
             if (bShowAttackFailReason && !LastAttackFailReason.IsEmpty())
             {
                 const FVector Loc = SelfPawn->GetActorLocation() + FVector(0,0,AttackDebugTextZOffset);
