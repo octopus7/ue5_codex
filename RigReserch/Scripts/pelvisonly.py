@@ -3,7 +3,7 @@ import unreal
 # ========== USER CONFIG ==========
 SKELETAL_MESH = "/Game/Character/SK_Man"  # ← 너 메쉬 경로
 TARGET_FOLDER = "/Game/ControlRigs"                             # ← 저장할 폴더
-RIG_NAME      = "CR_PelvisOnlyB01"                               # ← 생성될 리그 이름
+RIG_NAME      = "CR_PelvisOnlyB02"                               # ← 생성될 리그 이름
 PELVIS_BONE   = "Pelvis"                                        # ← 골반 본 이름(캐릭터에 맞게)
 SHAPE_NAME    = "Circle"                                        # ← "Circle","Cube","Diamond" 등
 SHAPE_COLOR   = unreal.LinearColor(0.98, 0.45, 0.15, 1.0)       # ← 기즈모 색
@@ -267,6 +267,10 @@ def _add_forward_solve_pelvis(crb: unreal.ControlRigBlueprint, ctrl_name: str, b
     # Forward Solve 엔트리(Entry) → 실행선 연결
     graph = vmc.get_graph()
     entry_node = None
+    if graph is None:
+        print("[WARN] RigVM graph is None; open the Control Rig asset once, then rerun.")
+        print("[경고] RigVM 그래프가 None입니다. 에셋을 한 번 연 뒤 다시 실행하세요.")
+        return
     try:
         # 가장 흔한 엔트리 노드 타입
         for n in graph.get_nodes():
@@ -275,6 +279,16 @@ def _add_forward_solve_pelvis(crb: unreal.ControlRigBlueprint, ctrl_name: str, b
                 break
     except Exception:
         # 타입 체크가 안되면 이름으로 대충 찾기
+        try:
+            nodes = graph.get_nodes()
+            print(f"[INFO] Graph node count: {len(nodes)}")
+            for n in nodes:
+                try:
+                    print(" -", n.get_name())
+                except Exception:
+                    pass
+        except Exception:
+            pass
         for n in graph.get_nodes():
             title = ""
             try:
@@ -290,6 +304,9 @@ def _add_forward_solve_pelvis(crb: unreal.ControlRigBlueprint, ctrl_name: str, b
             vmc.add_link(_pin(entry_node, "Execute"), _pin(get_node, "Execute"))
         except Exception:
             pass
+    else:
+        print("[WARN] Entry node not found; skipping exec links. Open CR once and rerun.")
+        print("[경고] 엔트리 노드를 찾지 못했습니다. 에셋을 열고 다시 실행하세요.")
         try:
             vmc.add_link(_pin(get_node, "Execute"), _pin(set_node, "Execute"))
         except Exception:
