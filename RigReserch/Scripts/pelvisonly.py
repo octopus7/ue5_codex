@@ -3,7 +3,7 @@ import unreal
 # ========== USER CONFIG ==========
 SKELETAL_MESH = "/Game/Character/SK_Man"  # ← 너 메쉬 경로
 TARGET_FOLDER = "/Game/ControlRigs"                             # ← 저장할 폴더
-RIG_NAME      = "CR_PelvisOnlyA03"                               # ← 생성될 리그 이름
+RIG_NAME      = "CR_PelvisOnlyA05"                               # ← 생성될 리그 이름
 PELVIS_BONE   = "Pelvis"                                        # ← 골반 본 이름(캐릭터에 맞게)
 SHAPE_NAME    = "Circle"                                        # ← "Circle","Cube","Diamond" 등
 SHAPE_COLOR   = unreal.LinearColor(0.98, 0.45, 0.15, 1.0)       # ← 기즈모 색
@@ -147,6 +147,121 @@ def _safe_compile_and_save(crb):
     except Exception:
         pass
     return compiled
+
+# 9) Forward Solve 구성: Pelvis_CTRL -> Pelvis 본 구동
+def _add_forward_solve_pelvis(crb: unreal.ControlRigBlueprint, ctrl_name: str, bone_name: str):
+    # RigVM 메인 그래프 컨트롤러 얻기
+    model = crb.get_model()
+    entry_point = None
+    try:
+        entry_point = model.get_default_entry_point()
+    except Exception:
+        # 일부 버전 호환
+        entry_point = "Rig Graph"
+    vmc = crb.get_controller_by_name(entry_point)
+
+    def _pin(node, pin):
+        # 편하게 "NodeName.PinName" 경로 문자열 만들기
+        return f"{node.get_name()}.{pin}"
+
+    # 노드 배치 좌표 (보기 좋게)
+    P_GET  = unreal.Vector2D(-400.0,  0.0)
+    P_SET  = unreal.Vector2D(  50.0,  0.0)
+
+    # GetControlTransform
+    get_path = "/Script/ControlRig.RigUnit_GetControlTransform"
+    get_node = vmc.add_unit_node_from_struct_path(get_path, "Execute", P_GET, f"Get_{ctrl_name}", True)
+    # 컨트롤 이름/스페이스 세팅
+    vmc.set_pin_default_value(_pin(get_node, "Control"), ctrl_name, True)
+    # 핀 이름이 Space 또는 TransformSpace인 경우가 있어 둘 다 시도
+    for maybe_space in ("Space", "TransformSpace"):
+        try:
+            vmc.set_pin_default_value(_pin(get_node, maybe_space), "GlobalSpace", True)
+            break
+        except Exception:
+            pass
+
+    # Set 쪽: 신(계층) API 우선 시도 → 실패하면 구(본) API로 폴백
+    set_node = None
+    used_new_api = False
+    try:
+        # UE5 계층 API: RigUnit_HierarchySetGlobalTransform
+        set_new = "/Script/ControlRig.RigUnit_HierarchySetGlobalTransform"
+        set_node = vmc.add_unit_node_from_struct_path(set_new, "Execute", P_SET, f"Set_{bone_name}", True)
+        # Item 핀은 "Bone:Name" 형식
+        vmc.set_pin_default_value(_pin(set_node, "Item"), f"Bone:{bone_name}", True)
+        # 초기값이 아닌 현재값에 적용
+        try:
+            vmc.set_pin_default_value(_pin(set_node, "bInitial"), "False", True)
+        except Exception:
+            pass
+        # 트랜스폼 연결 (Get.Transform -> Set.Transform)
+        vmc.add_link(_pin(get_node, "Transform"), _pin(set_node, "Transform"))
+        used_new_api = True
+    except Exception:
+        # 구 API: RigUnit_SetBoneTransform
+        set_old = "/Script/ControlRig.RigUnit_SetBoneTransform"
+        set_node = vmc.add_unit_node_from_struct_path(set_old, "Execute", P_SET, f"Set_{bone_name}", True)
+        vmc.set_pin_default_value(_pin(set_node, "Bone"), bone_name, True)
+        vmc.set_pin_default_value(_pin(set_node, "Space"), "GlobalSpace", True)
+        vmc.set_pin_default_value(_pin(set_node, "Weight"), "1.0", True)
+        vmc.set_pin_default_value(_pin(set_node, "bPropagateToChildren"), "True", True)
+        # 입력 핀명이 Transform / Value 중 하나일 수 있어 둘 다 시도
+        try:
+            vmc.add_link(_pin(get_node, "Transform"), _pin(set_node, "Transform"))
+        except Exception:
+            vmc.add_link(_pin(get_node, "Transform"), _pin(set_node, "Value"))
+
+    # Forward Solve 엔트리(Entry) → 실행선 연결
+    graph = vmc.get_graph()
+    entry_node = None
+    try:
+        # 가장 흔한 엔트리 노드 타입
+        for n in graph.get_nodes():
+            if isinstance(n, unreal.RigVMFunctionEntryNode):
+                entry_node = n
+                break
+    except Exception:
+        # 타입 체크가 안되면 이름으로 대충 찾기
+        for n in graph.get_nodes():
+            title = ""
+            try:
+                title = n.get_node_title(0)  # 0 = ENodeTitleType.FullTitle
+            except Exception:
+                title = n.get_name()
+            if "Forward" in title or "Entry" in title or "Begin" in title:
+                entry_node = n
+                break
+
+    if entry_node:
+        try:
+            vmc.add_link(_pin(entry_node, "Execute"), _pin(get_node, "Execute"))
+        except Exception:
+            pass
+        try:
+            vmc.add_link(_pin(get_node, "Execute"), _pin(set_node, "Execute"))
+        except Exception:
+            pass
+
+    # 저장/컴파일
+    try:
+        unreal.ControlRigBlueprintLibrary.request_control_rig_init(crb)
+    except Exception:
+        pass
+    try:
+        if hasattr(unreal, "KismetEditorUtilities"):
+            unreal.KismetEditorUtilities.compile_blueprint(crb)
+    except Exception:
+        pass
+    try:
+        unreal.EditorAssetLibrary.save_loaded_asset(crb)
+    except Exception:
+        pass
+
+# 호출: 이미 만든 컨트롤 이름(ctrl_key.name)과 골반 본 이름으로 연결
+_add_forward_solve_pelvis(crb, ctrl_key.name, PELVIS_BONE)
+print("[OK] Forward Solve wired: Control -> Bone")
+
 
 _safe_compile_and_save(crb)
 
