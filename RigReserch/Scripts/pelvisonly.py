@@ -8,6 +8,8 @@ PELVIS_BONE   = "Pelvis"                                        # ← 골반 본
 SHAPE_NAME    = "Circle"                                        # ← "Circle","Cube","Diamond" 등
 SHAPE_COLOR   = unreal.LinearColor(0.98, 0.45, 0.15, 1.0)       # ← 기즈모 색
 SHAPE_SCALE   = unreal.Vector(12.0, 12.0, 12.0)                 # ← 기즈모 스케일
+# 컨트롤 루트 이름(컨트롤 전용 루트)
+CONTROL_ROOT_NAME = "CTRL_Root"
 # Set 노드 선택 우선순위: True면 레거시(SetBoneTransform) 우선 시도
 PREFER_LEGACY_SET_NODE = False
 # =================================
@@ -99,8 +101,100 @@ settings.shape_color    = SHAPE_COLOR
 # 컨트롤 값은 보통 아이덴티티(오프셋이 위치를 담당)
 ctrl_value = unreal.RigHierarchy.make_control_value_from_transform(unreal.Transform())
 
-# 5) 골반 본을 부모로 컨트롤 생성
-ctrl_key = controller.add_control("Pelvis_CTRL", pelvis_key, settings, ctrl_value, True)
+# 5) 컨트롤 루트(Null 또는 Control) 보장 후, 루트를 부모로 컨트롤 생성
+def _ensure_control_root(ctrl: unreal.RigHierarchyController, hier: unreal.RigHierarchy, name: str):
+    # 1) 기존 Null/Control 검사
+    for t in (unreal.RigElementType.NULL, unreal.RigElementType.CONTROL):
+        key = unreal.RigElementKey(name=name, type=t)
+        try:
+            if hier.contains(key):
+                return key
+        except Exception:
+            pass
+    # 2) Null 생성 시도 (여러 시그니처 폴백)
+    xf = unreal.Transform()
+    null_key = None
+    for parent in (None, unreal.RigElementKey(name="", type=unreal.RigElementType.NULL)):
+        for args in (
+            (name, parent, xf, True),
+            (name, parent, xf, True, False),
+        ):
+            try:
+                null_key = ctrl.add_null(*args)
+                if null_key:
+                    print(f"[INFO] Created NULL control root: {name}")
+                    print(f"[정보] NULL 컨트롤 루트 생성: {name}")
+                    return null_key
+            except Exception:
+                pass
+    # 3) 마지막 폴백: Transform 컨트롤로 루트 생성
+    try:
+        root_settings = unreal.RigControlSettings()
+        # Transform 타입(프로젝트 버전별 상수 폴백)
+        _rt = None
+        for _n in ("EULER_TRANSFORM", "TRANSFORM", "TRANSFORM_NO_SCALE"):
+            _rt = getattr(unreal.RigControlType, _n, None)
+            if _rt is not None:
+                break
+        root_settings.control_type = _rt
+        root_settings.display_name = name
+        root_settings.shape_name = "Cube"
+        root_settings.shape_visible = True
+        root_settings.shape_color = unreal.LinearColor(0.2, 0.7, 1.0, 1.0)
+        root_val = unreal.RigHierarchy.make_control_value_from_transform(unreal.Transform())
+        root_key = ctrl.add_control(name, None, root_settings, root_val, True)
+        if root_key:
+            print(f"[INFO] Created CONTROL root: {name}")
+            print(f"[정보] CONTROL 루트 생성: {name}")
+            return root_key
+    except Exception:
+        pass
+    # 실패 시 최후: 최상위에 바로 컨트롤 생성하도록 None 반환
+    print("[WARN] Failed to ensure control root; Pelvis_CTRL will be top-level")
+    print("[경고] 컨트롤 루트 생성 실패; Pelvis_CTRL은 최상위에 생성됩니다")
+    return None
+
+ctrl_root_key = _ensure_control_root(controller, hierarchy, CONTROL_ROOT_NAME)
+parent_key_for_ctrl = ctrl_root_key if ctrl_root_key else None
+
+# 기존 컨트롤이 있는 경우 루트로 리패런팅, 없으면 생성
+existing_ctrl_key = unreal.RigElementKey(name="Pelvis_CTRL", type=unreal.RigElementType.CONTROL)
+ctrl_key = None
+try:
+    if hierarchy.contains(existing_ctrl_key):
+        ctrl_key = existing_ctrl_key
+        # 리패런팅 시도
+        if parent_key_for_ctrl:
+            reparented = False
+            for meth in ("set_parent", "reparent_element", "set_hierarchy_parent", "set_display_parent"):
+                if hasattr(controller, meth):
+                    try:
+                        fn = getattr(controller, meth)
+                        # 다양한 시그니처 시도: (child, parent, maintain_global?)
+                        try:
+                            fn(ctrl_key, parent_key_for_ctrl, True)
+                            reparented = True
+                        except Exception:
+                            try:
+                                fn(ctrl_key, parent_key_for_ctrl)
+                                reparented = True
+                            except Exception:
+                                pass
+                        if reparented:
+                            print("[INFO] Reparented Pelvis_CTRL under control root")
+                            print("[정보] Pelvis_CTRL을 컨트롤 루트 하위로 이동")
+                            break
+                    except Exception:
+                        pass
+    else:
+        ctrl_key = controller.add_control("Pelvis_CTRL", parent_key_for_ctrl, settings, ctrl_value, True)
+except Exception:
+    # 생성/리패런팅 실패 시 최후: 부모 무시하고 생성 시도
+    if ctrl_key is None:
+        try:
+            ctrl_key = controller.add_control("Pelvis_CTRL", None, settings, ctrl_value, True)
+        except Exception:
+            pass
 
 # 6) 컨트롤을 골반 위치에 정렬: 오프셋=골반 글로벌, 값=아이덴티티
 hierarchy.set_control_offset_transform(ctrl_key, pelvis_xf, initial=True, setup_undo=False)
@@ -259,6 +353,21 @@ def _add_forward_solve_pelvis(crb: unreal.ControlRigBlueprint, ctrl_name: str, b
                         pass
         return None
 
+    # 실행 핀 연결 헬퍼: 여러 핀 이름 조합 시도
+    def _try_link_exec(src_node, dst_node):
+        if not src_node or not dst_node:
+            return False
+        src_exec_pins = ("Execute", "ExecuteContext", "Then")
+        dst_exec_pins = ("Execute", "ExecuteContext", "In")
+        for sp in src_exec_pins:
+            for dp in dst_exec_pins:
+                try:
+                    vmc.add_link(_pin(src_node, sp), _pin(dst_node, dp))
+                    return True
+                except Exception:
+                    pass
+        return False
+
     # GetControlTransform
     get_paths = [
         "/Script/ControlRig.RigUnit_GetControlTransform",
@@ -284,46 +393,14 @@ def _add_forward_solve_pelvis(crb: unreal.ControlRigBlueprint, ctrl_name: str, b
     set_node = None
     used_new_api = False
 
-    def _try_new_api():
-        nonlocal set_node, used_new_api
-        print("[INFO] Trying Set unit (new API): RigUnit_HierarchySetGlobalTransform")
-        print("[정보] Set 유닛 시도 (신규 API): RigUnit_HierarchySetGlobalTransform")
-        set_paths_new = [
-            "/Script/ControlRig.RigUnit_HierarchySetGlobalTransform",
-            "RigUnit_HierarchySetGlobalTransform",
-        ]
-        set_node_local = _add_unit_any(vmc, set_paths_new, P_SET, f"Set_{bone_name}")
-        if set_node_local:
-            try:
-                vmc.set_pin_default_value(_pin(set_node_local, "Item"), f"Bone:{bone_name}", True)
-            except Exception:
-                pass
-            try:
-                vmc.set_pin_default_value(_pin(set_node_local, "bInitial"), "False", True)
-            except Exception:
-                pass
-            if get_node:
-                # 입력 핀명이 Transform 또는 Value 일 수 있으므로 모두 시도
-                linked = False
-                for maybe_val in ("Transform", "Value"):
-                    try:
                         vmc.add_link(_pin(get_node, "Transform"), _pin(set_node_local, maybe_val))
                         linked = True
-                        break
-                    except Exception:
-                        pass
-            set_node = set_node_local
-            used_new_api = True
-
     def _try_legacy_api():
         nonlocal set_node
         print("[INFO] Trying Set unit (legacy API): RigUnit_SetBoneTransform / RigUnit_SetTransform")
         print("[정보] Set 유닛 시도 (레거시 API): RigUnit_SetBoneTransform / RigUnit_SetTransform")
         set_paths_old = [
-            "/Script/ControlRig.RigUnit_SetBoneTransform",
-            "RigUnit_SetBoneTransform",
             "/Script/ControlRig.RigUnit_SetTransform",
-            "RigUnit_SetTransform",
         ]
         set_node_local = _add_unit_any(vmc, set_paths_old, P_SET, f"Set_{bone_name}")
         if set_node_local:
@@ -353,15 +430,10 @@ def _add_forward_solve_pelvis(crb: unreal.ControlRigBlueprint, ctrl_name: str, b
                         pass
             set_node = set_node_local
 
-    # 시도 순서: 설정에 따라 레거시→신규 또는 신규→레거시
-    if PREFER_LEGACY_SET_NODE:
-        _try_legacy_api()
-        if set_node is None:
-            _try_new_api()
-    else:
-        _try_new_api()
-        if set_node is None:
-            _try_legacy_api()
+    # 시도 순서: 기본은 신규 API만 사용(Outdated 방지).
+    # 레거시 강제 사용을 원하면 PREFER_LEGACY_SET_NODE = True 로 설정.
+
+    _try_legacy_api()
 
     if set_node is None:
         print("[ERROR] Failed to create any Set Transform unit (new or legacy)")
@@ -411,19 +483,20 @@ def _add_forward_solve_pelvis(crb: unreal.ControlRigBlueprint, ctrl_name: str, b
 
     # 실행 핀 연결: Forwards Solve 이벤트 → Get → Set
     if event_node and set_node:
-        try:
-            # 이벤트 → Get
-            if get_node:
-                vmc.add_link(_pin(event_node, "Execute"), _pin(get_node, "Execute"))
-                # Get → Set
-                vmc.add_link(_pin(get_node, "Execute"), _pin(set_node, "Execute"))
-            else:
-                # 이벤트 → Set (Get 없이도 동작하도록 백업 경로)
-                vmc.add_link(_pin(event_node, "Execute"), _pin(set_node, "Execute"))
+        linked = False
+        # 이벤트 → Get → Set 체인 우선
+        if get_node:
+            if _try_link_exec(event_node, get_node):
+                linked = _try_link_exec(get_node, set_node)
+        # Get 연결이 실패하거나 없는 경우: 이벤트 → Set 직접 연결
+        if not linked:
+            linked = _try_link_exec(event_node, set_node)
+        if linked:
             print("[INFO] Wired Forwards Solve exec to Set Transform (with Get chain if available)")
             print("[정보] 포워즈 솔브 이벤트 실행선을 Set Transform에 연결(가능하면 Get 체인 포함)")
-        except Exception:
-            pass
+        else:
+            print("[WARN] Failed to link exec pins between Forwards Solve/Get/Set")
+            print("[경고] Forwards Solve / Get / Set 실행 핀 연결 실패")
     else:
         print("[WARN] Could not resolve Forwards Solve event or Set node; skipping exec wiring")
         print("[경고] 포워즈 솔브 이벤트 또는 Set 노드를 확인할 수 없어 실행선 연결을 건너뜁니다")
