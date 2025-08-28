@@ -3,7 +3,7 @@ import unreal
 # ========== USER CONFIG ==========
 SKELETAL_MESH = "/Game/Character/SK_Man"  # ← 너 메쉬 경로
 TARGET_FOLDER = "/Game/ControlRigs"                             # ← 저장할 폴더
-RIG_NAME      = "CR_PelvisOnly2"                                 # ← 생성될 리그 이름
+RIG_NAME      = "CR_PelvisOnlyA01"                                 # ← 생성될 리그 이름
 PELVIS_BONE   = "Pelvis"                                        # ← 골반 본 이름(캐릭터에 맞게)
 SHAPE_NAME    = "Circle"                                        # ← "Circle","Cube","Diamond" 등
 SHAPE_COLOR   = unreal.LinearColor(0.98, 0.45, 0.15, 1.0)       # ← 기즈모 색
