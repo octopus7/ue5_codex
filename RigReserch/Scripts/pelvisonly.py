@@ -3,7 +3,7 @@ import unreal
 # ========== USER CONFIG ==========
 SKELETAL_MESH = "/Game/Character/SK_Man"  # ← 너 메쉬 경로
 TARGET_FOLDER = "/Game/ControlRigs"                             # ← 저장할 폴더
-RIG_NAME      = "CR_PelvisOnlyA05"                               # ← 생성될 리그 이름
+RIG_NAME      = "CR_PelvisOnlyB01"                               # ← 생성될 리그 이름
 PELVIS_BONE   = "Pelvis"                                        # ← 골반 본 이름(캐릭터에 맞게)
 SHAPE_NAME    = "Circle"                                        # ← "Circle","Cube","Diamond" 등
 SHAPE_COLOR   = unreal.LinearColor(0.98, 0.45, 0.15, 1.0)       # ← 기즈모 색
@@ -151,14 +151,31 @@ def _safe_compile_and_save(crb):
 # 9) Forward Solve 구성: Pelvis_CTRL -> Pelvis 본 구동
 def _add_forward_solve_pelvis(crb: unreal.ControlRigBlueprint, ctrl_name: str, bone_name: str):
     # RigVM 메인 그래프 컨트롤러 얻기
-    model = crb.get_model()
-    entry_point = None
+    vmc = None
+    model = None
     try:
-        entry_point = model.get_default_entry_point()
+        model = crb.get_model()
+        entry_point = None
+        try:
+            entry_point = model.get_default_entry_point()
+        except Exception:
+            entry_point = "Rig Graph"
+        if hasattr(crb, "get_controller_by_name"):
+            vmc = crb.get_controller_by_name(entry_point)
     except Exception:
-        # 일부 버전 호환
-        entry_point = "Rig Graph"
-    vmc = crb.get_controller_by_name(entry_point)
+        vmc = None
+
+    # 추가 폴백: 기본 컨트롤러 시도
+    if vmc is None and hasattr(crb, "get_controller"):
+        try:
+            vmc = crb.get_controller()
+        except Exception:
+            vmc = None
+
+    if vmc is None:
+        print("[WARN] Could not acquire RigVM controller; skip Forward Solve wiring")
+        print("[경고] RigVM 컨트롤러를 얻지 못해 Forward Solve 연결을 건너뜁니다")
+        return
 
     def _pin(node, pin):
         # 편하게 "NodeName.PinName" 경로 문자열 만들기
@@ -168,40 +185,75 @@ def _add_forward_solve_pelvis(crb: unreal.ControlRigBlueprint, ctrl_name: str, b
     P_GET  = unreal.Vector2D(-400.0,  0.0)
     P_SET  = unreal.Vector2D(  50.0,  0.0)
 
+    # 유닛 노드 생성 헬퍼: 경로/클래스 모두 시도
+    def _add_unit_any(vmc, struct_paths, pos, title):
+        # 1) 클래스 기반
+        for sp in struct_paths:
+            cls = getattr(unreal, sp.split(".")[-1], None)
+            if cls and hasattr(vmc, "add_unit_node"):
+                try:
+                    return vmc.add_unit_node(cls, title, pos)
+                except Exception:
+                    pass
+        # 2) 경로 기반 (from_struct_path)
+        for sp in struct_paths:
+            for meth in ("add_unit_node_from_struct_path", "add_struct_node"):
+                if hasattr(vmc, meth):
+                    try:
+                        return getattr(vmc, meth)(sp, "Execute", pos, title, True)
+                    except Exception:
+                        pass
+        return None
+
     # GetControlTransform
-    get_path = "/Script/ControlRig.RigUnit_GetControlTransform"
-    get_node = vmc.add_unit_node_from_struct_path(get_path, "Execute", P_GET, f"Get_{ctrl_name}", True)
+    get_paths = [
+        "/Script/ControlRig.RigUnit_GetControlTransform",
+        "RigUnit_GetControlTransform",
+    ]
+    get_node = _add_unit_any(vmc, get_paths, P_GET, f"Get_{ctrl_name}")
     # 컨트롤 이름/스페이스 세팅
-    vmc.set_pin_default_value(_pin(get_node, "Control"), ctrl_name, True)
+    if get_node:
+        vmc.set_pin_default_value(_pin(get_node, "Control"), ctrl_name, True)
     # 핀 이름이 Space 또는 TransformSpace인 경우가 있어 둘 다 시도
-    for maybe_space in ("Space", "TransformSpace"):
-        try:
-            vmc.set_pin_default_value(_pin(get_node, maybe_space), "GlobalSpace", True)
-            break
-        except Exception:
-            pass
+    if get_node:
+        for maybe_space in ("Space", "TransformSpace"):
+            try:
+                vmc.set_pin_default_value(_pin(get_node, maybe_space), "GlobalSpace", True)
+                break
+            except Exception:
+                pass
 
     # Set 쪽: 신(계층) API 우선 시도 → 실패하면 구(본) API로 폴백
     set_node = None
     used_new_api = False
     try:
         # UE5 계층 API: RigUnit_HierarchySetGlobalTransform
-        set_new = "/Script/ControlRig.RigUnit_HierarchySetGlobalTransform"
-        set_node = vmc.add_unit_node_from_struct_path(set_new, "Execute", P_SET, f"Set_{bone_name}", True)
+        set_paths_new = [
+            "/Script/ControlRig.RigUnit_HierarchySetGlobalTransform",
+            "RigUnit_HierarchySetGlobalTransform",
+        ]
+        set_node = _add_unit_any(vmc, set_paths_new, P_SET, f"Set_{bone_name}")
         # Item 핀은 "Bone:Name" 형식
-        vmc.set_pin_default_value(_pin(set_node, "Item"), f"Bone:{bone_name}", True)
+        if set_node:
+            vmc.set_pin_default_value(_pin(set_node, "Item"), f"Bone:{bone_name}", True)
         # 초기값이 아닌 현재값에 적용
         try:
             vmc.set_pin_default_value(_pin(set_node, "bInitial"), "False", True)
         except Exception:
             pass
         # 트랜스폼 연결 (Get.Transform -> Set.Transform)
-        vmc.add_link(_pin(get_node, "Transform"), _pin(set_node, "Transform"))
+        if get_node and set_node:
+            vmc.add_link(_pin(get_node, "Transform"), _pin(set_node, "Transform"))
         used_new_api = True
     except Exception:
         # 구 API: RigUnit_SetBoneTransform
-        set_old = "/Script/ControlRig.RigUnit_SetBoneTransform"
-        set_node = vmc.add_unit_node_from_struct_path(set_old, "Execute", P_SET, f"Set_{bone_name}", True)
+        set_paths_old = [
+            "/Script/ControlRig.RigUnit_SetBoneTransform",
+            "RigUnit_SetBoneTransform",
+            "/Script/ControlRig.RigUnit_SetTransform",
+            "RigUnit_SetTransform",
+        ]
+        set_node = _add_unit_any(vmc, set_paths_old, P_SET, f"Set_{bone_name}")
         vmc.set_pin_default_value(_pin(set_node, "Bone"), bone_name, True)
         vmc.set_pin_default_value(_pin(set_node, "Space"), "GlobalSpace", True)
         vmc.set_pin_default_value(_pin(set_node, "Weight"), "1.0", True)
