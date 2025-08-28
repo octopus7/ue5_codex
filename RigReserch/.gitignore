@@ -1,0 +1,45 @@
+# Unreal Engine 5.5 GitIgnore
+
+# Core Unreal build artifacts (project and plugins)
+**/Binaries/
+**/DerivedDataCache/
+**/Intermediate/
+**/Saved/
+
+# Optional: ignore platform build outputs
+# Note: If you keep platform packaging resources under Build/, remove this rule.
+**/Build/
+
+# IDE: Visual Studio / Rider / VSCode
+.vs/
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.userprefs
+*.VC.db
+*.VC.opendb
+
+# Xcode (macOS)
+*.xcodeproj
+*.xcworkspace
+DerivedData/
+
+# Logs and temporary files
+*.log
+*.tlog
+*.tmp
+*.cache
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Packaged builds (if outside Saved/, adjust as needed)
+LocalBuilds/
+StagedBuilds/
+Saved/StagedBuilds/
+
