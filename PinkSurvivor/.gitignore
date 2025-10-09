@@ -1,0 +1,110 @@
+# Unreal Engine 5.5 build artifacts
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+Build/BuiltData/
+
+# User-specific configuration
+*.suo
+*.user
+*.userprefs
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+*.vscode
+.vs/
+.DS_Store
+
+# Generated project files (regenerable)
+*.xcodeproj/
+*.xcworkspace/
+*.xcconfig
+*.xcuserstate
+CMakeLists.txt
+CMakeCache.txt
+CMakeFiles/
+Makefile
+*.make
+*.workspace
+*.sln
+*.targets
+*.psess
+*.tpd
+*.gpd
+
+# Build products
+Binaries/*
+Build/**/*.app
+Build/**/*.dSYM
+Build/**/*.ipa
+Build/**/*.exe
+Build/**/*.dll
+Build/**/*.pdb
+Build/**/*.lib
+Build/**/*.appx
+Build/**/*.bat
+Build/**/*.so
+Build/**/*.dylib
+Build/**/*.apk
+
+# Logs and backups
+Saved/Logs/
+*.log
+*.log.*
+*.orig
+*.backup
+
+# Unreal auto-generated content
+*.generated.cpp
+*.generated.h
+*_BP.uasset
+*_BP.uexp
+
+# Temporary files
+*.tmp
+*.pid
+*.lock
+*.swp
+*.swn
+*.swo
+*.tmp
+*.temp
+
+# Other platform directories
+WindowsNoEditor/
+LinuxNoEditor/
+MacNoEditor/
+Android_ASTC/
+Android_ETC2/
+Android/etc/
+iOS/
+TVOS/
+HoloLens/
+
+# Packaging outputs
+Saved/StagedBuilds/
+Saved/Cooked/
+Saved/Backup/
+
+# Crash logs
+CrashReportClient/Saved/
+
+# IDE specific
+.idea/
+*.iml
+*.ipr
+*.iuser
+
+# Local plugins build folders
+Plugins/*/Binaries/
+Plugins/*/Intermediate/
+Plugins/*/DerivedDataCache/
+
+# Unreal Build Tool
+Engine/Build/Build.version
+Engine/Intermediate/
+Engine/DerivedDataCache/
+Engine/Saved/
+
