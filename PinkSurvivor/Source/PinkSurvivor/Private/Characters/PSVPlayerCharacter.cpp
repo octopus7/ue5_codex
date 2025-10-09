@@ -54,9 +54,9 @@ void APSVPlayerCharacter::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (AController* Controller = GetController())
+    if (AController* LocalController = GetController())
     {
-        if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+        if (APlayerController* PlayerController = Cast<APlayerController>(LocalController))
         {
             if (ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer())
             {
