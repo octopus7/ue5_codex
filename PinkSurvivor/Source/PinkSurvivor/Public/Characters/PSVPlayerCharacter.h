@@ -9,6 +9,7 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
+class UPSVAutoFireComponent;
 
 UCLASS()
 class PINKSURVIVOR_API APSVPlayerCharacter : public ACharacter
@@ -36,6 +37,12 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Input")
     TObjectPtr<UInputAction> MoveAction;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Combat")
+    TObjectPtr<UPSVAutoFireComponent> AutoFireComponent;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
+    bool bAlignMovementToCameraYaw = false;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera", meta=(ClampMin="0.0"))
     float CameraBoomLength = 800.0f;

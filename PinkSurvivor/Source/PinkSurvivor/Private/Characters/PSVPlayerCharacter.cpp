@@ -1,6 +1,7 @@
 #include "Characters/PSVPlayerCharacter.h"
 
 #include "Camera/CameraComponent.h"
+#include "Components/PSVAutoFireComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
@@ -24,6 +25,8 @@ APSVPlayerCharacter::APSVPlayerCharacter()
     FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
     FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
     FollowCamera->bUsePawnControlRotation = false;
+
+    AutoFireComponent = CreateDefaultSubobject<UPSVAutoFireComponent>(TEXT("AutoFireComponent"));
 
     bUseControllerRotationPitch = false;
     bUseControllerRotationYaw = false;
@@ -91,7 +94,7 @@ void APSVPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 void APSVPlayerCharacter::Move(const FInputActionValue& Value)
 {
-    if (!Controller || !CameraBoom)
+    if (!Controller)
     {
         return;
     }
@@ -102,8 +105,13 @@ void APSVPlayerCharacter::Move(const FInputActionValue& Value)
         return;
     }
 
-    const FVector ForwardDirection = FVector::ForwardVector;
-    const FVector RightDirection = FVector::RightVector;
+    const float MovementYaw = bAlignMovementToCameraYaw
+        ? (CameraBoom ? CameraBoom->GetComponentRotation().Yaw : CameraRelativeRotation.Yaw)
+        : 0.f;
+
+    const FRotator MovementRotation(0.f, MovementYaw, 0.f);
+    const FVector ForwardDirection = MovementRotation.RotateVector(FVector::ForwardVector);
+    const FVector RightDirection = MovementRotation.RotateVector(FVector::RightVector);
 
     AddMovementInput(ForwardDirection, MovementVector.Y);
     AddMovementInput(RightDirection, MovementVector.X);
