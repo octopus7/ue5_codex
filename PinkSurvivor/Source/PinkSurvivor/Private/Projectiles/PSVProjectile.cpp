@@ -2,6 +2,7 @@
 
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 APSVProjectile::APSVProjectile()
 {
@@ -19,4 +20,34 @@ APSVProjectile::APSVProjectile()
     ProjectileMovement->ProjectileGravityScale = 0.f;
 
     InitialLifeSpan = 3.0f;
+}
+
+void APSVProjectile::BeginPlay()
+{
+    Super::BeginPlay();
+
+    if (ProjectileMesh)
+    {
+        ProjectileMesh->OnComponentHit.AddDynamic(this, &APSVProjectile::HandleProjectileHit);
+    }
+}
+
+void APSVProjectile::HandleProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+    if (!OtherActor || OtherActor == this || OtherActor == GetOwner())
+    {
+        return;
+    }
+
+    if (OtherComp && OtherComp->IsSimulatingPhysics())
+    {
+        OtherComp->AddImpulseAtLocation(GetVelocity().GetSafeNormal() * ImpactImpulse, Hit.ImpactPoint);
+    }
+
+    if (Damage > 0.f)
+    {
+        UGameplayStatics::ApplyDamage(OtherActor, Damage, GetInstigatorController(), this, nullptr);
+    }
+
+    Destroy();
 }

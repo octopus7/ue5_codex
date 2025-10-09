@@ -10,6 +10,8 @@ class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
 class UPSVAutoFireComponent;
+class UPSVHealthComponent;
+class APSVHUD;
 
 UCLASS()
 class PINKSURVIVOR_API APSVPlayerCharacter : public ACharacter
@@ -22,9 +24,17 @@ public:
     virtual void PostInitializeComponents() override;
     virtual void BeginPlay() override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    virtual float TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 protected:
     void Move(const FInputActionValue& Value);
+    void InitializeHealth();
+
+    UFUNCTION()
+    void HandleHealthChanged(float CurrentHealth, float MaxHealth);
+
+    UFUNCTION()
+    void HandleDeath();
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
     TObjectPtr<USpringArmComponent> CameraBoom;
@@ -41,8 +51,16 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Combat")
     TObjectPtr<UPSVAutoFireComponent> AutoFireComponent;
 
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Combat")
+    TObjectPtr<UPSVHealthComponent> HealthComponent;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
     bool bAlignMovementToCameraYaw = false;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Health", meta=(ClampMin="1.0"))
+    float MaxHealth = 100.f;
+
+    bool bIsDead = false;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera", meta=(ClampMin="0.0"))
     float CameraBoomLength = 800.0f;

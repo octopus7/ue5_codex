@@ -4,6 +4,7 @@
 #include "Projectiles/PSVProjectile.h"
 #include "TimerManager.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
 UPSVAutoFireComponent::UPSVAutoFireComponent()
@@ -72,7 +73,7 @@ void UPSVAutoFireComponent::HandleFire()
 
     FActorSpawnParameters SpawnParameters;
     SpawnParameters.Owner = OwnerActor;
-    SpawnParameters.Instigator = OwnerActor->GetInstigator();
+    SpawnParameters.Instigator = Cast<APawn>(OwnerActor);
     SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
     APSVProjectile* Projectile = World->SpawnActor<APSVProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParameters);

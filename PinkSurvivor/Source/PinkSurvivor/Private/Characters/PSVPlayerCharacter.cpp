@@ -1,7 +1,9 @@
 #include "Characters/PSVPlayerCharacter.h"
 
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/PSVAutoFireComponent.h"
+#include "Components/PSVHealthComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
@@ -9,6 +11,7 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "InputActionValue.h"
+#include "UI/PSVHUD.h"
 
 APSVPlayerCharacter::APSVPlayerCharacter()
 {
@@ -27,6 +30,8 @@ APSVPlayerCharacter::APSVPlayerCharacter()
     FollowCamera->bUsePawnControlRotation = false;
 
     AutoFireComponent = CreateDefaultSubobject<UPSVAutoFireComponent>(TEXT("AutoFireComponent"));
+
+    HealthComponent = CreateDefaultSubobject<UPSVHealthComponent>(TEXT("HealthComponent"));
 
     bUseControllerRotationPitch = false;
     bUseControllerRotationYaw = false;
@@ -56,6 +61,8 @@ void APSVPlayerCharacter::PostInitializeComponents()
 void APSVPlayerCharacter::BeginPlay()
 {
     Super::BeginPlay();
+
+    InitializeHealth();
 
     if (AController* LocalController = GetController())
     {
@@ -94,7 +101,7 @@ void APSVPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 void APSVPlayerCharacter::Move(const FInputActionValue& Value)
 {
-    if (!Controller)
+    if (!Controller || bIsDead)
     {
         return;
     }
@@ -115,4 +122,76 @@ void APSVPlayerCharacter::Move(const FInputActionValue& Value)
 
     AddMovementInput(ForwardDirection, MovementVector.Y);
     AddMovementInput(RightDirection, MovementVector.X);
+}
+
+void APSVPlayerCharacter::InitializeHealth()
+{
+    bIsDead = false;
+
+    if (!HealthComponent)
+    {
+        return;
+    }
+
+    HealthComponent->OnHealthChanged.AddDynamic(this, &APSVPlayerCharacter::HandleHealthChanged);
+    HealthComponent->OnDeath.AddDynamic(this, &APSVPlayerCharacter::HandleDeath);
+    HealthComponent->InitializeHealth(MaxHealth, true);
+}
+
+float APSVPlayerCharacter::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+    const float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+    if (ActualDamage > 0.f && HealthComponent && !bIsDead)
+    {
+        HealthComponent->ApplyDamage(ActualDamage);
+    }
+
+    return ActualDamage;
+}
+
+void APSVPlayerCharacter::HandleHealthChanged(float CurrentHealthValue, float MaxHealthValue)
+{
+    if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+    {
+        if (APSVHUD* PSVHUD = PlayerController->GetHUD<APSVHUD>())
+        {
+            PSVHUD->HandlePlayerHealthChanged(CurrentHealthValue, MaxHealthValue);
+        }
+    }
+}
+
+void APSVPlayerCharacter::HandleDeath()
+{
+    if (bIsDead)
+    {
+        return;
+    }
+
+    bIsDead = true;
+
+    if (AutoFireComponent)
+    {
+        AutoFireComponent->StopFiring();
+    }
+
+    if (UCharacterMovementComponent* Movement = GetCharacterMovement())
+    {
+        Movement->DisableMovement();
+    }
+
+    if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+    {
+        Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    }
+
+    if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+    {
+        DisableInput(PlayerController);
+
+        if (APSVHUD* PSVHUD = PlayerController->GetHUD<APSVHUD>())
+        {
+            PSVHUD->HandlePlayerDeath();
+        }
+    }
 }
