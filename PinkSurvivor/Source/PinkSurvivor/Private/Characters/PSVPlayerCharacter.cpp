@@ -102,9 +102,8 @@ void APSVPlayerCharacter::Move(const FInputActionValue& Value)
         return;
     }
 
-    const FRotator CameraYawOnly(0.f, CameraBoom->GetComponentRotation().Yaw, 0.f);
-    const FVector ForwardDirection = FRotationMatrix(CameraYawOnly).GetUnitAxis(EAxis::X);
-    const FVector RightDirection = FRotationMatrix(CameraYawOnly).GetUnitAxis(EAxis::Y);
+    const FVector ForwardDirection = FVector::ForwardVector;
+    const FVector RightDirection = FVector::RightVector;
 
     AddMovementInput(ForwardDirection, MovementVector.Y);
     AddMovementInput(RightDirection, MovementVector.X);

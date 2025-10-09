@@ -41,5 +41,5 @@ protected:
     float CameraBoomLength = 800.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera")
-    FRotator CameraRelativeRotation = FRotator(-50.0f, -45.0f, 0.0f);
+    FRotator CameraRelativeRotation = FRotator(-55.0f, 0.0f, 0.0f);
 };
