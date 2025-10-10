@@ -27,6 +27,9 @@ public:
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
     virtual float TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
+    UFUNCTION(BlueprintCallable, Category="Cheats")
+    bool IsEightWayFireEnabled() const { return bCheatEightWayFire; }
+
     UFUNCTION(BlueprintCallable, Category="Progression")
     void HandlePersistentGoldChanged(int32 NewTotalGold);
 
@@ -47,6 +50,7 @@ protected:
 
     UFUNCTION()
     void HandleLevelUp(int32 NewLevel, int32 TotalExperience);
+
     void StartDeathRagdoll();
     FVector GetDeathImpulseDirection() const;
 
@@ -93,4 +97,7 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Death")
     float DeathImpulseUpwardScale = 0.15f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Cheats")
+    bool bCheatEightWayFire = false;
 };

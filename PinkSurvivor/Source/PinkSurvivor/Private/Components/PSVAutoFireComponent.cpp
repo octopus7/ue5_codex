@@ -1,6 +1,7 @@
 #include "Components/PSVAutoFireComponent.h"
 
 #include "Engine/World.h"
+#include "Characters/PSVPlayerCharacter.h"
 #include "Projectiles/PSVProjectile.h"
 #include "TimerManager.h"
 #include "GameFramework/Actor.h"
@@ -58,33 +59,70 @@ void UPSVAutoFireComponent::HandleFire()
         return;
     }
 
-    const FVector SpawnLocation = OwnerActor->GetActorLocation()
-        + OwnerActor->GetActorForwardVector() * SpawnOffset.X
-        + OwnerActor->GetActorRightVector() * SpawnOffset.Y
-        + OwnerActor->GetActorUpVector() * SpawnOffset.Z;
-
     const FVector ForwardDirection = OwnerActor->GetActorForwardVector();
     if (ForwardDirection.IsNearlyZero())
     {
         return;
     }
 
-    const FRotator SpawnRotation = ForwardDirection.Rotation();
+    const FVector UpVector = OwnerActor->GetActorUpVector();
+    const FRotator BaseRotation = ForwardDirection.Rotation();
+
+    bool bUseEightWayFire = false;
+    if (const APSVPlayerCharacter* PlayerCharacter = Cast<APSVPlayerCharacter>(OwnerActor))
+    {
+        bUseEightWayFire = PlayerCharacter->IsEightWayFireEnabled();
+    }
+
+    TArray<FRotator> SpawnRotations;
+    if (bUseEightWayFire)
+    {
+        SpawnRotations.Reserve(8);
+        for (int32 Step = 0; Step < 8; ++Step)
+        {
+            const float AdditionalYaw = 45.f * static_cast<float>(Step);
+            SpawnRotations.Add(BaseRotation + FRotator(0.f, AdditionalYaw, 0.f));
+        }
+    }
+    else
+    {
+        SpawnRotations.Add(BaseRotation);
+    }
 
     FActorSpawnParameters SpawnParameters;
     SpawnParameters.Owner = OwnerActor;
     SpawnParameters.Instigator = Cast<APawn>(OwnerActor);
     SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-    APSVProjectile* Projectile = World->SpawnActor<APSVProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParameters);
-    if (!Projectile)
+    for (const FRotator& SpawnRotation : SpawnRotations)
     {
-        return;
-    }
+        const FVector Direction = SpawnRotation.Vector().GetSafeNormal();
+        if (Direction.IsNearlyZero())
+        {
+            continue;
+        }
 
-    if (UProjectileMovementComponent* Movement = Projectile->GetProjectileMovement())
-    {
-        const float DesiredSpeed = ProjectileSpeedOverride > 0.f ? ProjectileSpeedOverride : Movement->InitialSpeed;
-        Movement->Velocity = SpawnRotation.Vector() * DesiredSpeed;
+        FVector RightVector = FVector::CrossProduct(UpVector, Direction).GetSafeNormal();
+        if (RightVector.IsNearlyZero())
+        {
+            RightVector = OwnerActor->GetActorRightVector();
+        }
+
+        const FVector SpawnLocation = OwnerActor->GetActorLocation()
+            + Direction * SpawnOffset.X
+            + RightVector * SpawnOffset.Y
+            + UpVector * SpawnOffset.Z;
+
+        APSVProjectile* Projectile = World->SpawnActor<APSVProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParameters);
+        if (!Projectile)
+        {
+            continue;
+        }
+
+        if (UProjectileMovementComponent* Movement = Projectile->GetProjectileMovement())
+        {
+            const float DesiredSpeed = ProjectileSpeedOverride > 0.f ? ProjectileSpeedOverride : Movement->InitialSpeed;
+            Movement->Velocity = Direction * DesiredSpeed;
+        }
     }
 }
