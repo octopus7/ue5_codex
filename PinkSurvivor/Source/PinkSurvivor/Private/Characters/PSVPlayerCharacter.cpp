@@ -49,6 +49,11 @@ APSVPlayerCharacter::APSVPlayerCharacter()
         Movement->BrakingDecelerationWalking = 2048.f;
         Movement->bUseControllerDesiredRotation = false;
     }
+
+    if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+    {
+        Capsule->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+    }
 }
 
 void APSVPlayerCharacter::HandleExperienceChanged(int32 CurrentExperienceValue, int32 CurrentLevelValue)

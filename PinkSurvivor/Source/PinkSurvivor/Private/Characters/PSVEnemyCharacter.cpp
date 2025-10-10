@@ -20,6 +20,11 @@ APSVEnemyCharacter::APSVEnemyCharacter()
         Movement->bOrientRotationToMovement = true;
     }
 
+    if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+    {
+        Capsule->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+    }
+
     AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
