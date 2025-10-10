@@ -4,6 +4,7 @@
 #include "Components/PSVHealthComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Pickups/PSVExperienceGem.h"
 #include "TimerManager.h"
 
 APSVEnemyCharacter::APSVEnemyCharacter()
@@ -201,5 +202,47 @@ void APSVEnemyCharacter::HandleDeath()
         Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     }
 
+    SpawnExperienceGem();
+
     SetLifeSpan(2.0f);
+}
+
+void APSVEnemyCharacter::SpawnExperienceGem()
+{
+    if (ExperienceGemClasses.Num() == 0)
+    {
+        return;
+    }
+
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        return;
+    }
+
+    TSubclassOf<APSVExperienceGem> GemClass = nullptr;
+    if (ExperienceGemClasses.Num() == 1)
+    {
+        GemClass = ExperienceGemClasses[0];
+    }
+    else
+    {
+        const int32 RandomIndex = FMath::RandRange(0, ExperienceGemClasses.Num() - 1);
+        GemClass = ExperienceGemClasses.IsValidIndex(RandomIndex) ? ExperienceGemClasses[RandomIndex] : nullptr;
+    }
+
+    if (!GemClass)
+    {
+        return;
+    }
+
+    FVector SpawnLocation = GetActorLocation();
+    SpawnLocation.Z += GemSpawnOffsetZ;
+
+    const FRotator SpawnRotation = FRotator::ZeroRotator;
+
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+    World->SpawnActor<APSVExperienceGem>(GemClass, SpawnLocation, SpawnRotation, SpawnParams);
 }

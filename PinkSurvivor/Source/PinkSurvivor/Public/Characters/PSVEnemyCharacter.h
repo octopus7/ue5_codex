@@ -5,6 +5,7 @@
 #include "PSVEnemyCharacter.generated.h"
 
 class UPSVHealthComponent;
+class APSVExperienceGem;
 
 UCLASS()
 class PINKSURVIVOR_API APSVEnemyCharacter : public ACharacter
@@ -29,6 +30,8 @@ protected:
     UFUNCTION()
     void HandleDeath();
 
+    void SpawnExperienceGem();
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
     TObjectPtr<UPSVHealthComponent> HealthComponent;
 
@@ -49,6 +52,12 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Combat", meta=(ClampMin="0.0"))
     float AttackRadiusTolerance = 50.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Experience")
+    TArray<TSubclassOf<APSVExperienceGem>> ExperienceGemClasses;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Experience", meta=(ClampMin="0.0"))
+    float GemSpawnOffsetZ = 30.f;
 
     bool bIsDead = false;
     bool bIsAttacking = false;

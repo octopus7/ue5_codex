@@ -15,4 +15,10 @@ public:
 
     UFUNCTION(BlueprintImplementableEvent, Category="HUD")
     void OnPlayerDied();
+
+    UFUNCTION(BlueprintImplementableEvent, Category="HUD")
+    void OnExperienceChanged(int32 CurrentExperience, int32 CurrentLevel, int32 ExperienceToNextLevel);
+
+    UFUNCTION(BlueprintImplementableEvent, Category="HUD")
+    void OnLevelUp(int32 NewLevel, int32 TotalExperience);
 };

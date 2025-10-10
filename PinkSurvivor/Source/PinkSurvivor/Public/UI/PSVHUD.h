@@ -19,6 +19,8 @@ public:
 
     void HandlePlayerHealthChanged(float CurrentHealth, float MaxHealth);
     void HandlePlayerDeath();
+    void HandlePlayerExperienceChanged(int32 CurrentExperience, int32 CurrentLevel, int32 ExperienceToNextLevel);
+    void HandlePlayerLevelUp(int32 NewLevel, int32 TotalExperience);
 
 protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="HUD")
@@ -37,4 +39,9 @@ private:
     float CachedHealth = 0.f;
     float CachedMaxHealth = 1.f;
     bool bHasCachedHealth = false;
+
+    int32 CachedExperience = 0;
+    int32 CachedLevel = 1;
+    int32 CachedExperienceToNextLevel = 0;
+    bool bHasCachedExperience = false;
 };

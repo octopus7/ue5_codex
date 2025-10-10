@@ -23,6 +23,11 @@ void APSVHUD::BeginPlay()
             {
                 PlayerHUDWidget->OnHealthChanged(CachedHealth, CachedMaxHealth);
             }
+
+            if (bHasCachedExperience)
+            {
+                PlayerHUDWidget->OnExperienceChanged(CachedExperience, CachedLevel, CachedExperienceToNextLevel);
+            }
         }
     }
 }
@@ -60,5 +65,26 @@ void APSVHUD::HandlePlayerDeath()
     {
         PC->SetPause(true);
         PC->bShowMouseCursor = true;
+    }
+}
+
+void APSVHUD::HandlePlayerExperienceChanged(int32 CurrentExperience, int32 CurrentLevel, int32 ExperienceToNextLevel)
+{
+    CachedExperience = CurrentExperience;
+    CachedLevel = CurrentLevel;
+    CachedExperienceToNextLevel = ExperienceToNextLevel;
+    bHasCachedExperience = true;
+
+    if (PlayerHUDWidget)
+    {
+        PlayerHUDWidget->OnExperienceChanged(CurrentExperience, CurrentLevel, ExperienceToNextLevel);
+    }
+}
+
+void APSVHUD::HandlePlayerLevelUp(int32 NewLevel, int32 TotalExperience)
+{
+    if (PlayerHUDWidget)
+    {
+        PlayerHUDWidget->OnLevelUp(NewLevel, TotalExperience);
     }
 }

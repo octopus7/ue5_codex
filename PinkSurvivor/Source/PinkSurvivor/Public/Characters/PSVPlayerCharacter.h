@@ -11,6 +11,7 @@ class UInputAction;
 struct FInputActionValue;
 class UPSVAutoFireComponent;
 class UPSVHealthComponent;
+class UPSVExperienceComponent;
 class APSVHUD;
 
 UCLASS()
@@ -29,12 +30,19 @@ public:
 protected:
     void Move(const FInputActionValue& Value);
     void InitializeHealth();
+    void InitializeExperience();
 
     UFUNCTION()
     void HandleHealthChanged(float CurrentHealth, float MaxHealth);
 
     UFUNCTION()
     void HandleDeath();
+
+    UFUNCTION()
+    void HandleExperienceChanged(int32 CurrentExperience, int32 CurrentLevel);
+
+    UFUNCTION()
+    void HandleLevelUp(int32 NewLevel, int32 TotalExperience);
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
     TObjectPtr<USpringArmComponent> CameraBoom;
@@ -53,6 +61,9 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Combat")
     TObjectPtr<UPSVHealthComponent> HealthComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Progression")
+    TObjectPtr<UPSVExperienceComponent> ExperienceComponent;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Movement")
     bool bAlignMovementToCameraYaw = false;

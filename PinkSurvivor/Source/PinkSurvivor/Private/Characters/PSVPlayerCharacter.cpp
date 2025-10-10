@@ -3,6 +3,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/PSVAutoFireComponent.h"
+#include "Components/PSVExperienceComponent.h"
 #include "Components/PSVHealthComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -33,6 +34,8 @@ APSVPlayerCharacter::APSVPlayerCharacter()
 
     HealthComponent = CreateDefaultSubobject<UPSVHealthComponent>(TEXT("HealthComponent"));
 
+    ExperienceComponent = CreateDefaultSubobject<UPSVExperienceComponent>(TEXT("ExperienceComponent"));
+
     bUseControllerRotationPitch = false;
     bUseControllerRotationYaw = false;
     bUseControllerRotationRoll = false;
@@ -44,6 +47,29 @@ APSVPlayerCharacter::APSVPlayerCharacter()
         Movement->MaxWalkSpeed = 600.f;
         Movement->BrakingDecelerationWalking = 2048.f;
         Movement->bUseControllerDesiredRotation = false;
+    }
+}
+
+void APSVPlayerCharacter::HandleExperienceChanged(int32 CurrentExperienceValue, int32 CurrentLevelValue)
+{
+    if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+    {
+        if (APSVHUD* PSVHUD = PlayerController->GetHUD<APSVHUD>())
+        {
+            const int32 ExperienceToNextLevel = ExperienceComponent ? ExperienceComponent->GetExperienceToNextLevel() : 0;
+            PSVHUD->HandlePlayerExperienceChanged(CurrentExperienceValue, CurrentLevelValue, ExperienceToNextLevel);
+        }
+    }
+}
+
+void APSVPlayerCharacter::HandleLevelUp(int32 NewLevel, int32 TotalExperience)
+{
+    if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+    {
+        if (APSVHUD* PSVHUD = PlayerController->GetHUD<APSVHUD>())
+        {
+            PSVHUD->HandlePlayerLevelUp(NewLevel, TotalExperience);
+        }
     }
 }
 
@@ -63,6 +89,7 @@ void APSVPlayerCharacter::BeginPlay()
     Super::BeginPlay();
 
     InitializeHealth();
+    InitializeExperience();
 
     if (AController* LocalController = GetController())
     {
@@ -138,6 +165,18 @@ void APSVPlayerCharacter::InitializeHealth()
     HealthComponent->InitializeHealth(MaxHealth, true);
 }
 
+void APSVPlayerCharacter::InitializeExperience()
+{
+    if (!ExperienceComponent)
+    {
+        return;
+    }
+
+    ExperienceComponent->OnExperienceChanged.AddDynamic(this, &APSVPlayerCharacter::HandleExperienceChanged);
+    ExperienceComponent->OnLevelUp.AddDynamic(this, &APSVPlayerCharacter::HandleLevelUp);
+    ExperienceComponent->ResetProgression();
+}
+
 float APSVPlayerCharacter::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
     const float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
@@ -169,6 +208,11 @@ void APSVPlayerCharacter::HandleDeath()
     }
 
     bIsDead = true;
+
+    if (ExperienceComponent)
+    {
+        ExperienceComponent->ResetProgression();
+    }
 
     if (AutoFireComponent)
     {
