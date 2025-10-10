@@ -50,9 +50,7 @@ bool UPSVChestRouletteSubsystem::StartRoulette(APSVPlayerCharacter* Player, floa
         &UPSVChestRouletteSubsystem::AdvanceRoulette,
         RouletteInterval,
         true,
-        0.f,
-        0.f,
-        false);
+        0.f);
 
     TimerManager.SetTimer(
         FinalizeTimerHandle,
@@ -60,9 +58,7 @@ bool UPSVChestRouletteSubsystem::StartRoulette(APSVPlayerCharacter* Player, floa
         &UPSVChestRouletteSubsystem::FinalizeResult,
         ActiveDuration,
         false,
-        ActiveDuration,
-        0.f,
-        false);
+        ActiveDuration);
 
     return true;
 }
@@ -100,7 +96,7 @@ void UPSVChestRouletteSubsystem::FinalizeResult()
 
     bAwaitingConfirm = true;
 
-    static const FString ConfirmPromptText = TEXT("X / OK를 눌러 확정");
+    static const FString ConfirmPromptText = TEXT("Press X / OK to confirm");
     UpdateHUDDisplay(CurrentDisplay, ConfirmPromptText);
 }
 

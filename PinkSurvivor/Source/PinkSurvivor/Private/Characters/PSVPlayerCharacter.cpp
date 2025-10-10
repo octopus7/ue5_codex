@@ -11,6 +11,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
+#include "InputAction.h"
 #include "Engine/GameInstance.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
@@ -148,12 +149,12 @@ void APSVPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
         if (ConfirmAction)
         {
+            ConfirmAction->bTriggerWhenPaused = true;
             FEnhancedInputActionEventBinding& ConfirmBinding = EnhancedInputComponent->BindAction(
                 ConfirmAction,
                 ETriggerEvent::Triggered,
                 this,
                 &APSVPlayerCharacter::HandleConfirmAction);
-            ConfirmBinding.bTriggerWhenPaused = true;
         }
     }
 }

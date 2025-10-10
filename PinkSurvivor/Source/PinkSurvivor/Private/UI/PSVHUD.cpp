@@ -53,22 +53,24 @@ void APSVHUD::DrawHUD()
 
     UFont* DisplayFont = GEngine ? GEngine->GetLargeFont() : nullptr;
     const float DisplayScale = 2.5f;
-    FVector2D DisplaySize(0.f, 0.f);
-    GetTextSize(RouletteDisplayText, DisplaySize.X, DisplaySize.Y, DisplayFont, DisplayScale);
+    float DisplayWidth = 0.f;
+    float DisplayHeight = 0.f;
+    GetTextSize(RouletteDisplayText, DisplayWidth, DisplayHeight, DisplayFont, DisplayScale);
 
-    const float DisplayX = DisplayAnchor.X - (DisplaySize.X * 0.5f);
-    const float DisplayY = DisplayAnchor.Y - (DisplaySize.Y * 0.5f);
+    const float DisplayX = DisplayAnchor.X - (DisplayWidth * 0.5f);
+    const float DisplayY = DisplayAnchor.Y - (DisplayHeight * 0.5f);
     DrawText(RouletteDisplayText, FLinearColor::Yellow, DisplayX, DisplayY, DisplayFont, DisplayScale, false);
 
     if (!RoulettePromptText.IsEmpty())
     {
         UFont* PromptFont = GEngine ? GEngine->GetMediumFont() : nullptr;
         const float PromptScale = 1.2f;
-        FVector2D PromptSize(0.f, 0.f);
-        GetTextSize(RoulettePromptText, PromptSize.X, PromptSize.Y, PromptFont, PromptScale);
+        float PromptWidth = 0.f;
+        float PromptHeight = 0.f;
+        GetTextSize(RoulettePromptText, PromptWidth, PromptHeight, PromptFont, PromptScale);
 
-        const float PromptX = DisplayAnchor.X - (PromptSize.X * 0.5f);
-        const float PromptY = DisplayY + DisplaySize.Y + 20.f;
+        const float PromptX = DisplayAnchor.X - (PromptWidth * 0.5f);
+        const float PromptY = DisplayY + DisplayHeight + 20.f;
         DrawText(RoulettePromptText, FLinearColor::White, PromptX, PromptY, PromptFont, PromptScale, false);
     }
 }
