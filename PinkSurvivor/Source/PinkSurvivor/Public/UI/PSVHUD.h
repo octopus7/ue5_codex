@@ -21,6 +21,7 @@ public:
     void HandlePlayerDeath();
     void HandlePlayerExperienceChanged(int32 CurrentExperience, int32 CurrentLevel, int32 ExperienceToNextLevel);
     void HandlePlayerLevelUp(int32 NewLevel, int32 TotalExperience);
+    void HandlePlayerGoldChanged(int32 TotalGold);
 
 protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="HUD")
@@ -44,4 +45,7 @@ private:
     int32 CachedLevel = 1;
     int32 CachedExperienceToNextLevel = 0;
     bool bHasCachedExperience = false;
+
+    int32 CachedPersistentGold = 0;
+    bool bHasCachedPersistentGold = false;
 };

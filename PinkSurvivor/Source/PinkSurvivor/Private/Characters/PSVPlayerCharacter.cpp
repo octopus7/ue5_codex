@@ -5,6 +5,7 @@
 #include "Components/PSVAutoFireComponent.h"
 #include "Components/PSVExperienceComponent.h"
 #include "Components/PSVHealthComponent.h"
+#include "Core/PSVGameInstance.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
@@ -108,6 +109,14 @@ void APSVPlayerCharacter::BeginPlay()
 
             const FRotator CameraYawOnly(0.f, CameraRelativeRotation.Yaw, 0.f);
             PlayerController->SetControlRotation(CameraYawOnly);
+        }
+    }
+
+    if (UWorld* World = GetWorld())
+    {
+        if (UPSVGameInstance* PSVGameInstance = Cast<UPSVGameInstance>(World->GetGameInstance()))
+        {
+            HandlePersistentGoldChanged(PSVGameInstance->GetPersistentGold());
         }
     }
 }
@@ -236,6 +245,17 @@ void APSVPlayerCharacter::HandleDeath()
         if (APSVHUD* PSVHUD = PlayerController->GetHUD<APSVHUD>())
         {
             PSVHUD->HandlePlayerDeath();
+        }
+    }
+}
+
+void APSVPlayerCharacter::HandlePersistentGoldChanged(int32 NewTotalGold)
+{
+    if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+    {
+        if (APSVHUD* PSVHUD = PlayerController->GetHUD<APSVHUD>())
+        {
+            PSVHUD->HandlePlayerGoldChanged(NewTotalGold);
         }
     }
 }

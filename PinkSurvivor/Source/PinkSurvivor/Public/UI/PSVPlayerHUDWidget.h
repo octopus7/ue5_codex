@@ -21,4 +21,7 @@ public:
 
     UFUNCTION(BlueprintImplementableEvent, Category="HUD")
     void OnLevelUp(int32 NewLevel, int32 TotalExperience);
+
+    UFUNCTION(BlueprintImplementableEvent, Category="HUD")
+    void OnPersistentGoldChanged(int32 TotalGold);
 };

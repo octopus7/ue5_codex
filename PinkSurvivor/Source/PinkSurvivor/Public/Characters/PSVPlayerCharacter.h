@@ -27,6 +27,9 @@ public:
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
     virtual float TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
+    UFUNCTION(BlueprintCallable, Category="Progression")
+    void HandlePersistentGoldChanged(int32 NewTotalGold);
+
 protected:
     void Move(const FInputActionValue& Value);
     void InitializeHealth();

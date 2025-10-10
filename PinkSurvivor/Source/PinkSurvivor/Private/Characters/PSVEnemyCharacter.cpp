@@ -5,6 +5,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Pickups/PSVExperienceGem.h"
+#include "Pickups/PSVGoldCoin.h"
 #include "TimerManager.h"
 
 APSVEnemyCharacter::APSVEnemyCharacter()
@@ -202,6 +203,7 @@ void APSVEnemyCharacter::HandleDeath()
         Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     }
 
+    TrySpawnGoldCoin();
     SpawnExperienceGem();
 
     SetLifeSpan(2.0f);
@@ -245,4 +247,31 @@ void APSVEnemyCharacter::SpawnExperienceGem()
     SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
     World->SpawnActor<APSVExperienceGem>(GemClass, SpawnLocation, SpawnRotation, SpawnParams);
+}
+
+void APSVEnemyCharacter::TrySpawnGoldCoin()
+{
+    if (!GoldCoinClass || GoldCoinDropChance <= 0.f)
+    {
+        return;
+    }
+
+    if (FMath::FRand() > GoldCoinDropChance)
+    {
+        return;
+    }
+
+    UWorld* World = GetWorld();
+    if (!World)
+    {
+        return;
+    }
+
+    FVector SpawnLocation = GetActorLocation();
+    SpawnLocation.Z += GemSpawnOffsetZ;
+
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+    World->SpawnActor<APSVGoldCoin>(GoldCoinClass, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
 }

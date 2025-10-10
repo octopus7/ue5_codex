@@ -6,6 +6,7 @@
 
 class UPSVHealthComponent;
 class APSVExperienceGem;
+class APSVGoldCoin;
 
 UCLASS()
 class PINKSURVIVOR_API APSVEnemyCharacter : public ACharacter
@@ -31,6 +32,7 @@ protected:
     void HandleDeath();
 
     void SpawnExperienceGem();
+    void TrySpawnGoldCoin();
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
     TObjectPtr<UPSVHealthComponent> HealthComponent;
@@ -58,6 +60,12 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Experience", meta=(ClampMin="0.0"))
     float GemSpawnOffsetZ = 30.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Currency")
+    TSubclassOf<APSVGoldCoin> GoldCoinClass;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Currency", meta=(ClampMin="0.0", ClampMax="1.0"))
+    float GoldCoinDropChance = 0.05f;
 
     bool bIsDead = false;
     bool bIsAttacking = false;

@@ -28,6 +28,11 @@ void APSVHUD::BeginPlay()
             {
                 PlayerHUDWidget->OnExperienceChanged(CachedExperience, CachedLevel, CachedExperienceToNextLevel);
             }
+
+            if (bHasCachedPersistentGold)
+            {
+                PlayerHUDWidget->OnPersistentGoldChanged(CachedPersistentGold);
+            }
         }
     }
 }
@@ -86,5 +91,16 @@ void APSVHUD::HandlePlayerLevelUp(int32 NewLevel, int32 TotalExperience)
     if (PlayerHUDWidget)
     {
         PlayerHUDWidget->OnLevelUp(NewLevel, TotalExperience);
+    }
+}
+
+void APSVHUD::HandlePlayerGoldChanged(int32 TotalGold)
+{
+    CachedPersistentGold = TotalGold;
+    bHasCachedPersistentGold = true;
+
+    if (PlayerHUDWidget)
+    {
+        PlayerHUDWidget->OnPersistentGoldChanged(TotalGold);
     }
 }

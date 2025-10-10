@@ -1,27 +1,30 @@
 # Pink Survivor
 
-UE 5.5을 기반으로 제작 중인 3D 뱀파이어 서바이버즈 스타일 프로젝트입니다.  
-주요 전투 루프와 성장 구조를 유지하면서 3D 플레이 경험에 맞춰 확장하고 있습니다.
+Pink Survivor is a UE 5.5 project that reimagines the Vampire Survivors loop in a fully 3D environment. Combat pacing and growth structure stay familiar while systems are extended to support third-person play.
 
-## 구현 사항
+## Implemented Features
 
-- **경험치 컴포넌트**
-  - `UPSVExperienceComponent`를 추가하여 런타임 경험치, 레벨, 임계값 관리를 캡슐화.
-  - BP에서 경험치 임계값을 손쉽게 커스터마이즈할 수 있도록 `ExperienceThresholds` 배열 노출.
-  - 경험치 획득 및 레벨업 이벤트를 델리게이트로 제공 (`OnExperienceChanged`, `OnLevelUp`).
+- **Experience Component**
+  - `UPSVExperienceComponent` encapsulates run-based experience, level, and threshold logic.
+  - Thresholds are fully data-driven via `ExperienceThresholds`, allowing Blueprint tuning per level.
+  - Level progression events are exposed through `OnExperienceChanged` and `OnLevelUp`.
 
-- **경험치 보석 픽업**
-  - `APSVExperienceGem` 액터를 도입해 적 처치 시 드랍되는 보석을 구현.
-  - 보석은 겹치는 플레이어에게 경험치를 지급 후 스스로 파괴되며, BP에서 등급·경험치 값을 설정 가능.
+- **Experience Gem Pickup**
+  - `APSVExperienceGem` drops from defeated enemies and awards the configured amount of XP when collected.
+  - Gems are designed for Blueprint tier variants so visuals and values are easy to author.
 
-- **플레이어/적 연동**
-  - 플레이어 캐릭터에 경험치 컴포넌트를 부착하고 사망 시 성장 상태가 초기화되도록 처리.
-  - HUD 위젯에 경험치/레벨업 이벤트를 전달해 BP 기반 UI 연출이 가능하도록 확장.
-  - 적 캐릭터 사망 시 지정한 경험치 보석 클래스를 스폰하는 로직을 추가.
+- **Persistent Gold Economy**
+  - `UPSVGameInstance` + `UPSVSaveGame` load and store long-term gold across sessions.
+  - `APSVGoldCoin` is a low-probability drop that adds gold through the game instance before saving.
+  - Player HUD receives `OnPersistentGoldChanged` callbacks to reflect the saved balance.
 
-## 다음 작업 가이드
+- **Player & Enemy Integration**
+  - The player character owns both health and experience components and fans out UI updates through the HUD.
+  - Enemies spawn experience gems every time and gold coins based on configurable drop chances.
 
-1. `APSVExperienceGem` BP 자식들을 만들어 각 티어에 맞는 메시·머티리얼과 경험치 값을 설정합니다.
-2. 플레이어 HUD 위젯 BP에서 `OnExperienceChanged`, `OnLevelUp` 이벤트를 구현해 게이지 및 연출을 구성합니다.
-3. 적 BP에서 드랍할 보석 클래스를 할당하고 PIE에서 처치→획득→레벨업 흐름을 검증합니다.
+## Next Steps
+
+1. Author Blueprint derivatives of `APSVExperienceGem` and `APSVGoldCoin` with final art, FX, and tuned values.
+2. Implement HUD reactions for `OnExperienceChanged`, `OnLevelUp`, and `OnPersistentGoldChanged` to display meters and totals.
+3. Balance gold drop chances per enemy archetype and playtest persistent progression loops in PIE or standalone builds.
 
