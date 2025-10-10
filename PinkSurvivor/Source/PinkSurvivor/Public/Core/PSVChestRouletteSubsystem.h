@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "Containers/Ticker.h"
 #include "PSVChestRouletteSubsystem.generated.h"
 
 class APSVPlayerCharacter;
@@ -33,6 +34,9 @@ protected:
     APSVHUD* ResolveHUD(APSVPlayerCharacter* Player) const;
     void UpdateHUDDisplay(const FString& DisplayText, const FString& PromptText);
     void ClearState();
+    void StartRouletteTicker();
+    void StopRouletteTicker();
+    bool TickRoulette(float DeltaTime);
 
     UPROPERTY(EditDefaultsOnly, Category="Roulette")
     TArray<FString> CandidateTexts;
@@ -43,8 +47,7 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category="Roulette")
     float DefaultRouletteDuration;
 
-    FTimerHandle RouletteTimerHandle;
-    FTimerHandle FinalizeTimerHandle;
+    FTSTicker::FDelegateHandle RouletteTickerHandle;
 
     FString CurrentDisplay;
 
@@ -52,4 +55,7 @@ protected:
 
     bool bIsRouletteActive = false;
     bool bAwaitingConfirm = false;
+    float ActiveRouletteDuration = 0.f;
+    float RouletteElapsedTime = 0.f;
+    float RouletteIntervalAccumulator = 0.f;
 };

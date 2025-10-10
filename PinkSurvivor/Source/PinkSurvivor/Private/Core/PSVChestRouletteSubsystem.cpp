@@ -4,7 +4,6 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
-#include "TimerManager.h"
 #include "UI/PSVHUD.h"
 
 UPSVChestRouletteSubsystem::UPSVChestRouletteSubsystem()
@@ -37,28 +36,65 @@ bool UPSVChestRouletteSubsystem::StartRoulette(APSVPlayerCharacter* Player, floa
     bAwaitingConfirm = false;
 
     const float ActiveDuration = InDuration > 0.f ? InDuration : DefaultRouletteDuration;
+    ActiveRouletteDuration = ActiveDuration;
+    RouletteElapsedTime = 0.f;
+    RouletteIntervalAccumulator = 0.f;
 
     UGameplayStatics::SetGamePaused(World, true);
 
     // Advance once immediately to seed the display
     AdvanceRoulette();
 
-    FTimerManager& TimerManager = World->GetTimerManager();
-    TimerManager.SetTimer(
-        RouletteTimerHandle,
-        this,
-        &UPSVChestRouletteSubsystem::AdvanceRoulette,
-        RouletteInterval,
-        true,
-        0.f);
+    StartRouletteTicker();
 
-    TimerManager.SetTimer(
-        FinalizeTimerHandle,
-        this,
-        &UPSVChestRouletteSubsystem::FinalizeResult,
-        ActiveDuration,
-        false,
-        ActiveDuration);
+    return true;
+}
+
+void UPSVChestRouletteSubsystem::StartRouletteTicker()
+{
+    StopRouletteTicker();
+
+    RouletteTickerHandle = FTSTicker::GetCoreTicker().AddTicker(
+        FTickerDelegate::CreateUObject(this, &UPSVChestRouletteSubsystem::TickRoulette));
+}
+
+void UPSVChestRouletteSubsystem::StopRouletteTicker()
+{
+    if (RouletteTickerHandle.IsValid())
+    {
+        FTSTicker::GetCoreTicker().RemoveTicker(RouletteTickerHandle);
+        RouletteTickerHandle = FTSTicker::FDelegateHandle();
+    }
+}
+
+bool UPSVChestRouletteSubsystem::TickRoulette(float DeltaTime)
+{
+    if (!bIsRouletteActive)
+    {
+        return false;
+    }
+
+    RouletteElapsedTime += DeltaTime;
+    RouletteIntervalAccumulator += DeltaTime;
+
+    if (RouletteInterval <= KINDA_SMALL_NUMBER)
+    {
+        AdvanceRoulette();
+    }
+    else
+    {
+        while (RouletteIntervalAccumulator >= RouletteInterval)
+        {
+            RouletteIntervalAccumulator -= RouletteInterval;
+            AdvanceRoulette();
+        }
+    }
+
+    if (RouletteElapsedTime >= ActiveRouletteDuration)
+    {
+        FinalizeResult();
+        return false;
+    }
 
     return true;
 }
@@ -90,9 +126,7 @@ void UPSVChestRouletteSubsystem::FinalizeResult()
         return;
     }
 
-    FTimerManager& TimerManager = World->GetTimerManager();
-    TimerManager.ClearTimer(RouletteTimerHandle);
-    TimerManager.ClearTimer(FinalizeTimerHandle);
+    StopRouletteTicker();
 
     bAwaitingConfirm = true;
 
@@ -160,11 +194,9 @@ void UPSVChestRouletteSubsystem::ClearState()
     bIsRouletteActive = false;
     bAwaitingConfirm = false;
     ActivePlayer.Reset();
+    StopRouletteTicker();
 
-    if (UWorld* World = GetWorld())
-    {
-        FTimerManager& TimerManager = World->GetTimerManager();
-        TimerManager.ClearTimer(RouletteTimerHandle);
-        TimerManager.ClearTimer(FinalizeTimerHandle);
-    }
+    ActiveRouletteDuration = 0.f;
+    RouletteElapsedTime = 0.f;
+    RouletteIntervalAccumulator = 0.f;
 }
