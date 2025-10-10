@@ -67,6 +67,13 @@ float APSVEnemyCharacter::TakeDamage(float DamageAmount, const FDamageEvent& Dam
 
     if (ActualDamage > 0.f && HealthComponent && !bIsDead)
     {
+        AActor* KnockbackSource = DamageCauser;
+        if (!KnockbackSource && EventInstigator)
+        {
+            KnockbackSource = EventInstigator->GetPawn();
+        }
+
+        ApplyKnockbackFrom(KnockbackSource);
         HealthComponent->ApplyDamage(ActualDamage);
     }
 
@@ -274,4 +281,23 @@ void APSVEnemyCharacter::TrySpawnGoldCoin()
     SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
     World->SpawnActor<APSVGoldCoin>(GoldCoinClass, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
+}
+
+void APSVEnemyCharacter::ApplyKnockbackFrom(AActor* DamageCauser)
+{
+    if (!DamageCauser || KnockbackStrength <= 0.f)
+    {
+        return;
+    }
+
+    const FVector Offset = GetActorLocation() - DamageCauser->GetActorLocation();
+    FVector KnockbackDirection(Offset.X, Offset.Y, 0.f);
+
+    if (!KnockbackDirection.Normalize())
+    {
+        return;
+    }
+
+    const FVector LaunchVelocity = KnockbackDirection * KnockbackStrength;
+    LaunchCharacter(LaunchVelocity, true, false);
 }

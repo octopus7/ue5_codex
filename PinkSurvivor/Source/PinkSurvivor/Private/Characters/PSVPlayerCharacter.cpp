@@ -192,10 +192,36 @@ float APSVPlayerCharacter::TakeDamage(float DamageAmount, const FDamageEvent& Da
 
     if (ActualDamage > 0.f && HealthComponent && !bIsDead)
     {
+        AActor* KnockbackSource = DamageCauser;
+        if (!KnockbackSource && EventInstigator)
+        {
+            KnockbackSource = EventInstigator->GetPawn();
+        }
+
+        ApplyKnockbackFrom(KnockbackSource);
         HealthComponent->ApplyDamage(ActualDamage);
     }
 
     return ActualDamage;
+}
+
+void APSVPlayerCharacter::ApplyKnockbackFrom(AActor* DamageCauser)
+{
+    if (!DamageCauser || KnockbackStrength <= 0.f)
+    {
+        return;
+    }
+
+    const FVector Offset = GetActorLocation() - DamageCauser->GetActorLocation();
+    FVector KnockbackDirection(Offset.X, Offset.Y, 0.f);
+
+    if (!KnockbackDirection.Normalize())
+    {
+        return;
+    }
+
+    const FVector LaunchVelocity = KnockbackDirection * KnockbackStrength;
+    LaunchCharacter(LaunchVelocity, true, false);
 }
 
 void APSVPlayerCharacter::HandleHealthChanged(float CurrentHealthValue, float MaxHealthValue)

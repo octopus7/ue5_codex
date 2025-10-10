@@ -34,6 +34,7 @@ protected:
     void Move(const FInputActionValue& Value);
     void InitializeHealth();
     void InitializeExperience();
+    void ApplyKnockbackFrom(AActor* DamageCauser);
 
     UFUNCTION()
     void HandleHealthChanged(float CurrentHealth, float MaxHealth);
@@ -81,4 +82,7 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Camera")
     FRotator CameraRelativeRotation = FRotator(-55.0f, 0.0f, 0.0f);
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Combat", meta=(ClampMin="0.0"))
+    float KnockbackStrength = 600.f;
 };

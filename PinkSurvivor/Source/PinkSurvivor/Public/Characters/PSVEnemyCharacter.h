@@ -33,6 +33,7 @@ protected:
 
     void SpawnExperienceGem();
     void TrySpawnGoldCoin();
+    void ApplyKnockbackFrom(AActor* DamageCauser);
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
     TObjectPtr<UPSVHealthComponent> HealthComponent;
@@ -66,6 +67,9 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Currency", meta=(ClampMin="0.0", ClampMax="1.0"))
     float GoldCoinDropChance = 0.05f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Combat", meta=(ClampMin="0.0"))
+    float KnockbackStrength = 600.f;
 
     bool bIsDead = false;
     bool bIsAttacking = false;
