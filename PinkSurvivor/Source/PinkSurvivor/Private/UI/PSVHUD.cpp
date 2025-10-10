@@ -1,6 +1,8 @@
 #include "UI/PSVHUD.h"
 
 #include "Blueprint/UserWidget.h"
+#include "Engine/Canvas.h"
+#include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/PSVPlayerHUDWidget.h"
 
@@ -37,6 +39,40 @@ void APSVHUD::BeginPlay()
     }
 }
 
+void APSVHUD::DrawHUD()
+{
+    Super::DrawHUD();
+
+    if (!bIsRouletteVisible || !Canvas)
+    {
+        return;
+    }
+
+    const FVector2D ScreenSize(Canvas->SizeX, Canvas->SizeY);
+    const FVector2D DisplayAnchor(ScreenSize.X * 0.5f, ScreenSize.Y * 0.35f);
+
+    UFont* DisplayFont = GEngine ? GEngine->GetLargeFont() : nullptr;
+    const float DisplayScale = 2.5f;
+    FVector2D DisplaySize(0.f, 0.f);
+    GetTextSize(RouletteDisplayText, DisplaySize.X, DisplaySize.Y, DisplayFont, DisplayScale);
+
+    const float DisplayX = DisplayAnchor.X - (DisplaySize.X * 0.5f);
+    const float DisplayY = DisplayAnchor.Y - (DisplaySize.Y * 0.5f);
+    DrawText(RouletteDisplayText, FLinearColor::Yellow, DisplayX, DisplayY, DisplayFont, DisplayScale, false);
+
+    if (!RoulettePromptText.IsEmpty())
+    {
+        UFont* PromptFont = GEngine ? GEngine->GetMediumFont() : nullptr;
+        const float PromptScale = 1.2f;
+        FVector2D PromptSize(0.f, 0.f);
+        GetTextSize(RoulettePromptText, PromptSize.X, PromptSize.Y, PromptFont, PromptScale);
+
+        const float PromptX = DisplayAnchor.X - (PromptSize.X * 0.5f);
+        const float PromptY = DisplayY + DisplaySize.Y + 20.f;
+        DrawText(RoulettePromptText, FLinearColor::White, PromptX, PromptY, PromptFont, PromptScale, false);
+    }
+}
+
 void APSVHUD::HandlePlayerHealthChanged(float CurrentHealth, float MaxHealth)
 {
     CachedHealth = CurrentHealth;
@@ -47,6 +83,20 @@ void APSVHUD::HandlePlayerHealthChanged(float CurrentHealth, float MaxHealth)
     {
         PlayerHUDWidget->OnHealthChanged(CurrentHealth, MaxHealth);
     }
+}
+
+void APSVHUD::ShowRouletteMessage(const FString& Text, const FString& PromptText)
+{
+    RouletteDisplayText = Text;
+    RoulettePromptText = PromptText;
+    bIsRouletteVisible = true;
+}
+
+void APSVHUD::ClearRouletteMessage()
+{
+    bIsRouletteVisible = false;
+    RouletteDisplayText.Reset();
+    RoulettePromptText.Reset();
 }
 
 void APSVHUD::HandlePlayerDeath()

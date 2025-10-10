@@ -12,6 +12,7 @@ struct FInputActionValue;
 class UPSVAutoFireComponent;
 class UPSVHealthComponent;
 class UPSVExperienceComponent;
+class UPSVChestRouletteSubsystem;
 class APSVHUD;
 
 UCLASS()
@@ -35,6 +36,7 @@ public:
 
 protected:
     void Move(const FInputActionValue& Value);
+    void HandleConfirmAction(const FInputActionValue& Value);
     void InitializeHealth();
     void InitializeExperience();
     void ApplyKnockbackFrom(AActor* DamageCauser);
@@ -65,6 +67,9 @@ protected:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Input")
     TObjectPtr<UInputAction> MoveAction;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Input")
+    TObjectPtr<UInputAction> ConfirmAction;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Combat")
     TObjectPtr<UPSVAutoFireComponent> AutoFireComponent;
@@ -100,4 +105,6 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Cheats")
     bool bCheatEightWayFire = false;
+
+    TWeakObjectPtr<UPSVChestRouletteSubsystem> ChestRouletteSubsystem;
 };

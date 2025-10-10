@@ -6,10 +6,12 @@
 #include "Components/PSVExperienceComponent.h"
 #include "Components/PSVHealthComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Core/PSVChestRouletteSubsystem.h"
 #include "Core/PSVGameInstance.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
+#include "Engine/GameInstance.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -120,6 +122,11 @@ void APSVPlayerCharacter::BeginPlay()
 
     if (UWorld* World = GetWorld())
     {
+        if (UGameInstance* GameInstance = World->GetGameInstance())
+        {
+            ChestRouletteSubsystem = GameInstance->GetSubsystem<UPSVChestRouletteSubsystem>();
+        }
+
         if (UPSVGameInstance* PSVGameInstance = Cast<UPSVGameInstance>(World->GetGameInstance()))
         {
             HandlePersistentGoldChanged(PSVGameInstance->GetPersistentGold());
@@ -137,6 +144,16 @@ void APSVPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
         {
             EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APSVPlayerCharacter::Move);
             EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &APSVPlayerCharacter::Move);
+        }
+
+        if (ConfirmAction)
+        {
+            FEnhancedInputActionEventBinding& ConfirmBinding = EnhancedInputComponent->BindAction(
+                ConfirmAction,
+                ETriggerEvent::Triggered,
+                this,
+                &APSVPlayerCharacter::HandleConfirmAction);
+            ConfirmBinding.bTriggerWhenPaused = true;
         }
     }
 }
@@ -228,6 +245,17 @@ void APSVPlayerCharacter::ApplyKnockbackFrom(AActor* DamageCauser)
 
     const FVector LaunchVelocity = KnockbackDirection * KnockbackStrength;
     LaunchCharacter(LaunchVelocity, true, false);
+}
+
+void APSVPlayerCharacter::HandleConfirmAction(const FInputActionValue& Value)
+{
+    const bool bPressed = Value.Get<bool>();
+    (void)bPressed;
+
+    if (ChestRouletteSubsystem.IsValid())
+    {
+        ChestRouletteSubsystem->HandleConfirm(this);
+    }
 }
 
 void APSVPlayerCharacter::StartDeathRagdoll()

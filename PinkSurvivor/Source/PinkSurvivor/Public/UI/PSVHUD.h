@@ -16,12 +16,16 @@ public:
     APSVHUD();
 
     virtual void BeginPlay() override;
+    virtual void DrawHUD() override;
 
     void HandlePlayerHealthChanged(float CurrentHealth, float MaxHealth);
     void HandlePlayerDeath();
     void HandlePlayerExperienceChanged(int32 CurrentExperience, int32 CurrentLevel, int32 ExperienceToNextLevel);
     void HandlePlayerLevelUp(int32 NewLevel, int32 TotalExperience);
     void HandlePlayerGoldChanged(int32 TotalGold);
+
+    void ShowRouletteMessage(const FString& Text, const FString& PromptText);
+    void ClearRouletteMessage();
 
 protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="HUD")
@@ -48,4 +52,8 @@ private:
 
     int32 CachedPersistentGold = 0;
     bool bHasCachedPersistentGold = false;
+
+    bool bIsRouletteVisible = false;
+    FString RouletteDisplayText;
+    FString RoulettePromptText;
 };
