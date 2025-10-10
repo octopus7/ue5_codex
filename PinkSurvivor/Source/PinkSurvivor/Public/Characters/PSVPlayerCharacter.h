@@ -47,6 +47,8 @@ protected:
 
     UFUNCTION()
     void HandleLevelUp(int32 NewLevel, int32 TotalExperience);
+    void StartDeathRagdoll();
+    FVector GetDeathImpulseDirection() const;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components")
     TObjectPtr<USpringArmComponent> CameraBoom;
@@ -85,4 +87,10 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Combat", meta=(ClampMin="0.0"))
     float KnockbackStrength = 600.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Death", meta=(ClampMin="0.0"))
+    float DeathImpulseStrength = 450.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Death")
+    float DeathImpulseUpwardScale = 0.15f;
 };

@@ -65,6 +65,9 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category="Spawning", meta=(ClampMin="0.0"))
     float SpawnHeightOffset = 50.f;
 
+    UPROPERTY(EditAnywhere, Category="Spawning", meta=(ClampMin="0.0"))
+    float SpawnCountScalar = 0.25f;
+
     UPROPERTY()
     TArray<FPSVSpawnPatternCommand> SpawnScript;
 };

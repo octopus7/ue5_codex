@@ -5,6 +5,7 @@
 #include "Components/PSVAutoFireComponent.h"
 #include "Components/PSVExperienceComponent.h"
 #include "Components/PSVHealthComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Core/PSVGameInstance.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -229,6 +230,44 @@ void APSVPlayerCharacter::ApplyKnockbackFrom(AActor* DamageCauser)
     LaunchCharacter(LaunchVelocity, true, false);
 }
 
+void APSVPlayerCharacter::StartDeathRagdoll()
+{
+    if (USkeletalMeshComponent* MeshComp = GetMesh())
+    {
+        MeshComp->SetCollisionProfileName(TEXT("Ragdoll"));
+        MeshComp->SetAllBodiesSimulatePhysics(true);
+        MeshComp->SetSimulatePhysics(true);
+        MeshComp->WakeAllRigidBodies();
+        MeshComp->SetAllBodiesPhysicsBlendWeight(1.f);
+        MeshComp->bBlendPhysics = true;
+
+        const FVector ImpulseDirection = GetDeathImpulseDirection();
+        if (DeathImpulseStrength > 0.f && !ImpulseDirection.IsNearlyZero())
+        {
+            MeshComp->AddImpulse(ImpulseDirection * DeathImpulseStrength, NAME_None, true);
+        }
+    }
+}
+
+FVector APSVPlayerCharacter::GetDeathImpulseDirection() const
+{
+    FVector Direction = GetActorRightVector();
+    if (Direction.IsNearlyZero())
+    {
+        Direction = FVector::RightVector;
+    }
+
+    Direction = Direction.GetSafeNormal();
+
+    if (!FMath::IsNearlyZero(DeathImpulseUpwardScale))
+    {
+        Direction.Z += FMath::Clamp(DeathImpulseUpwardScale, -1.f, 1.f);
+        Direction = Direction.GetSafeNormal();
+    }
+
+    return Direction;
+}
+
 void APSVPlayerCharacter::HandleHealthChanged(float CurrentHealthValue, float MaxHealthValue)
 {
     if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
@@ -268,6 +307,8 @@ void APSVPlayerCharacter::HandleDeath()
     {
         Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     }
+
+    StartDeathRagdoll();
 
     if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
     {

@@ -72,7 +72,23 @@ void APSVGameMode::ScheduleSpawnCommands()
 
 void APSVGameMode::ExecuteSpawnCommand(FPSVSpawnPatternCommand Command)
 {
-    const int32 SpawnCount = FMath::Max(0, Command.NumEnemies);
+    const int32 RawCount = FMath::Max(0, Command.NumEnemies);
+    int32 SpawnCount = 0;
+
+    if (RawCount > 0)
+    {
+        const float Scalar = FMath::Max(0.f, SpawnCountScalar);
+        if (Scalar <= KINDA_SMALL_NUMBER)
+        {
+            SpawnCount = 0;
+        }
+        else
+        {
+            const float ScaledCount = static_cast<float>(RawCount) * Scalar;
+            SpawnCount = FMath::Max(1, FMath::FloorToInt(ScaledCount));
+        }
+    }
+
     if (SpawnCount <= 0)
     {
         return;
