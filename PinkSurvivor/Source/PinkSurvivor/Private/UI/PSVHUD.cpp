@@ -4,6 +4,7 @@
 #include "Engine/Canvas.h"
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
+#include "UI/PSVGameOverWidget.h"
 #include "UI/PSVPlayerHUDWidget.h"
 
 APSVHUD::APSVHUD()
@@ -110,7 +111,7 @@ void APSVHUD::HandlePlayerDeath()
 
     if (!GameOverWidget && GameOverWidgetClass)
     {
-        GameOverWidget = CreateWidget<UUserWidget>(GetWorld(), GameOverWidgetClass);
+        GameOverWidget = CreateWidget<UPSVGameOverWidget>(GetWorld(), GameOverWidgetClass);
     }
 
     if (GameOverWidget && !GameOverWidget->IsInViewport())

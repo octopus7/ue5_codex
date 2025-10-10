@@ -5,7 +5,7 @@
 #include "PSVHUD.generated.h"
 
 class UPSVPlayerHUDWidget;
-class UUserWidget;
+class UPSVGameOverWidget;
 
 UCLASS()
 class PINKSURVIVOR_API APSVHUD : public AHUD
@@ -32,14 +32,14 @@ protected:
     TSubclassOf<UPSVPlayerHUDWidget> PlayerHUDWidgetClass;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="HUD")
-    TSubclassOf<UUserWidget> GameOverWidgetClass;
+    TSubclassOf<UPSVGameOverWidget> GameOverWidgetClass;
 
 private:
     UPROPERTY()
     TObjectPtr<UPSVPlayerHUDWidget> PlayerHUDWidget;
 
     UPROPERTY()
-    TObjectPtr<UUserWidget> GameOverWidget;
+    TObjectPtr<UPSVGameOverWidget> GameOverWidget;
 
     float CachedHealth = 0.f;
     float CachedMaxHealth = 1.f;
