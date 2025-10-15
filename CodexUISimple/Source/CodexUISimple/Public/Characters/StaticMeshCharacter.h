@@ -11,6 +11,8 @@ class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
 class UAmmoHealthWidget;
+class USpringArmComponent;
+class UCameraComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAmmoChanged, int32, NewAmmo, int32, MaxAmmo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHealthChanged, float, NewHealth, float, MaxHealth);
@@ -71,6 +73,14 @@ protected:
     /** Static mesh that artists/designers can swap out per-instance. */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     UStaticMeshComponent* CharacterMesh;
+
+    /** Spring arm used to position the player camera. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    USpringArmComponent* CameraBoom;
+
+    /** Player-facing camera attached to the spring arm. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    UCameraComponent* FollowCamera;
 
     /** Default mapping context pushed to the local player at begin-play. */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
