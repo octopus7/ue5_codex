@@ -128,7 +128,7 @@ void AStaticMeshCharacter::AddHealth(float HealthAmount)
 
 void AStaticMeshCharacter::HandleFireInput(const FInputActionValue& Value)
 {
-    if (Value.Get<bool>())
+    //if (Value.Get<bool>())
     {
         ConsumeAmmo(AmmoCostPerFire);
     }
@@ -136,7 +136,7 @@ void AStaticMeshCharacter::HandleFireInput(const FInputActionValue& Value)
 
 void AStaticMeshCharacter::HandleBreatheInput(const FInputActionValue& Value)
 {
-    if (Value.Get<bool>())
+    //if (Value.Get<bool>())
     {
         ConsumeHealth(HealthCostPerBreath);
     }
