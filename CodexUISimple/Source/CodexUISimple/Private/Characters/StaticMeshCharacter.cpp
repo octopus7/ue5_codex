@@ -11,6 +11,7 @@
 #include "InputActionValue.h"
 #include "UI/AmmoHealthWidget.h"
 #include "Blueprint/UserWidget.h"
+#include "Engine/Engine.h"
 AStaticMeshCharacter::AStaticMeshCharacter()
 {
     PrimaryActorTick.bCanEverTick = false;
@@ -152,11 +153,19 @@ void AStaticMeshCharacter::ConsumeAmmo(int32 Amount)
         return;
     }
 
+    const int32 PreviousAmmo = CurrentAmmo;
     const int32 NewAmmo = FMath::Clamp(CurrentAmmo - Amount, 0, MaxAmmo);
 
     if (NewAmmo != CurrentAmmo)
     {
         CurrentAmmo = NewAmmo;
+
+        if (GEngine && NewAmmo < PreviousAmmo)
+        {
+            const FString DebugMessage = FString::Printf(TEXT("Ammo decreased: %d -> %d"), PreviousAmmo, NewAmmo);
+            GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Yellow, DebugMessage);
+        }
+
         BroadcastAmmoChanged();
     }
 }
@@ -172,11 +181,19 @@ void AStaticMeshCharacter::ConsumeHealth(float Amount)
         return;
     }
 
+    const float PreviousHealth = CurrentHealth;
     const float NewHealth = FMath::Clamp(CurrentHealth - Amount, 0.f, MaxHealth);
 
     if (!FMath::IsNearlyEqual(NewHealth, CurrentHealth))
     {
         CurrentHealth = NewHealth;
+
+        if (GEngine && NewHealth < PreviousHealth)
+        {
+            const FString DebugMessage = FString::Printf(TEXT("Health decreased: %.0f -> %.0f"), PreviousHealth, NewHealth);
+            GEngine->AddOnScreenDebugMessage(INDEX_NONE, 2.f, FColor::Red, DebugMessage);
+        }
+
         BroadcastHealthChanged();
     }
 }
