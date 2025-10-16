@@ -31,6 +31,8 @@ public:
 
     // APawn interface
     virtual void BeginPlay() override;
+    virtual void PossessedBy(AController* NewController) override;
+    virtual void OnRep_Controller() override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
     /** Current ammo count available for firing. */

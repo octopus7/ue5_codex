@@ -72,6 +72,18 @@ void AStaticMeshCharacter::BeginPlay()
     BroadcastHealthChanged();
 }
 
+void AStaticMeshCharacter::PossessedBy(AController* NewController)
+{
+    Super::PossessedBy(NewController);
+    CreateStatusWidget();
+}
+
+void AStaticMeshCharacter::OnRep_Controller()
+{
+    Super::OnRep_Controller();
+    CreateStatusWidget();
+}
+
 void AStaticMeshCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -214,7 +226,7 @@ void AStaticMeshCharacter::CreateStatusWidget()
     if (UAmmoHealthWidget* NewWidget = CreateWidget<UAmmoHealthWidget>(PlayerController, UAmmoHealthWidget::StaticClass()))
     {
         StatusWidget = NewWidget;
-        StatusWidget->AddToViewport();
+        StatusWidget->AddToPlayerScreen();
         StatusWidget->SetAmmo(CurrentAmmo, MaxAmmo);
         StatusWidget->SetHealth(CurrentHealth, MaxHealth);
     }
