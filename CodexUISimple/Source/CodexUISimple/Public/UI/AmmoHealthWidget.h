@@ -5,12 +5,9 @@
 
 #include "AmmoHealthWidget.generated.h"
 
-class UVerticalBox;
 class UTextBlock;
 
-/**
- * Minimal HUD widget built entirely in C++ that displays ammo and health stats.
- */
+/** Minimal HUD widget that exposes ammo/health labels for a designer-authored Widget Blueprint. */
 UCLASS()
 class CODEXUISIMPLE_API UAmmoHealthWidget : public UUserWidget
 {
@@ -26,15 +23,11 @@ public:
     void SetHealth(float CurrentHealth, float MaxHealth);
 
 private:
-    /** Container created at runtime to hold text labels. */
-    UPROPERTY(Transient)
-    UVerticalBox* RootLayout;
-
-    /** Text block showing ammo values. */
-    UPROPERTY(Transient)
+    /** Text block showing ammo values. Populated via the Widget Blueprint hierarchy. */
+    UPROPERTY(meta = (BindWidget))
     UTextBlock* AmmoTextBlock;
 
-    /** Text block showing health values. */
-    UPROPERTY(Transient)
+    /** Text block showing health values. Populated via the Widget Blueprint hierarchy. */
+    UPROPERTY(meta = (BindWidget))
     UTextBlock* HealthTextBlock;
 };

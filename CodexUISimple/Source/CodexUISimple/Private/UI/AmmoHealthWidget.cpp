@@ -1,36 +1,14 @@
 #include "UI/AmmoHealthWidget.h"
 
 #include "Components/TextBlock.h"
-#include "Components/VerticalBox.h"
-#include "Components/VerticalBoxSlot.h"
-#include "Blueprint/WidgetTree.h"
 
 void UAmmoHealthWidget::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    if (!WidgetTree)
+    if (!ensureMsgf(AmmoTextBlock && HealthTextBlock, TEXT("AmmoHealthWidget requires AmmoTextBlock and HealthTextBlock bindings.")))
     {
         return;
-    }
-
-    RootLayout = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
-    WidgetTree->RootWidget = RootLayout;
-
-    AmmoTextBlock = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-    HealthTextBlock = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
-
-    if (RootLayout)
-    {
-        if (UVerticalBoxSlot* AmmoSlot = RootLayout->AddChildToVerticalBox(AmmoTextBlock))
-        {
-            AmmoSlot->SetPadding(FMargin(8.f, 8.f));
-        }
-
-        if (UVerticalBoxSlot* HealthSlot = RootLayout->AddChildToVerticalBox(HealthTextBlock))
-        {
-            HealthSlot->SetPadding(FMargin(8.f, 8.f));
-        }
     }
 
     SetAmmo(0, 0);

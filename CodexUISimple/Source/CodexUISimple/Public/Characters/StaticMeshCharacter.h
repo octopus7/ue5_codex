@@ -96,6 +96,10 @@ protected:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
     UInputAction* BreatheAction;
 
+    /** Widget blueprint class instantiated to display player status info. */
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+    TSubclassOf<UAmmoHealthWidget> StatusWidgetClass;
+
     /** Cost in ammo units each time the fire input is triggered. */
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input", meta = (ClampMin = "0"))
     int32 AmmoCostPerFire;
@@ -134,4 +138,7 @@ private:
     /** HUD widget that mirrors ammo/health stats. */
     UPROPERTY(Transient)
     UAmmoHealthWidget* StatusWidget;
+
+    /** Tracks whether we've already warned about a missing widget class to avoid log spam. */
+    bool bHasWarnedMissingWidgetClass;
 };

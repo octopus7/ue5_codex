@@ -40,7 +40,9 @@ AStaticMeshCharacter::AStaticMeshCharacter()
     CurrentAmmo = MaxAmmo;
     CurrentHealth = MaxHealth;
 
+    StatusWidgetClass = nullptr;
     StatusWidget = nullptr;
+    bHasWarnedMissingWidgetClass = false;
 
     AutoPossessPlayer = EAutoReceiveInput::Player0;
 }
@@ -223,8 +225,19 @@ void AStaticMeshCharacter::CreateStatusWidget()
         return;
     }
 
-    if (UAmmoHealthWidget* NewWidget = CreateWidget<UAmmoHealthWidget>(PlayerController, UAmmoHealthWidget::StaticClass()))
+    if (!StatusWidgetClass)
     {
+        if (!bHasWarnedMissingWidgetClass)
+        {
+            bHasWarnedMissingWidgetClass = true;
+            UE_LOG(LogTemp, Warning, TEXT("StaticMeshCharacter %s has no StatusWidgetClass set; assign a widget blueprint derived from UAmmoHealthWidget."), *GetName());
+        }
+        return;
+    }
+
+    if (UAmmoHealthWidget* NewWidget = CreateWidget<UAmmoHealthWidget>(PlayerController, StatusWidgetClass))
+    {
+        bHasWarnedMissingWidgetClass = false;
         StatusWidget = NewWidget;
         StatusWidget->AddToPlayerScreen();
         StatusWidget->SetAmmo(CurrentAmmo, MaxAmmo);
