@@ -23,6 +23,13 @@
 		},
 		{
 			"Name": "ProjectBootstrapper",
+			"Enabled": false,
+			"TargetAllowList": [
+				"Editor"
+			]
+		},
+		{
+			"Name": "OctoDen",
 			"Enabled": true,
 			"TargetAllowList": [
 				"Editor"

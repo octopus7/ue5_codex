@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0.0",
+	"FriendlyName": "OctoDen",
+	"Description": "Dockable editor tools that assist project setup and input asset authoring.",
+	"Category": "Editor",
+	"CanContainContent": false,
+	"IsBetaVersion": true,
+	"EnabledByDefault": true,
+	"Plugins": [
+		{
+			"Name": "EnhancedInput",
+			"Enabled": true
+		}
+	],
+	"Modules": [
+		{
+			"Name": "OctoDen",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	]
+}
