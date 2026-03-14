@@ -7,12 +7,22 @@
 		{
 			"Name": "CodexInven",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine"
+			]
 		}
 	],
 	"Plugins": [
 		{
 			"Name": "ModelingToolsEditorMode",
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
+		},
+		{
+			"Name": "ProjectBootstrapper",
 			"Enabled": true,
 			"TargetAllowList": [
 				"Editor"
