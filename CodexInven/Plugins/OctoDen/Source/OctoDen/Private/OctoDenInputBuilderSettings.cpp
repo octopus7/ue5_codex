@@ -80,6 +80,11 @@ bool FOctoDenManagedInputAnalysis::HasAvailableActions() const
 	});
 }
 
+UOctoDenInputBuilderSettings::UOctoDenInputBuilderSettings()
+{
+	ResetDraftBindingsToDefaults();
+}
+
 TArray<EOctoDenStandardInputAction> UOctoDenInputBuilderSettings::GetAllStandardActions()
 {
 	return {
@@ -155,6 +160,27 @@ FText UOctoDenInputBuilderSettings::GetPresetBindingSummary(const EOctoDenStanda
 	default:
 		return FText::GetEmpty();
 	}
+}
+
+FOctoDenInputBindingDraft UOctoDenInputBuilderSettings::MakeDefaultBindingDraft(const EOctoDenStandardInputAction InAction)
+{
+	FOctoDenInputBindingDraft Draft;
+
+	switch (InAction)
+	{
+	case EOctoDenStandardInputAction::Jump:
+		Draft.PrimaryKey = EKeys::SpaceBar;
+		Draft.GamepadKey = EKeys::Gamepad_FaceButton_Bottom;
+		break;
+	case EOctoDenStandardInputAction::Fire:
+		Draft.PrimaryKey = EKeys::LeftMouseButton;
+		Draft.GamepadKey = EKeys::Gamepad_RightTrigger;
+		break;
+	default:
+		break;
+	}
+
+	return Draft;
 }
 
 FOctoDenManagedInputAnalysis UOctoDenInputBuilderSettings::AnalyzeSelectedInputMappingContext() const
@@ -288,6 +314,12 @@ bool UOctoDenInputBuilderSettings::SelectedActionUsesPresetBindings() const
 {
 	EOctoDenStandardInputAction ResolvedAction = EOctoDenStandardInputAction::Move;
 	return ResolveSelectedAction(ResolvedAction) && UsesPresetBindings(ResolvedAction);
+}
+
+void UOctoDenInputBuilderSettings::ResetDraftBindingsToDefaults()
+{
+	JumpBindings = MakeDefaultBindingDraft(EOctoDenStandardInputAction::Jump);
+	FireBindings = MakeDefaultBindingDraft(EOctoDenStandardInputAction::Fire);
 }
 
 FString UOctoDenInputBuilderSettings::GetCanonicalInputActionName(const EOctoDenStandardInputAction InAction) const

@@ -85,8 +85,12 @@ bool FOctoDenInputBuilderDefaultsTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("Default IA prefix"), Settings->InputActionPrefix, FString(TEXT("IA_")));
 	TestEqual(TEXT("Default IA folder"), Settings->InputActionFolder, FString(TEXT("/Game/Input/Actions")));
 	TestEqual(TEXT("Default selected action"), Settings->SelectedAction, EOctoDenStandardInputAction::Move);
-	TestFalse(TEXT("Jump draft starts empty"), Settings->JumpBindings.HasAnyValidKey());
-	TestFalse(TEXT("Fire draft starts empty"), Settings->FireBindings.HasAnyValidKey());
+	TestTrue(TEXT("Jump draft starts with defaults"), Settings->JumpBindings.HasAnyValidKey());
+	TestEqual(TEXT("Jump default primary key"), Settings->JumpBindings.PrimaryKey, EKeys::SpaceBar);
+	TestEqual(TEXT("Jump default gamepad key"), Settings->JumpBindings.GamepadKey, EKeys::Gamepad_FaceButton_Bottom);
+	TestTrue(TEXT("Fire draft starts with defaults"), Settings->FireBindings.HasAnyValidKey());
+	TestEqual(TEXT("Fire default primary key"), Settings->FireBindings.PrimaryKey, EKeys::LeftMouseButton);
+	TestEqual(TEXT("Fire default gamepad key"), Settings->FireBindings.GamepadKey, EKeys::Gamepad_RightTrigger);
 	return true;
 }
 

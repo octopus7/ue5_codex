@@ -4,6 +4,7 @@
 #include "DetailLayoutBuilder.h"
 #include "DetailWidgetRow.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
+#include "IPropertyUtilities.h"
 #include "Modules/ModuleManager.h"
 #include "OctoDenInputBuilderSettings.h"
 #include "OctoDenModule.h"
@@ -196,6 +197,8 @@ void FOctoDenInputBuilderSettingsCustomization::CustomizeDetails(IDetailLayoutBu
 {
 	TSharedRef<IPropertyHandle> SelectedImcProperty = DetailBuilder.GetProperty(
 		GET_MEMBER_NAME_CHECKED(UOctoDenInputBuilderSettings, SelectedInputMappingContext));
+	TSharedRef<IPropertyHandle> SelectedActionProperty = DetailBuilder.GetProperty(
+		GET_MEMBER_NAME_CHECKED(UOctoDenInputBuilderSettings, SelectedAction));
 	TSharedRef<IPropertyHandle> InputActionPrefixProperty = DetailBuilder.GetProperty(
 		GET_MEMBER_NAME_CHECKED(UOctoDenInputBuilderSettings, InputActionPrefix));
 	TSharedRef<IPropertyHandle> InputActionFolderProperty = DetailBuilder.GetProperty(
@@ -204,8 +207,10 @@ void FOctoDenInputBuilderSettingsCustomization::CustomizeDetails(IDetailLayoutBu
 		GET_MEMBER_NAME_CHECKED(UOctoDenInputBuilderSettings, JumpBindings));
 	TSharedRef<IPropertyHandle> FireBindingsProperty = DetailBuilder.GetProperty(
 		GET_MEMBER_NAME_CHECKED(UOctoDenInputBuilderSettings, FireBindings));
+	const TSharedPtr<IPropertyUtilities> PropertyUtilities = DetailBuilder.GetPropertyUtilities();
 
 	DetailBuilder.HideProperty(SelectedImcProperty);
+	DetailBuilder.HideProperty(SelectedActionProperty);
 	DetailBuilder.HideProperty(InputActionPrefixProperty);
 	DetailBuilder.HideProperty(InputActionFolderProperty);
 	DetailBuilder.HideProperty(JumpBindingsProperty);
@@ -340,7 +345,7 @@ void FOctoDenInputBuilderSettingsCustomization::CustomizeDetails(IDetailLayoutBu
 		.Padding(0.0f, 0.0f, 8.0f, 0.0f)
 		[
 			SNew(SComboButton)
-			.OnGetMenuContent_Lambda([DialogSettings]()
+			.OnGetMenuContent_Lambda([DialogSettings, SelectedActionProperty, PropertyUtilities]()
 			{
 				FMenuBuilder MenuBuilder(true, nullptr);
 				if (UOctoDenInputBuilderSettings* Settings = DialogSettings.Get())
@@ -351,11 +356,12 @@ void FOctoDenInputBuilderSettingsCustomization::CustomizeDetails(IDetailLayoutBu
 							UOctoDenInputBuilderSettings::GetStandardActionDisplayText(Action),
 							FText::GetEmpty(),
 							FSlateIcon(),
-							FUIAction(FExecuteAction::CreateLambda([DialogSettings, Action]()
+							FUIAction(FExecuteAction::CreateLambda([SelectedActionProperty, PropertyUtilities, Action]()
 							{
-								if (UOctoDenInputBuilderSettings* MutableSettings = DialogSettings.Get())
+								SelectedActionProperty->SetValue(static_cast<uint8>(Action));
+								if (PropertyUtilities.IsValid())
 								{
-									MutableSettings->SelectedAction = Action;
+									PropertyUtilities->ForceRefresh();
 								}
 							})));
 					}

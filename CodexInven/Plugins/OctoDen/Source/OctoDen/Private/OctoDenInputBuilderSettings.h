@@ -62,6 +62,8 @@ class UOctoDenInputBuilderSettings : public UObject
 	GENERATED_BODY()
 
 public:
+	UOctoDenInputBuilderSettings();
+
 	UPROPERTY(EditAnywhere, Category = "Input Builder|IMC")
 	TObjectPtr<UInputMappingContext> SelectedInputMappingContext = nullptr;
 
@@ -71,7 +73,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Input Builder|IA", meta = (ToolTip = "Content browser folder path. Example: /Game/Input/Actions"))
 	FString InputActionFolder = TEXT("/Game/Input/Actions");
 
-	UPROPERTY(Transient)
+	UPROPERTY(EditAnywhere, Transient, Category = "Input Builder|Selection")
 	EOctoDenStandardInputAction SelectedAction = EOctoDenStandardInputAction::Move;
 
 	UPROPERTY(EditAnywhere, Transient, Category = "Input Builder|Draft")
@@ -86,12 +88,14 @@ public:
 	static EInputActionValueType GetStandardActionValueType(EOctoDenStandardInputAction InAction);
 	static bool UsesPresetBindings(EOctoDenStandardInputAction InAction);
 	static FText GetPresetBindingSummary(EOctoDenStandardInputAction InAction);
+	static FOctoDenInputBindingDraft MakeDefaultBindingDraft(EOctoDenStandardInputAction InAction);
 
 	FOctoDenManagedInputAnalysis AnalyzeSelectedInputMappingContext() const;
 	bool ResolveSelectedAction(EOctoDenStandardInputAction& OutAction) const;
 	bool HasSelectedInputMappingContext() const;
 	bool CanAddSelectedAction(FText* OutFailReason = nullptr) const;
 	bool SelectedActionUsesPresetBindings() const;
+	void ResetDraftBindingsToDefaults();
 
 	FString GetCanonicalInputActionName(EOctoDenStandardInputAction InAction) const;
 	FString GetCanonicalInputActionPackagePath(EOctoDenStandardInputAction InAction) const;
