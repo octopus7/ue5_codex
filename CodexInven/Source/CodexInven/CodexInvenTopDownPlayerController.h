@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "InputActionValue.h"
+#include "TimerManager.h"
 #include "CodexInvenTopDownPlayerController.generated.h"
 
 class ACodexInvenTopDownCharacter;
@@ -26,16 +27,25 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	int32 InputMappingPriority = 0;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (ClampMin = "0.01"))
+	float AutomaticFireInterval = 0.12f;
+
 private:
 	const UCodexInvenInputConfigDataAsset* GetInputConfig() const;
 	ACodexInvenTopDownCharacter* GetTopDownCharacter() const;
 	void ApplyInputMappingContext();
 	bool TryGetCursorGroundPoint(FVector& OutWorldPoint) const;
+	void FireProjectileOnce();
 	void UpdateAimFromCursor() const;
 	void HandleMove(const FInputActionValue& InValue);
 	void HandleLook(const FInputActionValue& InValue);
 	void HandleJumpStarted();
 	void HandleJumpCompleted();
 	void HandleFireStarted();
+	void HandleFireCompleted();
+	void HandleAutoFireTick();
 	void BindConfiguredInput(UEnhancedInputComponent& InEnhancedInputComponent);
+
+	FTimerHandle AutomaticFireTimerHandle;
+	bool bIsAutomaticFireActive = false;
 };

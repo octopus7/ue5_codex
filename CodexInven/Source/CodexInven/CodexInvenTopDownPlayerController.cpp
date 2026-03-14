@@ -9,6 +9,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/LocalPlayer.h"
+#include "Engine/World.h"
 
 ACodexInvenTopDownPlayerController::ACodexInvenTopDownPlayerController()
 {
@@ -90,6 +91,21 @@ bool ACodexInvenTopDownPlayerController::TryGetCursorGroundPoint(FVector& OutWor
 	return true;
 }
 
+void ACodexInvenTopDownPlayerController::FireProjectileOnce()
+{
+	if (ACodexInvenTopDownCharacter* ControlledCharacter = GetTopDownCharacter())
+	{
+		FVector CursorWorldPoint;
+		if (TryGetCursorGroundPoint(CursorWorldPoint))
+		{
+			ControlledCharacter->FireAtWorldLocation(CursorWorldPoint);
+			return;
+		}
+
+		ControlledCharacter->FireAtWorldLocation(ControlledCharacter->GetActorLocation() + ControlledCharacter->GetActorForwardVector() * 1000.0f);
+	}
+}
+
 void ACodexInvenTopDownPlayerController::UpdateAimFromCursor() const
 {
 	ACodexInvenTopDownCharacter* ControlledCharacter = GetTopDownCharacter();
@@ -148,17 +164,48 @@ void ACodexInvenTopDownPlayerController::HandleJumpCompleted()
 
 void ACodexInvenTopDownPlayerController::HandleFireStarted()
 {
-	if (ACodexInvenTopDownCharacter* ControlledCharacter = GetTopDownCharacter())
+	if (bIsAutomaticFireActive)
 	{
-		FVector CursorWorldPoint;
-		if (TryGetCursorGroundPoint(CursorWorldPoint))
-		{
-			ControlledCharacter->FireAtWorldLocation(CursorWorldPoint);
-			return;
-		}
-
-		ControlledCharacter->FireAtWorldLocation(ControlledCharacter->GetActorLocation() + ControlledCharacter->GetActorForwardVector() * 1000.0f);
+		return;
 	}
+
+	bIsAutomaticFireActive = true;
+	FireProjectileOnce();
+
+	UWorld* World = GetWorld();
+	if (World == nullptr)
+	{
+		return;
+	}
+
+	World->GetTimerManager().SetTimer(
+		AutomaticFireTimerHandle,
+		this,
+		&ThisClass::HandleAutoFireTick,
+		AutomaticFireInterval,
+		true,
+		AutomaticFireInterval);
+}
+
+void ACodexInvenTopDownPlayerController::HandleFireCompleted()
+{
+	bIsAutomaticFireActive = false;
+
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(AutomaticFireTimerHandle);
+	}
+}
+
+void ACodexInvenTopDownPlayerController::HandleAutoFireTick()
+{
+	if (!bIsAutomaticFireActive)
+	{
+		HandleFireCompleted();
+		return;
+	}
+
+	FireProjectileOnce();
 }
 
 void ACodexInvenTopDownPlayerController::BindConfiguredInput(UEnhancedInputComponent& InEnhancedInputComponent)
@@ -174,4 +221,6 @@ void ACodexInvenTopDownPlayerController::BindConfiguredInput(UEnhancedInputCompo
 	InEnhancedInputComponent.BindAction(InputConfig->JumpAction, ETriggerEvent::Started, this, &ThisClass::HandleJumpStarted);
 	InEnhancedInputComponent.BindAction(InputConfig->JumpAction, ETriggerEvent::Completed, this, &ThisClass::HandleJumpCompleted);
 	InEnhancedInputComponent.BindAction(InputConfig->FireAction, ETriggerEvent::Started, this, &ThisClass::HandleFireStarted);
+	InEnhancedInputComponent.BindAction(InputConfig->FireAction, ETriggerEvent::Completed, this, &ThisClass::HandleFireCompleted);
+	InEnhancedInputComponent.BindAction(InputConfig->FireAction, ETriggerEvent::Canceled, this, &ThisClass::HandleFireCompleted);
 }
