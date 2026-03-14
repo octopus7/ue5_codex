@@ -1,0 +1,18 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0.0",
+	"FriendlyName": "Project Bootstrapper",
+	"Description": "Generates project-native GameInstance/GameMode classes and assigns blueprint-based startup defaults.",
+	"Category": "Editor",
+	"CanContainContent": false,
+	"IsBetaVersion": true,
+	"EnabledByDefault": true,
+	"Modules": [
+		{
+			"Name": "ProjectBootstrapper",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	]
+}
