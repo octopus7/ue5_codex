@@ -12,6 +12,7 @@
 #include "GameFramework/WorldSettings.h"
 #include "GameMapsSettings.h"
 #include "GameProjectUtils.h"
+#include "Interfaces/IPluginManager.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Misc/App.h"
 #include "Misc/MessageDialog.h"
@@ -21,7 +22,10 @@
 #include "Modules/ModuleManager.h"
 #include "ProjectBootstrapperDialogSettings.h"
 #include "ProjectBootstrapperDialogSettingsCustomization.h"
+#include "Brushes/SlateImageBrush.h"
 #include "IDetailsView.h"
+#include "Styling/SlateStyle.h"
+#include "Styling/SlateStyleRegistry.h"
 #include "PropertyEditorModule.h"
 #include "ToolMenus.h"
 #include "UObject/StrongObjectPtr.h"
@@ -41,6 +45,10 @@ namespace ProjectBootstrapper
 {
 	const TCHAR* MenuName = TEXT("LevelEditor.MainMenu.Tools");
 	const TCHAR* ManagedMapFolder = TEXT("/Game/Maps");
+	const TCHAR* BasicTemplateMapPackage = TEXT("/Engine/Maps/Templates/Template_Default");
+	const TCHAR* TimeOfDayTemplateMapPackage = TEXT("/Engine/Maps/Templates/TimeOfDay_Default");
+	const TCHAR* StyleSetName = TEXT("ProjectBootstrapperStyle");
+	const TCHAR* MenuIconKey = TEXT("ProjectBootstrapper.MenuIcon");
 
 	FString TrimTrailingSlash(FString InValue)
 	{
@@ -481,6 +489,44 @@ namespace ProjectBootstrapper
 		return true;
 	}
 
+	bool CreateManagedMapWorld(const EProjectBootstrapperManagedMapTemplate InTemplate, UWorld*& OutWorld, FText& OutFailReason)
+	{
+		switch (InTemplate)
+		{
+		case EProjectBootstrapperManagedMapTemplate::Blank:
+			OutWorld = UEditorLoadingAndSavingUtils::NewBlankMap(/*bSaveExistingMap=*/false);
+			if (OutWorld == nullptr)
+			{
+				OutFailReason = LOCTEXT("CreateBlankManagedMapFailed", "Failed to create a new Blank map.");
+				return false;
+			}
+			return true;
+
+		case EProjectBootstrapperManagedMapTemplate::TimeOfDay:
+			OutWorld = UEditorLoadingAndSavingUtils::NewMapFromTemplate(TimeOfDayTemplateMapPackage, /*bSaveExistingMap=*/false);
+			if (OutWorld == nullptr)
+			{
+				OutFailReason = FText::Format(
+					LOCTEXT("CreateTimeOfDayManagedMapFailed", "Failed to create a new TimeOfDay map from template '{0}'."),
+					FText::FromString(TimeOfDayTemplateMapPackage));
+				return false;
+			}
+			return true;
+
+		case EProjectBootstrapperManagedMapTemplate::Basic:
+		default:
+			OutWorld = UEditorLoadingAndSavingUtils::NewMapFromTemplate(BasicTemplateMapPackage, /*bSaveExistingMap=*/false);
+			if (OutWorld == nullptr)
+			{
+				OutFailReason = FText::Format(
+					LOCTEXT("CreateBasicManagedMapFailed", "Failed to create a new Basic map from template '{0}'."),
+					FText::FromString(BasicTemplateMapPackage));
+				return false;
+			}
+			return true;
+		}
+	}
+
 	void ApplySuggestedGameModeNames(UProjectBootstrapperDialogSettings& InSettings, const FString& MapPackageName)
 	{
 		const FString ProjectName = ToPascalCase(FApp::GetProjectName());
@@ -611,6 +657,8 @@ namespace ProjectBootstrapper
 
 void FProjectBootstrapperModule::StartupModule()
 {
+	RegisterStyle();
+
 	FPropertyEditorModule& PropertyEditorModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
 	PropertyEditorModule.RegisterCustomClassLayout(
 		UProjectBootstrapperDialogSettings::StaticClass()->GetFName(),
@@ -632,9 +680,46 @@ void FProjectBootstrapperModule::ShutdownModule()
 		PropertyEditorModule.NotifyCustomizationModuleChanged();
 	}
 
+	UnregisterStyle();
+
 	DialogWindow.Reset();
 	DialogDetailsView.Reset();
 	DialogSettings.Reset();
+}
+
+void FProjectBootstrapperModule::RegisterStyle()
+{
+	if (StyleSet.IsValid())
+	{
+		return;
+	}
+
+	const TSharedPtr<IPlugin> Plugin = IPluginManager::Get().FindPlugin(TEXT("ProjectBootstrapper"));
+	if (!Plugin.IsValid())
+	{
+		return;
+	}
+
+	StyleSet = MakeShared<FSlateStyleSet>(ProjectBootstrapper::StyleSetName);
+	StyleSet->SetContentRoot(Plugin->GetBaseDir() / TEXT("Resources"));
+	StyleSet->Set(
+		ProjectBootstrapper::MenuIconKey,
+		new FSlateVectorImageBrush(
+			StyleSet->RootToContentDir(TEXT("Icons/ProjectBootstrapperDuck_20"), TEXT(".svg")),
+			FVector2D(20.0f, 20.0f)));
+
+	FSlateStyleRegistry::RegisterSlateStyle(*StyleSet);
+}
+
+void FProjectBootstrapperModule::UnregisterStyle()
+{
+	if (!StyleSet.IsValid())
+	{
+		return;
+	}
+
+	FSlateStyleRegistry::UnRegisterSlateStyle(*StyleSet);
+	StyleSet.Reset();
 }
 
 void FProjectBootstrapperModule::RegisterMenus()
@@ -642,13 +727,16 @@ void FProjectBootstrapperModule::RegisterMenus()
 	FToolMenuOwnerScoped OwnerScoped(this);
 
 	UToolMenu* Menu = UToolMenus::Get()->ExtendMenu(ProjectBootstrapper::MenuName);
-	FToolMenuSection& Section = Menu->FindOrAddSection(TEXT("ProjectBootstrapper"));
+	FToolMenuSection& Section = Menu->FindOrAddSection(
+		TEXT("ProjectBootstrapperCustomTools"),
+		LOCTEXT("ProjectBootstrapperCustomToolsSection", "Custom Tools"),
+		FToolMenuInsert(TEXT("Tools"), EToolMenuInsertType::Before));
 
 	Section.AddMenuEntry(
 		TEXT("OpenProjectBootstrapper"),
 		LOCTEXT("OpenProjectBootstrapperLabel", "Project Bootstrapper"),
 		LOCTEXT("OpenProjectBootstrapperTooltip", "Generate project-native GameInstance and GameMode classes, create matching blueprints, and assign project map defaults."),
-		FSlateIcon(),
+		FSlateIcon(ProjectBootstrapper::StyleSetName, ProjectBootstrapper::MenuIconKey),
 		FUIAction(FExecuteAction::CreateRaw(this, &FProjectBootstrapperModule::OpenBootstrapperWindow)));
 }
 
@@ -774,10 +862,10 @@ bool FProjectBootstrapperModule::CreateManagedMap(UProjectBootstrapperDialogSett
 		return false;
 	}
 
-	UWorld* NewWorld = UEditorLoadingAndSavingUtils::NewBlankMap(/*bSaveExistingMap=*/false);
-	if (NewWorld == nullptr)
+	UWorld* NewWorld = nullptr;
+	if (!ProjectBootstrapper::CreateManagedMapWorld(InDialogSettings->ManagedMapTemplate, NewWorld, FailReason))
 	{
-		FMessageDialog::Open(EAppMsgType::Ok, LOCTEXT("CreateManagedMapFailed", "Failed to create a new blank map."));
+		FMessageDialog::Open(EAppMsgType::Ok, FailReason);
 		return false;
 	}
 

@@ -23,7 +23,10 @@ void FProjectBootstrapperDialogSettingsCustomization::CustomizeDetails(IDetailLa
 {
 	TSharedRef<IPropertyHandle> ManagedMapNameProperty = DetailBuilder.GetProperty(
 		GET_MEMBER_NAME_CHECKED(UProjectBootstrapperDialogSettings, ManagedMapName));
+	TSharedRef<IPropertyHandle> ManagedMapTemplateProperty = DetailBuilder.GetProperty(
+		GET_MEMBER_NAME_CHECKED(UProjectBootstrapperDialogSettings, ManagedMapTemplate));
 	DetailBuilder.HideProperty(ManagedMapNameProperty);
+	DetailBuilder.HideProperty(ManagedMapTemplateProperty);
 
 	TArray<TWeakObjectPtr<UObject>> CustomizedObjects;
 	DetailBuilder.GetObjectsBeingCustomized(CustomizedObjects);
@@ -67,6 +70,17 @@ void FProjectBootstrapperDialogSettingsCustomization::CustomizeDetails(IDetailLa
 			{
 				ManagedMapNameProperty->SetValue(InText.ToString());
 			})
+		]
+		+ SHorizontalBox::Slot()
+		.AutoWidth()
+		.Padding(0.0f, 0.0f, 8.0f, 0.0f)
+		.VAlign(VAlign_Center)
+		[
+			SNew(SBox)
+			.WidthOverride(120.0f)
+			[
+				ManagedMapTemplateProperty->CreatePropertyValueWidget()
+			]
 		]
 		+ SHorizontalBox::Slot()
 		.AutoWidth()

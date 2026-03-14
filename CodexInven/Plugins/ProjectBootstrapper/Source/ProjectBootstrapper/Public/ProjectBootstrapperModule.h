@@ -6,6 +6,7 @@
 
 class SWindow;
 class IDetailsView;
+class FSlateStyleSet;
 class UProjectBootstrapperDialogSettings;
 
 class FProjectBootstrapperModule final : public IModuleInterface
@@ -21,10 +22,13 @@ public:
 	void RefreshDialogDetails() const;
 
 private:
+	void RegisterStyle();
+	void UnregisterStyle();
 	void RegisterMenus();
 	void OpenBootstrapperWindow();
 	void HandleDialogWindowClosed(const TSharedRef<SWindow>& Window);
 
+	TSharedPtr<FSlateStyleSet> StyleSet;
 	TSharedPtr<SWindow> DialogWindow;
 	TSharedPtr<IDetailsView> DialogDetailsView;
 	TStrongObjectPtr<UProjectBootstrapperDialogSettings> DialogSettings;

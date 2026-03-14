@@ -4,6 +4,14 @@
 #include "Engine/World.h"
 #include "ProjectBootstrapperDialogSettings.generated.h"
 
+UENUM()
+enum class EProjectBootstrapperManagedMapTemplate : uint8
+{
+	Basic,
+	Blank,
+	TimeOfDay
+};
+
 UCLASS(Transient)
 class UProjectBootstrapperDialogSettings : public UObject
 {
@@ -15,6 +23,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Maps", meta = (DisplayName = "Managed Map Name", ToolTip = "Used by the Create and Open buttons to manage /Game/Maps/<Name>."))
 	FString ManagedMapName = TEXT("BasicMap");
+
+	UPROPERTY(EditAnywhere, Category = "Maps", meta = (DisplayName = "Managed Map Template"))
+	EProjectBootstrapperManagedMapTemplate ManagedMapTemplate = EProjectBootstrapperManagedMapTemplate::Basic;
 
 	UPROPERTY(EditAnywhere, Category = "Maps")
 	TSoftObjectPtr<UWorld> TargetMap;
