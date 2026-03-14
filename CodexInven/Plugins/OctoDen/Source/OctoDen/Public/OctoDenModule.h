@@ -24,6 +24,7 @@ public:
 	bool CreateBlueprintsAndApply(UOctoDenBootstrapperSettings* InSettings);
 	bool BuildInputAssets(UOctoDenInputBuilderSettings* InSettings);
 	bool CreateDefaultInputMappingContext(UOctoDenInputBuilderSettings* InSettings);
+	bool LinkInputConfigDataAsset(UOctoDenInputBuilderSettings* InSettings);
 
 private:
 	void RegisterMenus();

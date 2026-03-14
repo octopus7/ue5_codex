@@ -100,6 +100,22 @@ namespace
 		return FText::GetEmpty();
 	}
 
+	FText GetRuntimeLinkButtonToolTip(const TWeakObjectPtr<UOctoDenInputBuilderSettings> InSettings)
+	{
+		if (const UOctoDenInputBuilderSettings* Settings = InSettings.Get())
+		{
+			FText FailReason;
+			if (Settings->CanLinkRuntimeInputConfig(&FailReason))
+			{
+				return LOCTEXT("RuntimeLinkTooltip", "Create or update the runtime Data Asset, then assign it to the project GameInstance Blueprint.");
+			}
+
+			return FailReason;
+		}
+
+		return FText::GetEmpty();
+	}
+
 	FText GetStatusText(const TWeakObjectPtr<UOctoDenInputBuilderSettings> InSettings, const EOctoDenStandardInputAction InAction)
 	{
 		if (const UOctoDenInputBuilderSettings* Settings = InSettings.Get())
@@ -189,6 +205,10 @@ void FOctoDenInputBuilderSettingsCustomization::CustomizeDetails(IDetailLayoutBu
 		GET_MEMBER_NAME_CHECKED(UOctoDenInputBuilderSettings, InputActionPrefix));
 	TSharedRef<IPropertyHandle> InputActionFolderProperty = DetailBuilder.GetProperty(
 		GET_MEMBER_NAME_CHECKED(UOctoDenInputBuilderSettings, InputActionFolder));
+	TSharedRef<IPropertyHandle> InputConfigFolderProperty = DetailBuilder.GetProperty(
+		GET_MEMBER_NAME_CHECKED(UOctoDenInputBuilderSettings, InputConfigFolder));
+	TSharedRef<IPropertyHandle> InputConfigAssetNameProperty = DetailBuilder.GetProperty(
+		GET_MEMBER_NAME_CHECKED(UOctoDenInputBuilderSettings, InputConfigAssetName));
 	TSharedRef<IPropertyHandle> JumpBindingsProperty = DetailBuilder.GetProperty(
 		GET_MEMBER_NAME_CHECKED(UOctoDenInputBuilderSettings, JumpBindings));
 	TSharedRef<IPropertyHandle> FireBindingsProperty = DetailBuilder.GetProperty(
@@ -199,6 +219,8 @@ void FOctoDenInputBuilderSettingsCustomization::CustomizeDetails(IDetailLayoutBu
 	DetailBuilder.HideProperty(SelectedActionProperty);
 	DetailBuilder.HideProperty(InputActionPrefixProperty);
 	DetailBuilder.HideProperty(InputActionFolderProperty);
+	DetailBuilder.HideProperty(InputConfigFolderProperty);
+	DetailBuilder.HideProperty(InputConfigAssetNameProperty);
 	DetailBuilder.HideProperty(JumpBindingsProperty);
 	DetailBuilder.HideProperty(FireBindingsProperty);
 
@@ -308,6 +330,42 @@ void FOctoDenInputBuilderSettingsCustomization::CustomizeDetails(IDetailLayoutBu
 	.MaxDesiredWidth(420.0f)
 	[
 		InputActionFolderProperty->CreatePropertyValueWidget()
+	];
+
+	BuilderCategory.AddCustomRow(LOCTEXT("DaFolderFilter", "Input Config Folder"))
+	.Visibility(TAttribute<EVisibility>::CreateLambda([DialogSettings]()
+	{
+		return GetSetupRowsVisibility(DialogSettings);
+	}))
+	.NameContent()
+	[
+		SNew(STextBlock)
+		.Text(LOCTEXT("DaFolderLabel", "Input Config Folder"))
+		.Font(IDetailLayoutBuilder::GetDetailFont())
+	]
+	.ValueContent()
+	.MinDesiredWidth(320.0f)
+	.MaxDesiredWidth(420.0f)
+	[
+		InputConfigFolderProperty->CreatePropertyValueWidget()
+	];
+
+	BuilderCategory.AddCustomRow(LOCTEXT("DaNameFilter", "Input Config Asset"))
+	.Visibility(TAttribute<EVisibility>::CreateLambda([DialogSettings]()
+	{
+		return GetSetupRowsVisibility(DialogSettings);
+	}))
+	.NameContent()
+	[
+		SNew(STextBlock)
+		.Text(LOCTEXT("DaNameLabel", "Input Config Asset"))
+		.Font(IDetailLayoutBuilder::GetDetailFont())
+	]
+	.ValueContent()
+	.MinDesiredWidth(320.0f)
+	.MaxDesiredWidth(420.0f)
+	[
+		InputConfigAssetNameProperty->CreatePropertyValueWidget()
 	];
 
 	BuilderCategory.AddCustomRow(LOCTEXT("ActionSelectionFilter", "Managed Action"))
@@ -449,8 +507,59 @@ void FOctoDenInputBuilderSettingsCustomization::CustomizeDetails(IDetailLayoutBu
 	.WholeRowContent()
 	[
 		SNew(STextBlock)
-		.Text(UOctoDenInputBuilderSettings::GetPresetBindingSummary(EOctoDenStandardInputAction::Fire))
+			.Text(UOctoDenInputBuilderSettings::GetPresetBindingSummary(EOctoDenStandardInputAction::Fire))
 		.AutoWrapText(true)
+	];
+
+	BuilderCategory.AddCustomRow(LOCTEXT("RuntimeLinkFilter", "Runtime Link"))
+	.Visibility(TAttribute<EVisibility>::CreateLambda([DialogSettings]()
+	{
+		return GetSetupRowsVisibility(DialogSettings);
+	}))
+	.WholeRowContent()
+	[
+		SNew(SVerticalBox)
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		.Padding(0.0f, 4.0f, 0.0f, 8.0f)
+		[
+			SNew(STextBlock)
+			.Text(LOCTEXT("RuntimeLinkHint", "When all four managed actions exist, create or update the runtime DA and assign it to the current GameInstance Blueprint."))
+			.AutoWrapText(true)
+		]
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		[
+			SNew(SBox)
+			.WidthOverride(220.0f)
+			[
+				SNew(SButton)
+				.Text(LOCTEXT("RuntimeLinkButton", "Link DA && GameInstance"))
+				.IsEnabled_Lambda([DialogSettings]()
+				{
+					if (const UOctoDenInputBuilderSettings* Settings = DialogSettings.Get())
+					{
+						return Settings->CanLinkRuntimeInputConfig();
+					}
+
+					return false;
+				})
+				.ToolTipText_Lambda([DialogSettings]()
+				{
+					return GetRuntimeLinkButtonToolTip(DialogSettings);
+				})
+				.OnClicked_Lambda([DialogSettings]()
+				{
+					if (UOctoDenInputBuilderSettings* Settings = DialogSettings.Get())
+					{
+						FOctoDenModule& Module = FModuleManager::LoadModuleChecked<FOctoDenModule>(TEXT("OctoDen"));
+						Module.LinkInputConfigDataAsset(Settings);
+					}
+
+					return FReply::Handled();
+				})
+			]
+		]
 	];
 
 	BuilderCategory.AddCustomRow(LOCTEXT("AllActionsAddedFilter", "All Actions Added"))

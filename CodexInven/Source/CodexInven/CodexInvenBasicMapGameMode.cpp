@@ -3,3 +3,12 @@
 
 #include "CodexInvenBasicMapGameMode.h"
 
+#include "CodexInvenTopDownCharacter.h"
+#include "CodexInvenTopDownPlayerController.h"
+
+ACodexInvenBasicMapGameMode::ACodexInvenBasicMapGameMode()
+{
+	DefaultPawnClass = ACodexInvenTopDownCharacter::StaticClass();
+	PlayerControllerClass = ACodexInvenTopDownPlayerController::StaticClass();
+}
+

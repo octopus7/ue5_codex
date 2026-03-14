@@ -5,8 +5,10 @@
 #include "Editor.h"
 #include "Editor/EditorEngine.h"
 #include "Engine/Blueprint.h"
+#include "Engine/DataAsset.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
+#include "Factories/DataAssetFactory.h"
 #include "FileHelpers.h"
 #include "Framework/Docking/TabManager.h"
 #include "Framework/Notifications/NotificationManager.h"
@@ -18,6 +20,7 @@
 #include "InputAction.h"
 #include "InputEditorModule.h"
 #include "InputMappingContext.h"
+#include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Misc/App.h"
 #include "Misc/MessageDialog.h"
@@ -33,6 +36,7 @@
 #include "PropertyEditorModule.h"
 #include "Styling/AppStyle.h"
 #include "ToolMenus.h"
+#include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/StrongObjectPtr.h"
 #include "Widgets/Docking/SDockTab.h"
@@ -770,6 +774,14 @@ namespace OctoDenInputBuilder
 		int32 AddedMappings = 0;
 	};
 
+	struct FRuntimeInputLinkSummary
+	{
+		FString InputConfigPackagePath;
+		FString InputMappingContextPackagePath;
+		FString GameInstanceBlueprintPath;
+		bool bCreatedInputConfig = false;
+	};
+
 	FString BuildSummaryText(const FManagedInputBuildSummary& InSummary)
 	{
 		return FString::Printf(
@@ -781,6 +793,242 @@ namespace OctoDenInputBuilder
 			InSummary.RemovedNullMappings,
 			InSummary.RemovedExistingMappings,
 			InSummary.AddedMappings);
+	}
+
+	FString BuildRuntimeLinkSummaryText(const FRuntimeInputLinkSummary& InSummary)
+	{
+		return FString::Printf(
+			TEXT("Runtime input is linked.\nIMC: %s\nDA: %s\nDA Created: %s\nGameInstance BP: %s"),
+			*InSummary.InputMappingContextPackagePath,
+			*InSummary.InputConfigPackagePath,
+			InSummary.bCreatedInputConfig ? TEXT("Yes") : TEXT("No"),
+			*InSummary.GameInstanceBlueprintPath);
+	}
+
+	bool ResolveProjectInputConfigClass(UClass*& OutInputConfigClass, FText& OutFailReason)
+	{
+		const FString ProjectName = FApp::GetProjectName();
+		const FString ClassName = ProjectName + TEXT("InputConfigDataAsset");
+		const FString ClassPath = FString::Printf(TEXT("/Script/%s.%s"), *ProjectName, *ClassName);
+
+		OutInputConfigClass = LoadObject<UClass>(nullptr, *ClassPath);
+		if (OutInputConfigClass == nullptr)
+		{
+			OutFailReason = FText::Format(
+				LOCTEXT("ProjectInputConfigClassMissing", "Native input config class '{0}' is not loaded. Build the project module first."),
+				FText::FromString(ClassPath));
+			return false;
+		}
+
+		if (!OutInputConfigClass->IsChildOf(UDataAsset::StaticClass()))
+		{
+			OutFailReason = FText::Format(
+				LOCTEXT("ProjectInputConfigClassWrongParent", "Class '{0}' is not derived from UDataAsset."),
+				FText::FromString(ClassPath));
+			return false;
+		}
+
+		return true;
+	}
+
+	bool ResolveManagedInputActionForRuntimeLink(
+		const UOctoDenInputBuilderSettings& InSettings,
+		const EOctoDenStandardInputAction InAction,
+		UInputAction*& OutInputAction,
+		FText& OutFailReason)
+	{
+		OutInputAction = LoadObject<UInputAction>(nullptr, *InSettings.GetCanonicalInputActionObjectPath(InAction));
+		if (OutInputAction == nullptr)
+		{
+			OutFailReason = FText::Format(
+				LOCTEXT("ManagedInputActionMissingForRuntimeLink", "Managed IA '{0}' could not be loaded. Build the managed inputs first."),
+				FText::FromString(InSettings.GetCanonicalInputActionPackagePath(InAction)));
+			return false;
+		}
+
+		return true;
+	}
+
+	bool CreateInputConfigDataAsset(
+		const FString& InFolder,
+		const FString& InAssetName,
+		UClass* InInputConfigClass,
+		UObject*& OutInputConfigAsset,
+		FText& OutFailReason)
+	{
+		IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools")).Get();
+		UDataAssetFactory* Factory = NewObject<UDataAssetFactory>();
+		Factory->DataAssetClass = InInputConfigClass;
+
+		OutInputConfigAsset = AssetTools.CreateAsset(InAssetName, InFolder, InInputConfigClass, Factory, FName(TEXT("OctoDenInputBuilder")));
+		if (OutInputConfigAsset == nullptr)
+		{
+			OutFailReason = FText::Format(
+				LOCTEXT("CreateInputConfigDataAssetFailed", "Failed to create Input Config Data Asset '{0}'."), 
+				FText::FromString(InAssetName));
+			return false;
+		}
+
+		return true;
+	}
+
+	bool ResolveOrCreateInputConfigAsset(
+		const UOctoDenInputBuilderSettings& InSettings,
+		UClass* InInputConfigClass,
+		UObject*& OutInputConfigAsset,
+		bool& bOutCreatedInputConfig,
+		FText& OutFailReason)
+	{
+		bOutCreatedInputConfig = false;
+		OutInputConfigAsset = nullptr;
+
+		const FString InputConfigPackagePath = InSettings.GetInputConfigPackagePath();
+		if (!FPackageName::IsValidLongPackageName(InputConfigPackagePath))
+		{
+			OutFailReason = FText::Format(
+				LOCTEXT("InvalidInputConfigPackagePath", "The generated Input Config package path '{0}' is not valid."),
+				FText::FromString(InputConfigPackagePath));
+			return false;
+		}
+
+		if (FPackageName::DoesPackageExist(InputConfigPackagePath))
+		{
+			OutInputConfigAsset = StaticLoadObject(InInputConfigClass, nullptr, *InSettings.GetInputConfigObjectPath());
+			if (OutInputConfigAsset == nullptr)
+			{
+				OutFailReason = FText::Format(
+					LOCTEXT("LoadInputConfigDataAssetFailed", "Failed to load Input Config Data Asset '{0}' with the expected native class."),
+					FText::FromString(InputConfigPackagePath));
+				return false;
+			}
+
+			return true;
+		}
+
+		if (!CreateInputConfigDataAsset(
+			OctoDen::NormalizeAssetFolder(InSettings.InputConfigFolder),
+			InSettings.InputConfigAssetName.TrimStartAndEnd(),
+			InInputConfigClass,
+			OutInputConfigAsset,
+			OutFailReason))
+		{
+			return false;
+		}
+
+		bOutCreatedInputConfig = true;
+		return true;
+	}
+
+	bool SetObjectPropertyValue(
+		UObject& InTargetObject,
+		const TCHAR* InPropertyName,
+		UObject* InValue,
+		UClass* InExpectedPropertyBaseClass,
+		FText& OutFailReason)
+	{
+		FObjectProperty* ObjectProperty = FindFProperty<FObjectProperty>(InTargetObject.GetClass(), InPropertyName);
+		if (ObjectProperty == nullptr)
+		{
+			OutFailReason = FText::Format(
+				LOCTEXT("ObjectPropertyMissing", "Property '{0}' was not found on '{1}'."),
+				FText::FromString(InPropertyName),
+				FText::FromString(InTargetObject.GetClass()->GetPathName()));
+			return false;
+		}
+
+		if (InExpectedPropertyBaseClass != nullptr && !ObjectProperty->PropertyClass->IsChildOf(InExpectedPropertyBaseClass))
+		{
+			OutFailReason = FText::Format(
+				LOCTEXT("ObjectPropertyWrongType", "Property '{0}' on '{1}' does not accept values derived from '{2}'."),
+				FText::FromString(InPropertyName),
+				FText::FromString(InTargetObject.GetClass()->GetPathName()),
+				FText::FromString(InExpectedPropertyBaseClass->GetName()));
+			return false;
+		}
+
+		if (InValue != nullptr && !InValue->IsA(ObjectProperty->PropertyClass))
+		{
+			OutFailReason = FText::Format(
+				LOCTEXT("ObjectPropertyValueWrongType", "Value '{0}' is not compatible with property '{1}' on '{2}'."),
+				FText::FromString(InValue->GetPathName()),
+				FText::FromString(InPropertyName),
+				FText::FromString(InTargetObject.GetClass()->GetPathName()));
+			return false;
+		}
+
+		InTargetObject.Modify();
+		InTargetObject.PreEditChange(ObjectProperty);
+		ObjectProperty->SetObjectPropertyValue_InContainer(&InTargetObject, InValue);
+		FPropertyChangedEvent PropertyChangedEvent(ObjectProperty);
+		InTargetObject.PostEditChangeProperty(PropertyChangedEvent);
+		InTargetObject.MarkPackageDirty();
+		return true;
+	}
+
+	bool PopulateRuntimeInputConfigAsset(
+		UObject& InInputConfigAsset,
+		UInputMappingContext& InInputMappingContext,
+		UInputAction& InMoveAction,
+		UInputAction& InLookAction,
+		UInputAction& InJumpAction,
+		UInputAction& InFireAction,
+		FText& OutFailReason)
+	{
+		return SetObjectPropertyValue(InInputConfigAsset, TEXT("InputMappingContext"), &InInputMappingContext, UInputMappingContext::StaticClass(), OutFailReason)
+			&& SetObjectPropertyValue(InInputConfigAsset, TEXT("MoveAction"), &InMoveAction, UInputAction::StaticClass(), OutFailReason)
+			&& SetObjectPropertyValue(InInputConfigAsset, TEXT("LookAction"), &InLookAction, UInputAction::StaticClass(), OutFailReason)
+			&& SetObjectPropertyValue(InInputConfigAsset, TEXT("JumpAction"), &InJumpAction, UInputAction::StaticClass(), OutFailReason)
+			&& SetObjectPropertyValue(InInputConfigAsset, TEXT("FireAction"), &InFireAction, UInputAction::StaticClass(), OutFailReason);
+	}
+
+	bool ResolveProjectGameInstanceBlueprint(UBlueprint*& OutGameInstanceBlueprint, UObject*& OutDefaultObject, FText& OutFailReason)
+	{
+		const UGameMapsSettings* GameMapsSettings = GetDefault<UGameMapsSettings>();
+		if (GameMapsSettings == nullptr)
+		{
+			OutFailReason = LOCTEXT("GameMapsSettingsMissing", "GameMapsSettings could not be resolved.");
+			return false;
+		}
+
+		UClass* GameInstanceClass = GameMapsSettings->GameInstanceClass.TryLoadClass<UGameInstance>();
+		if (GameInstanceClass == nullptr)
+		{
+			OutFailReason = LOCTEXT("ProjectGameInstanceMissing", "Project GameInstanceClass is not assigned or could not be loaded.");
+			return false;
+		}
+
+		OutGameInstanceBlueprint = Cast<UBlueprint>(GameInstanceClass->ClassGeneratedBy);
+		if (OutGameInstanceBlueprint == nullptr)
+		{
+			OutFailReason = FText::Format(
+				LOCTEXT("ProjectGameInstanceMustBeBlueprint", "GameInstanceClass '{0}' must be a Blueprint child so the Input Config reference can be saved."),
+				FText::FromString(GameInstanceClass->GetPathName()));
+			return false;
+		}
+
+		OutDefaultObject = GameInstanceClass->GetDefaultObject();
+		if (OutDefaultObject == nullptr)
+		{
+			OutFailReason = FText::Format(
+				LOCTEXT("ProjectGameInstanceCdoMissing", "GameInstanceClass '{0}' does not expose a default object."),
+				FText::FromString(GameInstanceClass->GetPathName()));
+			return false;
+		}
+
+		return true;
+	}
+
+	bool AssignRuntimeInputConfigToGameInstance(UObject& InInputConfigAsset, UBlueprint& InGameInstanceBlueprint, UObject& InDefaultObject, FText& OutFailReason)
+	{
+		if (!SetObjectPropertyValue(InDefaultObject, TEXT("DefaultInputConfig"), &InInputConfigAsset, UDataAsset::StaticClass(), OutFailReason))
+		{
+			return false;
+		}
+
+		FBlueprintEditorUtils::MarkBlueprintAsModified(&InGameInstanceBlueprint);
+		FKismetEditorUtilities::CompileBlueprint(&InGameInstanceBlueprint);
+		InGameInstanceBlueprint.MarkPackageDirty();
+		return true;
 	}
 
 	bool CreateInputActionAsset(const FString& InFolder, const FString& InAssetName, UInputAction*& OutInputAction, FText& OutFailReason)
@@ -1063,7 +1311,7 @@ void FOctoDenModule::ResetInputBuilderSettings()
 		InputBuilderDetailsView->SetObject(InputBuilderSettings.Get());
 	}
 
-	UpdateInputBuilderResult(LOCTEXT("InputBuilderDefaultResult", "Create a default IMC or select one after it has been assigned, then add the managed inputs one by one."));
+	UpdateInputBuilderResult(LOCTEXT("InputBuilderDefaultResult", "Create a default IMC or select one after it has been assigned, add the managed inputs one by one, then link the runtime DA to the GameInstance."));
 }
 
 void FOctoDenModule::ShowNotification(const FText& InText, const bool bWasSuccessful) const
@@ -1339,7 +1587,7 @@ TSharedRef<SDockTab> FOctoDenModule::SpawnInputBuilderTab(const FSpawnTabArgs& S
 						[
 							SAssignNew(InputBuilderResultTextBlock, STextBlock)
 							.AutoWrapText(true)
-							.Text(LOCTEXT("InputBuilderInitialText", "Create a default IMC or select one after it has been assigned, then add the managed inputs one by one."))
+							.Text(LOCTEXT("InputBuilderInitialText", "Create a default IMC or select one after it has been assigned, add the managed inputs one by one, then link the runtime DA to the GameInstance."))
 						]
 					]
 				]
@@ -1739,6 +1987,112 @@ bool FOctoDenModule::BuildInputAssets(UOctoDenInputBuilderSettings* InSettings)
 			LOCTEXT("ManagedInputAddedNotification", "Added {0} to {1}."),
 			UOctoDenInputBuilderSettings::GetStandardActionDisplayText(ManagedAction),
 			FText::FromString(InSettings->SelectedInputMappingContext->GetName())),
+		true);
+
+	return true;
+}
+
+bool FOctoDenModule::LinkInputConfigDataAsset(UOctoDenInputBuilderSettings* InSettings)
+{
+	if (InSettings == nullptr)
+	{
+		return false;
+	}
+
+	FText FailReason;
+	if (!InSettings->CanLinkRuntimeInputConfig(&FailReason) || InSettings->SelectedInputMappingContext == nullptr)
+	{
+		UpdateInputBuilderResult(FailReason);
+		FMessageDialog::Open(EAppMsgType::Ok, FailReason);
+		return false;
+	}
+
+	UClass* InputConfigClass = nullptr;
+	if (!OctoDenInputBuilder::ResolveProjectInputConfigClass(InputConfigClass, FailReason))
+	{
+		UpdateInputBuilderResult(FailReason);
+		FMessageDialog::Open(EAppMsgType::Ok, FailReason);
+		return false;
+	}
+
+	UObject* InputConfigAsset = nullptr;
+	bool bCreatedInputConfig = false;
+	if (!OctoDenInputBuilder::ResolveOrCreateInputConfigAsset(*InSettings, InputConfigClass, InputConfigAsset, bCreatedInputConfig, FailReason))
+	{
+		UpdateInputBuilderResult(FailReason);
+		FMessageDialog::Open(EAppMsgType::Ok, FailReason);
+		return false;
+	}
+
+	UInputAction* MoveAction = nullptr;
+	UInputAction* LookAction = nullptr;
+	UInputAction* JumpAction = nullptr;
+	UInputAction* FireAction = nullptr;
+	if (!OctoDenInputBuilder::ResolveManagedInputActionForRuntimeLink(*InSettings, EOctoDenStandardInputAction::Move, MoveAction, FailReason)
+		|| !OctoDenInputBuilder::ResolveManagedInputActionForRuntimeLink(*InSettings, EOctoDenStandardInputAction::Look, LookAction, FailReason)
+		|| !OctoDenInputBuilder::ResolveManagedInputActionForRuntimeLink(*InSettings, EOctoDenStandardInputAction::Jump, JumpAction, FailReason)
+		|| !OctoDenInputBuilder::ResolveManagedInputActionForRuntimeLink(*InSettings, EOctoDenStandardInputAction::Fire, FireAction, FailReason))
+	{
+		UpdateInputBuilderResult(FailReason);
+		FMessageDialog::Open(EAppMsgType::Ok, FailReason);
+		return false;
+	}
+
+	if (!OctoDenInputBuilder::PopulateRuntimeInputConfigAsset(
+		*InputConfigAsset,
+		*InSettings->SelectedInputMappingContext,
+		*MoveAction,
+		*LookAction,
+		*JumpAction,
+		*FireAction,
+		FailReason))
+	{
+		UpdateInputBuilderResult(FailReason);
+		FMessageDialog::Open(EAppMsgType::Ok, FailReason);
+		return false;
+	}
+
+	UBlueprint* GameInstanceBlueprint = nullptr;
+	UObject* GameInstanceDefaultObject = nullptr;
+	if (!OctoDenInputBuilder::ResolveProjectGameInstanceBlueprint(GameInstanceBlueprint, GameInstanceDefaultObject, FailReason))
+	{
+		UpdateInputBuilderResult(FailReason);
+		FMessageDialog::Open(EAppMsgType::Ok, FailReason);
+		return false;
+	}
+
+	if (!OctoDenInputBuilder::AssignRuntimeInputConfigToGameInstance(*InputConfigAsset, *GameInstanceBlueprint, *GameInstanceDefaultObject, FailReason))
+	{
+		UpdateInputBuilderResult(FailReason);
+		FMessageDialog::Open(EAppMsgType::Ok, FailReason);
+		return false;
+	}
+
+	FText SaveFailReason;
+	TArray<UPackage*> PackagesToSave;
+	PackagesToSave.Add(InputConfigAsset->GetOutermost());
+	PackagesToSave.Add(GameInstanceBlueprint->GetOutermost());
+	if (!OctoDen::SavePackages(PackagesToSave, SaveFailReason))
+	{
+		UpdateInputBuilderResult(SaveFailReason);
+		FMessageDialog::Open(EAppMsgType::Ok, SaveFailReason);
+		return false;
+	}
+
+	OctoDenInputBuilder::FRuntimeInputLinkSummary Summary;
+	Summary.InputConfigPackagePath = InSettings->GetInputConfigPackagePath();
+	Summary.InputMappingContextPackagePath = InSettings->SelectedInputMappingContext->GetOutermost()->GetName();
+	Summary.GameInstanceBlueprintPath = GameInstanceBlueprint->GetPathName();
+	Summary.bCreatedInputConfig = bCreatedInputConfig;
+
+	UpdateInputBuilderResult(FText::FromString(OctoDenInputBuilder::BuildRuntimeLinkSummaryText(Summary)));
+	RefreshInputBuilderDetails();
+
+	ShowNotification(
+		FText::Format(
+			LOCTEXT("RuntimeInputLinkedNotification", "Linked input DA {0} to {1}."),
+			FText::FromString(InputConfigAsset->GetName()),
+			FText::FromString(GameInstanceBlueprint->GetName())),
 		true);
 
 	return true;

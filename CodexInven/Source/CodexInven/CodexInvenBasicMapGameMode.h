@@ -13,5 +13,7 @@ UCLASS()
 class CODEXINVEN_API ACodexInvenBasicMapGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
-	
+
+public:
+	ACodexInvenBasicMapGameMode();
 };

@@ -84,6 +84,9 @@ bool FOctoDenInputBuilderDefaultsTest::RunTest(const FString& Parameters)
 	TestNull(TEXT("Default selected IMC"), Settings->SelectedInputMappingContext);
 	TestEqual(TEXT("Default IA prefix"), Settings->InputActionPrefix, FString(TEXT("IA_")));
 	TestEqual(TEXT("Default IA folder"), Settings->InputActionFolder, FString(TEXT("/Game/Input/Actions")));
+	TestEqual(TEXT("Default Input Config folder"), Settings->InputConfigFolder, FString(TEXT("/Game/Input/Configs")));
+	TestEqual(TEXT("Default Input Config asset name"), Settings->InputConfigAssetName, FString(TEXT("DA_DefaultInputConfig")));
+	TestEqual(TEXT("Default Input Config package path"), Settings->GetInputConfigPackagePath(), FString(TEXT("/Game/Input/Configs/DA_DefaultInputConfig")));
 	TestEqual(TEXT("Default selected action"), Settings->SelectedAction, EOctoDenStandardInputAction::Move);
 	TestTrue(TEXT("Jump draft starts with defaults"), Settings->JumpBindings.HasAnyValidKey());
 	TestEqual(TEXT("Jump default primary key"), Settings->JumpBindings.PrimaryKey, EKeys::SpaceBar);
@@ -115,6 +118,7 @@ bool FOctoDenInputBuilderAvailabilityTest::RunTest(const FString& Parameters)
 
 	FOctoDenManagedInputAnalysis Analysis = Settings->AnalyzeSelectedInputMappingContext();
 	TestEqual(TEXT("Empty IMC exposes four actions"), Analysis.GetAvailableActions().Num(), 4);
+	TestFalse(TEXT("Runtime link is unavailable until all actions exist"), Settings->CanLinkRuntimeInputConfig());
 
 	UInputAction* MoveAction = FindOrCreateInputActionAtPackagePath(Settings->GetCanonicalInputActionPackagePath(EOctoDenStandardInputAction::Move));
 	TestNotNull(TEXT("Move action asset created"), MoveAction);
@@ -156,6 +160,7 @@ bool FOctoDenInputBuilderAvailabilityTest::RunTest(const FString& Parameters)
 
 	Analysis = Settings->AnalyzeSelectedInputMappingContext();
 	TestEqual(TEXT("All four actions mapped leaves no remaining actions"), Analysis.GetAvailableActions().Num(), 0);
+	TestTrue(TEXT("Runtime link becomes available once all actions are present"), Settings->CanLinkRuntimeInputConfig());
 	return true;
 }
 

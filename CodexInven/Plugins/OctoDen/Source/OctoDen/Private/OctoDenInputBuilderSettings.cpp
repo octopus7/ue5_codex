@@ -273,6 +273,21 @@ bool UOctoDenInputBuilderSettings::HasSelectedInputMappingContext() const
 	return SelectedInputMappingContext != nullptr;
 }
 
+bool UOctoDenInputBuilderSettings::HasAllManagedActions() const
+{
+	const FOctoDenManagedInputAnalysis Analysis = AnalyzeSelectedInputMappingContext();
+	if (!Analysis.bHasSelectedInputMappingContext)
+	{
+		return false;
+	}
+
+	return Analysis.ActionStates.Num() > 0
+		&& !Analysis.ActionStates.ContainsByPredicate([](const FOctoDenManagedInputActionState& State)
+		{
+			return !State.IsAdded();
+		});
+}
+
 bool UOctoDenInputBuilderSettings::CanAddSelectedAction(FText* OutFailReason) const
 {
 	if (SelectedInputMappingContext == nullptr)
@@ -323,6 +338,53 @@ bool UOctoDenInputBuilderSettings::CanAddSelectedAction(FText* OutFailReason) co
 	return true;
 }
 
+bool UOctoDenInputBuilderSettings::CanLinkRuntimeInputConfig(FText* OutFailReason) const
+{
+	if (SelectedInputMappingContext == nullptr)
+	{
+		if (OutFailReason != nullptr)
+		{
+			*OutFailReason = LOCTEXT("MissingSelectedImcForRuntimeLink", "Select an Input Mapping Context before linking the runtime Data Asset.");
+		}
+		return false;
+	}
+
+	if (!HasAllManagedActions())
+	{
+		if (OutFailReason != nullptr)
+		{
+			*OutFailReason = LOCTEXT("RuntimeLinkNeedsAllActions", "Add Move, Look, Jump, and Fire to the selected IMC before linking the runtime Data Asset.");
+		}
+		return false;
+	}
+
+	const FString NormalizedFolder = NormalizeAssetFolder(InputConfigFolder);
+	if (NormalizedFolder.IsEmpty() || !FPackageName::IsValidLongPackageName(NormalizedFolder))
+	{
+		if (OutFailReason != nullptr)
+		{
+			*OutFailReason = LOCTEXT("InvalidInputConfigFolder", "The Input Config folder must be a valid package path such as /Game/Input/Configs.");
+		}
+		return false;
+	}
+
+	if (!FPackageName::IsValidLongPackageName(GetInputConfigPackagePath()))
+	{
+		if (OutFailReason != nullptr)
+		{
+			*OutFailReason = LOCTEXT("InvalidInputConfigAssetPath", "The Input Config asset name results in an invalid package path.");
+		}
+		return false;
+	}
+
+	if (OutFailReason != nullptr)
+	{
+		*OutFailReason = FText::GetEmpty();
+	}
+
+	return true;
+}
+
 bool UOctoDenInputBuilderSettings::SelectedActionUsesPresetBindings() const
 {
 	EOctoDenStandardInputAction ResolvedAction = EOctoDenStandardInputAction::Move;
@@ -350,6 +412,17 @@ FString UOctoDenInputBuilderSettings::GetCanonicalInputActionObjectPath(const EO
 	const FString PackagePath = GetCanonicalInputActionPackagePath(InAction);
 	const FString AssetName = GetCanonicalInputActionName(InAction);
 	return PackagePath + TEXT(".") + AssetName;
+}
+
+FString UOctoDenInputBuilderSettings::GetInputConfigPackagePath() const
+{
+	return NormalizeAssetFolder(InputConfigFolder) / InputConfigAssetName.TrimStartAndEnd();
+}
+
+FString UOctoDenInputBuilderSettings::GetInputConfigObjectPath() const
+{
+	const FString AssetName = InputConfigAssetName.TrimStartAndEnd();
+	return GetInputConfigPackagePath() + TEXT(".") + AssetName;
 }
 
 const FOctoDenInputBindingDraft& UOctoDenInputBuilderSettings::GetBindingDraft(const EOctoDenStandardInputAction InAction) const

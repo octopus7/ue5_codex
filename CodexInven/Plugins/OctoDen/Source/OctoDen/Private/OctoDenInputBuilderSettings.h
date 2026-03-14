@@ -73,6 +73,12 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Input Builder|IA", meta = (ToolTip = "Content browser folder path. Example: /Game/Input/Actions"))
 	FString InputActionFolder = TEXT("/Game/Input/Actions");
 
+	UPROPERTY(EditAnywhere, Category = "Input Builder|DA", meta = (ToolTip = "Content browser folder path. Example: /Game/Input/Configs"))
+	FString InputConfigFolder = TEXT("/Game/Input/Configs");
+
+	UPROPERTY(EditAnywhere, Category = "Input Builder|DA")
+	FString InputConfigAssetName = TEXT("DA_DefaultInputConfig");
+
 	UPROPERTY(EditAnywhere, Transient, Category = "Input Builder|Selection")
 	EOctoDenStandardInputAction SelectedAction = EOctoDenStandardInputAction::Move;
 
@@ -93,13 +99,17 @@ public:
 	FOctoDenManagedInputAnalysis AnalyzeSelectedInputMappingContext() const;
 	bool ResolveSelectedAction(EOctoDenStandardInputAction& OutAction) const;
 	bool HasSelectedInputMappingContext() const;
+	bool HasAllManagedActions() const;
 	bool CanAddSelectedAction(FText* OutFailReason = nullptr) const;
+	bool CanLinkRuntimeInputConfig(FText* OutFailReason = nullptr) const;
 	bool SelectedActionUsesPresetBindings() const;
 	void ResetDraftBindingsToDefaults();
 
 	FString GetCanonicalInputActionName(EOctoDenStandardInputAction InAction) const;
 	FString GetCanonicalInputActionPackagePath(EOctoDenStandardInputAction InAction) const;
 	FString GetCanonicalInputActionObjectPath(EOctoDenStandardInputAction InAction) const;
+	FString GetInputConfigPackagePath() const;
+	FString GetInputConfigObjectPath() const;
 
 	const FOctoDenInputBindingDraft& GetBindingDraft(EOctoDenStandardInputAction InAction) const;
 	FOctoDenInputBindingDraft& GetBindingDraft(EOctoDenStandardInputAction InAction);
