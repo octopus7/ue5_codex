@@ -986,7 +986,12 @@ void FProjectBootstrapperModule::OpenBootstrapperWindow()
 									{
 										return bCanCreateBlueprintsAndApply;
 									})
-									.ToolTipText(LOCTEXT("CreateBlueprintsAndApplyTooltip", "GameMode and GameInstance classes must be loaded."))
+									.ToolTipText(TAttribute<FText>::CreateLambda([this]()
+									{
+										return bCanCreateBlueprintsAndApply
+											? FText::GetEmpty()
+											: LOCTEXT("CreateBlueprintsAndApplyTooltip", "GameMode and GameInstance classes must be loaded.");
+									}))
 									.Text(LOCTEXT("CreateBlueprintsAndApplyButton", "Create Blueprints && Apply"))
 									.OnClicked_Lambda([this]()
 									{
