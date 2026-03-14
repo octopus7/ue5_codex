@@ -57,6 +57,7 @@ namespace ProjectBootstrapper
 	const TCHAR* MenuIconKey = TEXT("ProjectBootstrapper.MenuIcon");
 	const TCHAR* HelpFolder = TEXT("Resources/Help");
 	const TCHAR* HelpFilePrefix = TEXT("ProjectBootstrapperHelp_");
+	const float FooterButtonHeight = 56.0f;
 
 	struct FHelpLanguageDefinition
 	{
@@ -931,92 +932,102 @@ void FProjectBootstrapperModule::OpenBootstrapperWindow()
 				.AutoHeight()
 				.Padding(0.0f, 12.0f, 0.0f, 0.0f)
 				[
-					SNew(SHorizontalBox)
-					+ SHorizontalBox::Slot()
-					.FillWidth(1.0f)
+					SNew(SVerticalBox)
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					.Padding(0.0f, 0.0f, 0.0f, 8.0f)
 					[
-						SNew(SHorizontalBox)
+						SNew(STextBlock)
 						.Visibility_Lambda([this]()
 						{
-							return ShouldShowCodeGenerationUI(DialogSettings.Get()) ? EVisibility::Visible : EVisibility::Collapsed;
+							return ShouldShowCodeGenerationUI(DialogSettings.Get()) && !bCanCreateBlueprintsAndApply ? EVisibility::Visible : EVisibility::Collapsed;
 						})
+						.Text(LOCTEXT("CreateBlueprintsAndApplyHint", "GameMode and GameInstance classes must be loaded."))
+						.ColorAndOpacity(FSlateColor(FLinearColor(0.65f, 0.65f, 0.65f, 1.0f)))
+						.AutoWrapText(true)
+					]
+					+ SVerticalBox::Slot()
+					.AutoHeight()
+					[
+						SNew(SHorizontalBox)
 						+ SHorizontalBox::Slot()
 						.FillWidth(1.0f)
-						.Padding(0.0f, 0.0f, 8.0f, 0.0f)
 						[
-							SNew(SButton)
-							.Text(LOCTEXT("GenerateCodeButton", "Generate Code"))
-							.OnClicked_Lambda([this]()
+							SNew(SHorizontalBox)
+							.Visibility_Lambda([this]()
 							{
-								GenerateNativeCode(DialogSettings.Get());
-								return FReply::Handled();
+								return ShouldShowCodeGenerationUI(DialogSettings.Get()) ? EVisibility::Visible : EVisibility::Collapsed;
 							})
+							+ SHorizontalBox::Slot()
+							.FillWidth(1.0f)
+							.Padding(0.0f, 0.0f, 8.0f, 0.0f)
+							[
+								SNew(SBox)
+								.HeightOverride(ProjectBootstrapper::FooterButtonHeight)
+								[
+									SNew(SButton)
+									.Text(LOCTEXT("GenerateCodeButton", "Generate Code"))
+									.OnClicked_Lambda([this]()
+									{
+										GenerateNativeCode(DialogSettings.Get());
+										return FReply::Handled();
+									})
+								]
+							]
+							+ SHorizontalBox::Slot()
+							.FillWidth(1.0f)
+							.Padding(0.0f, 0.0f, 8.0f, 0.0f)
+							[
+								SNew(SBox)
+								.HeightOverride(ProjectBootstrapper::FooterButtonHeight)
+								[
+									SNew(SButton)
+									.IsEnabled_Lambda([this]()
+									{
+										return bCanCreateBlueprintsAndApply;
+									})
+									.ToolTipText(LOCTEXT("CreateBlueprintsAndApplyTooltip", "GameMode and GameInstance classes must be loaded."))
+									.Text(LOCTEXT("CreateBlueprintsAndApplyButton", "Create Blueprints && Apply"))
+									.OnClicked_Lambda([this]()
+									{
+										CreateBlueprintsAndApply(DialogSettings.Get());
+										return FReply::Handled();
+									})
+								]
+							]
 						]
 						+ SHorizontalBox::Slot()
-						.FillWidth(1.0f)
+						.AutoWidth()
 						.Padding(0.0f, 0.0f, 8.0f, 0.0f)
 						[
-							SNew(SVerticalBox)
-							+ SVerticalBox::Slot()
-							.AutoHeight()
+							SNew(SBox)
+							.WidthOverride(120.0f)
+							.HeightOverride(ProjectBootstrapper::FooterButtonHeight)
 							[
 								SNew(SButton)
-								.IsEnabled_Lambda([this]()
-								{
-									return bCanCreateBlueprintsAndApply;
-								})
-								.ToolTipText(LOCTEXT("CreateBlueprintsAndApplyTooltip", "GameMode and GameInstance classes must be loaded."))
-								.Text(LOCTEXT("CreateBlueprintsAndApplyButton", "Create Blueprints && Apply"))
+								.Text(LOCTEXT("OpenHelpButton", "Help"))
 								.OnClicked_Lambda([this]()
 								{
-									CreateBlueprintsAndApply(DialogSettings.Get());
+									OpenHelpWindow();
 									return FReply::Handled();
 								})
 							]
-							+ SVerticalBox::Slot()
-							.AutoHeight()
-							.Padding(0.0f, 4.0f, 0.0f, 0.0f)
+						]
+						+ SHorizontalBox::Slot()
+						.AutoWidth()
+						[
+							SNew(SBox)
+							.WidthOverride(120.0f)
+							.HeightOverride(ProjectBootstrapper::FooterButtonHeight)
 							[
-								SNew(STextBlock)
-								.Visibility_Lambda([this]()
+								SNew(SButton)
+								.Text(LOCTEXT("CloseBootstrapButton", "Close"))
+								.OnClicked_Lambda([this]()
 								{
-									return bCanCreateBlueprintsAndApply ? EVisibility::Collapsed : EVisibility::Visible;
+									DialogWindow->RequestDestroyWindow();
+									return FReply::Handled();
 								})
-								.Text(LOCTEXT("CreateBlueprintsAndApplyHint", "GameMode and GameInstance classes must be loaded."))
-								.ColorAndOpacity(FSlateColor(FLinearColor(0.65f, 0.65f, 0.65f, 1.0f)))
-								.AutoWrapText(true)
 							]
-						]
-					]
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
-					.Padding(0.0f, 0.0f, 8.0f, 0.0f)
-					[
-						SNew(SBox)
-						.WidthOverride(120.0f)
-						[
-							SNew(SButton)
-							.Text(LOCTEXT("OpenHelpButton", "Help"))
-							.OnClicked_Lambda([this]()
-							{
-								OpenHelpWindow();
-								return FReply::Handled();
-							})
-						]
-					]
-					+ SHorizontalBox::Slot()
-					.AutoWidth()
-					[
-						SNew(SBox)
-						.WidthOverride(120.0f)
-						[
-							SNew(SButton)
-							.Text(LOCTEXT("CloseBootstrapButton", "Close"))
-							.OnClicked_Lambda([this]()
-							{
-								DialogWindow->RequestDestroyWindow();
-								return FReply::Handled();
-							})
 						]
 					]
 				]
