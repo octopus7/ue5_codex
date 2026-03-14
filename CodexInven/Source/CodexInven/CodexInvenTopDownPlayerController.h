@@ -34,9 +34,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (ClampMin = "0.0"))
 	float CursorAimResumeDelay = 0.1f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Debug")
+	bool bLogCursorTrace = false;
+
 private:
 	const UCodexInvenInputConfigDataAsset* GetInputConfig() const;
 	ACodexInvenTopDownCharacter* GetTopDownCharacter() const;
+	bool ShouldUseCursorAim() const;
 	void ApplyInputMappingContext();
 	bool TryGetCursorGroundPoint(FVector& OutWorldPoint) const;
 	void FireProjectileOnce();

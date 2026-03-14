@@ -4,12 +4,20 @@
 
 #include "CodexInvenGameInstance.h"
 #include "CodexInvenInputConfigDataAsset.h"
+#include "CodexInvenProjectile.h"
 #include "CodexInvenTopDownCharacter.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Camera/PlayerCameraManager.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
+
+namespace
+{
+	constexpr float CursorTraceDistance = 100000.0f;
+	constexpr int32 MaxCursorProjectileIgnores = 16;
+}
 
 ACodexInvenTopDownPlayerController::ACodexInvenTopDownPlayerController()
 {
@@ -72,6 +80,11 @@ ACodexInvenTopDownCharacter* ACodexInvenTopDownPlayerController::GetTopDownChara
 	return Cast<ACodexInvenTopDownCharacter>(GetPawn());
 }
 
+bool ACodexInvenTopDownPlayerController::ShouldUseCursorAim() const
+{
+	return bShowMouseCursor;
+}
+
 void ACodexInvenTopDownPlayerController::ApplyInputMappingContext()
 {
 	const UCodexInvenInputConfigDataAsset* InputConfig = GetInputConfig();
@@ -89,24 +102,75 @@ void ACodexInvenTopDownPlayerController::ApplyInputMappingContext()
 
 bool ACodexInvenTopDownPlayerController::TryGetCursorGroundPoint(FVector& OutWorldPoint) const
 {
-	FHitResult HitResult;
-	if (GetHitResultUnderCursorByChannel(UEngineTypes::ConvertToTraceType(ECC_Visibility), true, HitResult))
+	const UWorld* World = GetWorld();
+	if (World == nullptr)
 	{
-		OutWorldPoint = HitResult.ImpactPoint;
-		return true;
+		return false;
 	}
 
 	FVector MouseWorldLocation;
 	FVector MouseWorldDirection;
 	if (!DeprojectMousePositionToWorld(MouseWorldLocation, MouseWorldDirection))
 	{
+		if (bLogCursorTrace)
+		{
+			UE_LOG(LogTemp, Log, TEXT("[Cursor] Failed to deproject mouse position."));
+		}
+
 		return false;
+	}
+
+	FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(CodexInvenCursorTrace), true);
+	QueryParams.AddIgnoredActor(this);
+
+	if (const APawn* ControlledPawn = GetPawn())
+	{
+		QueryParams.AddIgnoredActor(ControlledPawn);
+	}
+
+	const FVector TraceStart = MouseWorldLocation;
+	const FVector TraceEnd = MouseWorldLocation + (MouseWorldDirection * CursorTraceDistance);
+
+	for (int32 IgnoreIndex = 0; IgnoreIndex < MaxCursorProjectileIgnores; ++IgnoreIndex)
+	{
+		FHitResult HitResult;
+		if (!World->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_Visibility, QueryParams))
+		{
+			break;
+		}
+
+		AActor* HitActor = HitResult.GetActor();
+		if (HitActor != nullptr && HitActor->IsA<ACodexInvenProjectile>())
+		{
+			QueryParams.AddIgnoredActor(HitActor);
+
+			if (bLogCursorTrace)
+			{
+				UE_LOG(
+					LogTemp,
+					Log,
+					TEXT("[Cursor] Ignored projectile hit %s at %s."),
+					*GetNameSafe(HitActor),
+					*HitResult.ImpactPoint.ToString());
+			}
+
+			continue;
+		}
+
+		OutWorldPoint = HitResult.ImpactPoint;
+		return true;
 	}
 
 	const APawn* ControlledPawn = GetPawn();
 	const float GroundHeight = ControlledPawn != nullptr ? ControlledPawn->GetActorLocation().Z : 0.0f;
 	const FPlane GroundPlane(FVector(0.0f, 0.0f, GroundHeight), FVector::UpVector);
-	OutWorldPoint = FMath::LinePlaneIntersection(MouseWorldLocation, MouseWorldLocation + (MouseWorldDirection * 100000.0f), GroundPlane);
+	OutWorldPoint = FMath::LinePlaneIntersection(TraceStart, TraceEnd, GroundPlane);
+
+	if (bLogCursorTrace)
+	{
+		UE_LOG(LogTemp, Log, TEXT("[Cursor] Fell back to ground plane at %s."), *OutWorldPoint.ToString());
+	}
+
 	return true;
 }
 
@@ -151,23 +215,55 @@ void ACodexInvenTopDownPlayerController::HandleMove(const FInputActionValue& InV
 
 void ACodexInvenTopDownPlayerController::HandleLook(const FInputActionValue& InValue)
 {
-	if (ACodexInvenTopDownCharacter* ControlledCharacter = GetTopDownCharacter())
+	const FVector2D LookInput = InValue.Get<FVector2D>();
+	if (LookInput.IsNearlyZero())
 	{
-		const FVector2D LookInput = InValue.Get<FVector2D>();
-		if (!LookInput.IsNearlyZero())
-		{
-			if (UWorld* World = GetWorld())
-			{
-				LastExplicitLookInputTime = World->GetTimeSeconds();
-			}
-
-			const FVector AimTarget = ControlledCharacter->GetActorLocation() + FVector(LookInput.Y, LookInput.X, 0.0f) * 1000.0f;
-			ControlledCharacter->AimAtWorldLocation(AimTarget);
-			return;
-		}
+		UpdateAimFromCursor();
+		return;
 	}
 
-	UpdateAimFromCursor();
+	if (ShouldUseCursorAim())
+	{
+		if (bLogCursorTrace)
+		{
+			UE_LOG(LogTemp, Log, TEXT("[Cursor] Ignored raw look input while cursor aim is active: %s"), *LookInput.ToString());
+		}
+
+		UpdateAimFromCursor();
+		return;
+	}
+
+	ACodexInvenTopDownCharacter* ControlledCharacter = GetTopDownCharacter();
+	if (ControlledCharacter == nullptr)
+	{
+		return;
+	}
+
+	if (UWorld* World = GetWorld())
+	{
+		LastExplicitLookInputTime = World->GetTimeSeconds();
+	}
+
+	const FRotator CameraRotation = PlayerCameraManager != nullptr ? PlayerCameraManager->GetCameraRotation() : FRotator::ZeroRotator;
+	FVector CameraForward = CameraRotation.Vector();
+	CameraForward.Z = 0.0f;
+	CameraForward.Normalize();
+
+	FVector CameraRight = FRotationMatrix(CameraRotation).GetUnitAxis(EAxis::Y);
+	CameraRight.Z = 0.0f;
+	CameraRight.Normalize();
+
+	FVector AimDirection = (CameraForward * LookInput.Y) + (CameraRight * LookInput.X);
+	AimDirection.Z = 0.0f;
+	AimDirection.Normalize();
+
+	if (AimDirection.IsNearlyZero())
+	{
+		return;
+	}
+
+	const FVector AimTarget = ControlledCharacter->GetActorLocation() + (AimDirection * 1000.0f);
+	ControlledCharacter->AimAtWorldLocation(AimTarget);
 }
 
 void ACodexInvenTopDownPlayerController::HandleJumpStarted()

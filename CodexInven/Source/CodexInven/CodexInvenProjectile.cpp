@@ -18,6 +18,8 @@ ACodexInvenProjectile::ACodexInvenProjectile()
 	CollisionComponent->SetCollisionObjectType(ECC_WorldDynamic);
 	CollisionComponent->SetCollisionResponseToAllChannels(ECR_Block);
 	CollisionComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	CollisionComponent->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+	CollisionComponent->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	CollisionComponent->SetNotifyRigidBodyCollision(true);
 	RootComponent = CollisionComponent;
 
