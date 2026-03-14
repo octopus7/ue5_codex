@@ -1,0 +1,28 @@
+Project Bootstrapper クイックガイド
+
+1. Managed Map
+- Managed Map にマップ名を入力します。
+- Blank、Basic、TimeOfDay のいずれかを選択します。
+- Create を押すと /Game/Maps/<名前> にマップを作成します。
+- Open を押すとそのマップを開き、Target Map、Editor Startup Map、Game Default Map をまとめて合わせます。
+
+2. コード設定
+- ランタイムモジュール名とクラス名を確認します。
+- GameInstance と GameMode の Blueprint フォルダ名/アセット名は、派生 Blueprint の作成先を決めます。
+
+3. Generate Code
+- 先に Generate Code を押します。
+- プラグインはプロジェクトのランタイムモジュール内にネイティブ GameInstance と GameMode クラスを作成、または再利用します。
+- Live Coding やコンパイルが始まった場合は、完了してから次の手順に進んでください。
+
+4. Create Blueprints & Apply
+- ネイティブクラスの読み込み完了後に Create Blueprints & Apply を押します。
+- プラグインは GameInstance と GameMode の子 Blueprint を作成、または再利用します。
+- 選択したマップに GameMode Blueprint を適用します。
+- プロジェクトの Editor Startup Map、Game Default Map、GameInstance の既定値を更新します。
+- Set as Global Default Game Mode が有効な場合、プロジェクト全体の既定 GameMode も更新します。
+
+5. 注意
+- 対象マップは一時的な Untitled マップではなく、保存済みのプロジェクトマップを使用してください。
+- クラス名や Blueprint 名を変更する場合は、Unreal の命名規則に沿った名前を使ってください。
+- 同じ設定で再実行しても問題ありません。対応するクラスや Blueprint が既にある場合は再利用されます。

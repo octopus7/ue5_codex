@@ -1,0 +1,28 @@
+Project Bootstrapper 快速说明
+
+1. Managed Map
+- 在 Managed Map 中输入地图名称。
+- 选择 Blank、Basic 或 TimeOfDay。
+- 点击 Create 会在 /Game/Maps/<名称> 下创建地图。
+- 点击 Open 会打开该地图，并同步 Target Map、Editor Startup Map、Game Default Map。
+
+2. 代码设置
+- 检查运行时模块名和类名。
+- GameInstance 与 GameMode 的 Blueprint 文件夹/名称字段决定派生蓝图的创建位置。
+
+3. Generate Code
+- 先点击 Generate Code。
+- 插件会在项目运行时模块中创建或复用原生 GameInstance 和 GameMode 类。
+- 如果触发了 Live Coding 或编译，请等待完成后再进行下一步。
+
+4. Create Blueprints & Apply
+- 原生类成功加载后，再点击 Create Blueprints & Apply。
+- 插件会创建或复用 GameInstance 与 GameMode 的子蓝图。
+- 它会把 GameMode 蓝图应用到当前选中的地图。
+- 它会更新项目的 Editor Startup Map、Game Default Map 和 GameInstance 默认值。
+- 如果启用了 Set as Global Default Game Mode，还会更新项目范围的默认 GameMode。
+
+5. 说明
+- 目标地图应当是已保存的项目地图，而不是临时的 Untitled 地图。
+- 修改类名或蓝图名时，请使用符合 Unreal 规则的命名。
+- 重新执行此工具是安全的。已有的对应类和蓝图在可用时会被复用。

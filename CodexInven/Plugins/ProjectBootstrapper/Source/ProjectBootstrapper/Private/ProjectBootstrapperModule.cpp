@@ -3,6 +3,7 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Editor.h"
 #include "Editor/EditorEngine.h"
+#include "HAL/PlatformMisc.h"
 #include "Engine/Blueprint.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
@@ -15,6 +16,7 @@
 #include "Interfaces/IPluginManager.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Misc/App.h"
+#include "Misc/FileHelper.h"
 #include "Misc/MessageDialog.h"
 #include "Misc/PackageName.h"
 #include "Misc/Paths.h"
@@ -22,6 +24,7 @@
 #include "Modules/ModuleManager.h"
 #include "ProjectBootstrapperDialogSettings.h"
 #include "ProjectBootstrapperDialogSettingsCustomization.h"
+#include "ProjectBootstrapperHelpSettings.h"
 #include "Brushes/SlateImageBrush.h"
 #include "IDetailsView.h"
 #include "Styling/SlateStyle.h"
@@ -30,9 +33,10 @@
 #include "ToolMenus.h"
 #include "UObject/StrongObjectPtr.h"
 #include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SComboBox.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
-#include "Widgets/Layout/SUniformGridPanel.h"
+#include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/SWindow.h"
 #include "Widgets/Text/STextBlock.h"
@@ -49,6 +53,67 @@ namespace ProjectBootstrapper
 	const TCHAR* TimeOfDayTemplateMapPackage = TEXT("/Engine/Maps/Templates/TimeOfDay_Default");
 	const TCHAR* StyleSetName = TEXT("ProjectBootstrapperStyle");
 	const TCHAR* MenuIconKey = TEXT("ProjectBootstrapper.MenuIcon");
+	const TCHAR* HelpFolder = TEXT("Resources/Help");
+	const TCHAR* HelpFilePrefix = TEXT("ProjectBootstrapperHelp_");
+
+	struct FHelpLanguageDefinition
+	{
+		const TCHAR* Code;
+		const TCHAR* Label;
+	};
+
+	const FHelpLanguageDefinition HelpLanguages[] =
+	{
+		{ TEXT("EN"), TEXT("English") },
+		{ TEXT("KO"), TEXT("한국어") },
+		{ TEXT("JA"), TEXT("日本語") },
+		{ TEXT("CN"), TEXT("简体中文") },
+		{ TEXT("TW"), TEXT("繁體中文") }
+	};
+
+	const FHelpLanguageDefinition* FindHelpLanguageDefinition(const FString& InLanguageCode)
+	{
+		for (const FHelpLanguageDefinition& Language : HelpLanguages)
+		{
+			if (InLanguageCode.Equals(Language.Code, ESearchCase::IgnoreCase))
+			{
+				return &Language;
+			}
+		}
+
+		return nullptr;
+	}
+
+	FString MapCultureToHelpLanguageCode(FString InCultureName)
+	{
+		InCultureName.TrimStartAndEndInline();
+		InCultureName.ToLowerInline();
+
+		if (InCultureName.StartsWith(TEXT("ko")))
+		{
+			return TEXT("KO");
+		}
+
+		if (InCultureName.StartsWith(TEXT("ja")))
+		{
+			return TEXT("JA");
+		}
+
+		if (InCultureName.StartsWith(TEXT("zh")))
+		{
+			if (InCultureName.Contains(TEXT("hant")) ||
+				InCultureName.Contains(TEXT("tw")) ||
+				InCultureName.Contains(TEXT("hk")) ||
+				InCultureName.Contains(TEXT("mo")))
+			{
+				return TEXT("TW");
+			}
+
+			return TEXT("CN");
+		}
+
+		return TEXT("EN");
+	}
 
 	FString TrimTrailingSlash(FString InValue)
 	{
@@ -682,9 +747,12 @@ void FProjectBootstrapperModule::ShutdownModule()
 
 	UnregisterStyle();
 
+	HelpWindow.Reset();
+	HelpTextBlock.Reset();
 	DialogWindow.Reset();
 	DialogDetailsView.Reset();
 	DialogSettings.Reset();
+	HelpLanguageOptions.Reset();
 }
 
 void FProjectBootstrapperModule::RegisterStyle()
@@ -781,9 +849,10 @@ void FProjectBootstrapperModule::OpenBootstrapperWindow()
 				.AutoHeight()
 				.Padding(0.0f, 12.0f, 0.0f, 0.0f)
 				[
-					SNew(SUniformGridPanel)
-					.SlotPadding(FMargin(8.0f, 0.0f))
-					+ SUniformGridPanel::Slot(0, 0)
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					.FillWidth(1.0f)
+					.Padding(0.0f, 0.0f, 8.0f, 0.0f)
 					[
 						SNew(SButton)
 						.Text(LOCTEXT("GenerateCodeButton", "Generate Code"))
@@ -793,7 +862,9 @@ void FProjectBootstrapperModule::OpenBootstrapperWindow()
 							return FReply::Handled();
 						})
 					]
-					+ SUniformGridPanel::Slot(1, 0)
+					+ SHorizontalBox::Slot()
+					.FillWidth(1.0f)
+					.Padding(0.0f, 0.0f, 8.0f, 0.0f)
 					[
 						SNew(SButton)
 						.Text(LOCTEXT("CreateBlueprintsAndApplyButton", "Create Blueprints && Apply"))
@@ -803,15 +874,36 @@ void FProjectBootstrapperModule::OpenBootstrapperWindow()
 							return FReply::Handled();
 						})
 					]
-					+ SUniformGridPanel::Slot(2, 0)
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.Padding(0.0f, 0.0f, 8.0f, 0.0f)
 					[
-						SNew(SButton)
-						.Text(LOCTEXT("CloseBootstrapButton", "Close"))
-						.OnClicked_Lambda([this]()
-						{
-							DialogWindow->RequestDestroyWindow();
-							return FReply::Handled();
-						})
+						SNew(SBox)
+						.WidthOverride(120.0f)
+						[
+							SNew(SButton)
+							.Text(LOCTEXT("OpenHelpButton", "Help"))
+							.OnClicked_Lambda([this]()
+							{
+								OpenHelpWindow();
+								return FReply::Handled();
+							})
+						]
+					]
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					[
+						SNew(SBox)
+						.WidthOverride(120.0f)
+						[
+							SNew(SButton)
+							.Text(LOCTEXT("CloseBootstrapButton", "Close"))
+							.OnClicked_Lambda([this]()
+							{
+								DialogWindow->RequestDestroyWindow();
+								return FReply::Handled();
+							})
+						]
 					]
 				]
 			]
@@ -828,6 +920,215 @@ void FProjectBootstrapperModule::HandleDialogWindowClosed(const TSharedRef<SWind
 	DialogWindow.Reset();
 	DialogDetailsView.Reset();
 	DialogSettings.Reset();
+}
+
+void FProjectBootstrapperModule::HandleHelpWindowClosed(const TSharedRef<SWindow>& Window)
+{
+	HelpWindow.Reset();
+	HelpTextBlock.Reset();
+}
+
+void FProjectBootstrapperModule::EnsureHelpLanguageOptions()
+{
+	if (!HelpLanguageOptions.IsEmpty())
+	{
+		return;
+	}
+
+	for (const ProjectBootstrapper::FHelpLanguageDefinition& Language : ProjectBootstrapper::HelpLanguages)
+	{
+		HelpLanguageOptions.Add(MakeShared<FString>(Language.Code));
+	}
+}
+
+FString FProjectBootstrapperModule::DetectDefaultHelpLanguageCode() const
+{
+	const FString DefaultLanguage = FPlatformMisc::GetDefaultLanguage();
+	if (!DefaultLanguage.IsEmpty())
+	{
+		return ProjectBootstrapper::MapCultureToHelpLanguageCode(DefaultLanguage);
+	}
+
+	const FString DefaultLocale = FPlatformMisc::GetDefaultLocale();
+	if (!DefaultLocale.IsEmpty())
+	{
+		return ProjectBootstrapper::MapCultureToHelpLanguageCode(DefaultLocale);
+	}
+
+	return TEXT("EN");
+}
+
+FString FProjectBootstrapperModule::GetSelectedHelpLanguageCode()
+{
+	UProjectBootstrapperHelpSettings* HelpSettings = GetMutableDefault<UProjectBootstrapperHelpSettings>();
+	FString SelectedLanguageCode = HelpSettings->HelpLanguageCode.TrimStartAndEnd().ToUpper();
+
+	if (ProjectBootstrapper::FindHelpLanguageDefinition(SelectedLanguageCode) == nullptr)
+	{
+		SelectedLanguageCode = DetectDefaultHelpLanguageCode();
+		HelpSettings->HelpLanguageCode = SelectedLanguageCode;
+		HelpSettings->SaveConfig();
+	}
+
+	return SelectedLanguageCode;
+}
+
+void FProjectBootstrapperModule::SaveHelpLanguageCode(const FString& InLanguageCode)
+{
+	if (ProjectBootstrapper::FindHelpLanguageDefinition(InLanguageCode) == nullptr)
+	{
+		return;
+	}
+
+	UProjectBootstrapperHelpSettings* HelpSettings = GetMutableDefault<UProjectBootstrapperHelpSettings>();
+	HelpSettings->HelpLanguageCode = InLanguageCode.ToUpper();
+	HelpSettings->SaveConfig();
+}
+
+FText FProjectBootstrapperModule::GetHelpLanguageDisplayText(const FString& InLanguageCode) const
+{
+	if (const ProjectBootstrapper::FHelpLanguageDefinition* Language = ProjectBootstrapper::FindHelpLanguageDefinition(InLanguageCode))
+	{
+		return FText::FromString(Language->Label);
+	}
+
+	return FText::FromString(InLanguageCode);
+}
+
+FString FProjectBootstrapperModule::LoadHelpTextForLanguage(const FString& InLanguageCode) const
+{
+	const TSharedPtr<IPlugin> Plugin = IPluginManager::Get().FindPlugin(TEXT("ProjectBootstrapper"));
+	if (!Plugin.IsValid())
+	{
+		return TEXT("Project Bootstrapper help resources could not be resolved.");
+	}
+
+	const FString NormalizedLanguageCode = InLanguageCode.ToUpper();
+	const FString HelpFileName = FString::Printf(TEXT("%s%s.txt"), ProjectBootstrapper::HelpFilePrefix, *NormalizedLanguageCode);
+	const FString HelpFilePath = FPaths::Combine(Plugin->GetBaseDir(), ProjectBootstrapper::HelpFolder, HelpFileName);
+
+	FString HelpText;
+	if (FFileHelper::LoadFileToString(HelpText, *HelpFilePath))
+	{
+		return HelpText;
+	}
+
+	if (!NormalizedLanguageCode.Equals(TEXT("EN"), ESearchCase::CaseSensitive))
+	{
+		return LoadHelpTextForLanguage(TEXT("EN"));
+	}
+
+	return FString::Printf(TEXT("Missing help file:\n%s"), *HelpFilePath);
+}
+
+void FProjectBootstrapperModule::RefreshHelpWindowContent()
+{
+	if (!HelpTextBlock.IsValid())
+	{
+		return;
+	}
+
+	HelpTextBlock->SetText(FText::FromString(LoadHelpTextForLanguage(GetSelectedHelpLanguageCode())));
+}
+
+void FProjectBootstrapperModule::OpenHelpWindow()
+{
+	EnsureHelpLanguageOptions();
+	const FString SelectedLanguageCode = GetSelectedHelpLanguageCode();
+
+	if (HelpWindow.IsValid())
+	{
+		RefreshHelpWindowContent();
+		HelpWindow->BringToFront();
+		return;
+	}
+
+	TSharedPtr<FString> SelectedLanguageOption;
+	for (const TSharedPtr<FString>& Option : HelpLanguageOptions)
+	{
+		if (Option.IsValid() && Option->Equals(SelectedLanguageCode, ESearchCase::IgnoreCase))
+		{
+			SelectedLanguageOption = Option;
+			break;
+		}
+	}
+
+	TSharedPtr<SComboBox<TSharedPtr<FString>>> LanguageComboBox;
+
+	TSharedRef<SWindow> Window = SNew(SWindow)
+		.Title(LOCTEXT("ProjectBootstrapperHelpWindowTitle", "Project Bootstrapper Help"))
+		.ClientSize(FVector2D(760.0f, 560.0f))
+		.SupportsMinimize(false)
+		.SupportsMaximize(true)
+		[
+			SNew(SBorder)
+			.Padding(12.0f)
+			[
+				SNew(SVerticalBox)
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(0.0f, 0.0f, 0.0f, 12.0f)
+				[
+					SNew(SHorizontalBox)
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					.VAlign(VAlign_Center)
+					.Padding(0.0f, 0.0f, 8.0f, 0.0f)
+					[
+						SNew(STextBlock)
+						.Text(LOCTEXT("HelpLanguageLabel", "Language"))
+					]
+					+ SHorizontalBox::Slot()
+					.AutoWidth()
+					[
+						SAssignNew(LanguageComboBox, SComboBox<TSharedPtr<FString>>)
+						.OptionsSource(&HelpLanguageOptions)
+						.InitiallySelectedItem(SelectedLanguageOption)
+						.OnGenerateWidget_Lambda([this](TSharedPtr<FString> InOption)
+						{
+							return SNew(STextBlock)
+								.Text(GetHelpLanguageDisplayText(InOption.IsValid() ? *InOption : TEXT("EN")));
+						})
+						.OnSelectionChanged_Lambda([this](TSharedPtr<FString> InOption, ESelectInfo::Type)
+						{
+							if (InOption.IsValid())
+							{
+								SaveHelpLanguageCode(*InOption);
+								RefreshHelpWindowContent();
+							}
+						})
+						[
+							SNew(STextBlock)
+							.Text_Lambda([this]()
+							{
+								return GetHelpLanguageDisplayText(GetSelectedHelpLanguageCode());
+							})
+						]
+					]
+				]
+				+ SVerticalBox::Slot()
+				.FillHeight(1.0f)
+				[
+					SNew(SBorder)
+					.Padding(12.0f)
+					[
+						SNew(SScrollBox)
+						+ SScrollBox::Slot()
+						[
+							SAssignNew(HelpTextBlock, STextBlock)
+							.AutoWrapText(true)
+							.Text(FText::FromString(LoadHelpTextForLanguage(SelectedLanguageCode)))
+						]
+					]
+				]
+			]
+		];
+
+	Window->SetOnWindowClosed(FOnWindowClosed::CreateRaw(this, &FProjectBootstrapperModule::HandleHelpWindowClosed));
+	HelpWindow = Window;
+	RefreshHelpWindowContent();
+
+	FSlateApplication::Get().AddWindow(Window);
 }
 
 bool FProjectBootstrapperModule::CreateManagedMap(UProjectBootstrapperDialogSettings* InDialogSettings)

@@ -1,0 +1,28 @@
+Project Bootstrapper 快速說明
+
+1. Managed Map
+- 在 Managed Map 中輸入地圖名稱。
+- 選擇 Blank、Basic 或 TimeOfDay。
+- 點擊 Create 會在 /Game/Maps/<名稱> 下建立地圖。
+- 點擊 Open 會開啟該地圖，並同步 Target Map、Editor Startup Map、Game Default Map。
+
+2. 程式碼設定
+- 檢查執行時模組名稱與類別名稱。
+- GameInstance 與 GameMode 的 Blueprint 資料夾/名稱欄位決定衍生藍圖的建立位置。
+
+3. Generate Code
+- 先點擊 Generate Code。
+- 外掛會在專案執行時模組中建立或重用原生 GameInstance 與 GameMode 類別。
+- 如果觸發 Live Coding 或編譯，請等待完成後再進行下一步。
+
+4. Create Blueprints & Apply
+- 原生類別確實載入後，再點擊 Create Blueprints & Apply。
+- 外掛會建立或重用 GameInstance 與 GameMode 的子藍圖。
+- 它會把 GameMode 藍圖套用到目前選取的地圖。
+- 它會更新專案的 Editor Startup Map、Game Default Map，以及 GameInstance 預設值。
+- 如果啟用了 Set as Global Default Game Mode，也會更新整個專案的預設 GameMode。
+
+5. 說明
+- 目標地圖應該是已儲存的專案地圖，而不是暫時的 Untitled 地圖。
+- 修改類別名稱或藍圖名稱時，請使用符合 Unreal 規則的命名。
+- 重新執行這個工具是安全的。已存在且符合的類別與藍圖會在可用時被重用。

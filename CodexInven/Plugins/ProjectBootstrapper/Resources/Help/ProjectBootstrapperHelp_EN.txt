@@ -1,0 +1,28 @@
+Project Bootstrapper Quick Guide
+
+1. Managed Map
+- Enter a name in Managed Map.
+- Choose Blank, Basic, or TimeOfDay.
+- Click Create to create /Game/Maps/<Name>.
+- Click Open to open that map and sync Target Map, Editor Startup Map, and Game Default Map.
+
+2. Code Setup
+- Check the runtime module and the class names.
+- GameInstance and GameMode blueprint folder/name fields define where the derived blueprints will be created.
+
+3. Generate Code
+- Click Generate Code first.
+- The plugin creates or reuses native GameInstance and GameMode classes in your project module.
+- If Live Coding or compilation starts, wait until it finishes before the next step.
+
+4. Create Blueprints & Apply
+- Click Create Blueprints & Apply after the native classes are loaded.
+- The plugin creates or reuses Blueprint children for GameInstance and GameMode.
+- It applies the GameMode blueprint to the selected map.
+- It updates Editor Startup Map, Game Default Map, and project GameInstance defaults.
+- If Set as Global Default Game Mode is enabled, the project-wide default GameMode is also updated.
+
+5. Notes
+- The selected map should be a saved project map, not a temporary Untitled map.
+- If class or blueprint names are changed, use valid Unreal naming.
+- Re-running the tool is safe. Existing matching classes and blueprints are reused when possible.

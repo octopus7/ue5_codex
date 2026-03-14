@@ -1,0 +1,28 @@
+Project Bootstrapper 빠른 사용법
+
+1. Managed Map
+- Managed Map에 맵 이름을 입력합니다.
+- Blank, Basic, TimeOfDay 중 하나를 선택합니다.
+- Create를 누르면 /Game/Maps/<이름> 경로에 맵을 생성합니다.
+- Open을 누르면 해당 맵을 열고 Target Map, Editor Startup Map, Game Default Map을 함께 맞춥니다.
+
+2. 코드 설정
+- 런타임 모듈과 클래스 이름을 확인합니다.
+- GameInstance와 GameMode의 Blueprint 폴더/이름 항목은 파생 블루프린트가 생성될 위치를 정합니다.
+
+3. Generate Code
+- 먼저 Generate Code를 누릅니다.
+- 플러그인이 프로젝트 런타임 모듈에 네이티브 GameInstance, GameMode 클래스를 생성하거나 재사용합니다.
+- Live Coding 또는 컴파일이 시작되면 끝날 때까지 기다린 뒤 다음 단계로 진행합니다.
+
+4. Create Blueprints & Apply
+- 네이티브 클래스가 실제로 로드된 뒤 Create Blueprints & Apply를 누릅니다.
+- 플러그인이 GameInstance와 GameMode의 자식 블루프린트를 생성하거나 재사용합니다.
+- 선택한 맵에 GameMode 블루프린트를 적용합니다.
+- 프로젝트의 Editor Startup Map, Game Default Map, GameInstance 기본값을 업데이트합니다.
+- Set as Global Default Game Mode가 켜져 있으면 프로젝트 전체 기본 GameMode도 함께 갱신합니다.
+
+5. 참고
+- 대상 맵은 임시 Untitled 맵이 아니라 저장된 프로젝트 맵이어야 합니다.
+- 클래스 이름이나 블루프린트 이름을 바꿀 때는 Unreal 규칙에 맞는 이름을 사용하세요.
+- 같은 설정으로 다시 실행해도 괜찮습니다. 이미 있는 클래스와 블루프린트는 가능한 경우 재사용합니다.
