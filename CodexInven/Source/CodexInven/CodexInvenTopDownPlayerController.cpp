@@ -13,6 +13,7 @@
 
 ACodexInvenTopDownPlayerController::ACodexInvenTopDownPlayerController()
 {
+	PrimaryActorTick.bCanEverTick = true;
 	bShowMouseCursor = true;
 	bEnableClickEvents = true;
 	bEnableMouseOverEvents = false;
@@ -29,6 +30,24 @@ void ACodexInvenTopDownPlayerController::BeginPlay()
 	SetInputMode(InputMode);
 
 	ApplyInputMappingContext();
+	UpdateAimFromCursor();
+}
+
+void ACodexInvenTopDownPlayerController::PlayerTick(const float DeltaTime)
+{
+	Super::PlayerTick(DeltaTime);
+
+	const UWorld* World = GetWorld();
+	if (World == nullptr)
+	{
+		return;
+	}
+
+	if (CursorAimResumeDelay > 0.0f && LastExplicitLookInputTime >= 0.0f && World->GetTimeSeconds() < LastExplicitLookInputTime + CursorAimResumeDelay)
+	{
+		return;
+	}
+
 	UpdateAimFromCursor();
 }
 
@@ -137,6 +156,11 @@ void ACodexInvenTopDownPlayerController::HandleLook(const FInputActionValue& InV
 		const FVector2D LookInput = InValue.Get<FVector2D>();
 		if (!LookInput.IsNearlyZero())
 		{
+			if (UWorld* World = GetWorld())
+			{
+				LastExplicitLookInputTime = World->GetTimeSeconds();
+			}
+
 			const FVector AimTarget = ControlledCharacter->GetActorLocation() + FVector(LookInput.Y, LookInput.X, 0.0f) * 1000.0f;
 			ControlledCharacter->AimAtWorldLocation(AimTarget);
 			return;

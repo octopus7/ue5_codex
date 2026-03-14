@@ -21,6 +21,7 @@ public:
 	ACodexInvenTopDownPlayerController();
 
 	virtual void BeginPlay() override;
+	virtual void PlayerTick(float DeltaTime) override;
 	virtual void SetupInputComponent() override;
 
 protected:
@@ -29,6 +30,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (ClampMin = "0.01"))
 	float AutomaticFireInterval = 0.12f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat", meta = (ClampMin = "0.0"))
+	float CursorAimResumeDelay = 0.1f;
 
 private:
 	const UCodexInvenInputConfigDataAsset* GetInputConfig() const;
@@ -48,4 +52,5 @@ private:
 
 	FTimerHandle AutomaticFireTimerHandle;
 	bool bIsAutomaticFireActive = false;
+	float LastExplicitLookInputTime = -1.0f;
 };

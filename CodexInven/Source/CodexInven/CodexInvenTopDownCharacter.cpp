@@ -20,7 +20,7 @@ ACodexInvenTopDownCharacter::ACodexInvenTopDownCharacter()
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 720.0f, 0.0f);
 	GetCharacterMovement()->JumpZVelocity = 650.0f;
 	GetCharacterMovement()->AirControl = 0.35f;
