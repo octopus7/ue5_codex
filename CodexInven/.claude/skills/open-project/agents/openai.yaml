@@ -1,0 +1,4 @@
+interface:
+  display_name: "Open Project"
+  short_description: "Open this repo's Unreal Editor"
+  default_prompt: "Open the current Unreal Engine project in the editor."
