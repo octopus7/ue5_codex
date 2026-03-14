@@ -1,0 +1,28 @@
+# Unreal Engine generated data
+/Binaries/
+/DerivedDataCache/
+/Intermediate/
+/Saved/
+/Plugins/**/Binaries/
+/Plugins/**/Intermediate/
+
+# Visual Studio / Rider / VS Code
+/.vs/
+/.idea/
+/.vscode/
+*.VC.db
+*.VC.opendb
+*.suo
+*.user
+*.userprefs
+*.sln.docstates
+*.DotSettings.user
+
+# Generated project files
+*.sln
+*.xcodeproj
+*.xcworkspace
+
+# OS files
+.DS_Store
+Thumbs.db
