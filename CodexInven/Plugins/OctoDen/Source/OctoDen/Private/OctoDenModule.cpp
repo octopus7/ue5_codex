@@ -28,6 +28,8 @@
 #include "OctoDenBootstrapperSettings.h"
 #include "OctoDenBootstrapperSettingsCustomization.h"
 #include "OctoDenInputBuilderSettings.h"
+#include "OctoDenInputBuilderSettingsCustomization.h"
+#include "OctoDenInputBuilderUtilities.h"
 #include "PropertyEditorModule.h"
 #include "Styling/AppStyle.h"
 #include "ToolMenus.h"
@@ -38,6 +40,7 @@
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SExpandableArea.h"
+#include "Widgets/Layout/SSpacer.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Notifications/SNotificationList.h"
 #include "Widgets/SBoxPanel.h"
@@ -53,6 +56,8 @@ namespace OctoDen
 	const FName InputBuilderTabId(TEXT("OctoDen.InputBuilder"));
 	const TCHAR* LevelEditorMainMenu = TEXT("LevelEditor.MainMenu");
 	const TCHAR* OctoDenMainMenu = TEXT("LevelEditor.MainMenu.OctoDen");
+	const TCHAR* DefaultInputMappingContextFolder = TEXT("/Game/Input/Contexts");
+	const TCHAR* DefaultInputMappingContextName = TEXT("IMC_Default");
 	const float FooterButtonHeight = 56.0f;
 
 	FString TrimTrailingSlash(FString InValue)
@@ -754,62 +759,31 @@ namespace OctoDenBootstrapper
 
 namespace OctoDenInputBuilder
 {
-	struct FBuildSummary
+	struct FManagedInputBuildSummary
 	{
-		int32 CreatedInputActions = 0;
-		int32 SkippedInputActions = 0;
-		int32 FailedInputActions = 0;
+		EOctoDenStandardInputAction Action = EOctoDenStandardInputAction::Move;
+		FString InputActionPackagePath;
+		FString InputMappingContextPackagePath;
+		bool bCreatedInputAction = false;
+		int32 RemovedNullMappings = 0;
+		int32 RemovedExistingMappings = 0;
 		int32 AddedMappings = 0;
-		bool bCreatedInputMappingContext = false;
-		bool bSkippedInputMappingContext = false;
-		TArray<FString> DetailLines;
-		TArray<UPackage*> PackagesToSave;
 	};
 
-	void AddDetail(FBuildSummary& InSummary, const FString& InLine)
+	FString BuildSummaryText(const FManagedInputBuildSummary& InSummary)
 	{
-		InSummary.DetailLines.Add(InLine);
-	}
-
-	bool HasAnyNamedRows(const UOctoDenInputBuilderSettings& InSettings)
-	{
-		for (const FOctoDenInputActionRow& Row : InSettings.Actions)
-		{
-			if (!Row.ActionName.TrimStartAndEnd().IsEmpty())
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	FString BuildSummaryText(const FBuildSummary& InSummary)
-	{
-		FString Result = FString::Printf(
-			TEXT("Input Builder completed.\nIMC Created: %s\nIMC Skipped: %s\nCreated IAs: %d\nSkipped IAs: %d\nFailed Rows: %d\nMappings Added: %d"),
-			InSummary.bCreatedInputMappingContext ? TEXT("Yes") : TEXT("No"),
-			InSummary.bSkippedInputMappingContext ? TEXT("Yes") : TEXT("No"),
-			InSummary.CreatedInputActions,
-			InSummary.SkippedInputActions,
-			InSummary.FailedInputActions,
+		return FString::Printf(
+			TEXT("Input Builder updated '%s'.\nAction: %s\nIA: %s\nIA Created: %s\nRemoved Null IMC Mappings: %d\nRemoved Existing Action Mappings: %d\nMappings Added: %d"),
+			*InSummary.InputMappingContextPackagePath,
+			*UOctoDenInputBuilderSettings::GetStandardActionStem(InSummary.Action),
+			*InSummary.InputActionPackagePath,
+			InSummary.bCreatedInputAction ? TEXT("Yes") : TEXT("No"),
+			InSummary.RemovedNullMappings,
+			InSummary.RemovedExistingMappings,
 			InSummary.AddedMappings);
-
-		if (!InSummary.DetailLines.IsEmpty())
-		{
-			Result.Append(TEXT("\n\nDetails\n"));
-			for (const FString& Line : InSummary.DetailLines)
-			{
-				Result.Append(TEXT("- "));
-				Result.Append(Line);
-				Result.Append(TEXT("\n"));
-			}
-		}
-
-		return Result;
 	}
 
-	bool CreateInputActionAsset(const FString& InFolder, const FString& InAssetName, const EInputActionValueType InValueType, UInputAction*& OutInputAction, FText& OutFailReason)
+	bool CreateInputActionAsset(const FString& InFolder, const FString& InAssetName, UInputAction*& OutInputAction, FText& OutFailReason)
 	{
 		IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools")).Get();
 		UInputAction_Factory* Factory = NewObject<UInputAction_Factory>();
@@ -823,9 +797,6 @@ namespace OctoDenInputBuilder
 			return false;
 		}
 
-		OutInputAction->Modify();
-		OutInputAction->ValueType = InValueType;
-		OutInputAction->MarkPackageDirty();
 		return true;
 	}
 
@@ -847,6 +818,53 @@ namespace OctoDenInputBuilder
 		OutInputMappingContext->MarkPackageDirty();
 		return true;
 	}
+
+	bool ResolveOrCreateInputActionAsset(
+		const UOctoDenInputBuilderSettings& InSettings,
+		const EOctoDenStandardInputAction InManagedAction,
+		UInputAction*& OutInputAction,
+		bool& bOutCreatedInputAction,
+		FText& OutFailReason)
+	{
+		bOutCreatedInputAction = false;
+		OutInputAction = nullptr;
+
+		const FString InputActionName = InSettings.GetCanonicalInputActionName(InManagedAction);
+		const FString InputActionPackagePath = InSettings.GetCanonicalInputActionPackagePath(InManagedAction);
+		if (!FPackageName::IsValidLongPackageName(InputActionPackagePath))
+		{
+			OutFailReason = FText::Format(
+				LOCTEXT("InvalidManagedInputActionPackagePath", "The generated IA package path '{0}' is not valid."),
+				FText::FromString(InputActionPackagePath));
+			return false;
+		}
+
+		if (FPackageName::DoesPackageExist(InputActionPackagePath))
+		{
+			OutInputAction = LoadObject<UInputAction>(nullptr, *InSettings.GetCanonicalInputActionObjectPath(InManagedAction));
+			if (OutInputAction == nullptr)
+			{
+				OutFailReason = FText::Format(
+					LOCTEXT("LoadManagedInputActionFailed", "Failed to load existing Input Action '{0}' as a UInputAction."),
+					FText::FromString(InputActionPackagePath));
+				return false;
+			}
+
+			return true;
+		}
+
+		if (!CreateInputActionAsset(
+			OctoDen::NormalizeAssetFolder(InSettings.InputActionFolder),
+			InputActionName,
+			OutInputAction,
+			OutFailReason))
+		{
+			return false;
+		}
+
+		bOutCreatedInputAction = true;
+		return true;
+	}
 }
 
 void FOctoDenModule::StartupModule()
@@ -861,6 +879,10 @@ void FOctoDenModule::StartupModule()
 		{
 			RefreshInputBuilderDetails();
 		}
+		else if (InputBuilderSettings.IsValid() && Object == InputBuilderSettings->SelectedInputMappingContext)
+		{
+			RefreshInputBuilderDetails();
+		}
 	});
 
 	ReloadCompleteHandle = FCoreUObjectDelegates::ReloadCompleteDelegate.AddLambda([this](EReloadCompleteReason)
@@ -869,12 +891,20 @@ void FOctoDenModule::StartupModule()
 		{
 			RefreshBootstrapperDetails();
 		}
+
+		if (InputBuilderTab.IsValid())
+		{
+			RefreshInputBuilderDetails();
+		}
 	});
 
 	FPropertyEditorModule& PropertyEditorModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
 	PropertyEditorModule.RegisterCustomClassLayout(
 		UOctoDenBootstrapperSettings::StaticClass()->GetFName(),
 		FOnGetDetailCustomizationInstance::CreateStatic(&FOctoDenBootstrapperSettingsCustomization::MakeInstance));
+	PropertyEditorModule.RegisterCustomClassLayout(
+		UOctoDenInputBuilderSettings::StaticClass()->GetFName(),
+		FOnGetDetailCustomizationInstance::CreateStatic(&FOctoDenInputBuilderSettingsCustomization::MakeInstance));
 	PropertyEditorModule.NotifyCustomizationModuleChanged();
 
 	RegisterTabSpawners();
@@ -902,6 +932,7 @@ void FOctoDenModule::ShutdownModule()
 	{
 		FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
 		PropertyEditorModule.UnregisterCustomClassLayout(UOctoDenBootstrapperSettings::StaticClass()->GetFName());
+		PropertyEditorModule.UnregisterCustomClassLayout(UOctoDenInputBuilderSettings::StaticClass()->GetFName());
 		PropertyEditorModule.NotifyCustomizationModuleChanged();
 	}
 
@@ -1026,14 +1057,13 @@ void FOctoDenModule::UpdateInputBuilderResult(const FText& InResultText)
 void FOctoDenModule::ResetInputBuilderSettings()
 {
 	InputBuilderSettings = TStrongObjectPtr<UOctoDenInputBuilderSettings>(NewObject<UOctoDenInputBuilderSettings>());
-	InputBuilderSettings->Actions.AddDefaulted();
 
 	if (InputBuilderDetailsView.IsValid())
 	{
 		InputBuilderDetailsView->SetObject(InputBuilderSettings.Get());
 	}
 
-	UpdateInputBuilderResult(LOCTEXT("InputBuilderDefaultResult", "Configure the target IMC and action rows, then click Build Assets."));
+	UpdateInputBuilderResult(LOCTEXT("InputBuilderDefaultResult", "Create a default IMC or select one after it has been assigned, then add the managed inputs one by one."));
 }
 
 void FOctoDenModule::ShowNotification(const FText& InText, const bool bWasSuccessful) const
@@ -1046,6 +1076,74 @@ void FOctoDenModule::ShowNotification(const FText& InText, const bool bWasSucces
 	{
 		Notification->SetCompletionState(bWasSuccessful ? SNotificationItem::CS_Success : SNotificationItem::CS_Fail);
 	}
+}
+
+bool FOctoDenModule::CreateDefaultInputMappingContext(UOctoDenInputBuilderSettings* InSettings)
+{
+	if (InSettings == nullptr)
+	{
+		return false;
+	}
+
+	const FString DefaultFolder = OctoDen::NormalizeAssetFolder(OctoDen::DefaultInputMappingContextFolder);
+	const FString DefaultPackagePath = OctoDen::MakePackagePath(DefaultFolder, OctoDen::DefaultInputMappingContextName);
+	if (!FPackageName::IsValidLongPackageName(DefaultPackagePath))
+	{
+		const FText FailReason = FText::Format(
+			LOCTEXT("InvalidDefaultInputMappingContextPackagePath", "The default IMC package path '{0}' is not valid."),
+			FText::FromString(DefaultPackagePath));
+		UpdateInputBuilderResult(FailReason);
+		FMessageDialog::Open(EAppMsgType::Ok, FailReason);
+		return false;
+	}
+
+	UInputMappingContext* DefaultInputMappingContext = nullptr;
+	if (FPackageName::DoesPackageExist(DefaultPackagePath))
+	{
+		const FString ObjectPath = DefaultPackagePath + TEXT(".") + OctoDen::DefaultInputMappingContextName;
+		DefaultInputMappingContext = LoadObject<UInputMappingContext>(nullptr, *ObjectPath);
+		if (DefaultInputMappingContext == nullptr)
+		{
+			const FText FailReason = FText::Format(
+				LOCTEXT("LoadDefaultInputMappingContextFailed", "Failed to load default IMC '{0}' as an Input Mapping Context."),
+				FText::FromString(DefaultPackagePath));
+			UpdateInputBuilderResult(FailReason);
+			FMessageDialog::Open(EAppMsgType::Ok, FailReason);
+			return false;
+		}
+	}
+	else
+	{
+		FText FailReason;
+		if (!OctoDenInputBuilder::CreateInputMappingContextAsset(DefaultFolder, OctoDen::DefaultInputMappingContextName, DefaultInputMappingContext, FailReason))
+		{
+			UpdateInputBuilderResult(FailReason);
+			FMessageDialog::Open(EAppMsgType::Ok, FailReason);
+			return false;
+		}
+
+		FText SaveFailReason;
+		TArray<UPackage*> PackagesToSave;
+		PackagesToSave.Add(DefaultInputMappingContext->GetOutermost());
+		if (!OctoDen::SavePackages(PackagesToSave, SaveFailReason))
+		{
+			UpdateInputBuilderResult(SaveFailReason);
+			FMessageDialog::Open(EAppMsgType::Ok, SaveFailReason);
+			return false;
+		}
+	}
+
+	InSettings->SelectedInputMappingContext = DefaultInputMappingContext;
+	RefreshInputBuilderDetails();
+	UpdateInputBuilderResult(FText::Format(
+		LOCTEXT("DefaultInputMappingContextSelected", "Using default IMC '{0}'."),
+		FText::FromString(DefaultPackagePath)));
+	ShowNotification(
+		FText::Format(
+			LOCTEXT("DefaultInputMappingContextNotification", "Selected default IMC {0}."),
+			FText::FromString(OctoDen::DefaultInputMappingContextName)),
+		true);
+	return true;
 }
 
 TSharedRef<SDockTab> FOctoDenModule::SpawnBootstrapperTab(const FSpawnTabArgs& SpawnTabArgs)
@@ -1210,19 +1308,8 @@ TSharedRef<SDockTab> FOctoDenModule::SpawnInputBuilderTab(const FSpawnTabArgs& S
 					SNew(SHorizontalBox)
 					+ SHorizontalBox::Slot()
 					.FillWidth(1.0f)
-					.Padding(0.0f, 0.0f, 8.0f, 0.0f)
 					[
-						SNew(SBox)
-						.HeightOverride(OctoDen::FooterButtonHeight)
-						[
-							SNew(SButton)
-							.Text(LOCTEXT("BuildInputAssetsButton", "Build Assets"))
-							.OnClicked_Lambda([this]()
-							{
-								BuildInputAssets(InputBuilderSettings.Get());
-								return FReply::Handled();
-							})
-						]
+						SNew(SSpacer)
 					]
 					+ SHorizontalBox::Slot()
 					.AutoWidth()
@@ -1252,7 +1339,7 @@ TSharedRef<SDockTab> FOctoDenModule::SpawnInputBuilderTab(const FSpawnTabArgs& S
 						[
 							SAssignNew(InputBuilderResultTextBlock, STextBlock)
 							.AutoWrapText(true)
-							.Text(LOCTEXT("InputBuilderInitialText", "Configure the target IMC and action rows, then click Build Assets."))
+							.Text(LOCTEXT("InputBuilderInitialText", "Create a default IMC or select one after it has been assigned, then add the managed inputs one by one."))
 						]
 					]
 				]
@@ -1580,181 +1667,81 @@ bool FOctoDenModule::BuildInputAssets(UOctoDenInputBuilderSettings* InSettings)
 		return false;
 	}
 
-	if (!OctoDen::IsValidAssetFolder(InSettings->InputMappingContextFolder))
+	FText FailReason;
+	if (!InSettings->CanAddSelectedAction(&FailReason))
 	{
-		FMessageDialog::Open(EAppMsgType::Ok, LOCTEXT("InvalidInputMappingContextFolder", "The Input Mapping Context folder must be a valid package path such as /Game/Input/Contexts."));
+		UpdateInputBuilderResult(FailReason);
+		FMessageDialog::Open(EAppMsgType::Ok, FailReason);
 		return false;
 	}
 
-	if (!OctoDen::IsValidAssetFolder(InSettings->InputActionFolder))
+	EOctoDenStandardInputAction ManagedAction = EOctoDenStandardInputAction::Move;
+	if (!InSettings->ResolveSelectedAction(ManagedAction) || InSettings->SelectedInputMappingContext == nullptr)
 	{
-		FMessageDialog::Open(EAppMsgType::Ok, LOCTEXT("InvalidInputActionFolder", "The Input Action folder must be a valid package path such as /Game/Input/Actions."));
+		FailReason = LOCTEXT("ResolveManagedActionFailed", "Failed to resolve a managed action for the selected IMC.");
+		UpdateInputBuilderResult(FailReason);
+		FMessageDialog::Open(EAppMsgType::Ok, FailReason);
 		return false;
 	}
 
-	if (!OctoDenInputBuilder::HasAnyNamedRows(*InSettings))
+	UInputAction* ManagedInputAction = nullptr;
+	bool bCreatedInputAction = false;
+	if (!OctoDenInputBuilder::ResolveOrCreateInputActionAsset(*InSettings, ManagedAction, ManagedInputAction, bCreatedInputAction, FailReason))
 	{
-		FMessageDialog::Open(EAppMsgType::Ok, LOCTEXT("MissingInputBuilderRows", "Add at least one action row before building input assets."));
+		UpdateInputBuilderResult(FailReason);
+		FMessageDialog::Open(EAppMsgType::Ok, FailReason);
 		return false;
 	}
 
-	const FString InputMappingContextName = OctoDen::MakePrefixedAssetName(
-		InSettings->InputMappingContextName,
-		InSettings->InputMappingContextPrefix,
-		TEXT("Default"));
-	const FString InputMappingContextPackagePath = OctoDen::MakePackagePath(InSettings->InputMappingContextFolder, InputMappingContextName);
+	OctoDenInputBuilder::ConfigureManagedInputAction(*ManagedInputAction, ManagedAction);
 
-	if (!FPackageName::IsValidLongPackageName(InputMappingContextPackagePath))
+	OctoDenInputBuilder::FApplyManagedActionMappingsResult ApplyResult;
+	if (!OctoDenInputBuilder::ApplyManagedActionMappings(
+		*InSettings->SelectedInputMappingContext,
+		*ManagedInputAction,
+		ManagedAction,
+		InSettings->GetBindingDraft(ManagedAction),
+		ApplyResult,
+		FailReason))
 	{
-		FMessageDialog::Open(
-			EAppMsgType::Ok,
-			FText::Format(
-				LOCTEXT("InvalidInputMappingContextPackagePath", "The generated IMC package path '{0}' is not valid."),
-				FText::FromString(InputMappingContextPackagePath)));
+		UpdateInputBuilderResult(FailReason);
+		FMessageDialog::Open(EAppMsgType::Ok, FailReason);
 		return false;
-	}
-
-	OctoDenInputBuilder::FBuildSummary Summary;
-	UInputMappingContext* CreatedInputMappingContext = nullptr;
-	const bool bInputMappingContextExists = FPackageName::DoesPackageExist(InputMappingContextPackagePath);
-
-	if (bInputMappingContextExists)
-	{
-		Summary.bSkippedInputMappingContext = true;
-		OctoDenInputBuilder::AddDetail(
-			Summary,
-			FString::Printf(TEXT("Skipped IMC '%s' because it already exists."), *InputMappingContextPackagePath));
-	}
-	else
-	{
-		FText FailReason;
-		if (!OctoDenInputBuilder::CreateInputMappingContextAsset(
-			OctoDen::NormalizeAssetFolder(InSettings->InputMappingContextFolder),
-			InputMappingContextName,
-			CreatedInputMappingContext,
-			FailReason))
-		{
-			UpdateInputBuilderResult(FailReason);
-			FMessageDialog::Open(EAppMsgType::Ok, FailReason);
-			return false;
-		}
-
-		Summary.bCreatedInputMappingContext = true;
-		Summary.PackagesToSave.Add(CreatedInputMappingContext->GetOutermost());
-		OctoDenInputBuilder::AddDetail(
-			Summary,
-			FString::Printf(TEXT("Created IMC '%s'."), *InputMappingContextPackagePath));
-	}
-
-	TSet<FString> RequestedActionPackagePaths;
-	for (int32 RowIndex = 0; RowIndex < InSettings->Actions.Num(); ++RowIndex)
-	{
-		const FOctoDenInputActionRow& Row = InSettings->Actions[RowIndex];
-		const FString TrimmedActionName = Row.ActionName.TrimStartAndEnd();
-		if (TrimmedActionName.IsEmpty())
-		{
-			++Summary.SkippedInputActions;
-			OctoDenInputBuilder::AddDetail(
-				Summary,
-				FString::Printf(TEXT("Skipped row %d because Action Name is empty."), RowIndex + 1));
-			continue;
-		}
-
-		const FString InputActionName = OctoDen::MakePrefixedAssetName(TrimmedActionName, InSettings->InputActionPrefix, TEXT("Action"));
-		const FString InputActionPackagePath = OctoDen::MakePackagePath(InSettings->InputActionFolder, InputActionName);
-		if (!FPackageName::IsValidLongPackageName(InputActionPackagePath))
-		{
-			++Summary.FailedInputActions;
-			OctoDenInputBuilder::AddDetail(
-				Summary,
-				FString::Printf(TEXT("Failed row %d because package path '%s' is invalid."), RowIndex + 1, *InputActionPackagePath));
-			continue;
-		}
-
-		if (RequestedActionPackagePaths.Contains(InputActionPackagePath))
-		{
-			++Summary.SkippedInputActions;
-			OctoDenInputBuilder::AddDetail(
-				Summary,
-				FString::Printf(TEXT("Skipped duplicate requested action '%s'."), *InputActionPackagePath));
-			continue;
-		}
-
-		RequestedActionPackagePaths.Add(InputActionPackagePath);
-
-		if (FPackageName::DoesPackageExist(InputActionPackagePath))
-		{
-			++Summary.SkippedInputActions;
-			OctoDenInputBuilder::AddDetail(
-				Summary,
-				FString::Printf(TEXT("Skipped IA '%s' because it already exists."), *InputActionPackagePath));
-			continue;
-		}
-
-		UInputAction* CreatedInputAction = nullptr;
-		FText FailReason;
-		if (!OctoDenInputBuilder::CreateInputActionAsset(
-			OctoDen::NormalizeAssetFolder(InSettings->InputActionFolder),
-			InputActionName,
-			Row.ValueType,
-			CreatedInputAction,
-			FailReason))
-		{
-			++Summary.FailedInputActions;
-			OctoDenInputBuilder::AddDetail(
-				Summary,
-				FString::Printf(TEXT("Failed to create IA '%s': %s"), *InputActionPackagePath, *FailReason.ToString()));
-			continue;
-		}
-
-		++Summary.CreatedInputActions;
-		Summary.PackagesToSave.Add(CreatedInputAction->GetOutermost());
-		OctoDenInputBuilder::AddDetail(
-			Summary,
-			FString::Printf(TEXT("Created IA '%s'."), *InputActionPackagePath));
-
-		if (CreatedInputMappingContext == nullptr)
-		{
-			continue;
-		}
-
-		auto AddMappingIfValid = [&Summary, CreatedInputAction, CreatedInputMappingContext](const FKey& InKey)
-		{
-			if (!InKey.IsValid())
-			{
-				return;
-			}
-
-			CreatedInputMappingContext->Modify();
-			CreatedInputMappingContext->MapKey(CreatedInputAction, InKey);
-			CreatedInputMappingContext->MarkPackageDirty();
-			++Summary.AddedMappings;
-		};
-
-		AddMappingIfValid(Row.PrimaryKey);
-		AddMappingIfValid(Row.SecondaryKey);
-		AddMappingIfValid(Row.GamepadKey);
 	}
 
 	FText SaveFailReason;
-	if (!OctoDen::SavePackages(Summary.PackagesToSave, SaveFailReason))
+	TArray<UPackage*> PackagesToSave;
+	PackagesToSave.Add(ManagedInputAction->GetOutermost());
+	PackagesToSave.Add(InSettings->SelectedInputMappingContext->GetOutermost());
+	if (!OctoDen::SavePackages(PackagesToSave, SaveFailReason))
 	{
 		UpdateInputBuilderResult(SaveFailReason);
 		FMessageDialog::Open(EAppMsgType::Ok, SaveFailReason);
 		return false;
 	}
 
+	OctoDenInputBuilder::FManagedInputBuildSummary Summary;
+	Summary.Action = ManagedAction;
+	Summary.InputActionPackagePath = InSettings->GetCanonicalInputActionPackagePath(ManagedAction);
+	Summary.InputMappingContextPackagePath = InSettings->SelectedInputMappingContext->GetOutermost()->GetName();
+	Summary.bCreatedInputAction = bCreatedInputAction;
+	Summary.RemovedNullMappings = ApplyResult.RemovedNullMappings;
+	Summary.RemovedExistingMappings = ApplyResult.RemovedExistingMappings;
+	Summary.AddedMappings = ApplyResult.AddedMappings;
+
+	InSettings->SelectedAction = ManagedAction;
 	const FText SummaryText = FText::FromString(OctoDenInputBuilder::BuildSummaryText(Summary));
 	UpdateInputBuilderResult(SummaryText);
+	RefreshInputBuilderDetails();
+
 	ShowNotification(
 		FText::Format(
-			LOCTEXT("InputBuilderNotification", "Input Builder finished. Created {0} IA(s), skipped {1}, failed {2}."),
-			FText::AsNumber(Summary.CreatedInputActions),
-			FText::AsNumber(Summary.SkippedInputActions),
-			FText::AsNumber(Summary.FailedInputActions)),
-		Summary.FailedInputActions == 0);
+			LOCTEXT("ManagedInputAddedNotification", "Added {0} to {1}."),
+			UOctoDenInputBuilderSettings::GetStandardActionDisplayText(ManagedAction),
+			FText::FromString(InSettings->SelectedInputMappingContext->GetName())),
+		true);
 
-	return Summary.FailedInputActions == 0;
+	return true;
 }
 
 IMPLEMENT_MODULE(FOctoDenModule, OctoDen)

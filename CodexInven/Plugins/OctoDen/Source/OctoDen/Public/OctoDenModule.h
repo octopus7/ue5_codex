@@ -23,6 +23,7 @@ public:
 	bool GenerateNativeCode(UOctoDenBootstrapperSettings* InSettings);
 	bool CreateBlueprintsAndApply(UOctoDenBootstrapperSettings* InSettings);
 	bool BuildInputAssets(UOctoDenInputBuilderSettings* InSettings);
+	bool CreateDefaultInputMappingContext(UOctoDenInputBuilderSettings* InSettings);
 
 private:
 	void RegisterMenus();
