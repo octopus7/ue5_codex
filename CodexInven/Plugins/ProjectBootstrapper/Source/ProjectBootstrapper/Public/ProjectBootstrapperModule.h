@@ -16,14 +16,17 @@ public:
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 
+	static bool ShouldShowCodeGenerationUI(const UProjectBootstrapperDialogSettings* InDialogSettings);
+
 	bool CreateManagedMap(UProjectBootstrapperDialogSettings* InDialogSettings);
 	bool OpenManagedMap(UProjectBootstrapperDialogSettings* InDialogSettings);
 	bool GenerateNativeCode(UProjectBootstrapperDialogSettings* InDialogSettings);
 	bool CreateBlueprintsAndApply(UProjectBootstrapperDialogSettings* InDialogSettings);
-	void RefreshDialogDetails() const;
+	void RefreshDialogDetails();
 	void OpenHelpWindow();
 
 private:
+	void RefreshBlueprintApplyAvailability();
 	void RegisterStyle();
 	void UnregisterStyle();
 	void RegisterMenus();
@@ -45,4 +48,7 @@ private:
 	TSharedPtr<SWindow> HelpWindow;
 	TSharedPtr<STextBlock> HelpTextBlock;
 	TArray<TSharedPtr<FString>> HelpLanguageOptions;
+	FDelegateHandle ObjectPropertyChangedHandle;
+	FDelegateHandle ReloadCompleteHandle;
+	bool bCanCreateBlueprintsAndApply = false;
 };

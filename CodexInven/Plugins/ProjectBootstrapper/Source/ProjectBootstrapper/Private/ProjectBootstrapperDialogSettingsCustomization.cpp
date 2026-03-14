@@ -41,6 +41,14 @@ void FProjectBootstrapperDialogSettingsCustomization::CustomizeDetails(IDetailLa
 		}
 	}
 
+	const bool bShowCodeGenerationUI = FProjectBootstrapperModule::ShouldShowCodeGenerationUI(DialogSettings.Get());
+	if (!bShowCodeGenerationUI)
+	{
+		DetailBuilder.HideCategory(TEXT("Code"));
+		DetailBuilder.HideCategory(TEXT("GameInstance"));
+		DetailBuilder.HideCategory(TEXT("GameMode"));
+	}
+
 	IDetailCategoryBuilder& MapsCategory = DetailBuilder.EditCategory(TEXT("Maps"));
 	MapsCategory.AddCustomRow(LOCTEXT("ManagedMapFilterText", "Managed Map"))
 	.NameContent()
@@ -116,6 +124,18 @@ void FProjectBootstrapperDialogSettingsCustomization::CustomizeDetails(IDetailLa
 			})
 		]
 	];
+
+	if (!bShowCodeGenerationUI)
+	{
+		MapsCategory.AddCustomRow(LOCTEXT("CodeGenerationHiddenFilterText", "Code Generation"))
+		.WholeRowContent()
+		[
+			SNew(STextBlock)
+			.Text(LOCTEXT("CodeGenerationHiddenMessage", "Create or open a saved target map to show the code generation settings."))
+			.Font(IDetailLayoutBuilder::GetDetailFontItalic())
+			.AutoWrapText(true)
+		];
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

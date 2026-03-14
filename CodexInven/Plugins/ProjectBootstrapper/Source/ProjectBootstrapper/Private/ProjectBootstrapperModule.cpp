@@ -31,6 +31,7 @@
 #include "Styling/SlateStyleRegistry.h"
 #include "PropertyEditorModule.h"
 #include "ToolMenus.h"
+#include "UObject/UObjectGlobals.h"
 #include "UObject/StrongObjectPtr.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SComboBox.h"
@@ -38,6 +39,7 @@
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/SBoxPanel.h"
+#include "Widgets/SWidget.h"
 #include "Widgets/SWindow.h"
 #include "Widgets/Text/STextBlock.h"
 
@@ -259,6 +261,12 @@ namespace ProjectBootstrapper
 	FString GetMapPackageName(const TSoftObjectPtr<UWorld>& MapReference)
 	{
 		return MapReference.ToSoftObjectPath().GetLongPackageName();
+	}
+
+	bool DoesTargetMapExist(const UProjectBootstrapperDialogSettings& InSettings)
+	{
+		const FString TargetMapPackageName = GetMapPackageName(InSettings.TargetMap);
+		return !TargetMapPackageName.IsEmpty() && FPackageName::DoesPackageExist(TargetMapPackageName);
 	}
 
 	FString GetCurrentEditorMapPackageName()
@@ -686,6 +694,45 @@ namespace ProjectBootstrapper
 		return true;
 	}
 
+	bool AreNativeClassesReady(const UProjectBootstrapperDialogSettings& InSettings)
+	{
+		if (!DoesTargetMapExist(InSettings))
+		{
+			return false;
+		}
+
+		FText UnusedFailReason;
+		if (!ValidateCodeSettings(InSettings, UnusedFailReason))
+		{
+			return false;
+		}
+
+		FModuleContextInfo RuntimeModule;
+		if (!ResolveRuntimeModule(InSettings.TargetRuntimeModule.TrimStartAndEnd(), RuntimeModule))
+		{
+			return false;
+		}
+
+		UClass* NativeGameInstanceClass = nullptr;
+		if (!TryLoadNativeClass(
+			InSettings.GameInstanceClassName,
+			UGameInstance::StaticClass(),
+			RuntimeModule,
+			NativeGameInstanceClass,
+			UnusedFailReason))
+		{
+			return false;
+		}
+
+		UClass* NativeGameModeClass = nullptr;
+		return TryLoadNativeClass(
+			InSettings.GameModeClassName,
+			AGameModeBase::StaticClass(),
+			RuntimeModule,
+			NativeGameModeClass,
+			UnusedFailReason);
+	}
+
 	void PopulateDefaults(UProjectBootstrapperDialogSettings& InSettings)
 	{
 		const FString ProjectName = ToPascalCase(FApp::GetProjectName());
@@ -724,6 +771,22 @@ void FProjectBootstrapperModule::StartupModule()
 {
 	RegisterStyle();
 
+	ObjectPropertyChangedHandle = FCoreUObjectDelegates::OnObjectPropertyChanged.AddLambda([this](UObject* Object, FPropertyChangedEvent&)
+	{
+		if (Object == DialogSettings.Get())
+		{
+			RefreshDialogDetails();
+		}
+	});
+
+	ReloadCompleteHandle = FCoreUObjectDelegates::ReloadCompleteDelegate.AddLambda([this](EReloadCompleteReason)
+	{
+		if (DialogWindow.IsValid())
+		{
+			RefreshDialogDetails();
+		}
+	});
+
 	FPropertyEditorModule& PropertyEditorModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
 	PropertyEditorModule.RegisterCustomClassLayout(
 		UProjectBootstrapperDialogSettings::StaticClass()->GetFName(),
@@ -737,6 +800,18 @@ void FProjectBootstrapperModule::ShutdownModule()
 {
 	UToolMenus::UnRegisterStartupCallback(this);
 	UToolMenus::UnregisterOwner(this);
+
+	if (ObjectPropertyChangedHandle.IsValid())
+	{
+		FCoreUObjectDelegates::OnObjectPropertyChanged.Remove(ObjectPropertyChangedHandle);
+		ObjectPropertyChangedHandle.Reset();
+	}
+
+	if (ReloadCompleteHandle.IsValid())
+	{
+		FCoreUObjectDelegates::ReloadCompleteDelegate.Remove(ReloadCompleteHandle);
+		ReloadCompleteHandle.Reset();
+	}
 
 	if (FModuleManager::Get().IsModuleLoaded(TEXT("PropertyEditor")))
 	{
@@ -753,6 +828,12 @@ void FProjectBootstrapperModule::ShutdownModule()
 	DialogDetailsView.Reset();
 	DialogSettings.Reset();
 	HelpLanguageOptions.Reset();
+	bCanCreateBlueprintsAndApply = false;
+}
+
+bool FProjectBootstrapperModule::ShouldShowCodeGenerationUI(const UProjectBootstrapperDialogSettings* InDialogSettings)
+{
+	return InDialogSettings != nullptr && ProjectBootstrapper::DoesTargetMapExist(*InDialogSettings);
 }
 
 void FProjectBootstrapperModule::RegisterStyle()
@@ -818,6 +899,7 @@ void FProjectBootstrapperModule::OpenBootstrapperWindow()
 
 	DialogSettings = TStrongObjectPtr<UProjectBootstrapperDialogSettings>(NewObject<UProjectBootstrapperDialogSettings>());
 	ProjectBootstrapper::PopulateDefaults(*DialogSettings.Get());
+	RefreshBlueprintApplyAvailability();
 
 	FPropertyEditorModule& PropertyEditorModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>(TEXT("PropertyEditor"));
 
@@ -852,27 +934,59 @@ void FProjectBootstrapperModule::OpenBootstrapperWindow()
 					SNew(SHorizontalBox)
 					+ SHorizontalBox::Slot()
 					.FillWidth(1.0f)
-					.Padding(0.0f, 0.0f, 8.0f, 0.0f)
 					[
-						SNew(SButton)
-						.Text(LOCTEXT("GenerateCodeButton", "Generate Code"))
-						.OnClicked_Lambda([this]()
+						SNew(SHorizontalBox)
+						.Visibility_Lambda([this]()
 						{
-							GenerateNativeCode(DialogSettings.Get());
-							return FReply::Handled();
+							return ShouldShowCodeGenerationUI(DialogSettings.Get()) ? EVisibility::Visible : EVisibility::Collapsed;
 						})
-					]
-					+ SHorizontalBox::Slot()
-					.FillWidth(1.0f)
-					.Padding(0.0f, 0.0f, 8.0f, 0.0f)
-					[
-						SNew(SButton)
-						.Text(LOCTEXT("CreateBlueprintsAndApplyButton", "Create Blueprints && Apply"))
-						.OnClicked_Lambda([this]()
-						{
-							CreateBlueprintsAndApply(DialogSettings.Get());
-							return FReply::Handled();
-						})
+						+ SHorizontalBox::Slot()
+						.FillWidth(1.0f)
+						.Padding(0.0f, 0.0f, 8.0f, 0.0f)
+						[
+							SNew(SButton)
+							.Text(LOCTEXT("GenerateCodeButton", "Generate Code"))
+							.OnClicked_Lambda([this]()
+							{
+								GenerateNativeCode(DialogSettings.Get());
+								return FReply::Handled();
+							})
+						]
+						+ SHorizontalBox::Slot()
+						.FillWidth(1.0f)
+						.Padding(0.0f, 0.0f, 8.0f, 0.0f)
+						[
+							SNew(SVerticalBox)
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							[
+								SNew(SButton)
+								.IsEnabled_Lambda([this]()
+								{
+									return bCanCreateBlueprintsAndApply;
+								})
+								.ToolTipText(LOCTEXT("CreateBlueprintsAndApplyTooltip", "GameMode and GameInstance classes must be loaded."))
+								.Text(LOCTEXT("CreateBlueprintsAndApplyButton", "Create Blueprints && Apply"))
+								.OnClicked_Lambda([this]()
+								{
+									CreateBlueprintsAndApply(DialogSettings.Get());
+									return FReply::Handled();
+								})
+							]
+							+ SVerticalBox::Slot()
+							.AutoHeight()
+							.Padding(0.0f, 4.0f, 0.0f, 0.0f)
+							[
+								SNew(STextBlock)
+								.Visibility_Lambda([this]()
+								{
+									return bCanCreateBlueprintsAndApply ? EVisibility::Collapsed : EVisibility::Visible;
+								})
+								.Text(LOCTEXT("CreateBlueprintsAndApplyHint", "GameMode and GameInstance classes must be loaded."))
+								.ColorAndOpacity(FSlateColor(FLinearColor(0.65f, 0.65f, 0.65f, 1.0f)))
+								.AutoWrapText(true)
+							]
+						]
 					]
 					+ SHorizontalBox::Slot()
 					.AutoWidth()
@@ -920,6 +1034,7 @@ void FProjectBootstrapperModule::HandleDialogWindowClosed(const TSharedRef<SWind
 	DialogWindow.Reset();
 	DialogDetailsView.Reset();
 	DialogSettings.Reset();
+	bCanCreateBlueprintsAndApply = false;
 }
 
 void FProjectBootstrapperModule::HandleHelpWindowClosed(const TSharedRef<SWindow>& Window)
@@ -1286,9 +1401,11 @@ bool FProjectBootstrapperModule::GenerateNativeCode(UProjectBootstrapperDialogSe
 		return false;
 	}
 
+	RefreshDialogDetails();
+
 	FMessageDialog::Open(
 		EAppMsgType::Ok,
-		LOCTEXT("NativeCodeCompleted", "Native GameInstance and GameMode classes are ready or were generated. If the editor is still compiling or reloading, wait for that to finish and then click 'Create Blueprints & Apply'."));
+		LOCTEXT("NativeCodeCompleted", "Native GameInstance and GameMode classes are ready or were generated. If the editor is still compiling or reloading, wait for that to finish. The 'Create Blueprints & Apply' button will be enabled when the native classes are loaded."));
 	return true;
 }
 
@@ -1422,11 +1539,23 @@ bool FProjectBootstrapperModule::CreateBlueprintsAndApply(UProjectBootstrapperDi
 	return true;
 }
 
-void FProjectBootstrapperModule::RefreshDialogDetails() const
+void FProjectBootstrapperModule::RefreshBlueprintApplyAvailability()
 {
+	bCanCreateBlueprintsAndApply = DialogSettings.IsValid() && ProjectBootstrapper::AreNativeClassesReady(*DialogSettings.Get());
+}
+
+void FProjectBootstrapperModule::RefreshDialogDetails()
+{
+	RefreshBlueprintApplyAvailability();
+
 	if (DialogDetailsView.IsValid())
 	{
 		DialogDetailsView->ForceRefresh();
+	}
+
+	if (DialogWindow.IsValid())
+	{
+		DialogWindow->Invalidate(EInvalidateWidgetReason::Layout);
 	}
 }
 
