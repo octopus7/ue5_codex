@@ -65,20 +65,6 @@ namespace
 		return EVisibility::Collapsed;
 	}
 
-	EVisibility GetBindingVisibility(const TWeakObjectPtr<UOctoDenInputBuilderSettings> InSettings, const EOctoDenStandardInputAction InAction)
-	{
-		if (const UOctoDenInputBuilderSettings* Settings = InSettings.Get())
-		{
-			EOctoDenStandardInputAction ResolvedAction = EOctoDenStandardInputAction::Move;
-			if (Settings->ResolveSelectedAction(ResolvedAction) && ResolvedAction == InAction && !UOctoDenInputBuilderSettings::UsesPresetBindings(ResolvedAction))
-			{
-				return EVisibility::Visible;
-			}
-		}
-
-		return EVisibility::Collapsed;
-	}
-
 	FText GetSelectedActionLabel(const TWeakObjectPtr<UOctoDenInputBuilderSettings> InSettings)
 	{
 		if (const UOctoDenInputBuilderSettings* Settings = InSettings.Get())
@@ -443,73 +429,29 @@ void FOctoDenInputBuilderSettingsCustomization::CustomizeDetails(IDetailLayoutBu
 		.AutoWrapText(true)
 	];
 
-	auto AddBindingRows = [&BuilderCategory, DialogSettings](const EOctoDenStandardInputAction InAction, const TSharedRef<IPropertyHandle>& BindingProperty)
+	BuilderCategory.AddCustomRow(LOCTEXT("PresetSummaryJumpFilter", "Preset Summary"))
+	.Visibility(TAttribute<EVisibility>::CreateLambda([DialogSettings]()
 	{
-		const TSharedPtr<IPropertyHandle> PrimaryKeyProperty = BindingProperty->GetChildHandle(GET_MEMBER_NAME_CHECKED(FOctoDenInputBindingDraft, PrimaryKey));
-		const TSharedPtr<IPropertyHandle> SecondaryKeyProperty = BindingProperty->GetChildHandle(GET_MEMBER_NAME_CHECKED(FOctoDenInputBindingDraft, SecondaryKey));
-		const TSharedPtr<IPropertyHandle> GamepadKeyProperty = BindingProperty->GetChildHandle(GET_MEMBER_NAME_CHECKED(FOctoDenInputBindingDraft, GamepadKey));
+		return GetPresetSummaryVisibility(DialogSettings, EOctoDenStandardInputAction::Jump);
+	}))
+	.WholeRowContent()
+	[
+		SNew(STextBlock)
+		.Text(UOctoDenInputBuilderSettings::GetPresetBindingSummary(EOctoDenStandardInputAction::Jump))
+		.AutoWrapText(true)
+	];
 
-		check(PrimaryKeyProperty.IsValid());
-		check(SecondaryKeyProperty.IsValid());
-		check(GamepadKeyProperty.IsValid());
-
-		BuilderCategory.AddCustomRow(LOCTEXT("PrimaryKeyFilter", "Primary Key"))
-		.Visibility(TAttribute<EVisibility>::CreateLambda([DialogSettings, InAction]()
-		{
-			return GetBindingVisibility(DialogSettings, InAction);
-		}))
-		.NameContent()
-		[
-			SNew(STextBlock)
-			.Text(LOCTEXT("PrimaryKeyLabel", "Primary Key"))
-			.Font(IDetailLayoutBuilder::GetDetailFont())
-		]
-		.ValueContent()
-		.MinDesiredWidth(320.0f)
-		.MaxDesiredWidth(420.0f)
-		[
-			PrimaryKeyProperty->CreatePropertyValueWidget()
-		];
-
-		BuilderCategory.AddCustomRow(LOCTEXT("SecondaryKeyFilter", "Secondary Key"))
-		.Visibility(TAttribute<EVisibility>::CreateLambda([DialogSettings, InAction]()
-		{
-			return GetBindingVisibility(DialogSettings, InAction);
-		}))
-		.NameContent()
-		[
-			SNew(STextBlock)
-			.Text(LOCTEXT("SecondaryKeyLabel", "Secondary Key"))
-			.Font(IDetailLayoutBuilder::GetDetailFont())
-		]
-		.ValueContent()
-		.MinDesiredWidth(320.0f)
-		.MaxDesiredWidth(420.0f)
-		[
-			SecondaryKeyProperty->CreatePropertyValueWidget()
-		];
-
-		BuilderCategory.AddCustomRow(LOCTEXT("GamepadKeyFilter", "Gamepad Key"))
-		.Visibility(TAttribute<EVisibility>::CreateLambda([DialogSettings, InAction]()
-		{
-			return GetBindingVisibility(DialogSettings, InAction);
-		}))
-		.NameContent()
-		[
-			SNew(STextBlock)
-			.Text(LOCTEXT("GamepadKeyLabel", "Gamepad Key"))
-			.Font(IDetailLayoutBuilder::GetDetailFont())
-		]
-		.ValueContent()
-		.MinDesiredWidth(320.0f)
-		.MaxDesiredWidth(420.0f)
-		[
-			GamepadKeyProperty->CreatePropertyValueWidget()
-		];
-	};
-
-	AddBindingRows(EOctoDenStandardInputAction::Jump, JumpBindingsProperty);
-	AddBindingRows(EOctoDenStandardInputAction::Fire, FireBindingsProperty);
+	BuilderCategory.AddCustomRow(LOCTEXT("PresetSummaryFireFilter", "Preset Summary"))
+	.Visibility(TAttribute<EVisibility>::CreateLambda([DialogSettings]()
+	{
+		return GetPresetSummaryVisibility(DialogSettings, EOctoDenStandardInputAction::Fire);
+	}))
+	.WholeRowContent()
+	[
+		SNew(STextBlock)
+		.Text(UOctoDenInputBuilderSettings::GetPresetBindingSummary(EOctoDenStandardInputAction::Fire))
+		.AutoWrapText(true)
+	];
 
 	BuilderCategory.AddCustomRow(LOCTEXT("AllActionsAddedFilter", "All Actions Added"))
 	.WholeRowContent()

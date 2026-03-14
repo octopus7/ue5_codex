@@ -389,15 +389,16 @@ bool FOctoDenInputBuilderReaddFireTest::RunTest(const FString& Parameters)
 	Settings->FireBindings = FOctoDenInputBindingDraft();
 	Settings->FireBindings.PrimaryKey = EKeys::RightMouseButton;
 
-	TestTrue(TEXT("Fire can be re-added with a new key"), OctoDenInputBuilder::ApplyManagedActionMappings(
+	TestTrue(TEXT("Fire can be re-added after removal"), OctoDenInputBuilder::ApplyManagedActionMappings(
 		*InputMappingContext,
 		*FireAction,
 		EOctoDenStandardInputAction::Fire,
 		Settings->FireBindings,
 		ApplyResult,
 		FailReason));
-	TestNotNull(TEXT("New fire key exists"), FindMapping(*InputMappingContext, FireAction, EKeys::RightMouseButton));
-	TestNull(TEXT("Old fire mouse key stays removed"), FindMapping(*InputMappingContext, FireAction, EKeys::LeftMouseButton));
+	TestNotNull(TEXT("Default fire mouse key is restored"), FindMapping(*InputMappingContext, FireAction, EKeys::LeftMouseButton));
+	TestNotNull(TEXT("Default fire gamepad key is restored"), FindMapping(*InputMappingContext, FireAction, EKeys::Gamepad_RightTrigger));
+	TestNull(TEXT("Hidden custom fire key is ignored"), FindMapping(*InputMappingContext, FireAction, EKeys::RightMouseButton));
 	return true;
 }
 

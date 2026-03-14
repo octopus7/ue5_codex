@@ -146,7 +146,16 @@ EInputActionValueType UOctoDenInputBuilderSettings::GetStandardActionValueType(c
 
 bool UOctoDenInputBuilderSettings::UsesPresetBindings(const EOctoDenStandardInputAction InAction)
 {
-	return InAction == EOctoDenStandardInputAction::Move || InAction == EOctoDenStandardInputAction::Look;
+	switch (InAction)
+	{
+	case EOctoDenStandardInputAction::Move:
+	case EOctoDenStandardInputAction::Look:
+	case EOctoDenStandardInputAction::Jump:
+	case EOctoDenStandardInputAction::Fire:
+		return true;
+	default:
+		return false;
+	}
 }
 
 FText UOctoDenInputBuilderSettings::GetPresetBindingSummary(const EOctoDenStandardInputAction InAction)
@@ -157,6 +166,10 @@ FText UOctoDenInputBuilderSettings::GetPresetBindingSummary(const EOctoDenStanda
 		return LOCTEXT("MovePresetSummary", "Preset bindings: WASD and Gamepad Left Stick.");
 	case EOctoDenStandardInputAction::Look:
 		return LOCTEXT("LookPresetSummary", "Preset bindings: Mouse2D and Gamepad Right Stick.");
+	case EOctoDenStandardInputAction::Jump:
+		return LOCTEXT("JumpPresetSummary", "Preset bindings: SpaceBar and Gamepad Face Button Bottom.");
+	case EOctoDenStandardInputAction::Fire:
+		return LOCTEXT("FirePresetSummary", "Preset bindings: Left Mouse Button and Gamepad Right Trigger.");
 	default:
 		return FText::GetEmpty();
 	}

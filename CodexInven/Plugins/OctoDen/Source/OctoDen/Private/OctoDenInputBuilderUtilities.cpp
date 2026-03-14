@@ -112,6 +112,7 @@ bool OctoDenInputBuilder::ApplyManagedActionMappings(
 	FText& OutFailReason)
 {
 	OutResult = FApplyManagedActionMappingsResult();
+	FOctoDenInputBindingDraft EffectiveBindingDraft = InBindingDraft;
 
 	if (!UOctoDenInputBuilderSettings::UsesPresetBindings(InManagedAction) && !InBindingDraft.HasAnyValidKey())
 	{
@@ -119,6 +120,11 @@ bool OctoDenInputBuilder::ApplyManagedActionMappings(
 			LOCTEXT("ManagedActionRequiresKeys", "{0} requires at least one valid key binding."),
 			UOctoDenInputBuilderSettings::GetStandardActionDisplayText(InManagedAction));
 		return false;
+	}
+
+	if (InManagedAction == EOctoDenStandardInputAction::Jump || InManagedAction == EOctoDenStandardInputAction::Fire)
+	{
+		EffectiveBindingDraft = UOctoDenInputBuilderSettings::MakeDefaultBindingDraft(InManagedAction);
 	}
 
 	InInputMappingContext.Modify();
@@ -144,7 +150,7 @@ bool OctoDenInputBuilder::ApplyManagedActionMappings(
 		break;
 	case EOctoDenStandardInputAction::Jump:
 	case EOctoDenStandardInputAction::Fire:
-		AddBooleanDraftMappings(InInputMappingContext, InInputAction, InBindingDraft, OutResult.AddedMappings);
+		AddBooleanDraftMappings(InInputMappingContext, InInputAction, EffectiveBindingDraft, OutResult.AddedMappings);
 		break;
 	default:
 		break;
