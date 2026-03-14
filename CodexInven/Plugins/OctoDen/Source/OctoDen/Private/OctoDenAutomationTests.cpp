@@ -16,7 +16,7 @@
 
 namespace
 {
-	TArray<FEnhancedActionKeyMapping>& AccessMappings(UInputMappingContext& InInputMappingContext)
+	TArray<FEnhancedActionKeyMapping>& AccessTestMappings(UInputMappingContext& InInputMappingContext)
 	{
 		return const_cast<TArray<FEnhancedActionKeyMapping>&>(InInputMappingContext.GetMappings());
 	}
@@ -133,7 +133,7 @@ bool FOctoDenInputBuilderAvailabilityTest::RunTest(const FString& Parameters)
 		TestTrue(TEXT("Move is treated as added"), MoveState->IsAdded());
 	}
 
-	AccessMappings(*InputMappingContext).Add(FEnhancedActionKeyMapping(nullptr, EKeys::LeftMouseButton));
+	AccessTestMappings(*InputMappingContext).Add(FEnhancedActionKeyMapping(nullptr, EKeys::LeftMouseButton));
 	Analysis = Settings->AnalyzeSelectedInputMappingContext();
 	TestEqual(TEXT("Broken null mappings do not consume an action slot"), Analysis.GetAvailableActions().Num(), 3);
 	TestEqual(TEXT("Broken null mappings are counted"), Analysis.NullActionMappingCount, 1);
@@ -192,7 +192,7 @@ bool FOctoDenInputBuilderJumpRepairTest::RunTest(const FString& Parameters)
 
 	JumpAction->ValueType = EInputActionValueType::Axis3D;
 	InputMappingContext->MapKey(JumpAction, EKeys::Q);
-	AccessMappings(*InputMappingContext).Add(FEnhancedActionKeyMapping(nullptr, EKeys::R));
+	AccessTestMappings(*InputMappingContext).Add(FEnhancedActionKeyMapping(nullptr, EKeys::R));
 
 	Settings->JumpBindings.PrimaryKey = EKeys::SpaceBar;
 	Settings->JumpBindings.GamepadKey = EKeys::Gamepad_FaceButton_Bottom;

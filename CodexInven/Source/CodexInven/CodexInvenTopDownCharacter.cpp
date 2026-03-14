@@ -2,6 +2,8 @@
 
 #include "CodexInvenTopDownCharacter.h"
 
+#include "CodexInvenGameInstance.h"
+#include "CodexInvenProjectile.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/World.h"
@@ -82,16 +84,31 @@ void ACodexInvenTopDownCharacter::FireAtWorldLocation(const FVector& InWorldLoca
 
 	AimAtWorldLocation(InWorldLocation);
 
-	const FVector TraceStart = GetActorLocation() + FVector(0.0f, 0.0f, BaseEyeHeight);
-	const FVector TraceEnd = TraceStart + (PlanarDirection * FireTraceDistance);
+	UWorld* World = GetWorld();
+	if (World == nullptr)
+	{
+		return;
+	}
 
-	FHitResult HitResult;
-	FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(CodexInvenTopDownFire), false, this);
-	const bool bHitBlockingObject = GetWorld() != nullptr
-		&& GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_Visibility, QueryParams);
+	const TSubclassOf<ACodexInvenProjectile> ProjectileClass = GetConfiguredProjectileClass();
+	if (ProjectileClass == nullptr)
+	{
+		return;
+	}
 
-	const FVector ImpactPoint = bHitBlockingObject ? HitResult.ImpactPoint : TraceEnd;
-	OnFireTriggered(TraceStart, InWorldLocation, ImpactPoint, bHitBlockingObject);
+	const FVector SpawnDirection = GetActorForwardVector();
+	const FVector SpawnLocation = GetActorLocation() + (SpawnDirection * ProjectileSpawnForwardDistance);
+	const FRotator SpawnRotation = SpawnDirection.Rotation();
+
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.Owner = this;
+	SpawnParameters.Instigator = this;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+	if (ACodexInvenProjectile* SpawnedProjectile = World->SpawnActor<ACodexInvenProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParameters))
+	{
+		OnProjectileSpawned(SpawnedProjectile, SpawnLocation, SpawnDirection);
+	}
 }
 
 FVector ACodexInvenTopDownCharacter::GetPlanarDirectionTo(const FVector& InWorldLocation) const
@@ -100,4 +117,20 @@ FVector ACodexInvenTopDownCharacter::GetPlanarDirectionTo(const FVector& InWorld
 	PlanarDirection.Z = 0.0f;
 	PlanarDirection.Normalize();
 	return PlanarDirection;
+}
+
+TSubclassOf<ACodexInvenProjectile> ACodexInvenTopDownCharacter::GetConfiguredProjectileClass() const
+{
+	const UCodexInvenGameInstance* CodexInvenGameInstance = GetGameInstance<UCodexInvenGameInstance>();
+	if (CodexInvenGameInstance == nullptr)
+	{
+		return ACodexInvenProjectile::StaticClass();
+	}
+
+	if (TSubclassOf<ACodexInvenProjectile> ProjectileClass = CodexInvenGameInstance->GetProjectileClass())
+	{
+		return ProjectileClass;
+	}
+
+	return ACodexInvenProjectile::StaticClass();
 }

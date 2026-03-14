@@ -6,6 +6,7 @@
 #include "Engine/GameInstance.h"
 #include "CodexInvenGameInstance.generated.h"
 
+class ACodexInvenProjectile;
 class UCodexInvenInputConfigDataAsset;
 class UInputAction;
 class UInputMappingContext;
@@ -25,8 +26,13 @@ class CODEXINVEN_API UCodexInvenGameInstance : public UGameInstance
 	GENERATED_BODY()
 
 public:
+	UCodexInvenGameInstance();
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UCodexInvenInputConfigDataAsset> DefaultInputConfig = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	TSubclassOf<ACodexInvenProjectile> DefaultProjectileClass;
 
 	UFUNCTION(BlueprintPure, Category = "Input")
 	const UCodexInvenInputConfigDataAsset* GetInputConfig() const;
@@ -36,4 +42,7 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Input")
 	const UInputAction* GetInputAction(ECodexInvenConfiguredInputAction InAction) const;
+
+	UFUNCTION(BlueprintPure, Category = "Combat")
+	TSubclassOf<ACodexInvenProjectile> GetProjectileClass() const;
 };

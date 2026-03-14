@@ -8,6 +8,7 @@
 
 class UCameraComponent;
 class USpringArmComponent;
+class ACodexInvenProjectile;
 
 UCLASS()
 class CODEXINVEN_API ACodexInvenTopDownCharacter : public ACharacter
@@ -39,7 +40,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Character|Combat")
-	void OnFireTriggered(const FVector& TraceStart, const FVector& TargetLocation, const FVector& ImpactPoint, bool bHitBlockingObject);
+	void OnProjectileSpawned(ACodexInvenProjectile* SpawnedProjectile, const FVector& SpawnLocation, const FVector& SpawnDirection);
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character|Camera")
@@ -57,6 +58,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character|Combat", meta = (ClampMin = "0.0"))
 	float FireTraceDistance = 5000.0f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character|Combat", meta = (ClampMin = "0.0"))
+	float ProjectileSpawnForwardDistance = 100.0f;
+
 private:
 	FVector GetPlanarDirectionTo(const FVector& InWorldLocation) const;
+	TSubclassOf<ACodexInvenProjectile> GetConfiguredProjectileClass() const;
 };
