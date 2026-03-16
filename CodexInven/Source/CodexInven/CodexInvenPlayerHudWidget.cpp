@@ -74,6 +74,7 @@ void UCodexInvenPlayerHudWidget::SetObservedOwnershipComponent(UCodexInvenOwners
 		return;
 	}
 
+	EndInventoryDrag();
 	UnbindObservedOwnershipComponent();
 	ObservedOwnershipComponent = InComponent;
 
@@ -90,9 +91,82 @@ void UCodexInvenPlayerHudWidget::SetObservedOwnershipComponent(UCodexInvenOwners
 	RefreshInventoryItems();
 }
 
+void UCodexInvenPlayerHudWidget::BeginInventoryDrag(const int32 InSourceSlotIndex)
+{
+	ActiveDragSourceSlotIndex = InSourceSlotIndex;
+	HoveredDropTargetSlotIndex = INDEX_NONE;
+	RefreshInventoryEntryVisualStates();
+}
+
+void UCodexInvenPlayerHudWidget::SetHoveredInventoryDropTarget(const int32 InTargetSlotIndex)
+{
+	if (HoveredDropTargetSlotIndex == InTargetSlotIndex)
+	{
+		return;
+	}
+
+	HoveredDropTargetSlotIndex = InTargetSlotIndex;
+	RefreshInventoryEntryVisualStates();
+}
+
+void UCodexInvenPlayerHudWidget::ClearHoveredInventoryDropTarget(const int32 InExpectedTargetSlotIndex)
+{
+	if (InExpectedTargetSlotIndex != INDEX_NONE && HoveredDropTargetSlotIndex != InExpectedTargetSlotIndex)
+	{
+		return;
+	}
+
+	if (HoveredDropTargetSlotIndex == INDEX_NONE)
+	{
+		return;
+	}
+
+	HoveredDropTargetSlotIndex = INDEX_NONE;
+	RefreshInventoryEntryVisualStates();
+}
+
+void UCodexInvenPlayerHudWidget::EndInventoryDrag()
+{
+	if (ActiveDragSourceSlotIndex == INDEX_NONE && HoveredDropTargetSlotIndex == INDEX_NONE)
+	{
+		return;
+	}
+
+	ActiveDragSourceSlotIndex = INDEX_NONE;
+	HoveredDropTargetSlotIndex = INDEX_NONE;
+	RefreshInventoryEntryVisualStates();
+}
+
+bool UCodexInvenPlayerHudWidget::HandleInventorySlotDrop(const int32 InSourceSlotIndex, const int32 InTargetSlotIndex)
+{
+	if (ObservedOwnershipComponent == nullptr)
+	{
+		EndInventoryDrag();
+		return false;
+	}
+
+	if (InSourceSlotIndex == InTargetSlotIndex)
+	{
+		EndInventoryDrag();
+		return true;
+	}
+
+	const TArray<FCodexInvenInventorySlotData> Snapshot = ObservedOwnershipComponent->BuildInventorySnapshot();
+	if (!Snapshot.IsValidIndex(InSourceSlotIndex) || !Snapshot.IsValidIndex(InTargetSlotIndex) || Snapshot[InSourceSlotIndex].bIsEmpty)
+	{
+		EndInventoryDrag();
+		return false;
+	}
+
+	EndInventoryDrag();
+	return Snapshot[InTargetSlotIndex].bIsEmpty
+		? ObservedOwnershipComponent->MoveInventorySlot(InSourceSlotIndex, InTargetSlotIndex)
+		: ObservedOwnershipComponent->SwapInventorySlots(InSourceSlotIndex, InTargetSlotIndex);
+}
+
 bool UCodexInvenPlayerHudWidget::ShouldBlockFireInput() const
 {
-	return IsInventoryPanelVisible() || IsButtonHovered(InventoryToggleButton) || IsButtonHovered(DebugToggleButton);
+	return IsInventoryPanelVisible() || ActiveDragSourceSlotIndex != INDEX_NONE || IsButtonHovered(InventoryToggleButton) || IsButtonHovered(DebugToggleButton);
 }
 
 bool UCodexInvenPlayerHudWidget::IsInventoryPanelVisible() const
@@ -129,6 +203,7 @@ void UCodexInvenPlayerHudWidget::NativeOnInitialized()
 
 void UCodexInvenPlayerHudWidget::NativeDestruct()
 {
+	EndInventoryDrag();
 	UnbindObservedOwnershipComponent();
 
 	Super::NativeDestruct();
@@ -299,6 +374,7 @@ void UCodexInvenPlayerHudWidget::RefreshInventoryItems()
 
 			const FName EntryWidgetName = MakeUniqueObjectName(this, UCodexInvenInventoryTileEntryWidget::StaticClass(), TEXT("InventoryTileEntry"));
 			UCodexInvenInventoryTileEntryWidget* EntryWidget = WidgetTree->ConstructWidget<UCodexInvenInventoryTileEntryWidget>(UCodexInvenInventoryTileEntryWidget::StaticClass(), EntryWidgetName);
+			EntryWidget->SetOwningHudWidget(this);
 			EntryWidget->SetTileItemObject(TileItem);
 			InventoryEntryWidgets.Add(EntryWidget);
 
@@ -319,6 +395,7 @@ void UCodexInvenPlayerHudWidget::RefreshInventoryItems()
 	}
 
 	RefreshInventorySummaryText();
+	RefreshInventoryEntryVisualStates();
 }
 
 void UCodexInvenPlayerHudWidget::RefreshInventorySummaryText() const
@@ -340,6 +417,22 @@ void UCodexInvenPlayerHudWidget::RefreshInventorySummaryText() const
 		FText::AsNumber(ObservedOwnershipComponent->GetInventoryCapacity())));
 }
 
+void UCodexInvenPlayerHudWidget::RefreshInventoryEntryVisualStates() const
+{
+	for (UCodexInvenInventoryTileEntryWidget* EntryWidget : InventoryEntryWidgets)
+	{
+		if (EntryWidget == nullptr)
+		{
+			continue;
+		}
+
+		const int32 SlotIndex = EntryWidget->GetSlotIndex();
+		EntryWidget->SetVisualState(
+			SlotIndex != INDEX_NONE && SlotIndex == ActiveDragSourceSlotIndex,
+			SlotIndex != INDEX_NONE && SlotIndex == HoveredDropTargetSlotIndex);
+	}
+}
+
 void UCodexInvenPlayerHudWidget::SetInventoryPanelVisible(const bool bInVisible)
 {
 	bIsInventoryVisible = bInVisible;
@@ -347,6 +440,11 @@ void UCodexInvenPlayerHudWidget::SetInventoryPanelVisible(const bool bInVisible)
 	if (InventoryPanelSizeBox != nullptr)
 	{
 		InventoryPanelSizeBox->SetVisibility(bIsInventoryVisible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+	}
+
+	if (!bIsInventoryVisible)
+	{
+		EndInventoryDrag();
 	}
 }
 

@@ -3,7 +3,11 @@
 #include "CodexInvenInventoryTileEntryWidget.h"
 
 #include "Blueprint/WidgetTree.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "CodexInvenInventoryDragDropOperation.h"
+#include "CodexInvenInventoryDragVisualWidget.h"
 #include "CodexInvenInventoryTileItemObject.h"
+#include "CodexInvenPlayerHudWidget.h"
 #include "Components/Border.h"
 #include "Components/BorderSlot.h"
 #include "Components/Image.h"
@@ -13,6 +17,9 @@
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
+#include "Engine/Texture2D.h"
+#include "Input/Reply.h"
+#include "InputCoreTypes.h"
 #include "Styling/SlateBrush.h"
 #include "Styling/SlateColor.h"
 
@@ -21,12 +28,40 @@ namespace
 	constexpr float InventoryTileIconSize = 64.0f;
 	constexpr int32 InventoryTileNameFontSize = 8;
 	constexpr int32 InventoryTileQuantityFontSize = 14;
+
+	FText BuildInventorySlotLabel(const FCodexInvenInventorySlotData& InSlotData)
+	{
+		if (!InSlotData.bStackable && InSlotData.UniqueInstanceId != INDEX_NONE)
+		{
+			return FText::Format(FText::FromString(TEXT("{0} #{1}")), InSlotData.DisplayName, FText::AsNumber(InSlotData.UniqueInstanceId));
+		}
+
+		return InSlotData.DisplayName;
+	}
 }
 
 void UCodexInvenInventoryTileEntryWidget::SetTileItemObject(UCodexInvenInventoryTileItemObject* InItemObject)
 {
 	BuildWidgetTreeIfNeeded();
 	RefreshFromItemObject(InItemObject);
+}
+
+void UCodexInvenInventoryTileEntryWidget::SetOwningHudWidget(UCodexInvenPlayerHudWidget* InOwningHudWidget)
+{
+	OwningHudWidget = InOwningHudWidget;
+}
+
+void UCodexInvenInventoryTileEntryWidget::SetVisualState(const bool bInIsDragSource, const bool bInIsDropTarget)
+{
+	bIsDragSource = bInIsDragSource;
+	bIsDropTarget = bInIsDropTarget;
+	ApplyVisualState();
+}
+
+int32 UCodexInvenInventoryTileEntryWidget::GetSlotIndex() const
+{
+	const UCodexInvenInventoryTileItemObject* ItemObject = GetTileItemObject();
+	return ItemObject != nullptr ? ItemObject->GetSlotData().SlotIndex : INDEX_NONE;
 }
 
 void UCodexInvenInventoryTileEntryWidget::NativeOnInitialized()
@@ -43,6 +78,94 @@ void UCodexInvenInventoryTileEntryWidget::NativeOnListItemObjectSet(UObject* Lis
 
 	BuildWidgetTreeIfNeeded();
 	RefreshFromItemObject(Cast<UCodexInvenInventoryTileItemObject>(ListItemObject));
+}
+
+FReply UCodexInvenInventoryTileEntryWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	const UCodexInvenInventoryTileItemObject* ItemObject = GetTileItemObject();
+	if (ItemObject == nullptr || ItemObject->GetSlotData().bIsEmpty)
+	{
+		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+	}
+
+	return UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton).NativeReply;
+}
+
+void UCodexInvenInventoryTileEntryWidget::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation)
+{
+	Super::NativeOnDragDetected(InGeometry, InMouseEvent, OutOperation);
+
+	const UCodexInvenInventoryTileItemObject* ItemObject = GetTileItemObject();
+	if (ItemObject == nullptr || OwningHudWidget == nullptr)
+	{
+		return;
+	}
+
+	const FCodexInvenInventorySlotData& SlotData = ItemObject->GetSlotData();
+	if (SlotData.bIsEmpty)
+	{
+		return;
+	}
+
+	UCodexInvenInventoryDragDropOperation* DragOperation = Cast<UCodexInvenInventoryDragDropOperation>(
+		UWidgetBlueprintLibrary::CreateDragDropOperation(UCodexInvenInventoryDragDropOperation::StaticClass()));
+	if (DragOperation == nullptr)
+	{
+		return;
+	}
+
+	UCodexInvenInventoryDragVisualWidget* DragVisual = CreateWidget<UCodexInvenInventoryDragVisualWidget>(
+		GetOwningPlayer(),
+		UCodexInvenInventoryDragVisualWidget::StaticClass());
+	if (DragVisual != nullptr)
+	{
+		DragVisual->InitializeFromSlotData(SlotData, ItemObject->GetIconTexture());
+		DragOperation->DefaultDragVisual = DragVisual;
+	}
+
+	DragOperation->Pivot = EDragPivot::MouseDown;
+	DragOperation->InitializeOperation(SlotData.SlotIndex, SlotData, ItemObject->GetIconTexture(), OwningHudWidget);
+	OwningHudWidget->BeginInventoryDrag(SlotData.SlotIndex);
+	OutOperation = DragOperation;
+}
+
+void UCodexInvenInventoryTileEntryWidget::NativeOnDragEnter(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+{
+	Super::NativeOnDragEnter(InGeometry, InDragDropEvent, InOperation);
+
+	const UCodexInvenInventoryDragDropOperation* DragOperation = Cast<UCodexInvenInventoryDragDropOperation>(InOperation);
+	if (DragOperation == nullptr || OwningHudWidget == nullptr)
+	{
+		return;
+	}
+
+	OwningHudWidget->SetHoveredInventoryDropTarget(DragOperation->GetSourceSlotIndex() == GetSlotIndex() ? INDEX_NONE : GetSlotIndex());
+}
+
+void UCodexInvenInventoryTileEntryWidget::NativeOnDragLeave(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+{
+	Super::NativeOnDragLeave(InDragDropEvent, InOperation);
+
+	const UCodexInvenInventoryDragDropOperation* DragOperation = Cast<UCodexInvenInventoryDragDropOperation>(InOperation);
+	if (DragOperation == nullptr || OwningHudWidget == nullptr)
+	{
+		return;
+	}
+
+	OwningHudWidget->ClearHoveredInventoryDropTarget(GetSlotIndex());
+}
+
+bool UCodexInvenInventoryTileEntryWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+{
+	Super::NativeOnDrop(InGeometry, InDragDropEvent, InOperation);
+
+	const UCodexInvenInventoryDragDropOperation* DragOperation = Cast<UCodexInvenInventoryDragDropOperation>(InOperation);
+	if (DragOperation == nullptr || OwningHudWidget == nullptr)
+	{
+		return false;
+	}
+
+	return OwningHudWidget->HandleInventorySlotDrop(DragOperation->GetSourceSlotIndex(), GetSlotIndex());
 }
 
 void UCodexInvenInventoryTileEntryWidget::BuildWidgetTreeIfNeeded()
@@ -72,7 +195,7 @@ void UCodexInvenInventoryTileEntryWidget::BuildWidgetTreeIfNeeded()
 	UOverlay* RootOverlay = WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass(), TEXT("RootOverlay"));
 	RootBorder->SetContent(RootOverlay);
 
-	UVerticalBox* ContentBox = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("ContentBox"));
+	ContentBox = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("ContentBox"));
 	if (UOverlaySlot* ContentSlot = RootOverlay->AddChildToOverlay(ContentBox))
 	{
 		ContentSlot->SetHorizontalAlignment(HAlign_Fill);
@@ -119,8 +242,10 @@ void UCodexInvenInventoryTileEntryWidget::BuildWidgetTreeIfNeeded()
 	}
 }
 
-void UCodexInvenInventoryTileEntryWidget::RefreshFromItemObject(UCodexInvenInventoryTileItemObject* InItemObject) const
+void UCodexInvenInventoryTileEntryWidget::RefreshFromItemObject(UCodexInvenInventoryTileItemObject* InItemObject)
 {
+	TileItemObject = InItemObject;
+
 	if (IconImage == nullptr || NameTextBlock == nullptr || QuantityTextBlock == nullptr)
 	{
 		return;
@@ -128,11 +253,11 @@ void UCodexInvenInventoryTileEntryWidget::RefreshFromItemObject(UCodexInvenInven
 
 	if (InItemObject == nullptr)
 	{
-		RootBorder->SetBrushColor(FLinearColor(0.03f, 0.04f, 0.05f, 0.92f));
 		IconImage->SetBrush(FSlateBrush());
 		IconImage->SetVisibility(ESlateVisibility::Collapsed);
 		NameTextBlock->SetText(FText::GetEmpty());
 		QuantityTextBlock->SetVisibility(ESlateVisibility::Collapsed);
+		ApplyVisualState();
 		return;
 	}
 
@@ -140,26 +265,17 @@ void UCodexInvenInventoryTileEntryWidget::RefreshFromItemObject(UCodexInvenInven
 
 	if (SlotData.bIsEmpty)
 	{
-		RootBorder->SetBrushColor(FLinearColor(0.03f, 0.04f, 0.05f, 0.92f));
 		IconImage->SetBrush(FSlateBrush());
 		IconImage->SetVisibility(ESlateVisibility::Collapsed);
 		NameTextBlock->SetText(FText::GetEmpty());
 		QuantityTextBlock->SetVisibility(ESlateVisibility::Collapsed);
+		ApplyVisualState();
 		return;
 	}
 
-	RootBorder->SetBrushColor(FLinearColor(0.08f, 0.10f, 0.12f, 0.92f));
-
 	IconImage->SetBrushFromTexture(InItemObject->GetIconTexture(), true);
 	IconImage->SetVisibility(ESlateVisibility::Visible);
-
-	FText EntryDisplayLabel = SlotData.DisplayName;
-	if (!SlotData.bStackable && SlotData.UniqueInstanceId != INDEX_NONE)
-	{
-		EntryDisplayLabel = FText::Format(FText::FromString(TEXT("{0} #{1}")), SlotData.DisplayName, FText::AsNumber(SlotData.UniqueInstanceId));
-	}
-
-	NameTextBlock->SetText(EntryDisplayLabel);
+	NameTextBlock->SetText(BuildInventorySlotLabel(SlotData));
 
 	if (SlotData.bStackable)
 	{
@@ -170,4 +286,40 @@ void UCodexInvenInventoryTileEntryWidget::RefreshFromItemObject(UCodexInvenInven
 	{
 		QuantityTextBlock->SetVisibility(ESlateVisibility::Collapsed);
 	}
+
+	ApplyVisualState();
+}
+
+void UCodexInvenInventoryTileEntryWidget::ApplyVisualState() const
+{
+	if (RootBorder == nullptr || IconImage == nullptr || NameTextBlock == nullptr || QuantityTextBlock == nullptr)
+	{
+		return;
+	}
+
+	const UCodexInvenInventoryTileItemObject* ItemObject = GetTileItemObject();
+	const bool bIsEmptySlot = ItemObject == nullptr || ItemObject->GetSlotData().bIsEmpty;
+
+	FLinearColor BorderColor = bIsEmptySlot
+		? FLinearColor(0.03f, 0.04f, 0.05f, 0.92f)
+		: FLinearColor(0.08f, 0.10f, 0.12f, 0.92f);
+
+	if (bIsDropTarget)
+	{
+		BorderColor = bIsEmptySlot
+			? FLinearColor(0.10f, 0.14f, 0.18f, 0.96f)
+			: FLinearColor(0.14f, 0.20f, 0.28f, 0.98f);
+	}
+
+	RootBorder->SetBrushColor(BorderColor);
+
+	const float ContentOpacity = bIsDragSource && !bIsEmptySlot ? 0.35f : 1.0f;
+	IconImage->SetRenderOpacity(ContentOpacity);
+	NameTextBlock->SetRenderOpacity(ContentOpacity);
+	QuantityTextBlock->SetRenderOpacity(ContentOpacity);
+}
+
+const UCodexInvenInventoryTileItemObject* UCodexInvenInventoryTileEntryWidget::GetTileItemObject() const
+{
+	return TileItemObject;
 }

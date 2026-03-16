@@ -24,6 +24,11 @@ class CODEXINVEN_API UCodexInvenPlayerHudWidget : public UUserWidget
 
 public:
 	void SetObservedOwnershipComponent(UCodexInvenOwnershipComponent* InComponent);
+	void BeginInventoryDrag(int32 InSourceSlotIndex);
+	void SetHoveredInventoryDropTarget(int32 InTargetSlotIndex);
+	void ClearHoveredInventoryDropTarget(int32 InExpectedTargetSlotIndex = INDEX_NONE);
+	void EndInventoryDrag();
+	bool HandleInventorySlotDrop(int32 InSourceSlotIndex, int32 InTargetSlotIndex);
 	bool ShouldBlockFireInput() const;
 	bool IsInventoryPanelVisible() const;
 
@@ -35,6 +40,7 @@ private:
 	void BuildWidgetTreeIfNeeded();
 	void RefreshInventoryItems();
 	void RefreshInventorySummaryText() const;
+	void RefreshInventoryEntryVisualStates() const;
 	void SetInventoryPanelVisible(bool bInVisible);
 	void SetDebugWidgetVisible(bool bInVisible);
 	void UnbindObservedOwnershipComponent();
@@ -89,6 +95,8 @@ private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UCodexInvenInventoryTileEntryWidget>> InventoryEntryWidgets;
 
+	int32 ActiveDragSourceSlotIndex = INDEX_NONE;
+	int32 HoveredDropTargetSlotIndex = INDEX_NONE;
 	bool bIsInventoryVisible = false;
 	bool bIsDebugVisible = true;
 };

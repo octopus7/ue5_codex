@@ -157,6 +157,48 @@ bool FCodexInvenInventorySnapshotAutomationTest::RunTest(const FString& Paramete
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FCodexInvenInventorySlotMutationAutomationTest,
+	"CodexInven.Pickups.InventorySlotMutation",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FCodexInvenInventorySlotMutationAutomationTest::RunTest(const FString& Parameters)
+{
+	UCodexInvenOwnershipComponent* OwnershipComponent = NewObject<UCodexInvenOwnershipComponent>();
+	TestNotNull(TEXT("Ownership component can be created for slot mutation"), OwnershipComponent);
+	if (OwnershipComponent == nullptr)
+	{
+		return false;
+	}
+
+	TestTrue(TEXT("First cube pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CubeRed));
+	TestTrue(TEXT("Second cube pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CubeBlue));
+	TestTrue(TEXT("First cylinder pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CylinderGreen));
+
+	TestFalse(TEXT("Move rejects same source and target slot"), OwnershipComponent->MoveInventorySlot(0, 0));
+	TestFalse(TEXT("Swap rejects same source and target slot"), OwnershipComponent->SwapInventorySlots(1, 1));
+	TestFalse(TEXT("Move rejects invalid source slot"), OwnershipComponent->MoveInventorySlot(-1, 2));
+	TestFalse(TEXT("Swap rejects invalid target slot"), OwnershipComponent->SwapInventorySlots(0, 100));
+
+	TestTrue(TEXT("Move into an empty slot succeeds"), OwnershipComponent->MoveInventorySlot(1, 5));
+
+	TArray<FCodexInvenInventorySlotData> Snapshot = OwnershipComponent->BuildInventorySnapshot();
+	TestEqual(TEXT("Source slot is empty after move"), Snapshot[1].bIsEmpty, true);
+	TestEqual(TEXT("Target slot now contains moved cube"), Snapshot[5].PickupType, ECodexInvenPickupType::CubeBlue);
+	TestEqual(TEXT("Moved cube keeps its unique id"), Snapshot[5].UniqueInstanceId, 2);
+
+	TestTrue(TEXT("Swap between occupied slots succeeds"), OwnershipComponent->SwapInventorySlots(0, 2));
+
+	Snapshot = OwnershipComponent->BuildInventorySnapshot();
+	TestEqual(TEXT("Slot 0 now contains the cylinder"), Snapshot[0].PickupType, ECodexInvenPickupType::CylinderGreen);
+	TestTrue(TEXT("Cylinder stack quantity is preserved across swap"), Snapshot[0].bStackable && Snapshot[0].Quantity == 1);
+	TestEqual(TEXT("Slot 2 now contains the red cube"), Snapshot[2].PickupType, ECodexInvenPickupType::CubeRed);
+	TestEqual(TEXT("Red cube keeps its unique id across swap"), Snapshot[2].UniqueInstanceId, 1);
+	TestTrue(TEXT("Moved blue cube remains in slot 5"), !Snapshot[5].bIsEmpty && Snapshot[5].PickupType == ECodexInvenPickupType::CubeBlue && Snapshot[5].UniqueInstanceId == 2);
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FCodexInvenOwnershipDebugTextAutomationTest,
 	"CodexInven.Pickups.OwnershipDebugText",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
