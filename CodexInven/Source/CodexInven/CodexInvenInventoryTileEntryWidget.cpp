@@ -178,7 +178,7 @@ void UCodexInvenInventoryTileEntryWidget::BuildWidgetTreeIfNeeded()
 	if (RootBorder == nullptr)
 	{
 		RootBorder = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("RootBorder"));
-		RootBorder->SetPadding(FMargin(8.0f));
+		RootBorder->SetPadding(FMargin(0.0f));
 		RootBorder->SetBrushColor(FLinearColor(0.08f, 0.10f, 0.12f, 0.92f));
 		WidgetTree->RootWidget = RootBorder;
 	}
@@ -208,6 +208,7 @@ void UCodexInvenInventoryTileEntryWidget::BuildWidgetTreeIfNeeded()
 	{
 		ContentSlot->SetHorizontalAlignment(HAlign_Fill);
 		ContentSlot->SetVerticalAlignment(VAlign_Fill);
+		ContentSlot->SetPadding(FMargin(8.0f));
 	}
 
 	USizeBox* IconSizeBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("IconSizeBox"));
@@ -322,11 +323,9 @@ void UCodexInvenInventoryTileEntryWidget::ApplyVisualState() const
 
 	const UCodexInvenInventoryTileItemObject* ItemObject = GetTileItemObject();
 	const bool bIsEmptySlot = ItemObject == nullptr || ItemObject->GetSlotData().bIsEmpty;
-	const bool bIsGoldRarity = !bIsEmptySlot && ItemObject->GetSlotData().Rarity == ECodexInvenPickupRarity::Gold;
-
 	FLinearColor BorderColor = bIsEmptySlot
 		? FLinearColor(0.03f, 0.04f, 0.05f, 0.92f)
-		: (bIsGoldRarity ? FLinearColor(0.12f, 0.10f, 0.05f, 0.94f) : FLinearColor(0.08f, 0.10f, 0.12f, 0.92f));
+		: FLinearColor(0.08f, 0.10f, 0.12f, 0.92f);
 
 	if (bIsDropTarget)
 	{
@@ -336,7 +335,7 @@ void UCodexInvenInventoryTileEntryWidget::ApplyVisualState() const
 	}
 
 	RootBorder->SetBrushColor(BorderColor);
-	RarityBackgroundImage->SetRenderOpacity(bIsGoldRarity ? 0.82f : 1.0f);
+	RarityBackgroundImage->SetRenderOpacity(1.0f);
 
 	const float ContentOpacity = bIsDragSource && !bIsEmptySlot ? 0.35f : 1.0f;
 	IconImage->SetRenderOpacity(ContentOpacity);

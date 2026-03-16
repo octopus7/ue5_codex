@@ -32,7 +32,7 @@ namespace
 	constexpr float HudMargin = 24.0f;
 	constexpr float InventoryPanelWidth = 640.0f;
 	constexpr float InventoryPanelHeight = 480.0f;
-	constexpr float InventoryTileEntrySize = 96.0f;
+	constexpr float InventoryTileEntrySize = 111.0f;
 	constexpr float InventoryTileSpacing = 8.0f;
 	constexpr float InventoryPanelInnerPadding = 16.0f;
 	const TCHAR* InventoryLabelText = TEXT("\uC18C\uC720\uBB3C");

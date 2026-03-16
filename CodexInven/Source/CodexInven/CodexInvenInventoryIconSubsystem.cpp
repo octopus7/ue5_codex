@@ -167,19 +167,38 @@ void UCodexInvenInventoryIconSubsystem::BuildInventorySlotBackgroundPixels(const
 		return;
 	}
 
-	const FLinearColor TopColor(0.08f, 0.06f, 0.01f, 0.02f);
-	const FLinearColor BottomColor(0.44f, 0.31f, 0.06f, 0.32f);
+	constexpr int32 GoldBorderThickness = 2;
+	const FLinearColor BorderColor(0.98f, 0.88f, 0.45f, 0.95f);
+	const FLinearColor TopFillColor(0.64f, 0.52f, 0.15f, 0.82f);
+	const FLinearColor BottomFillColor(0.17f, 0.12f, 0.02f, 0.94f);
+	const FLinearColor TopInnerHighlightColor(0.90f, 0.78f, 0.31f, 0.20f);
 
 	for (int32 Y = 0; Y < InventoryIconSize; ++Y)
 	{
 		const float NormalizedY = static_cast<float>(Y) / static_cast<float>(InventoryIconSize - 1);
-		const float GradientAlpha = FMath::Clamp((NormalizedY - 0.20f) / 0.80f, 0.0f, 1.0f);
-		const FLinearColor RowColor = FMath::Lerp(TopColor, BottomColor, GradientAlpha);
-		const FColor PixelColor = RowColor.GetClamped().ToFColorSRGB();
-
 		for (int32 X = 0; X < InventoryIconSize; ++X)
 		{
-			SetPixel(OutPixels, X, Y, PixelColor);
+			const bool bIsBorderPixel =
+				X < GoldBorderThickness ||
+				Y < GoldBorderThickness ||
+				X >= InventoryIconSize - GoldBorderThickness ||
+				Y >= InventoryIconSize - GoldBorderThickness;
+
+			if (bIsBorderPixel)
+			{
+				SetPixel(OutPixels, X, Y, BorderColor.GetClamped().ToFColorSRGB());
+				continue;
+			}
+
+			FLinearColor FillColor = FMath::Lerp(TopFillColor, BottomFillColor, FMath::InterpEaseIn(0.0f, 1.0f, NormalizedY, 1.6f));
+			if (Y < 10)
+			{
+				const float HighlightAlpha = 1.0f - (static_cast<float>(Y) / 10.0f);
+				FillColor = FMath::Lerp(FillColor, TopInnerHighlightColor, HighlightAlpha * TopInnerHighlightColor.A);
+				FillColor.A = FMath::Max(FillColor.A, TopFillColor.A);
+			}
+
+			SetPixel(OutPixels, X, Y, FillColor.GetClamped().ToFColorSRGB());
 		}
 	}
 }
