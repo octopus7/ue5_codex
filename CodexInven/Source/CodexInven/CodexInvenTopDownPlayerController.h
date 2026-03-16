@@ -11,6 +11,7 @@
 class ACodexInvenTopDownCharacter;
 class UEnhancedInputComponent;
 class UCodexInvenInputConfigDataAsset;
+class UCodexInvenPlayerHudWidget;
 
 UCLASS()
 class CODEXINVEN_API ACodexInvenTopDownPlayerController : public APlayerController
@@ -22,6 +23,7 @@ public:
 
 	virtual void BeginPlay() override;
 	virtual void PlayerTick(float DeltaTime) override;
+	virtual void SetPawn(APawn* InPawn) override;
 	virtual void SetupInputComponent() override;
 
 protected:
@@ -37,13 +39,19 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Debug")
 	bool bLogCursorTrace = false;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UCodexInvenPlayerHudWidget> PlayerHudWidgetClass;
+
 private:
 	const UCodexInvenInputConfigDataAsset* GetInputConfig() const;
 	ACodexInvenTopDownCharacter* GetTopDownCharacter() const;
 	bool ShouldUseCursorAim() const;
 	void ApplyInputMappingContext();
+	void TryCreatePlayerHud();
+	void RefreshObservedOwnershipComponent();
 	bool TryGetCursorGroundPoint(FVector& OutWorldPoint) const;
 	void FireProjectileOnce();
+	bool ShouldBlockFireInput() const;
 	void UpdateAimFromCursor() const;
 	void HandleMove(const FInputActionValue& InValue);
 	void HandleLook(const FInputActionValue& InValue);
@@ -55,6 +63,8 @@ private:
 	void BindConfiguredInput(UEnhancedInputComponent& InEnhancedInputComponent);
 
 	FTimerHandle AutomaticFireTimerHandle;
+	UPROPERTY(Transient)
+	TObjectPtr<UCodexInvenPlayerHudWidget> RuntimePlayerHudWidget = nullptr;
 	bool bIsAutomaticFireActive = false;
 	float LastExplicitLookInputTime = -1.0f;
 };

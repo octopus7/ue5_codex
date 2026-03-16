@@ -4,6 +4,7 @@
 
 #include "CodexInvenGameInstance.h"
 #include "CodexInvenInputConfigDataAsset.h"
+#include "CodexInvenPlayerHudWidget.h"
 #include "CodexInvenProjectile.h"
 #include "CodexInvenTopDownCharacter.h"
 #include "EnhancedInputComponent.h"
@@ -26,6 +27,7 @@ ACodexInvenTopDownPlayerController::ACodexInvenTopDownPlayerController()
 	bEnableClickEvents = true;
 	bEnableMouseOverEvents = false;
 	DefaultMouseCursor = EMouseCursor::Crosshairs;
+	PlayerHudWidgetClass = UCodexInvenPlayerHudWidget::StaticClass();
 }
 
 void ACodexInvenTopDownPlayerController::BeginPlay()
@@ -38,6 +40,8 @@ void ACodexInvenTopDownPlayerController::BeginPlay()
 	SetInputMode(InputMode);
 
 	ApplyInputMappingContext();
+	TryCreatePlayerHud();
+	RefreshObservedOwnershipComponent();
 	UpdateAimFromCursor();
 }
 
@@ -57,6 +61,13 @@ void ACodexInvenTopDownPlayerController::PlayerTick(const float DeltaTime)
 	}
 
 	UpdateAimFromCursor();
+}
+
+void ACodexInvenTopDownPlayerController::SetPawn(APawn* InPawn)
+{
+	Super::SetPawn(InPawn);
+
+	RefreshObservedOwnershipComponent();
 }
 
 void ACodexInvenTopDownPlayerController::SetupInputComponent()
@@ -98,6 +109,36 @@ void ACodexInvenTopDownPlayerController::ApplyInputMappingContext()
 	{
 		InputSubsystem->AddMappingContext(InputConfig->InputMappingContext, InputMappingPriority);
 	}
+}
+
+void ACodexInvenTopDownPlayerController::TryCreatePlayerHud()
+{
+	if (!IsLocalController() || RuntimePlayerHudWidget != nullptr || PlayerHudWidgetClass == nullptr)
+	{
+		return;
+	}
+
+	RuntimePlayerHudWidget = CreateWidget<UCodexInvenPlayerHudWidget>(this, PlayerHudWidgetClass);
+	if (RuntimePlayerHudWidget != nullptr)
+	{
+		RuntimePlayerHudWidget->AddToViewport(100);
+	}
+}
+
+void ACodexInvenTopDownPlayerController::RefreshObservedOwnershipComponent()
+{
+	if (RuntimePlayerHudWidget == nullptr)
+	{
+		return;
+	}
+
+	if (const ACodexInvenTopDownCharacter* ControlledCharacter = GetTopDownCharacter())
+	{
+		RuntimePlayerHudWidget->SetObservedOwnershipComponent(ControlledCharacter->GetOwnershipComponent());
+		return;
+	}
+
+	RuntimePlayerHudWidget->SetObservedOwnershipComponent(nullptr);
 }
 
 bool ACodexInvenTopDownPlayerController::TryGetCursorGroundPoint(FVector& OutWorldPoint) const
@@ -187,6 +228,11 @@ void ACodexInvenTopDownPlayerController::FireProjectileOnce()
 
 		ControlledCharacter->FireAtWorldLocation(ControlledCharacter->GetActorLocation() + ControlledCharacter->GetActorForwardVector() * 1000.0f);
 	}
+}
+
+bool ACodexInvenTopDownPlayerController::ShouldBlockFireInput() const
+{
+	return RuntimePlayerHudWidget != nullptr && RuntimePlayerHudWidget->ShouldBlockFireInput();
 }
 
 void ACodexInvenTopDownPlayerController::UpdateAimFromCursor() const
@@ -284,6 +330,11 @@ void ACodexInvenTopDownPlayerController::HandleJumpCompleted()
 
 void ACodexInvenTopDownPlayerController::HandleFireStarted()
 {
+	if (ShouldBlockFireInput())
+	{
+		return;
+	}
+
 	if (bIsAutomaticFireActive)
 	{
 		return;
@@ -320,6 +371,12 @@ void ACodexInvenTopDownPlayerController::HandleFireCompleted()
 void ACodexInvenTopDownPlayerController::HandleAutoFireTick()
 {
 	if (!bIsAutomaticFireActive)
+	{
+		HandleFireCompleted();
+		return;
+	}
+
+	if (ShouldBlockFireInput())
 	{
 		HandleFireCompleted();
 		return;

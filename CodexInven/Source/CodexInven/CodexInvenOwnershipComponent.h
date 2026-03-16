@@ -18,7 +18,28 @@ struct FCodexInvenOwnedUniquePickup
 	ECodexInvenPickupType Type = ECodexInvenPickupType::CubeRed;
 };
 
-DECLARE_MULTICAST_DELEGATE_ThreeParams(FOnCodexInvenOwnershipChanged, ECodexInvenPickupType, int32, int32);
+USTRUCT()
+struct FCodexInvenInventorySlotData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(VisibleAnywhere, Category = "Ownership")
+	ECodexInvenPickupType PickupType = ECodexInvenPickupType::CubeRed;
+
+	UPROPERTY(VisibleAnywhere, Category = "Ownership")
+	FText DisplayName;
+
+	UPROPERTY(VisibleAnywhere, Category = "Ownership")
+	int32 Quantity = 0;
+
+	UPROPERTY(VisibleAnywhere, Category = "Ownership")
+	bool bStackable = false;
+
+	UPROPERTY(VisibleAnywhere, Category = "Ownership")
+	int32 UniqueInstanceId = INDEX_NONE;
+};
+
+DECLARE_MULTICAST_DELEGATE(FOnCodexInvenInventoryChanged);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class CODEXINVEN_API UCodexInvenOwnershipComponent : public UActorComponent
@@ -31,9 +52,10 @@ public:
 	bool AddPickup(ECodexInvenPickupType InPickupType);
 	int32 GetStackCount(ECodexInvenPickupType InPickupType) const;
 	const TArray<FCodexInvenOwnedUniquePickup>& GetUniquePickups() const;
+	TArray<FCodexInvenInventorySlotData> BuildInventorySnapshot() const;
 	FText BuildDebugOwnershipText() const;
 
-	FOnCodexInvenOwnershipChanged OnOwnershipChanged;
+	FOnCodexInvenInventoryChanged OnInventoryChanged;
 
 protected:
 	UPROPERTY(VisibleAnywhere, Category = "Ownership")
@@ -44,9 +66,8 @@ protected:
 
 private:
 	int32 GetUniqueCount(ECodexInvenPickupType InPickupType) const;
-	int32 GetTotalForPickupType(ECodexInvenPickupType InPickupType) const;
 	FString BuildPickupChangeDebugMessage(ECodexInvenPickupType InPickupType, int32 InDelta, int32 InNewTotal) const;
-	FString BuildUniquePickupDebugList(ECodexInvenPickupType InPickupType) const;
+	FString BuildUniquePickupDebugList(const TArray<FCodexInvenInventorySlotData>& InSnapshot, ECodexInvenPickupType InPickupType) const;
 
 	int32 NextUniquePickupInstanceId = 1;
 };

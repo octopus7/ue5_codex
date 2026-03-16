@@ -5,10 +5,8 @@
 #include "Blueprint/UserWidget.h"
 #include "CodexInvenOwnershipDebugWidget.generated.h"
 
-class UCanvasPanel;
 class UTextBlock;
 class UCodexInvenOwnershipComponent;
-enum class ECodexInvenPickupType : uint8;
 
 UCLASS()
 class CODEXINVEN_API UCodexInvenOwnershipDebugWidget : public UUserWidget
@@ -26,10 +24,7 @@ private:
 	void BuildWidgetTreeIfNeeded();
 	void RefreshOwnershipText() const;
 	void UnbindObservedOwnershipComponent();
-	void HandleOwnershipChanged(ECodexInvenPickupType InPickupType, int32 InDelta, int32 InNewTotal);
-
-	UPROPERTY(Transient)
-	TObjectPtr<UCanvasPanel> RootCanvasPanel = nullptr;
+	void HandleInventoryChanged();
 
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> OwnershipTextBlock = nullptr;
