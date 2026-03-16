@@ -93,6 +93,39 @@ bool FCodexInvenOwnershipComponentAutomationTest::RunTest(const FString& Paramet
 }
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+	FCodexInvenOwnershipDebugTextAutomationTest,
+	"CodexInven.Pickups.OwnershipDebugText",
+	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FCodexInvenOwnershipDebugTextAutomationTest::RunTest(const FString& Parameters)
+{
+	UCodexInvenOwnershipComponent* OwnershipComponent = NewObject<UCodexInvenOwnershipComponent>();
+	TestNotNull(TEXT("Ownership component can be created for debug text"), OwnershipComponent);
+	if (OwnershipComponent == nullptr)
+	{
+		return false;
+	}
+
+	const FString EmptyText = OwnershipComponent->BuildDebugOwnershipText().ToString();
+	TestTrue(TEXT("Empty text includes header"), EmptyText.Contains(TEXT("Ownership Debug")));
+	TestTrue(TEXT("Empty text includes zero cylinder count"), EmptyText.Contains(TEXT("Cylinder Red: 0")));
+	TestTrue(TEXT("Empty text includes empty cube entry"), EmptyText.Contains(TEXT("Cube Blue: None")));
+	TestTrue(TEXT("Empty text includes zero totals"), EmptyText.Contains(TEXT("Stacked Items: 0")) && EmptyText.Contains(TEXT("Unique Items: 0")));
+
+	TestTrue(TEXT("Cylinder green pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CylinderGreen));
+	TestTrue(TEXT("Second cylinder green pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CylinderGreen));
+	TestTrue(TEXT("First cube blue pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CubeBlue));
+	TestTrue(TEXT("Second cube blue pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CubeBlue));
+
+	const FString PopulatedText = OwnershipComponent->BuildDebugOwnershipText().ToString();
+	TestTrue(TEXT("Populated text includes cylinder stack"), PopulatedText.Contains(TEXT("Cylinder Green: 2")));
+	TestTrue(TEXT("Populated text includes cube instance list"), PopulatedText.Contains(TEXT("Cube Blue: #1, #2")));
+	TestTrue(TEXT("Populated text includes updated totals"), PopulatedText.Contains(TEXT("Stacked Items: 2")) && PopulatedText.Contains(TEXT("Unique Items: 2")));
+
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 	FCodexInvenPickupSpawnerAutomationTest,
 	"CodexInven.Pickups.Spawner",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)

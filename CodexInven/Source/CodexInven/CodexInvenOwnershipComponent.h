@@ -31,6 +31,7 @@ public:
 	bool AddPickup(ECodexInvenPickupType InPickupType);
 	int32 GetStackCount(ECodexInvenPickupType InPickupType) const;
 	const TArray<FCodexInvenOwnedUniquePickup>& GetUniquePickups() const;
+	FText BuildDebugOwnershipText() const;
 
 	FOnCodexInvenOwnershipChanged OnOwnershipChanged;
 
@@ -45,6 +46,7 @@ private:
 	int32 GetUniqueCount(ECodexInvenPickupType InPickupType) const;
 	int32 GetTotalForPickupType(ECodexInvenPickupType InPickupType) const;
 	FString BuildPickupChangeDebugMessage(ECodexInvenPickupType InPickupType, int32 InDelta, int32 InNewTotal) const;
+	FString BuildUniquePickupDebugList(ECodexInvenPickupType InPickupType) const;
 
 	int32 NextUniquePickupInstanceId = 1;
 };
