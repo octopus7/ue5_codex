@@ -6,6 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "CodexInvenBasicMapGameMode.generated.h"
 
+class ACodexInvenPickupSpawner;
+
 /**
  * 
  */
@@ -16,4 +18,13 @@ class CODEXINVEN_API ACodexInvenBasicMapGameMode : public AGameModeBase
 
 public:
 	ACodexInvenBasicMapGameMode();
+
+	virtual void StartPlay() override;
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Pickups")
+	TSubclassOf<ACodexInvenPickupSpawner> PickupSpawnerClass;
+
+	UPROPERTY(Transient)
+	TObjectPtr<ACodexInvenPickupSpawner> RuntimePickupSpawner = nullptr;
 };

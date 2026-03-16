@@ -3,6 +3,7 @@
 #include "CodexInvenTopDownCharacter.h"
 
 #include "CodexInvenGameInstance.h"
+#include "CodexInvenOwnershipComponent.h"
 #include "CodexInvenProjectile.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -40,6 +41,8 @@ ACodexInvenTopDownCharacter::ACodexInvenTopDownCharacter()
 	TopDownCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("TopDownCamera"));
 	TopDownCameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	TopDownCameraComponent->bUsePawnControlRotation = false;
+
+	OwnershipComponent = CreateDefaultSubobject<UCodexInvenOwnershipComponent>(TEXT("OwnershipComponent"));
 }
 
 void ACodexInvenTopDownCharacter::MoveInTopDownPlane(const FVector2D& InMoveInput)

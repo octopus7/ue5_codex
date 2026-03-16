@@ -9,6 +9,7 @@
 class UCameraComponent;
 class USpringArmComponent;
 class ACodexInvenProjectile;
+class UCodexInvenOwnershipComponent;
 
 UCLASS()
 class CODEXINVEN_API ACodexInvenTopDownCharacter : public ACharacter
@@ -39,6 +40,12 @@ public:
 		return TopDownCameraComponent;
 	}
 
+	UFUNCTION(BlueprintPure, Category = "Character|Ownership")
+	UCodexInvenOwnershipComponent* GetOwnershipComponent() const
+	{
+		return OwnershipComponent;
+	}
+
 	UFUNCTION(BlueprintImplementableEvent, Category = "Character|Combat")
 	void OnProjectileSpawned(ACodexInvenProjectile* SpawnedProjectile, const FVector& SpawnLocation, const FVector& SpawnDirection);
 
@@ -48,6 +55,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character|Camera")
 	TObjectPtr<UCameraComponent> TopDownCameraComponent = nullptr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character|Ownership")
+	TObjectPtr<UCodexInvenOwnershipComponent> OwnershipComponent = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character|Camera", meta = (ClampMin = "100.0"))
 	float CameraBoomLength = 1200.0f;
