@@ -10,6 +10,7 @@
 class USphereComponent;
 class UStaticMeshComponent;
 class UPrimitiveComponent;
+class UMaterialInstanceDynamic;
 
 UCLASS()
 class CODEXINVEN_API ACodexInvenPickupActor : public AActor
@@ -42,6 +43,9 @@ protected:
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Pickup")
 	ECodexInvenPickupType PickupType = ECodexInvenPickupType::CubeRed;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> PickupMaterialInstance = nullptr;
 
 private:
 	void ApplyPickupDefinition();

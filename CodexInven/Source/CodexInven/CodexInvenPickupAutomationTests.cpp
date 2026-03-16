@@ -19,7 +19,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 bool FCodexInvenPickupDefinitionAutomationTest::RunTest(const FString& Parameters)
 {
 	const TConstArrayView<ECodexInvenPickupType> PickupTypes = CodexInvenPickupData::GetAllPickupTypes();
-	TestEqual(TEXT("All six pickup types are registered"), PickupTypes.Num(), 6);
+	TestEqual(TEXT("All eight pickup types are registered"), PickupTypes.Num(), 8);
 
 	for (const ECodexInvenPickupType PickupType : PickupTypes)
 	{
@@ -38,6 +38,15 @@ bool FCodexInvenPickupDefinitionAutomationTest::RunTest(const FString& Parameter
 		case ECodexInvenPickupType::CubeRed:
 		case ECodexInvenPickupType::CubeGreen:
 		case ECodexInvenPickupType::CubeBlue:
+			TestEqual(TEXT("Common cubes use common rarity"), Definition->Rarity, ECodexInvenPickupRarity::Common);
+			TestFalse(TEXT("Common cubes do not use metallic material"), Definition->bUseMetallicMaterial);
+			TestFalse(TEXT("Cube pickups are unique"), Definition->bStackable);
+			TestEqual(TEXT("Cube pickups use cube mesh"), Definition->MeshKind, ECodexInvenPickupMeshKind::Cube);
+			break;
+
+		case ECodexInvenPickupType::CubeGold:
+			TestEqual(TEXT("Gold cube uses gold rarity"), Definition->Rarity, ECodexInvenPickupRarity::Gold);
+			TestTrue(TEXT("Gold cube uses metallic material"), Definition->bUseMetallicMaterial);
 			TestFalse(TEXT("Cube pickups are unique"), Definition->bStackable);
 			TestEqual(TEXT("Cube pickups use cube mesh"), Definition->MeshKind, ECodexInvenPickupMeshKind::Cube);
 			break;
@@ -45,6 +54,15 @@ bool FCodexInvenPickupDefinitionAutomationTest::RunTest(const FString& Parameter
 		case ECodexInvenPickupType::CylinderRed:
 		case ECodexInvenPickupType::CylinderGreen:
 		case ECodexInvenPickupType::CylinderBlue:
+			TestEqual(TEXT("Common cylinders use common rarity"), Definition->Rarity, ECodexInvenPickupRarity::Common);
+			TestFalse(TEXT("Common cylinders do not use metallic material"), Definition->bUseMetallicMaterial);
+			TestTrue(TEXT("Cylinder pickups are stackable"), Definition->bStackable);
+			TestEqual(TEXT("Cylinder pickups use cylinder mesh"), Definition->MeshKind, ECodexInvenPickupMeshKind::Cylinder);
+			break;
+
+		case ECodexInvenPickupType::CylinderGold:
+			TestEqual(TEXT("Gold cylinder uses gold rarity"), Definition->Rarity, ECodexInvenPickupRarity::Gold);
+			TestTrue(TEXT("Gold cylinder uses metallic material"), Definition->bUseMetallicMaterial);
 			TestTrue(TEXT("Cylinder pickups are stackable"), Definition->bStackable);
 			TestEqual(TEXT("Cylinder pickups use cylinder mesh"), Definition->MeshKind, ECodexInvenPickupMeshKind::Cylinder);
 			break;
@@ -149,6 +167,15 @@ bool FCodexInvenInventorySnapshotAutomationTest::RunTest(const FString& Paramete
 	TestEqual(TEXT("First empty slot is reused"), RefilledSnapshot[1].PickupType, ECodexInvenPickupType::CubeGreen);
 	TestEqual(TEXT("Refilled slot gets a new unique id"), RefilledSnapshot[1].UniqueInstanceId, 4);
 
+	TestTrue(TEXT("Gold cylinder pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CylinderGold));
+	TestTrue(TEXT("Gold cube pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CubeGold));
+
+	const TArray<FCodexInvenInventorySlotData> GoldSnapshot = OwnershipComponent->BuildInventorySnapshot();
+	TestEqual(TEXT("Gold cylinder slot uses gold rarity"), GoldSnapshot[4].Rarity, ECodexInvenPickupRarity::Gold);
+	TestTrue(TEXT("Gold cylinder remains stackable"), GoldSnapshot[4].bStackable);
+	TestEqual(TEXT("Gold cube slot uses gold rarity"), GoldSnapshot[5].Rarity, ECodexInvenPickupRarity::Gold);
+	TestFalse(TEXT("Gold cube remains unique"), GoldSnapshot[5].bStackable);
+
 	TestTrue(TEXT("Increasing inventory capacity succeeds"), OwnershipComponent->IncreaseInventoryCapacity(10));
 	TestEqual(TEXT("Inventory capacity increases by 10"), OwnershipComponent->GetInventoryCapacity(), 110);
 	TestEqual(TEXT("Snapshot length tracks expanded capacity"), OwnershipComponent->BuildInventorySnapshot().Num(), 110);
@@ -215,7 +242,9 @@ bool FCodexInvenOwnershipDebugTextAutomationTest::RunTest(const FString& Paramet
 	const FString EmptyText = OwnershipComponent->BuildDebugOwnershipText().ToString();
 	TestTrue(TEXT("Empty text includes header"), EmptyText.Contains(TEXT("Ownership Debug")));
 	TestTrue(TEXT("Empty text includes zero cylinder count"), EmptyText.Contains(TEXT("Cylinder Red: 0")));
+	TestTrue(TEXT("Empty text includes zero gold cylinder count"), EmptyText.Contains(TEXT("Cylinder Gold: 0")));
 	TestTrue(TEXT("Empty text includes empty cube entry"), EmptyText.Contains(TEXT("Cube Blue: None")));
+	TestTrue(TEXT("Empty text includes empty gold cube entry"), EmptyText.Contains(TEXT("Cube Gold: None")));
 	TestTrue(TEXT("Empty text includes zero totals"), EmptyText.Contains(TEXT("Stacked Items: 0")) && EmptyText.Contains(TEXT("Unique Items: 0")));
 
 	TestTrue(TEXT("Cylinder green pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CylinderGreen));
@@ -267,6 +296,14 @@ bool FCodexInvenInventoryIconSubsystemAutomationTest::RunTest(const FString& Par
 
 		TestEqual(TEXT("Inventory icon width is 64"), IconTexture->GetSizeX(), 64);
 		TestEqual(TEXT("Inventory icon height is 64"), IconTexture->GetSizeY(), 64);
+	}
+
+	UTexture2D* GoldBackgroundTexture = IconSubsystem->GetInventorySlotBackground(ECodexInvenPickupRarity::Gold);
+	TestNotNull(TEXT("Gold inventory slot background exists"), GoldBackgroundTexture);
+	if (GoldBackgroundTexture != nullptr)
+	{
+		TestEqual(TEXT("Gold slot background width is 64"), GoldBackgroundTexture->GetSizeX(), 64);
+		TestEqual(TEXT("Gold slot background height is 64"), GoldBackgroundTexture->GetSizeY(), 64);
 	}
 
 	GameInstance->Shutdown();

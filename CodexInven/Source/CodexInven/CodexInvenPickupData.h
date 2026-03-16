@@ -11,9 +11,11 @@ enum class ECodexInvenPickupType : uint8
 	CubeRed,
 	CubeGreen,
 	CubeBlue,
+	CubeGold,
 	CylinderRed,
 	CylinderGreen,
-	CylinderBlue
+	CylinderBlue,
+	CylinderGold
 };
 
 UENUM()
@@ -21,6 +23,13 @@ enum class ECodexInvenPickupMeshKind : uint8
 {
 	Cube,
 	Cylinder
+};
+
+UENUM()
+enum class ECodexInvenPickupRarity : uint8
+{
+	Common,
+	Gold
 };
 
 USTRUCT()
@@ -35,12 +44,16 @@ struct FCodexInvenPickupDefinition
 		const TCHAR* InDisplayName,
 		const bool bInStackable,
 		const ECodexInvenPickupMeshKind InMeshKind,
-		const FLinearColor& InTintColor)
+		const FLinearColor& InTintColor,
+		const ECodexInvenPickupRarity InRarity,
+		const bool bInUseMetallicMaterial = false)
 		: Type(InType)
 		, DisplayName(InDisplayName)
 		, bStackable(bInStackable)
 		, MeshKind(InMeshKind)
 		, TintColor(InTintColor)
+		, Rarity(InRarity)
+		, bUseMetallicMaterial(bInUseMetallicMaterial)
 	{
 	}
 
@@ -58,6 +71,12 @@ struct FCodexInvenPickupDefinition
 
 	UPROPERTY()
 	FLinearColor TintColor = FLinearColor::Red;
+
+	UPROPERTY()
+	ECodexInvenPickupRarity Rarity = ECodexInvenPickupRarity::Common;
+
+	UPROPERTY()
+	bool bUseMetallicMaterial = false;
 };
 
 namespace CodexInvenPickupData

@@ -44,6 +44,7 @@ bool UCodexInvenOwnershipComponent::AddPickup(const ECodexInvenPickupType InPick
 			TargetSlot.PickupType = InPickupType;
 			TargetSlot.Quantity = 1;
 			TargetSlot.bStackable = true;
+			TargetSlot.Rarity = Definition->Rarity;
 			TargetSlot.UniqueInstanceId = INDEX_NONE;
 		}
 	}
@@ -60,6 +61,7 @@ bool UCodexInvenOwnershipComponent::AddPickup(const ECodexInvenPickupType InPick
 		TargetSlot.PickupType = InPickupType;
 		TargetSlot.Quantity = 1;
 		TargetSlot.bStackable = false;
+		TargetSlot.Rarity = Definition->Rarity;
 		TargetSlot.UniqueInstanceId = NextUniquePickupInstanceId++;
 	}
 
@@ -190,6 +192,7 @@ TArray<FCodexInvenInventorySlotData> UCodexInvenOwnershipComponent::BuildInvento
 		SlotData.DisplayName = FText::FromString(Definition.DisplayName);
 		SlotData.Quantity = Slot.Quantity;
 		SlotData.bStackable = Slot.bStackable;
+		SlotData.Rarity = Definition.Rarity;
 		SlotData.UniqueInstanceId = Slot.UniqueInstanceId;
 	}
 
@@ -220,17 +223,19 @@ FText UCodexInvenOwnershipComponent::BuildDebugOwnershipText() const
 	}
 
 	TArray<FString> Lines;
-	Lines.Reserve(14);
+	Lines.Reserve(16);
 	Lines.Add(TEXT("Ownership Debug"));
 	Lines.Add(TEXT("Stacks"));
 	Lines.Add(FString::Printf(TEXT("Cylinder Red: %d"), GetStackCount(ECodexInvenPickupType::CylinderRed)));
 	Lines.Add(FString::Printf(TEXT("Cylinder Green: %d"), GetStackCount(ECodexInvenPickupType::CylinderGreen)));
 	Lines.Add(FString::Printf(TEXT("Cylinder Blue: %d"), GetStackCount(ECodexInvenPickupType::CylinderBlue)));
+	Lines.Add(FString::Printf(TEXT("Cylinder Gold: %d"), GetStackCount(ECodexInvenPickupType::CylinderGold)));
 	Lines.Add(TEXT(""));
 	Lines.Add(TEXT("Unique Cubes"));
 	Lines.Add(FString::Printf(TEXT("Cube Red: %s"), *BuildUniquePickupDebugList(Snapshot, ECodexInvenPickupType::CubeRed)));
 	Lines.Add(FString::Printf(TEXT("Cube Green: %s"), *BuildUniquePickupDebugList(Snapshot, ECodexInvenPickupType::CubeGreen)));
 	Lines.Add(FString::Printf(TEXT("Cube Blue: %s"), *BuildUniquePickupDebugList(Snapshot, ECodexInvenPickupType::CubeBlue)));
+	Lines.Add(FString::Printf(TEXT("Cube Gold: %s"), *BuildUniquePickupDebugList(Snapshot, ECodexInvenPickupType::CubeGold)));
 	Lines.Add(TEXT(""));
 	Lines.Add(TEXT("Totals"));
 	Lines.Add(FString::Printf(TEXT("Stacked Items: %d"), TotalStackedItems));
@@ -306,6 +311,7 @@ void UCodexInvenOwnershipComponent::ResetInventorySlot(FCodexInvenInventorySlot&
 	InSlot.PickupType = ECodexInvenPickupType::CubeRed;
 	InSlot.Quantity = 0;
 	InSlot.bStackable = false;
+	InSlot.Rarity = ECodexInvenPickupRarity::Common;
 	InSlot.UniqueInstanceId = INDEX_NONE;
 }
 

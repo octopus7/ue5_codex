@@ -30,11 +30,24 @@ void UCodexInvenInventoryIconSubsystem::Initialize(FSubsystemCollectionBase& Col
 	{
 		InventoryIcons.Add(PickupType, CreateInventoryIconTexture(CodexInvenPickupData::GetPickupDefinitionChecked(PickupType)));
 	}
+
+	InventorySlotBackgrounds.Reset();
+	InventorySlotBackgrounds.Add(ECodexInvenPickupRarity::Gold, CreateInventorySlotBackgroundTexture(ECodexInvenPickupRarity::Gold));
 }
 
 UTexture2D* UCodexInvenInventoryIconSubsystem::GetInventoryIcon(const ECodexInvenPickupType InPickupType) const
 {
 	if (const TObjectPtr<UTexture2D>* FoundTexture = InventoryIcons.Find(InPickupType))
+	{
+		return FoundTexture->Get();
+	}
+
+	return nullptr;
+}
+
+UTexture2D* UCodexInvenInventoryIconSubsystem::GetInventorySlotBackground(const ECodexInvenPickupRarity InRarity) const
+{
+	if (const TObjectPtr<UTexture2D>* FoundTexture = InventorySlotBackgrounds.Find(InRarity))
 	{
 		return FoundTexture->Get();
 	}
@@ -63,6 +76,31 @@ UTexture2D* UCodexInvenInventoryIconSubsystem::CreateInventoryIconTexture(const 
 	Texture->NeverStream = true;
 	Texture->SRGB = true;
 	Texture->Filter = TF_Nearest;
+	Texture->UpdateResource();
+	return Texture;
+}
+
+UTexture2D* UCodexInvenInventoryIconSubsystem::CreateInventorySlotBackgroundTexture(const ECodexInvenPickupRarity InRarity) const
+{
+	TArray64<uint8> PixelData;
+	BuildInventorySlotBackgroundPixels(InRarity, PixelData);
+
+	const FName TextureName = MakeUniqueObjectName(
+		GetTransientPackage(),
+		UTexture2D::StaticClass(),
+		FName(*FString::Printf(TEXT("InventorySlotBackground_%d"), static_cast<int32>(InRarity))));
+
+	UTexture2D* Texture = UTexture2D::CreateTransient(InventoryIconSize, InventoryIconSize, PF_B8G8R8A8, TextureName, PixelData);
+	if (Texture == nullptr)
+	{
+		return nullptr;
+	}
+
+	Texture->LODGroup = TEXTUREGROUP_UI;
+	Texture->MipGenSettings = TMGS_NoMipmaps;
+	Texture->NeverStream = true;
+	Texture->SRGB = true;
+	Texture->Filter = TF_Bilinear;
 	Texture->UpdateResource();
 	return Texture;
 }
@@ -116,6 +154,32 @@ void UCodexInvenInventoryIconSubsystem::BuildInventoryIconPixels(const FCodexInv
 			}
 
 			SetPixel(OutPixels, X, Y, bInsideInnerShape ? FillColor : OutlineColor);
+		}
+	}
+}
+
+void UCodexInvenInventoryIconSubsystem::BuildInventorySlotBackgroundPixels(const ECodexInvenPickupRarity InRarity, TArray64<uint8>& OutPixels)
+{
+	OutPixels.Init(0, static_cast<int64>(InventoryIconSize) * InventoryIconSize * 4);
+
+	if (InRarity != ECodexInvenPickupRarity::Gold)
+	{
+		return;
+	}
+
+	const FLinearColor TopColor(0.08f, 0.06f, 0.01f, 0.02f);
+	const FLinearColor BottomColor(0.44f, 0.31f, 0.06f, 0.32f);
+
+	for (int32 Y = 0; Y < InventoryIconSize; ++Y)
+	{
+		const float NormalizedY = static_cast<float>(Y) / static_cast<float>(InventoryIconSize - 1);
+		const float GradientAlpha = FMath::Clamp((NormalizedY - 0.20f) / 0.80f, 0.0f, 1.0f);
+		const FLinearColor RowColor = FMath::Lerp(TopColor, BottomColor, GradientAlpha);
+		const FColor PixelColor = RowColor.GetClamped().ToFColorSRGB();
+
+		for (int32 X = 0; X < InventoryIconSize; ++X)
+		{
+			SetPixel(OutPixels, X, Y, PixelColor);
 		}
 	}
 }

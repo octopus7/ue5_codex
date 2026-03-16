@@ -14,7 +14,7 @@ class CODEXINVEN_API UCodexInvenInventoryTileItemObject : public UObject
 	GENERATED_BODY()
 
 public:
-	void InitializeItem(const FCodexInvenInventorySlotData& InSlotData, UTexture2D* InIconTexture);
+	void InitializeItem(const FCodexInvenInventorySlotData& InSlotData, UTexture2D* InIconTexture, UTexture2D* InBackgroundTexture);
 
 	const FCodexInvenInventorySlotData& GetSlotData() const
 	{
@@ -26,10 +26,18 @@ public:
 		return IconTexture;
 	}
 
+	UTexture2D* GetBackgroundTexture() const
+	{
+		return BackgroundTexture;
+	}
+
 private:
 	UPROPERTY(Transient)
 	FCodexInvenInventorySlotData SlotData;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UTexture2D> IconTexture = nullptr;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UTexture2D> BackgroundTexture = nullptr;
 };

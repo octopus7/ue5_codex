@@ -8,6 +8,7 @@
 #include "Engine/StaticMesh.h"
 #include "GameFramework/Pawn.h"
 #include "Materials/MaterialInterface.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
 #include "UObject/UObjectGlobals.h"
 
@@ -66,6 +67,8 @@ void ACodexInvenPickupActor::ApplyPickupDefinition()
 {
 	static UStaticMesh* CubeMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube"));
 	static UStaticMesh* CylinderMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
+	static UMaterialInterface* StandardPickupMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial_Inst.BasicShapeMaterial_Inst"));
+	static UMaterialInterface* MetallicPickupMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/TemplateResources/MI_Template_BaseOrange_Metal.MI_Template_BaseOrange_Metal"));
 
 	PickupSphereComponent->SetSphereRadius(PickupRadius);
 
@@ -89,9 +92,28 @@ void ACodexInvenPickupActor::ApplyPickupDefinition()
 		break;
 	}
 
-	PickupMeshComponent->SetVectorParameterValueOnMaterials(
-		TEXT("Color"),
-		FVector(Definition.TintColor.R, Definition.TintColor.G, Definition.TintColor.B));
+	UMaterialInterface* BaseMaterial = Definition.bUseMetallicMaterial && MetallicPickupMaterial != nullptr
+		? MetallicPickupMaterial
+		: StandardPickupMaterial;
+
+	if (BaseMaterial != nullptr)
+	{
+		PickupMaterialInstance = UMaterialInstanceDynamic::Create(BaseMaterial, this);
+		if (PickupMaterialInstance != nullptr)
+		{
+			PickupMeshComponent->SetMaterial(0, PickupMaterialInstance);
+			PickupMaterialInstance->SetVectorParameterValue(TEXT("Color"), Definition.TintColor);
+			PickupMaterialInstance->SetVectorParameterValue(TEXT("BaseColor"), Definition.TintColor);
+			PickupMaterialInstance->SetVectorParameterValue(TEXT("Tint"), Definition.TintColor);
+			PickupMaterialInstance->SetVectorParameterValue(TEXT("TintColor"), Definition.TintColor);
+			PickupMaterialInstance->SetScalarParameterValue(TEXT("Metallic"), Definition.bUseMetallicMaterial ? 1.0f : 0.0f);
+			PickupMaterialInstance->SetScalarParameterValue(TEXT("Roughness"), Definition.bUseMetallicMaterial ? 0.18f : 0.55f);
+			PickupMaterialInstance->SetScalarParameterValue(TEXT("Specular"), Definition.bUseMetallicMaterial ? 0.85f : 0.5f);
+			return;
+		}
+	}
+
+	PickupMeshComponent->SetVectorParameterValueOnMaterials(TEXT("Color"), FVector(Definition.TintColor.R, Definition.TintColor.G, Definition.TintColor.B));
 }
 
 void ACodexInvenPickupActor::HandlePickupSphereBeginOverlap(

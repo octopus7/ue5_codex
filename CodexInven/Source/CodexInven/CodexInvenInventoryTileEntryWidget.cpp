@@ -195,6 +195,14 @@ void UCodexInvenInventoryTileEntryWidget::BuildWidgetTreeIfNeeded()
 	UOverlay* RootOverlay = WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass(), TEXT("RootOverlay"));
 	RootBorder->SetContent(RootOverlay);
 
+	RarityBackgroundImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("RarityBackgroundImage"));
+	RarityBackgroundImage->SetVisibility(ESlateVisibility::Collapsed);
+	if (UOverlaySlot* BackgroundSlot = RootOverlay->AddChildToOverlay(RarityBackgroundImage))
+	{
+		BackgroundSlot->SetHorizontalAlignment(HAlign_Fill);
+		BackgroundSlot->SetVerticalAlignment(VAlign_Fill);
+	}
+
 	ContentBox = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("ContentBox"));
 	if (UOverlaySlot* ContentSlot = RootOverlay->AddChildToOverlay(ContentBox))
 	{
@@ -246,13 +254,15 @@ void UCodexInvenInventoryTileEntryWidget::RefreshFromItemObject(UCodexInvenInven
 {
 	TileItemObject = InItemObject;
 
-	if (IconImage == nullptr || NameTextBlock == nullptr || QuantityTextBlock == nullptr)
+	if (RarityBackgroundImage == nullptr || IconImage == nullptr || NameTextBlock == nullptr || QuantityTextBlock == nullptr)
 	{
 		return;
 	}
 
 	if (InItemObject == nullptr)
 	{
+		RarityBackgroundImage->SetBrush(FSlateBrush());
+		RarityBackgroundImage->SetVisibility(ESlateVisibility::Collapsed);
 		IconImage->SetBrush(FSlateBrush());
 		IconImage->SetVisibility(ESlateVisibility::Collapsed);
 		NameTextBlock->SetText(FText::GetEmpty());
@@ -265,12 +275,25 @@ void UCodexInvenInventoryTileEntryWidget::RefreshFromItemObject(UCodexInvenInven
 
 	if (SlotData.bIsEmpty)
 	{
+		RarityBackgroundImage->SetBrush(FSlateBrush());
+		RarityBackgroundImage->SetVisibility(ESlateVisibility::Collapsed);
 		IconImage->SetBrush(FSlateBrush());
 		IconImage->SetVisibility(ESlateVisibility::Collapsed);
 		NameTextBlock->SetText(FText::GetEmpty());
 		QuantityTextBlock->SetVisibility(ESlateVisibility::Collapsed);
 		ApplyVisualState();
 		return;
+	}
+
+	if (UTexture2D* BackgroundTexture = InItemObject->GetBackgroundTexture())
+	{
+		RarityBackgroundImage->SetBrushFromTexture(BackgroundTexture, true);
+		RarityBackgroundImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
+	else
+	{
+		RarityBackgroundImage->SetBrush(FSlateBrush());
+		RarityBackgroundImage->SetVisibility(ESlateVisibility::Collapsed);
 	}
 
 	IconImage->SetBrushFromTexture(InItemObject->GetIconTexture(), true);
@@ -292,17 +315,18 @@ void UCodexInvenInventoryTileEntryWidget::RefreshFromItemObject(UCodexInvenInven
 
 void UCodexInvenInventoryTileEntryWidget::ApplyVisualState() const
 {
-	if (RootBorder == nullptr || IconImage == nullptr || NameTextBlock == nullptr || QuantityTextBlock == nullptr)
+	if (RootBorder == nullptr || RarityBackgroundImage == nullptr || IconImage == nullptr || NameTextBlock == nullptr || QuantityTextBlock == nullptr)
 	{
 		return;
 	}
 
 	const UCodexInvenInventoryTileItemObject* ItemObject = GetTileItemObject();
 	const bool bIsEmptySlot = ItemObject == nullptr || ItemObject->GetSlotData().bIsEmpty;
+	const bool bIsGoldRarity = !bIsEmptySlot && ItemObject->GetSlotData().Rarity == ECodexInvenPickupRarity::Gold;
 
 	FLinearColor BorderColor = bIsEmptySlot
 		? FLinearColor(0.03f, 0.04f, 0.05f, 0.92f)
-		: FLinearColor(0.08f, 0.10f, 0.12f, 0.92f);
+		: (bIsGoldRarity ? FLinearColor(0.12f, 0.10f, 0.05f, 0.94f) : FLinearColor(0.08f, 0.10f, 0.12f, 0.92f));
 
 	if (bIsDropTarget)
 	{
@@ -312,6 +336,7 @@ void UCodexInvenInventoryTileEntryWidget::ApplyVisualState() const
 	}
 
 	RootBorder->SetBrushColor(BorderColor);
+	RarityBackgroundImage->SetRenderOpacity(bIsGoldRarity ? 0.82f : 1.0f);
 
 	const float ContentOpacity = bIsDragSource && !bIsEmptySlot ? 0.35f : 1.0f;
 	IconImage->SetRenderOpacity(ContentOpacity);

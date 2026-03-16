@@ -369,7 +369,10 @@ void UCodexInvenPlayerHudWidget::RefreshInventoryItems()
 		for (const FCodexInvenInventorySlotData& SlotData : Snapshot)
 		{
 			UCodexInvenInventoryTileItemObject* TileItem = NewObject<UCodexInvenInventoryTileItemObject>(this);
-			TileItem->InitializeItem(SlotData, IconSubsystem != nullptr ? IconSubsystem->GetInventoryIcon(SlotData.PickupType) : nullptr);
+			TileItem->InitializeItem(
+				SlotData,
+				IconSubsystem != nullptr ? IconSubsystem->GetInventoryIcon(SlotData.PickupType) : nullptr,
+				IconSubsystem != nullptr ? IconSubsystem->GetInventorySlotBackground(SlotData.Rarity) : nullptr);
 			InventoryTileItems.Add(TileItem);
 
 			const FName EntryWidgetName = MakeUniqueObjectName(this, UCodexInvenInventoryTileEntryWidget::StaticClass(), TEXT("InventoryTileEntry"));

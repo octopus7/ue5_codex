@@ -36,6 +36,9 @@ struct FCodexInvenInventorySlot
 	bool bStackable = false;
 
 	UPROPERTY(VisibleAnywhere, Category = "Ownership")
+	ECodexInvenPickupRarity Rarity = ECodexInvenPickupRarity::Common;
+
+	UPROPERTY(VisibleAnywhere, Category = "Ownership")
 	int32 UniqueInstanceId = INDEX_NONE;
 };
 
@@ -61,6 +64,9 @@ struct FCodexInvenInventorySlotData
 
 	UPROPERTY(VisibleAnywhere, Category = "Ownership")
 	bool bStackable = false;
+
+	UPROPERTY(VisibleAnywhere, Category = "Ownership")
+	ECodexInvenPickupRarity Rarity = ECodexInvenPickupRarity::Common;
 
 	UPROPERTY(VisibleAnywhere, Category = "Ownership")
 	int32 UniqueInstanceId = INDEX_NONE;

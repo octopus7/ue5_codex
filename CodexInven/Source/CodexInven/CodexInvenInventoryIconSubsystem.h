@@ -17,11 +17,17 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
 	UTexture2D* GetInventoryIcon(ECodexInvenPickupType InPickupType) const;
+	UTexture2D* GetInventorySlotBackground(ECodexInvenPickupRarity InRarity) const;
 
 private:
 	UTexture2D* CreateInventoryIconTexture(const FCodexInvenPickupDefinition& InDefinition) const;
+	UTexture2D* CreateInventorySlotBackgroundTexture(ECodexInvenPickupRarity InRarity) const;
 	static void BuildInventoryIconPixels(const FCodexInvenPickupDefinition& InDefinition, TArray64<uint8>& OutPixels);
+	static void BuildInventorySlotBackgroundPixels(ECodexInvenPickupRarity InRarity, TArray64<uint8>& OutPixels);
 
 	UPROPERTY(Transient)
 	TMap<ECodexInvenPickupType, TObjectPtr<UTexture2D>> InventoryIcons;
+
+	UPROPERTY(Transient)
+	TMap<ECodexInvenPickupRarity, TObjectPtr<UTexture2D>> InventorySlotBackgrounds;
 };

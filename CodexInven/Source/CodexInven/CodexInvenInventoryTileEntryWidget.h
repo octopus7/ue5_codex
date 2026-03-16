@@ -52,6 +52,9 @@ private:
 	TObjectPtr<UVerticalBox> ContentBox = nullptr;
 
 	UPROPERTY(Transient)
+	TObjectPtr<UImage> RarityBackgroundImage = nullptr;
+
+	UPROPERTY(Transient)
 	TObjectPtr<UImage> IconImage = nullptr;
 
 	UPROPERTY(Transient)
