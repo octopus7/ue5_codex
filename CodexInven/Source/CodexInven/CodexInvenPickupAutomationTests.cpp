@@ -68,6 +68,9 @@ bool FCodexInvenOwnershipComponentAutomationTest::RunTest(const FString& Paramet
 		return false;
 	}
 
+	TestEqual(TEXT("Default inventory capacity starts at 100"), OwnershipComponent->GetInventoryCapacity(), 100);
+	TestEqual(TEXT("Default inventory starts empty"), OwnershipComponent->GetOccupiedSlotCount(), 0);
+
 	TestTrue(TEXT("First cylinder pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CylinderRed));
 	TestTrue(TEXT("Second cylinder pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CylinderRed));
 	TestEqual(TEXT("Cylinder stack count increments"), OwnershipComponent->GetStackCount(ECodexInvenPickupType::CylinderRed), 2);
@@ -109,34 +112,46 @@ bool FCodexInvenInventorySnapshotAutomationTest::RunTest(const FString& Paramete
 		return false;
 	}
 
-	TestEqual(TEXT("Empty snapshot starts with zero slots"), OwnershipComponent->BuildInventorySnapshot().Num(), 0);
+	const TArray<FCodexInvenInventorySlotData> EmptySnapshot = OwnershipComponent->BuildInventorySnapshot();
+	TestEqual(TEXT("Empty snapshot contains the default 100 slots"), EmptySnapshot.Num(), 100);
+	TestTrue(TEXT("First snapshot slot starts empty"), EmptySnapshot[0].bIsEmpty);
 
+	TestTrue(TEXT("First green cylinder pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CylinderGreen));
+	TestTrue(TEXT("Second green cylinder pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CylinderGreen));
 	TestTrue(TEXT("First blue cube pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CubeBlue));
 	TestTrue(TEXT("Second blue cube pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CubeBlue));
 	TestTrue(TEXT("Red cube pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CubeRed));
-	TestTrue(TEXT("First green cylinder pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CylinderGreen));
-	TestTrue(TEXT("Second green cylinder pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CylinderGreen));
 
 	const TArray<FCodexInvenInventorySlotData> Snapshot = OwnershipComponent->BuildInventorySnapshot();
-	TestEqual(TEXT("Snapshot expands unique items and collapses stacks"), Snapshot.Num(), 4);
-	if (Snapshot.Num() != 4)
+	TestEqual(TEXT("Snapshot keeps full capacity with empty slots"), Snapshot.Num(), 100);
+	if (Snapshot.Num() != 100)
 	{
 		return false;
 	}
 
-	TestEqual(TEXT("Slot 0 follows pickup enum order"), Snapshot[0].PickupType, ECodexInvenPickupType::CubeRed);
-	TestFalse(TEXT("Cube red slot is unique"), Snapshot[0].bStackable);
-	TestEqual(TEXT("Cube red keeps its unique id"), Snapshot[0].UniqueInstanceId, 3);
+	TestFalse(TEXT("Slot 0 is now occupied"), Snapshot[0].bIsEmpty);
+	TestEqual(TEXT("First slot keeps the first stackable pickup"), Snapshot[0].PickupType, ECodexInvenPickupType::CylinderGreen);
+	TestTrue(TEXT("First slot is stackable"), Snapshot[0].bStackable);
+	TestEqual(TEXT("First slot stack quantity increments in place"), Snapshot[0].Quantity, 2);
 
 	TestEqual(TEXT("Slot 1 is first blue cube"), Snapshot[1].PickupType, ECodexInvenPickupType::CubeBlue);
-	TestEqual(TEXT("First blue cube stays in instance id order"), Snapshot[1].UniqueInstanceId, 1);
+	TestEqual(TEXT("Slot 1 keeps the first blue cube id"), Snapshot[1].UniqueInstanceId, 1);
 	TestEqual(TEXT("Slot 2 is second blue cube"), Snapshot[2].PickupType, ECodexInvenPickupType::CubeBlue);
-	TestEqual(TEXT("Second blue cube stays in instance id order"), Snapshot[2].UniqueInstanceId, 2);
+	TestEqual(TEXT("Slot 2 keeps the second blue cube id"), Snapshot[2].UniqueInstanceId, 2);
+	TestEqual(TEXT("Slot 3 is red cube"), Snapshot[3].PickupType, ECodexInvenPickupType::CubeRed);
+	TestEqual(TEXT("Slot 3 keeps the red cube id"), Snapshot[3].UniqueInstanceId, 3);
+	TestTrue(TEXT("Next slot remains empty"), Snapshot[4].bIsEmpty);
 
-	TestEqual(TEXT("Slot 3 collapses green cylinders"), Snapshot[3].PickupType, ECodexInvenPickupType::CylinderGreen);
-	TestTrue(TEXT("Green cylinder slot is stackable"), Snapshot[3].bStackable);
-	TestEqual(TEXT("Green cylinder slot stores stack quantity"), Snapshot[3].Quantity, 2);
-	TestEqual(TEXT("Stacked slots do not carry unique ids"), Snapshot[3].UniqueInstanceId, INDEX_NONE);
+	TestTrue(TEXT("Clearing slot 1 succeeds"), OwnershipComponent->ClearInventorySlot(1));
+	TestTrue(TEXT("New cube pickup refills the first empty slot"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CubeGreen));
+
+	const TArray<FCodexInvenInventorySlotData> RefilledSnapshot = OwnershipComponent->BuildInventorySnapshot();
+	TestEqual(TEXT("First empty slot is reused"), RefilledSnapshot[1].PickupType, ECodexInvenPickupType::CubeGreen);
+	TestEqual(TEXT("Refilled slot gets a new unique id"), RefilledSnapshot[1].UniqueInstanceId, 4);
+
+	TestTrue(TEXT("Increasing inventory capacity succeeds"), OwnershipComponent->IncreaseInventoryCapacity(10));
+	TestEqual(TEXT("Inventory capacity increases by 10"), OwnershipComponent->GetInventoryCapacity(), 110);
+	TestEqual(TEXT("Snapshot length tracks expanded capacity"), OwnershipComponent->BuildInventorySnapshot().Num(), 110);
 
 	return true;
 }

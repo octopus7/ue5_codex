@@ -10,6 +10,7 @@ class UButton;
 class UCanvasPanel;
 class UScrollBox;
 class USizeBox;
+class UTextBlock;
 class UWrapBox;
 class UCodexInvenInventoryTileEntryWidget;
 class UCodexInvenInventoryTileItemObject;
@@ -33,6 +34,7 @@ protected:
 private:
 	void BuildWidgetTreeIfNeeded();
 	void RefreshInventoryItems();
+	void RefreshInventorySummaryText() const;
 	void SetInventoryPanelVisible(bool bInVisible);
 	void SetDebugWidgetVisible(bool bInVisible);
 	void UnbindObservedOwnershipComponent();
@@ -44,6 +46,9 @@ private:
 
 	UFUNCTION()
 	void HandleDebugToggleClicked();
+
+	UFUNCTION()
+	void HandleIncreaseCapacityClicked();
 
 	UPROPERTY(Transient)
 	TObjectPtr<UCanvasPanel> RootCanvasPanel = nullptr;
@@ -59,6 +64,12 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<USizeBox> InventoryPanelSizeBox = nullptr;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> InventorySummaryTextBlock = nullptr;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> IncreaseCapacityButton = nullptr;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UScrollBox> InventoryScrollBox = nullptr;

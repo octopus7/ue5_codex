@@ -19,7 +19,7 @@
 namespace
 {
 	constexpr float InventoryTileIconSize = 64.0f;
-	constexpr int32 InventoryTileNameFontSize = 16;
+	constexpr int32 InventoryTileNameFontSize = 8;
 	constexpr int32 InventoryTileQuantityFontSize = 14;
 }
 
@@ -128,7 +128,9 @@ void UCodexInvenInventoryTileEntryWidget::RefreshFromItemObject(UCodexInvenInven
 
 	if (InItemObject == nullptr)
 	{
+		RootBorder->SetBrushColor(FLinearColor(0.03f, 0.04f, 0.05f, 0.92f));
 		IconImage->SetBrush(FSlateBrush());
+		IconImage->SetVisibility(ESlateVisibility::Collapsed);
 		NameTextBlock->SetText(FText::GetEmpty());
 		QuantityTextBlock->SetVisibility(ESlateVisibility::Collapsed);
 		return;
@@ -136,7 +138,20 @@ void UCodexInvenInventoryTileEntryWidget::RefreshFromItemObject(UCodexInvenInven
 
 	const FCodexInvenInventorySlotData& SlotData = InItemObject->GetSlotData();
 
+	if (SlotData.bIsEmpty)
+	{
+		RootBorder->SetBrushColor(FLinearColor(0.03f, 0.04f, 0.05f, 0.92f));
+		IconImage->SetBrush(FSlateBrush());
+		IconImage->SetVisibility(ESlateVisibility::Collapsed);
+		NameTextBlock->SetText(FText::GetEmpty());
+		QuantityTextBlock->SetVisibility(ESlateVisibility::Collapsed);
+		return;
+	}
+
+	RootBorder->SetBrushColor(FLinearColor(0.08f, 0.10f, 0.12f, 0.92f));
+
 	IconImage->SetBrushFromTexture(InItemObject->GetIconTexture(), true);
+	IconImage->SetVisibility(ESlateVisibility::Visible);
 
 	FText EntryDisplayLabel = SlotData.DisplayName;
 	if (!SlotData.bStackable && SlotData.UniqueInstanceId != INDEX_NONE)

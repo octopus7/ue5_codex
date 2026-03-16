@@ -4,9 +4,15 @@
 
 #include "Engine/Engine.h"
 
+namespace
+{
+	constexpr int32 DefaultInventoryCapacity = 100;
+}
+
 UCodexInvenOwnershipComponent::UCodexInvenOwnershipComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
+	InitializeInventoryCapacity(DefaultInventoryCapacity);
 }
 
 bool UCodexInvenOwnershipComponent::AddPickup(const ECodexInvenPickupType InPickupType)
@@ -17,21 +23,49 @@ bool UCodexInvenOwnershipComponent::AddPickup(const ECodexInvenPickupType InPick
 		return false;
 	}
 
-	int32 NewTotal = 0;
+	int32 TargetSlotIndex = INDEX_NONE;
 	if (Definition->bStackable)
 	{
-		int32& StackCount = StackedPickupCounts.FindOrAdd(InPickupType);
-		++StackCount;
-		NewTotal = StackCount;
+		TargetSlotIndex = FindStackableSlotIndex(InPickupType);
+		if (TargetSlotIndex != INDEX_NONE)
+		{
+			++InventorySlots[TargetSlotIndex].Quantity;
+		}
+		else
+		{
+			TargetSlotIndex = FindFirstEmptyInventorySlotIndex();
+			if (TargetSlotIndex == INDEX_NONE)
+			{
+				return false;
+			}
+
+			FCodexInvenInventorySlot& TargetSlot = InventorySlots[TargetSlotIndex];
+			TargetSlot.bOccupied = true;
+			TargetSlot.PickupType = InPickupType;
+			TargetSlot.Quantity = 1;
+			TargetSlot.bStackable = true;
+			TargetSlot.UniqueInstanceId = INDEX_NONE;
+		}
 	}
 	else
 	{
-		FCodexInvenOwnedUniquePickup& UniquePickup = UniquePickups.AddDefaulted_GetRef();
-		UniquePickup.InstanceId = NextUniquePickupInstanceId++;
-		UniquePickup.Type = InPickupType;
-		NewTotal = GetUniqueCount(InPickupType);
+		TargetSlotIndex = FindFirstEmptyInventorySlotIndex();
+		if (TargetSlotIndex == INDEX_NONE)
+		{
+			return false;
+		}
+
+		FCodexInvenInventorySlot& TargetSlot = InventorySlots[TargetSlotIndex];
+		TargetSlot.bOccupied = true;
+		TargetSlot.PickupType = InPickupType;
+		TargetSlot.Quantity = 1;
+		TargetSlot.bStackable = false;
+		TargetSlot.UniqueInstanceId = NextUniquePickupInstanceId++;
 	}
 
+	RebuildOwnershipCachesFromSlots();
+
+	const int32 NewTotal = GetTotalForPickupType(InPickupType);
 	OnInventoryChanged.Broadcast();
 
 	if (GEngine != nullptr)
@@ -40,6 +74,63 @@ bool UCodexInvenOwnershipComponent::AddPickup(const ECodexInvenPickupType InPick
 		GEngine->AddOnScreenDebugMessage(MessageKey, 3.0f, FColor::White, BuildPickupChangeDebugMessage(InPickupType, 1, NewTotal));
 	}
 
+	return true;
+}
+
+bool UCodexInvenOwnershipComponent::IncreaseInventoryCapacity(const int32 InAdditionalSlots)
+{
+	if (InAdditionalSlots <= 0)
+	{
+		return false;
+	}
+
+	InventorySlots.AddDefaulted(InAdditionalSlots);
+	OnInventoryChanged.Broadcast();
+	return true;
+}
+
+bool UCodexInvenOwnershipComponent::ClearInventorySlot(const int32 InSlotIndex)
+{
+	if (!IsValidInventorySlotIndex(InSlotIndex) || !InventorySlots[InSlotIndex].bOccupied)
+	{
+		return false;
+	}
+
+	ResetInventorySlot(InventorySlots[InSlotIndex]);
+	RebuildOwnershipCachesFromSlots();
+	OnInventoryChanged.Broadcast();
+	return true;
+}
+
+bool UCodexInvenOwnershipComponent::MoveInventorySlot(const int32 InFromSlotIndex, const int32 InToSlotIndex)
+{
+	if (!IsValidInventorySlotIndex(InFromSlotIndex) || !IsValidInventorySlotIndex(InToSlotIndex) || InFromSlotIndex == InToSlotIndex)
+	{
+		return false;
+	}
+
+	if (!InventorySlots[InFromSlotIndex].bOccupied || InventorySlots[InToSlotIndex].bOccupied)
+	{
+		return false;
+	}
+
+	InventorySlots[InToSlotIndex] = InventorySlots[InFromSlotIndex];
+	ResetInventorySlot(InventorySlots[InFromSlotIndex]);
+	RebuildOwnershipCachesFromSlots();
+	OnInventoryChanged.Broadcast();
+	return true;
+}
+
+bool UCodexInvenOwnershipComponent::SwapInventorySlots(const int32 InFirstSlotIndex, const int32 InSecondSlotIndex)
+{
+	if (!IsValidInventorySlotIndex(InFirstSlotIndex) || !IsValidInventorySlotIndex(InSecondSlotIndex) || InFirstSlotIndex == InSecondSlotIndex)
+	{
+		return false;
+	}
+
+	Swap(InventorySlots[InFirstSlotIndex], InventorySlots[InSecondSlotIndex]);
+	RebuildOwnershipCachesFromSlots();
+	OnInventoryChanged.Broadcast();
 	return true;
 }
 
@@ -53,6 +144,25 @@ int32 UCodexInvenOwnershipComponent::GetStackCount(const ECodexInvenPickupType I
 	return 0;
 }
 
+int32 UCodexInvenOwnershipComponent::GetInventoryCapacity() const
+{
+	return InventorySlots.Num();
+}
+
+int32 UCodexInvenOwnershipComponent::GetOccupiedSlotCount() const
+{
+	int32 OccupiedSlotCount = 0;
+	for (const FCodexInvenInventorySlot& Slot : InventorySlots)
+	{
+		if (Slot.bOccupied)
+		{
+			++OccupiedSlotCount;
+		}
+	}
+
+	return OccupiedSlotCount;
+}
+
 const TArray<FCodexInvenOwnedUniquePickup>& UCodexInvenOwnershipComponent::GetUniquePickups() const
 {
 	return UniquePickups;
@@ -61,49 +171,26 @@ const TArray<FCodexInvenOwnedUniquePickup>& UCodexInvenOwnershipComponent::GetUn
 TArray<FCodexInvenInventorySlotData> UCodexInvenOwnershipComponent::BuildInventorySnapshot() const
 {
 	TArray<FCodexInvenInventorySlotData> Snapshot;
-	Snapshot.Reserve(CodexInvenPickupData::GetAllPickupTypes().Num() + UniquePickups.Num());
+	Snapshot.Reserve(InventorySlots.Num());
 
-	for (const ECodexInvenPickupType PickupType : CodexInvenPickupData::GetAllPickupTypes())
+	for (int32 SlotIndex = 0; SlotIndex < InventorySlots.Num(); ++SlotIndex)
 	{
-		const FCodexInvenPickupDefinition& Definition = CodexInvenPickupData::GetPickupDefinitionChecked(PickupType);
+		const FCodexInvenInventorySlot& Slot = InventorySlots[SlotIndex];
+		FCodexInvenInventorySlotData& SlotData = Snapshot.AddDefaulted_GetRef();
+		SlotData.SlotIndex = SlotIndex;
+		SlotData.bIsEmpty = !Slot.bOccupied;
 
-		if (Definition.bStackable)
+		if (!Slot.bOccupied)
 		{
-			const int32 Quantity = GetStackCount(PickupType);
-			if (Quantity <= 0)
-			{
-				continue;
-			}
-
-			FCodexInvenInventorySlotData& SlotData = Snapshot.AddDefaulted_GetRef();
-			SlotData.PickupType = PickupType;
-			SlotData.DisplayName = FText::FromString(Definition.DisplayName);
-			SlotData.Quantity = Quantity;
-			SlotData.bStackable = true;
-			SlotData.UniqueInstanceId = INDEX_NONE;
 			continue;
 		}
 
-		TArray<int32> MatchingInstanceIds;
-		for (const FCodexInvenOwnedUniquePickup& UniquePickup : UniquePickups)
-		{
-			if (UniquePickup.Type == PickupType)
-			{
-				MatchingInstanceIds.Add(UniquePickup.InstanceId);
-			}
-		}
-
-		MatchingInstanceIds.Sort();
-
-		for (const int32 InstanceId : MatchingInstanceIds)
-		{
-			FCodexInvenInventorySlotData& SlotData = Snapshot.AddDefaulted_GetRef();
-			SlotData.PickupType = PickupType;
-			SlotData.DisplayName = FText::FromString(Definition.DisplayName);
-			SlotData.Quantity = 1;
-			SlotData.bStackable = false;
-			SlotData.UniqueInstanceId = InstanceId;
-		}
+		const FCodexInvenPickupDefinition& Definition = CodexInvenPickupData::GetPickupDefinitionChecked(Slot.PickupType);
+		SlotData.PickupType = Slot.PickupType;
+		SlotData.DisplayName = FText::FromString(Definition.DisplayName);
+		SlotData.Quantity = Slot.Quantity;
+		SlotData.bStackable = Slot.bStackable;
+		SlotData.UniqueInstanceId = Slot.UniqueInstanceId;
 	}
 
 	return Snapshot;
@@ -117,6 +204,11 @@ FText UCodexInvenOwnershipComponent::BuildDebugOwnershipText() const
 	int32 TotalUniqueItems = 0;
 	for (const FCodexInvenInventorySlotData& SlotData : Snapshot)
 	{
+		if (SlotData.bIsEmpty)
+		{
+			continue;
+		}
+
 		if (SlotData.bStackable)
 		{
 			TotalStackedItems += SlotData.Quantity;
@@ -147,6 +239,47 @@ FText UCodexInvenOwnershipComponent::BuildDebugOwnershipText() const
 	return FText::FromString(FString::Join(Lines, TEXT("\n")));
 }
 
+void UCodexInvenOwnershipComponent::InitializeInventoryCapacity(const int32 InCapacity)
+{
+	InventorySlots.Reset();
+	if (InCapacity > 0)
+	{
+		InventorySlots.AddDefaulted(InCapacity);
+	}
+}
+
+bool UCodexInvenOwnershipComponent::IsValidInventorySlotIndex(const int32 InSlotIndex) const
+{
+	return InventorySlots.IsValidIndex(InSlotIndex);
+}
+
+int32 UCodexInvenOwnershipComponent::FindFirstEmptyInventorySlotIndex() const
+{
+	for (int32 SlotIndex = 0; SlotIndex < InventorySlots.Num(); ++SlotIndex)
+	{
+		if (!InventorySlots[SlotIndex].bOccupied)
+		{
+			return SlotIndex;
+		}
+	}
+
+	return INDEX_NONE;
+}
+
+int32 UCodexInvenOwnershipComponent::FindStackableSlotIndex(const ECodexInvenPickupType InPickupType) const
+{
+	for (int32 SlotIndex = 0; SlotIndex < InventorySlots.Num(); ++SlotIndex)
+	{
+		const FCodexInvenInventorySlot& Slot = InventorySlots[SlotIndex];
+		if (Slot.bOccupied && Slot.bStackable && Slot.PickupType == InPickupType)
+		{
+			return SlotIndex;
+		}
+	}
+
+	return INDEX_NONE;
+}
+
 int32 UCodexInvenOwnershipComponent::GetUniqueCount(const ECodexInvenPickupType InPickupType) const
 {
 	int32 UniqueCount = 0;
@@ -161,6 +294,50 @@ int32 UCodexInvenOwnershipComponent::GetUniqueCount(const ECodexInvenPickupType 
 	return UniqueCount;
 }
 
+int32 UCodexInvenOwnershipComponent::GetTotalForPickupType(const ECodexInvenPickupType InPickupType) const
+{
+	const FCodexInvenPickupDefinition& Definition = CodexInvenPickupData::GetPickupDefinitionChecked(InPickupType);
+	return Definition.bStackable ? GetStackCount(InPickupType) : GetUniqueCount(InPickupType);
+}
+
+void UCodexInvenOwnershipComponent::ResetInventorySlot(FCodexInvenInventorySlot& InSlot) const
+{
+	InSlot.bOccupied = false;
+	InSlot.PickupType = ECodexInvenPickupType::CubeRed;
+	InSlot.Quantity = 0;
+	InSlot.bStackable = false;
+	InSlot.UniqueInstanceId = INDEX_NONE;
+}
+
+void UCodexInvenOwnershipComponent::RebuildOwnershipCachesFromSlots()
+{
+	StackedPickupCounts.Reset();
+	UniquePickups.Reset();
+
+	for (const FCodexInvenInventorySlot& Slot : InventorySlots)
+	{
+		if (!Slot.bOccupied)
+		{
+			continue;
+		}
+
+		if (Slot.bStackable)
+		{
+			StackedPickupCounts.FindOrAdd(Slot.PickupType) += Slot.Quantity;
+			continue;
+		}
+
+		FCodexInvenOwnedUniquePickup& UniquePickup = UniquePickups.AddDefaulted_GetRef();
+		UniquePickup.InstanceId = Slot.UniqueInstanceId;
+		UniquePickup.Type = Slot.PickupType;
+	}
+
+	UniquePickups.Sort([](const FCodexInvenOwnedUniquePickup& Left, const FCodexInvenOwnedUniquePickup& Right)
+	{
+		return Left.InstanceId < Right.InstanceId;
+	});
+}
+
 FString UCodexInvenOwnershipComponent::BuildPickupChangeDebugMessage(const ECodexInvenPickupType InPickupType, const int32 InDelta, const int32 InNewTotal) const
 {
 	const FCodexInvenPickupDefinition& Definition = CodexInvenPickupData::GetPickupDefinitionChecked(InPickupType);
@@ -173,7 +350,7 @@ FString UCodexInvenOwnershipComponent::BuildUniquePickupDebugList(const TArray<F
 	TArray<int32> MatchingInstanceIds;
 	for (const FCodexInvenInventorySlotData& SlotData : InSnapshot)
 	{
-		if (!SlotData.bStackable && SlotData.PickupType == InPickupType && SlotData.UniqueInstanceId != INDEX_NONE)
+		if (!SlotData.bIsEmpty && !SlotData.bStackable && SlotData.PickupType == InPickupType && SlotData.UniqueInstanceId != INDEX_NONE)
 		{
 			MatchingInstanceIds.Add(SlotData.UniqueInstanceId);
 		}

@@ -117,6 +117,11 @@ void UCodexInvenPlayerHudWidget::NativeOnInitialized()
 		DebugToggleButton->OnClicked.AddUniqueDynamic(this, &ThisClass::HandleDebugToggleClicked);
 	}
 
+	if (IncreaseCapacityButton != nullptr)
+	{
+		IncreaseCapacityButton->OnClicked.AddUniqueDynamic(this, &ThisClass::HandleIncreaseCapacityClicked);
+	}
+
 	SetInventoryPanelVisible(bIsInventoryVisible);
 	SetDebugWidgetVisible(bIsDebugVisible);
 	RefreshInventoryItems();
@@ -173,7 +178,7 @@ void UCodexInvenPlayerHudWidget::BuildWidgetTreeIfNeeded()
 		}
 	}
 
-	if (InventoryPanelSizeBox == nullptr || InventoryPanelBorder == nullptr || InventoryScrollBox == nullptr || InventoryWrapBox == nullptr)
+	if (InventoryPanelSizeBox == nullptr || InventoryPanelBorder == nullptr || InventoryScrollBox == nullptr || InventoryWrapBox == nullptr || InventorySummaryTextBlock == nullptr || IncreaseCapacityButton == nullptr)
 	{
 		InventoryPanelSizeBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("InventoryPanelSizeBox"));
 		InventoryPanelSizeBox->SetWidthOverride(InventoryPanelWidth);
@@ -187,14 +192,41 @@ void UCodexInvenPlayerHudWidget::BuildWidgetTreeIfNeeded()
 		UVerticalBox* InventoryContentBox = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("InventoryContentBox"));
 		InventoryPanelBorder->SetContent(InventoryContentBox);
 
+		UHorizontalBox* InventoryHeaderBox = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("InventoryHeaderBox"));
+		if (UVerticalBoxSlot* HeaderSlot = InventoryContentBox->AddChildToVerticalBox(InventoryHeaderBox))
+		{
+			HeaderSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 12.0f));
+			HeaderSlot->SetHorizontalAlignment(HAlign_Fill);
+		}
+
 		UTextBlock* TitleText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("InventoryTitleText"));
 		TitleText->SetText(FText::FromString(FString(InventoryLabelText)));
 		TitleText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
-		TitleText->SetJustification(ETextJustify::Center);
-		if (UVerticalBoxSlot* TitleSlot = InventoryContentBox->AddChildToVerticalBox(TitleText))
+		TitleText->SetJustification(ETextJustify::Left);
+		if (UHorizontalBoxSlot* TitleSlot = InventoryHeaderBox->AddChildToHorizontalBox(TitleText))
 		{
-			TitleSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 12.0f));
-			TitleSlot->SetHorizontalAlignment(HAlign_Fill);
+			TitleSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+			TitleSlot->SetHorizontalAlignment(HAlign_Left);
+			TitleSlot->SetVerticalAlignment(VAlign_Center);
+		}
+
+		InventorySummaryTextBlock = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("InventorySummaryTextBlock"));
+		InventorySummaryTextBlock->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+		InventorySummaryTextBlock->SetJustification(ETextJustify::Right);
+		if (UHorizontalBoxSlot* SummarySlot = InventoryHeaderBox->AddChildToHorizontalBox(InventorySummaryTextBlock))
+		{
+			SummarySlot->SetPadding(FMargin(0.0f, 0.0f, 8.0f, 0.0f));
+			SummarySlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+			SummarySlot->SetHorizontalAlignment(HAlign_Right);
+			SummarySlot->SetVerticalAlignment(VAlign_Center);
+		}
+
+		IncreaseCapacityButton = CreateHudButton(*WidgetTree, TEXT("IncreaseCapacityButton"), FText::FromString(TEXT("+10")));
+		if (UHorizontalBoxSlot* IncreaseButtonSlot = InventoryHeaderBox->AddChildToHorizontalBox(IncreaseCapacityButton))
+		{
+			IncreaseButtonSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
+			IncreaseButtonSlot->SetHorizontalAlignment(HAlign_Right);
+			IncreaseButtonSlot->SetVerticalAlignment(VAlign_Center);
 		}
 
 		InventoryScrollBox = WidgetTree->ConstructWidget<UScrollBox>(UScrollBox::StaticClass(), TEXT("InventoryScrollBox"));
@@ -285,6 +317,27 @@ void UCodexInvenPlayerHudWidget::RefreshInventoryItems()
 			}
 		}
 	}
+
+	RefreshInventorySummaryText();
+}
+
+void UCodexInvenPlayerHudWidget::RefreshInventorySummaryText() const
+{
+	if (InventorySummaryTextBlock == nullptr)
+	{
+		return;
+	}
+
+	if (ObservedOwnershipComponent == nullptr)
+	{
+		InventorySummaryTextBlock->SetText(FText::FromString(TEXT("Slots 0 / 0")));
+		return;
+	}
+
+	InventorySummaryTextBlock->SetText(FText::Format(
+		FText::FromString(TEXT("Slots {0} / {1}")),
+		FText::AsNumber(ObservedOwnershipComponent->GetOccupiedSlotCount()),
+		FText::AsNumber(ObservedOwnershipComponent->GetInventoryCapacity())));
 }
 
 void UCodexInvenPlayerHudWidget::SetInventoryPanelVisible(const bool bInVisible)
@@ -334,4 +387,12 @@ void UCodexInvenPlayerHudWidget::HandleInventoryToggleClicked()
 void UCodexInvenPlayerHudWidget::HandleDebugToggleClicked()
 {
 	SetDebugWidgetVisible(!bIsDebugVisible);
+}
+
+void UCodexInvenPlayerHudWidget::HandleIncreaseCapacityClicked()
+{
+	if (ObservedOwnershipComponent != nullptr)
+	{
+		ObservedOwnershipComponent->IncreaseInventoryCapacity(10);
+	}
 }
