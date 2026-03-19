@@ -7,10 +7,20 @@
 		{
 			"Name": "CodexInvenMedium",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine"
+			]
 		}
 	],
 	"Plugins": [
+		{
+			"Name": "OctoDen",
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
+		},
 		{
 			"Name": "ModelingToolsEditorMode",
 			"Enabled": true,

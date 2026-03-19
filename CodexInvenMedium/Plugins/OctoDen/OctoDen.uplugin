@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0.0",
+	"FriendlyName": "OctoDen",
+	"Description": "Editor tools for project bootstrapping and Enhanced Input authoring.",
+	"Category": "Editor",
+	"CanContainContent": false,
+	"EnabledByDefault": true,
+	"IsBetaVersion": true,
+	"Plugins": [
+		{
+			"Name": "EnhancedInput",
+			"Enabled": true
+		}
+	],
+	"Modules": [
+		{
+			"Name": "OctoDen",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	]
+}
