@@ -388,6 +388,7 @@ namespace
 			UScrollBox* const DayScrollBox = WidgetTree.ConstructWidget<UScrollBox>(UScrollBox::StaticClass(), TEXT("DayEntryPanel"));
 			DayScrollBox->bIsVariable = true;
 			DayScrollBox->SetOrientation(Orient_Horizontal);
+			DayScrollBox->SetAllowRightClickDragScrolling(false);
 			DayScrollBox->SetConsumeMouseWheel(EConsumeMouseWheel::Never);
 			RailContentBorder->SetContent(DayScrollBox);
 		}
