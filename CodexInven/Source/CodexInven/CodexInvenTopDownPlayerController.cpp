@@ -2,6 +2,7 @@
 
 #include "CodexInvenTopDownPlayerController.h"
 
+#include "CodexInvenClockWidget.h"
 #include "CodexInvenGameInstance.h"
 #include "CodexInvenInputConfigDataAsset.h"
 #include "CodexInvenPlayerHudWidget.h"
@@ -18,6 +19,7 @@ namespace
 {
 	constexpr float CursorTraceDistance = 100000.0f;
 	constexpr int32 MaxCursorProjectileIgnores = 16;
+	const TCHAR* ClockWidgetClassObjectPath = TEXT("/Game/UI/WBP_CodexClock.WBP_CodexClock_C");
 }
 
 ACodexInvenTopDownPlayerController::ACodexInvenTopDownPlayerController()
@@ -41,6 +43,7 @@ void ACodexInvenTopDownPlayerController::BeginPlay()
 
 	ApplyInputMappingContext();
 	TryCreatePlayerHud();
+	TryCreateClockWidget();
 	RefreshObservedOwnershipComponent();
 	UpdateAimFromCursor();
 }
@@ -122,6 +125,31 @@ void ACodexInvenTopDownPlayerController::TryCreatePlayerHud()
 	if (RuntimePlayerHudWidget != nullptr)
 	{
 		RuntimePlayerHudWidget->AddToViewport(100);
+	}
+}
+
+void ACodexInvenTopDownPlayerController::TryCreateClockWidget()
+{
+	if (!IsLocalController() || RuntimeClockWidget != nullptr)
+	{
+		return;
+	}
+
+	TSubclassOf<UCodexInvenClockWidget> ResolvedClockWidgetClass = ClockWidgetClass;
+	if (ResolvedClockWidgetClass == nullptr)
+	{
+		ResolvedClockWidgetClass = LoadClass<UCodexInvenClockWidget>(nullptr, ClockWidgetClassObjectPath);
+	}
+
+	if (ResolvedClockWidgetClass == nullptr)
+	{
+		return;
+	}
+
+	RuntimeClockWidget = CreateWidget<UCodexInvenClockWidget>(this, ResolvedClockWidgetClass);
+	if (RuntimeClockWidget != nullptr)
+	{
+		RuntimeClockWidget->AddToViewport(200);
 	}
 }
 

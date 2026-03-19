@@ -9,6 +9,7 @@
 #include "CodexInvenTopDownPlayerController.generated.h"
 
 class ACodexInvenTopDownCharacter;
+class UCodexInvenClockWidget;
 class UEnhancedInputComponent;
 class UCodexInvenInputConfigDataAsset;
 class UCodexInvenPlayerHudWidget;
@@ -42,12 +43,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UCodexInvenPlayerHudWidget> PlayerHudWidgetClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UCodexInvenClockWidget> ClockWidgetClass;
+
 private:
 	const UCodexInvenInputConfigDataAsset* GetInputConfig() const;
 	ACodexInvenTopDownCharacter* GetTopDownCharacter() const;
 	bool ShouldUseCursorAim() const;
 	void ApplyInputMappingContext();
 	void TryCreatePlayerHud();
+	void TryCreateClockWidget();
 	void RefreshObservedOwnershipComponent();
 	bool TryGetCursorGroundPoint(FVector& OutWorldPoint) const;
 	void FireProjectileOnce();
@@ -65,6 +70,8 @@ private:
 	FTimerHandle AutomaticFireTimerHandle;
 	UPROPERTY(Transient)
 	TObjectPtr<UCodexInvenPlayerHudWidget> RuntimePlayerHudWidget = nullptr;
+	UPROPERTY(Transient)
+	TObjectPtr<UCodexInvenClockWidget> RuntimeClockWidget = nullptr;
 	bool bIsAutomaticFireActive = false;
 	float LastExplicitLookInputTime = -1.0f;
 };

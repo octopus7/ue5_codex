@@ -26,7 +26,11 @@ public class CodexInvenEditor : ModuleRules
 				"GeometryScriptingCore",
 				"GeometryScriptingEditor",
 				"MeshDescription",
+				"Slate",
+				"SlateCore",
 				"StaticMeshDescription",
+				"UMG",
+				"UMGEditor",
 				"UnrealEd"
 			});
 	}
