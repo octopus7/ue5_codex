@@ -3,10 +3,16 @@
 
 #include "CodexInvenGameInstance.h"
 
+#include "CodexInvenAttendanceConfigDataAsset.h"
 #include "CodexInvenInputConfigDataAsset.h"
 #include "CodexInvenProjectile.h"
 #include "InputAction.h"
 #include "InputMappingContext.h"
+
+namespace
+{
+	const TCHAR* AttendanceConfigObjectPath = TEXT("/Game/Data/Attendance/DA_AttendanceConfig.DA_AttendanceConfig");
+}
 
 UCodexInvenGameInstance::UCodexInvenGameInstance()
 {
@@ -31,5 +37,21 @@ const UInputAction* UCodexInvenGameInstance::GetInputAction(const ECodexInvenCon
 TSubclassOf<ACodexInvenProjectile> UCodexInvenGameInstance::GetProjectileClass() const
 {
 	return DefaultProjectileClass;
+}
+
+const UCodexInvenAttendanceConfigDataAsset* UCodexInvenGameInstance::GetAttendanceConfig() const
+{
+	if (AttendanceConfig != nullptr)
+	{
+		RuntimeResolvedAttendanceConfig = AttendanceConfig;
+		return RuntimeResolvedAttendanceConfig;
+	}
+
+	if (RuntimeResolvedAttendanceConfig == nullptr)
+	{
+		RuntimeResolvedAttendanceConfig = LoadObject<UCodexInvenAttendanceConfigDataAsset>(nullptr, AttendanceConfigObjectPath);
+	}
+
+	return RuntimeResolvedAttendanceConfig;
 }
 

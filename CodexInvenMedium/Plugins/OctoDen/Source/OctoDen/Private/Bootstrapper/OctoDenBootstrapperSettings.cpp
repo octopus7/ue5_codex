@@ -5,7 +5,7 @@
 
 namespace
 {
-	const FString ManagedMapsFolder = TEXT("/Game/Maps");
+	const FString BootstrapperManagedMapsFolder = TEXT("/Game/Maps");
 }
 
 void UOctoDenBootstrapperSettings::ResetToDefaults()
@@ -28,7 +28,7 @@ void UOctoDenBootstrapperSettings::DeriveDefaultsFromProject()
 	GameModeBlueprintFolder = TEXT("/Game/Blueprints/Maps");
 	GameModeBlueprintName = FString::Printf(TEXT("BP_%s"), *GameModeClassName);
 
-	const FString MapObjectPath = OctoDenAssetNaming::BuildObjectPath(ManagedMapsFolder, SafeMapName);
+	const FString MapObjectPath = OctoDenAssetNaming::BuildObjectPath(BootstrapperManagedMapsFolder, SafeMapName);
 	TargetMap = FSoftObjectPath(MapObjectPath);
 	EditorStartupMap = TargetMap;
 	GameDefaultMap = TargetMap;
@@ -36,5 +36,5 @@ void UOctoDenBootstrapperSettings::DeriveDefaultsFromProject()
 
 FString UOctoDenBootstrapperSettings::GetManagedMapPackagePath() const
 {
-	return OctoDenAssetNaming::BuildPackagePath(TEXT("/Game/Maps"), ManagedMapName);
+	return OctoDenAssetNaming::BuildPackagePath(BootstrapperManagedMapsFolder, ManagedMapName);
 }

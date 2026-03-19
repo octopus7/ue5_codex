@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CodexInvenAttendanceTypes.h"
 #include "GameFramework/PlayerController.h"
 #include "InputActionValue.h"
 #include "TimerManager.h"
@@ -11,6 +12,7 @@
 class ACodexInvenTopDownCharacter;
 class UCodexInvenClockWidget;
 class UCodexInvenClockMvvmWidget;
+class UCodexInvenAttendanceWidgetBase;
 class UEnhancedInputComponent;
 class UCodexInvenInputConfigDataAsset;
 class UCodexInvenPlayerHudWidget;
@@ -58,6 +60,10 @@ private:
 	void TryCreatePlayerHud();
 	void TryCreateClockWidget();
 	void TryCreateClockMvvmWidget();
+	void ScheduleAttendancePopupSequence();
+	void HandleAttendancePopupSequenceStart();
+	void TryShowNextAttendancePopup();
+	void HandleAttendancePopupClosed(FName InClosedEventId);
 	void RefreshObservedOwnershipComponent();
 	bool TryGetCursorGroundPoint(FVector& OutWorldPoint) const;
 	void FireProjectileOnce();
@@ -73,12 +79,17 @@ private:
 	void BindConfiguredInput(UEnhancedInputComponent& InEnhancedInputComponent);
 
 	FTimerHandle AutomaticFireTimerHandle;
+	FTimerHandle AttendancePopupSequenceTimerHandle;
+	TArray<FCodexInvenAttendancePopupEntry> PendingAttendancePopupEntries;
 	UPROPERTY(Transient)
 	TObjectPtr<UCodexInvenPlayerHudWidget> RuntimePlayerHudWidget = nullptr;
 	UPROPERTY(Transient)
 	TObjectPtr<UCodexInvenClockWidget> RuntimeClockWidget = nullptr;
 	UPROPERTY(Transient)
 	TObjectPtr<UCodexInvenClockMvvmWidget> RuntimeClockMvvmWidget = nullptr;
+	UPROPERTY(Transient)
+	TObjectPtr<UCodexInvenAttendanceWidgetBase> RuntimeAttendanceWidget = nullptr;
 	bool bIsAutomaticFireActive = false;
+	bool bIsAttendancePopupVisible = false;
 	float LastExplicitLookInputTime = -1.0f;
 };

@@ -6,12 +6,11 @@
 #include "GameFramework/GameModeBase.h"
 #include "CodexInvenMainGameMode.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class CODEXINVENMEDIUM_API ACodexInvenMainGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
-	
+
+public:
+	ACodexInvenMainGameMode();
 };

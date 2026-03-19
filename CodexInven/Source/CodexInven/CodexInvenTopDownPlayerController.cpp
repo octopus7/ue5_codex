@@ -2,6 +2,9 @@
 
 #include "CodexInvenTopDownPlayerController.h"
 
+#include "CodexInvenAttendanceConfigDataAsset.h"
+#include "CodexInvenAttendanceSubsystem.h"
+#include "CodexInvenAttendanceWidgetBase.h"
 #include "CodexInvenClockMvvmWidget.h"
 #include "CodexInvenClockWidget.h"
 #include "CodexInvenGameInstance.h"
@@ -49,6 +52,7 @@ void ACodexInvenTopDownPlayerController::BeginPlay()
 	TryCreateClockMvvmWidget();
 	RefreshObservedOwnershipComponent();
 	UpdateAimFromCursor();
+	ScheduleAttendancePopupSequence();
 }
 
 void ACodexInvenTopDownPlayerController::PlayerTick(const float DeltaTime)
@@ -74,6 +78,10 @@ void ACodexInvenTopDownPlayerController::SetPawn(APawn* InPawn)
 	Super::SetPawn(InPawn);
 
 	RefreshObservedOwnershipComponent();
+	if (RuntimeAttendanceWidget == nullptr)
+	{
+		ScheduleAttendancePopupSequence();
+	}
 }
 
 void ACodexInvenTopDownPlayerController::SetupInputComponent()
@@ -179,6 +187,124 @@ void ACodexInvenTopDownPlayerController::TryCreateClockMvvmWidget()
 	{
 		RuntimeClockMvvmWidget->AddToViewport(210);
 	}
+}
+
+void ACodexInvenTopDownPlayerController::ScheduleAttendancePopupSequence()
+{
+	if (!IsLocalController() || RuntimeAttendanceWidget != nullptr)
+	{
+		return;
+	}
+
+	UWorld* const World = GetWorld();
+	if (World == nullptr)
+	{
+		return;
+	}
+
+	float PopupDelaySeconds = 0.0f;
+	if (const UCodexInvenGameInstance* const CodexInvenGameInstance = Cast<UCodexInvenGameInstance>(GetGameInstance()))
+	{
+		if (const UCodexInvenAttendanceConfigDataAsset* const AttendanceConfig = CodexInvenGameInstance->GetAttendanceConfig())
+		{
+			PopupDelaySeconds = FMath::Max(0.0f, AttendanceConfig->PopupInitialDelaySeconds);
+		}
+	}
+
+	World->GetTimerManager().ClearTimer(AttendancePopupSequenceTimerHandle);
+	World->GetTimerManager().SetTimer(
+		AttendancePopupSequenceTimerHandle,
+		this,
+		&ThisClass::HandleAttendancePopupSequenceStart,
+		PopupDelaySeconds > 0.0f ? PopupDelaySeconds : 0.01f,
+		false);
+}
+
+void ACodexInvenTopDownPlayerController::HandleAttendancePopupSequenceStart()
+{
+	if (!IsLocalController() || RuntimeAttendanceWidget != nullptr)
+	{
+		return;
+	}
+
+	ACodexInvenTopDownCharacter* const TopDownCharacter = GetTopDownCharacter();
+	if (TopDownCharacter == nullptr || TopDownCharacter->GetOwnershipComponent() == nullptr)
+	{
+		if (UWorld* const World = GetWorld())
+		{
+			World->GetTimerManager().SetTimer(
+				AttendancePopupSequenceTimerHandle,
+				this,
+				&ThisClass::HandleAttendancePopupSequenceStart,
+				0.25f,
+				false);
+		}
+
+		return;
+	}
+
+	UCodexInvenAttendanceSubsystem* const AttendanceSubsystem = GetGameInstance() != nullptr
+		? GetGameInstance()->GetSubsystem<UCodexInvenAttendanceSubsystem>()
+		: nullptr;
+	if (AttendanceSubsystem == nullptr)
+	{
+		return;
+	}
+
+	PendingAttendancePopupEntries = AttendanceSubsystem->GetPendingPopupQueueForToday();
+	if (PendingAttendancePopupEntries.IsEmpty())
+	{
+		return;
+	}
+
+	TryShowNextAttendancePopup();
+}
+
+void ACodexInvenTopDownPlayerController::TryShowNextAttendancePopup()
+{
+	if (RuntimeAttendanceWidget != nullptr)
+	{
+		return;
+	}
+
+	while (!PendingAttendancePopupEntries.IsEmpty())
+	{
+		const FCodexInvenAttendancePopupEntry PopupEntry = PendingAttendancePopupEntries[0];
+		PendingAttendancePopupEntries.RemoveAt(0);
+
+		if (PopupEntry.PopupWidgetClass == nullptr)
+		{
+			continue;
+		}
+
+		RuntimeAttendanceWidget = CreateWidget<UCodexInvenAttendanceWidgetBase>(this, PopupEntry.PopupWidgetClass);
+		if (RuntimeAttendanceWidget == nullptr)
+		{
+			continue;
+		}
+
+		RuntimeAttendanceWidget->InitializeForEvent(PopupEntry.EventId);
+		RuntimeAttendanceWidget->OnAttendanceWidgetClosed().AddUObject(this, &ThisClass::HandleAttendancePopupClosed);
+		RuntimeAttendanceWidget->AddToViewport(400);
+		bIsAttendancePopupVisible = true;
+		return;
+	}
+
+	bIsAttendancePopupVisible = false;
+}
+
+void ACodexInvenTopDownPlayerController::HandleAttendancePopupClosed(const FName InClosedEventId)
+{
+	static_cast<void>(InClosedEventId);
+
+	if (RuntimeAttendanceWidget != nullptr)
+	{
+		RuntimeAttendanceWidget->OnAttendanceWidgetClosed().RemoveAll(this);
+		RuntimeAttendanceWidget = nullptr;
+	}
+
+	bIsAttendancePopupVisible = false;
+	TryShowNextAttendancePopup();
 }
 
 void ACodexInvenTopDownPlayerController::RefreshObservedOwnershipComponent()
@@ -288,7 +414,7 @@ void ACodexInvenTopDownPlayerController::FireProjectileOnce()
 
 bool ACodexInvenTopDownPlayerController::ShouldBlockFireInput() const
 {
-	return RuntimePlayerHudWidget != nullptr && RuntimePlayerHudWidget->ShouldBlockFireInput();
+	return bIsAttendancePopupVisible || (RuntimePlayerHudWidget != nullptr && RuntimePlayerHudWidget->ShouldBlockFireInput());
 }
 
 void ACodexInvenTopDownPlayerController::UpdateAimFromCursor() const

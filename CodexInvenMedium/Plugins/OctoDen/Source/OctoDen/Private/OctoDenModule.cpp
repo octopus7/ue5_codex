@@ -22,6 +22,11 @@ const FName FOctoDenModule::InputBuilderTabId(TEXT("OctoDen.InputBuilder"));
 
 void FOctoDenModule::StartupModule()
 {
+	if (IsRunningCommandlet())
+	{
+		return;
+	}
+
 	BootstrapperSettings.Reset(NewObject<UOctoDenBootstrapperSettings>());
 	BootstrapperSettings->AddToRoot();
 	BootstrapperSettings->ResetToDefaults();
@@ -36,6 +41,11 @@ void FOctoDenModule::StartupModule()
 
 void FOctoDenModule::ShutdownModule()
 {
+	if (IsRunningCommandlet())
+	{
+		return;
+	}
+
 	if (UToolMenus::TryGet() != nullptr)
 	{
 		UToolMenus::UnRegisterStartupCallback(this);

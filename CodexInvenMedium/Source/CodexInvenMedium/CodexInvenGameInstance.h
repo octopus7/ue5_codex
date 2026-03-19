@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Engine/GameInstance.h"
+#include "CodexInvenMediumGameInstance.h"
 #include "CodexInvenGameInstance.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class CODEXINVENMEDIUM_API UCodexInvenGameInstance : public UGameInstance
+class CODEXINVENMEDIUM_API UCodexInvenGameInstance : public UCodexInvenMediumGameInstance
 {
 	GENERATED_BODY()
 	

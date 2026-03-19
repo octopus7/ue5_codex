@@ -11,5 +11,6 @@ public class CodexInvenMediumEditorTarget : TargetRules
 		DefaultBuildSettings = BuildSettingsVersion.V6;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_7;
 		ExtraModuleNames.Add("CodexInvenMedium");
+		ExtraModuleNames.Add("CodexInvenMediumEditor");
 	}
 }

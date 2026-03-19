@@ -12,7 +12,7 @@
 
 namespace
 {
-	TArray<FEnhancedActionKeyMapping>& AccessMappings(UInputMappingContext& InputMappingContext)
+	TArray<FEnhancedActionKeyMapping>& AccessTestMappings(UInputMappingContext& InputMappingContext)
 	{
 		return const_cast<TArray<FEnhancedActionKeyMapping>&>(InputMappingContext.GetMappings());
 	}
@@ -60,7 +60,7 @@ bool FOctoDenImcAnalysisTest::RunTest(const FString& Parameters)
 	UInputAction* MoveAction = NewObject<UInputAction>();
 	MoveAction->Rename(TEXT("IA_Move"));
 	Context->MapKey(MoveAction, EKeys::D);
-	AccessMappings(*Context).Add(FEnhancedActionKeyMapping());
+	AccessTestMappings(*Context).Add(FEnhancedActionKeyMapping());
 	Settings->SelectedInputMappingContext = Context;
 
 	FOctoDenInputContextAnalysis Analysis;

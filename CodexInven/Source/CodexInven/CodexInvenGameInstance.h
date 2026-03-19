@@ -7,6 +7,7 @@
 #include "CodexInvenGameInstance.generated.h"
 
 class ACodexInvenProjectile;
+class UCodexInvenAttendanceConfigDataAsset;
 class UCodexInvenInputConfigDataAsset;
 class UInputAction;
 class UInputMappingContext;
@@ -34,6 +35,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
 	TSubclassOf<ACodexInvenProjectile> DefaultProjectileClass;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attendance")
+	TObjectPtr<UCodexInvenAttendanceConfigDataAsset> AttendanceConfig = nullptr;
+
 	UFUNCTION(BlueprintPure, Category = "Input")
 	const UCodexInvenInputConfigDataAsset* GetInputConfig() const;
 
@@ -45,4 +49,11 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Combat")
 	TSubclassOf<ACodexInvenProjectile> GetProjectileClass() const;
+
+	UFUNCTION(BlueprintPure, Category = "Attendance")
+	const UCodexInvenAttendanceConfigDataAsset* GetAttendanceConfig() const;
+
+private:
+	UPROPERTY(Transient)
+	mutable TObjectPtr<UCodexInvenAttendanceConfigDataAsset> RuntimeResolvedAttendanceConfig = nullptr;
 };

@@ -83,6 +83,7 @@ public:
 	UCodexInvenOwnershipComponent();
 
 	bool AddPickup(ECodexInvenPickupType InPickupType);
+	bool CanAddPickup(ECodexInvenPickupType InPickupType, int32 InQuantity = 1) const;
 	bool IncreaseInventoryCapacity(int32 InAdditionalSlots = 10);
 	bool ClearInventorySlot(int32 InSlotIndex);
 	bool MoveInventorySlot(int32 InFromSlotIndex, int32 InToSlotIndex);

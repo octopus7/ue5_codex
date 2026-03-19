@@ -1,12 +1,20 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
+using System.IO;
 
 public class CodexInvenMedium : ModuleRules
 {
 	public CodexInvenMedium(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+
+		PublicIncludePaths.AddRange(new string[]
+		{
+			ModuleDirectory,
+			Path.Combine(ModuleDirectory, "Input"),
+			Path.Combine(ModuleDirectory, "TopDown")
+		});
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" });
 

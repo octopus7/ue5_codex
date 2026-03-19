@@ -11,6 +11,15 @@
 			"AdditionalDependencies": [
 				"Engine"
 			]
+		},
+		{
+			"Name": "CodexInvenMediumEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"CodexInvenMedium",
+				"Engine"
+			]
 		}
 	],
 	"Plugins": [

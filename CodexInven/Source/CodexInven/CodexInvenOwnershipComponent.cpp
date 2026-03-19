@@ -79,6 +79,40 @@ bool UCodexInvenOwnershipComponent::AddPickup(const ECodexInvenPickupType InPick
 	return true;
 }
 
+bool UCodexInvenOwnershipComponent::CanAddPickup(const ECodexInvenPickupType InPickupType, const int32 InQuantity) const
+{
+	if (InQuantity <= 0)
+	{
+		return false;
+	}
+
+	const FCodexInvenPickupDefinition* Definition = CodexInvenPickupData::FindPickupDefinition(InPickupType);
+	if (Definition == nullptr)
+	{
+		return false;
+	}
+
+	if (Definition->bStackable)
+	{
+		return FindStackableSlotIndex(InPickupType) != INDEX_NONE || FindFirstEmptyInventorySlotIndex() != INDEX_NONE;
+	}
+
+	int32 EmptySlotCount = 0;
+	for (const FCodexInvenInventorySlot& InventorySlot : InventorySlots)
+	{
+		if (!InventorySlot.bOccupied)
+		{
+			++EmptySlotCount;
+			if (EmptySlotCount >= InQuantity)
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 bool UCodexInvenOwnershipComponent::IncreaseInventoryCapacity(const int32 InAdditionalSlots)
 {
 	if (InAdditionalSlots <= 0)
