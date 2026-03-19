@@ -17,6 +17,8 @@ class UCodexInvenInventoryTileItemObject;
 class UCodexInvenOwnershipComponent;
 class UCodexInvenOwnershipDebugWidget;
 
+DECLARE_MULTICAST_DELEGATE(FOnCodexInvenPickupPageToggleRequested);
+
 UCLASS()
 class CODEXINVEN_API UCodexInvenPlayerHudWidget : public UUserWidget
 {
@@ -31,6 +33,7 @@ public:
 	bool HandleInventorySlotDrop(int32 InSourceSlotIndex, int32 InTargetSlotIndex);
 	bool ShouldBlockFireInput() const;
 	bool IsInventoryPanelVisible() const;
+	FOnCodexInvenPickupPageToggleRequested& OnPickupPageToggleRequested();
 
 protected:
 	virtual void NativeOnInitialized() override;
@@ -56,6 +59,9 @@ private:
 	UFUNCTION()
 	void HandleIncreaseCapacityClicked();
 
+	UFUNCTION()
+	void HandlePickupPageToggleClicked();
+
 	UPROPERTY(Transient)
 	TObjectPtr<UCanvasPanel> RootCanvasPanel = nullptr;
 
@@ -64,6 +70,9 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> DebugToggleButton = nullptr;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> PickupPageToggleButton = nullptr;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UBorder> InventoryPanelBorder = nullptr;
@@ -99,4 +108,5 @@ private:
 	int32 HoveredDropTargetSlotIndex = INDEX_NONE;
 	bool bIsInventoryVisible = false;
 	bool bIsDebugVisible = true;
+	FOnCodexInvenPickupPageToggleRequested PickupPageToggleRequested;
 };

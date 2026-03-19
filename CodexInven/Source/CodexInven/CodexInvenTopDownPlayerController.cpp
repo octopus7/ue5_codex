@@ -9,6 +9,7 @@
 #include "CodexInvenClockWidget.h"
 #include "CodexInvenGameInstance.h"
 #include "CodexInvenInputConfigDataAsset.h"
+#include "CodexInvenPickupPageWidget.h"
 #include "CodexInvenPlayerHudWidget.h"
 #include "CodexInvenProjectile.h"
 #include "CodexInvenTopDownCharacter.h"
@@ -25,6 +26,7 @@ namespace
 	constexpr int32 MaxCursorProjectileIgnores = 16;
 	const TCHAR* ClockWidgetClassObjectPath = TEXT("/Game/UI/WBP_CodexClock.WBP_CodexClock_C");
 	const TCHAR* ClockMvvmWidgetClassObjectPath = TEXT("/Game/UI/WBP_CodexClockMvvm.WBP_CodexClockMvvm_C");
+	const TCHAR* PickupPageWidgetClassObjectPath = TEXT("/Game/UI/Pickups/WBP_PickupPage.WBP_PickupPage_C");
 }
 
 ACodexInvenTopDownPlayerController::ACodexInvenTopDownPlayerController()
@@ -135,6 +137,7 @@ void ACodexInvenTopDownPlayerController::TryCreatePlayerHud()
 	RuntimePlayerHudWidget = CreateWidget<UCodexInvenPlayerHudWidget>(this, PlayerHudWidgetClass);
 	if (RuntimePlayerHudWidget != nullptr)
 	{
+		RuntimePlayerHudWidget->OnPickupPageToggleRequested().AddUObject(this, &ThisClass::HandlePickupPageToggleRequested);
 		RuntimePlayerHudWidget->AddToViewport(100);
 	}
 }
@@ -414,7 +417,9 @@ void ACodexInvenTopDownPlayerController::FireProjectileOnce()
 
 bool ACodexInvenTopDownPlayerController::ShouldBlockFireInput() const
 {
-	return bIsAttendancePopupVisible || (RuntimePlayerHudWidget != nullptr && RuntimePlayerHudWidget->ShouldBlockFireInput());
+	return bIsAttendancePopupVisible ||
+		IsPickupPageVisible() ||
+		(RuntimePlayerHudWidget != nullptr && RuntimePlayerHudWidget->ShouldBlockFireInput());
 }
 
 void ACodexInvenTopDownPlayerController::UpdateAimFromCursor() const
@@ -565,6 +570,50 @@ void ACodexInvenTopDownPlayerController::HandleAutoFireTick()
 	}
 
 	FireProjectileOnce();
+}
+
+void ACodexInvenTopDownPlayerController::HandlePickupPageToggleRequested()
+{
+	TogglePickupPage();
+}
+
+void ACodexInvenTopDownPlayerController::TogglePickupPage()
+{
+	if (!IsLocalController())
+	{
+		return;
+	}
+
+	if (RuntimePickupPageWidget == nullptr)
+	{
+		TSubclassOf<UCodexInvenPickupPageWidget> ResolvedPickupPageWidgetClass = PickupPageWidgetClass;
+		if (ResolvedPickupPageWidgetClass == nullptr)
+		{
+			ResolvedPickupPageWidgetClass = LoadClass<UCodexInvenPickupPageWidget>(nullptr, PickupPageWidgetClassObjectPath);
+		}
+
+		if (ResolvedPickupPageWidgetClass == nullptr)
+		{
+			ResolvedPickupPageWidgetClass = UCodexInvenPickupPageWidget::StaticClass();
+		}
+
+		RuntimePickupPageWidget = CreateWidget<UCodexInvenPickupPageWidget>(this, ResolvedPickupPageWidgetClass);
+		if (RuntimePickupPageWidget != nullptr)
+		{
+			RuntimePickupPageWidget->AddToViewport(50);
+		}
+
+		return;
+	}
+
+	RuntimePickupPageWidget->SetVisibility(IsPickupPageVisible() ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
+}
+
+bool ACodexInvenTopDownPlayerController::IsPickupPageVisible() const
+{
+	return RuntimePickupPageWidget != nullptr &&
+		RuntimePickupPageWidget->GetVisibility() != ESlateVisibility::Collapsed &&
+		RuntimePickupPageWidget->GetVisibility() != ESlateVisibility::Hidden;
 }
 
 void ACodexInvenTopDownPlayerController::BindConfiguredInput(UEnhancedInputComponent& InEnhancedInputComponent)

@@ -13,6 +13,7 @@ class ACodexInvenTopDownCharacter;
 class UCodexInvenClockWidget;
 class UCodexInvenClockMvvmWidget;
 class UCodexInvenAttendanceWidgetBase;
+class UCodexInvenPickupPageWidget;
 class UEnhancedInputComponent;
 class UCodexInvenInputConfigDataAsset;
 class UCodexInvenPlayerHudWidget;
@@ -52,6 +53,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UCodexInvenClockMvvmWidget> ClockMvvmWidgetClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UCodexInvenPickupPageWidget> PickupPageWidgetClass;
+
 private:
 	const UCodexInvenInputConfigDataAsset* GetInputConfig() const;
 	ACodexInvenTopDownCharacter* GetTopDownCharacter() const;
@@ -66,7 +70,9 @@ private:
 	void HandleAttendancePopupClosed(FName InClosedEventId);
 	void RefreshObservedOwnershipComponent();
 	bool TryGetCursorGroundPoint(FVector& OutWorldPoint) const;
+	void TogglePickupPage();
 	void FireProjectileOnce();
+	bool IsPickupPageVisible() const;
 	bool ShouldBlockFireInput() const;
 	void UpdateAimFromCursor() const;
 	void HandleMove(const FInputActionValue& InValue);
@@ -76,6 +82,7 @@ private:
 	void HandleFireStarted();
 	void HandleFireCompleted();
 	void HandleAutoFireTick();
+	void HandlePickupPageToggleRequested();
 	void BindConfiguredInput(UEnhancedInputComponent& InEnhancedInputComponent);
 
 	FTimerHandle AutomaticFireTimerHandle;
@@ -87,6 +94,8 @@ private:
 	TObjectPtr<UCodexInvenClockWidget> RuntimeClockWidget = nullptr;
 	UPROPERTY(Transient)
 	TObjectPtr<UCodexInvenClockMvvmWidget> RuntimeClockMvvmWidget = nullptr;
+	UPROPERTY(Transient)
+	TObjectPtr<UCodexInvenPickupPageWidget> RuntimePickupPageWidget = nullptr;
 	UPROPERTY(Transient)
 	TObjectPtr<UCodexInvenAttendanceWidgetBase> RuntimeAttendanceWidget = nullptr;
 	bool bIsAutomaticFireActive = false;
