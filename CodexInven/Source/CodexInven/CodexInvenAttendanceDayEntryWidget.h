@@ -32,6 +32,12 @@ private:
 	TObjectPtr<UBorder> RewardPanelBorder = nullptr;
 
 	UPROPERTY(Transient)
+	TObjectPtr<UBorder> RewardPanelInnerBorder = nullptr;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UBorder> RewardPanelAccentBorder = nullptr;
+
+	UPROPERTY(Transient)
 	TObjectPtr<UBorder> StateBadgeBorder = nullptr;
 
 	UPROPERTY(Transient)

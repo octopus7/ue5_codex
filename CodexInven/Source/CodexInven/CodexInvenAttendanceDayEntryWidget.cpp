@@ -11,6 +11,7 @@
 #include "Engine/GameInstance.h"
 #include "Engine/Texture2D.h"
 #include "Styling/SlateColor.h"
+#include "Styling/SlateBrush.h"
 
 namespace
 {
@@ -57,6 +58,19 @@ namespace
 		return TextureSlot != nullptr ? TextureSlot->Get() : nullptr;
 	}
 
+	FSlateBrush MakeRoundedBrush(
+		const FLinearColor& InFillColor,
+		const FLinearColor& InOutlineColor,
+		const float InCornerRadius,
+		const float InOutlineWidth)
+	{
+		FSlateBrush Brush;
+		Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
+		Brush.TintColor = FSlateColor(InFillColor);
+		Brush.OutlineSettings = FSlateBrushOutlineSettings(InCornerRadius, FSlateColor(InOutlineColor), InOutlineWidth);
+		return Brush;
+	}
+
 	FLinearColor GetCardFallbackColor(const ECodexInvenAttendanceDayState InState)
 	{
 		switch (InState)
@@ -94,14 +108,78 @@ namespace
 		switch (InState)
 		{
 		case ECodexInvenAttendanceDayState::Claimed:
-			return FLinearColor(0.96f, 1.0f, 0.98f, 0.78f);
+			return FLinearColor(0.95f, 1.0f, 0.98f, 0.90f);
 
 		case ECodexInvenAttendanceDayState::Claimable:
-			return FLinearColor(1.0f, 0.98f, 0.94f, 0.80f);
+			return FLinearColor(1.0f, 0.98f, 0.94f, 0.92f);
 
 		case ECodexInvenAttendanceDayState::Locked:
 		default:
-			return FLinearColor(0.96f, 0.97f, 1.0f, 0.76f);
+			return FLinearColor(0.95f, 0.97f, 1.0f, 0.90f);
+		}
+	}
+
+	FLinearColor GetRewardPanelFrameColor(const ECodexInvenAttendanceDayState InState)
+	{
+		switch (InState)
+		{
+		case ECodexInvenAttendanceDayState::Claimed:
+			return FLinearColor(0.06f, 0.22f, 0.20f, 0.88f);
+
+		case ECodexInvenAttendanceDayState::Claimable:
+			return FLinearColor(0.28f, 0.21f, 0.07f, 0.90f);
+
+		case ECodexInvenAttendanceDayState::Locked:
+		default:
+			return FLinearColor(0.10f, 0.14f, 0.20f, 0.88f);
+		}
+	}
+
+	FLinearColor GetRewardPanelOutlineColor(const ECodexInvenAttendanceDayState InState)
+	{
+		switch (InState)
+		{
+		case ECodexInvenAttendanceDayState::Claimed:
+			return FLinearColor(0.40f, 0.85f, 0.73f, 0.94f);
+
+		case ECodexInvenAttendanceDayState::Claimable:
+			return FLinearColor(0.97f, 0.80f, 0.28f, 0.96f);
+
+		case ECodexInvenAttendanceDayState::Locked:
+		default:
+			return FLinearColor(0.72f, 0.80f, 0.94f, 0.92f);
+		}
+	}
+
+	FLinearColor GetRewardPanelInnerOutlineColor(const ECodexInvenAttendanceDayState InState)
+	{
+		switch (InState)
+		{
+		case ECodexInvenAttendanceDayState::Claimed:
+			return FLinearColor(0.45f, 0.78f, 0.70f, 0.36f);
+
+		case ECodexInvenAttendanceDayState::Claimable:
+			return FLinearColor(0.85f, 0.62f, 0.26f, 0.34f);
+
+		case ECodexInvenAttendanceDayState::Locked:
+		default:
+			return FLinearColor(0.54f, 0.62f, 0.82f, 0.30f);
+		}
+	}
+
+	FLinearColor GetRewardPanelAccentColor(const ECodexInvenAttendanceDayState InState)
+	{
+		switch (InState)
+		{
+		case ECodexInvenAttendanceDayState::Claimed:
+			return FLinearColor(0.30f, 0.88f, 0.70f, 0.98f);
+
+		case ECodexInvenAttendanceDayState::Claimable:
+			return FLinearColor(0.94f, 0.42f, 0.54f, 0.98f);
+
+		case ECodexInvenAttendanceDayState::Locked:
+		default:
+			return FLinearColor(0.46f, 0.58f, 0.86f, 0.94f);
 		}
 	}
 
@@ -196,7 +274,7 @@ void UCodexInvenAttendanceDayEntryWidget::BuildWidgetTreeIfNeeded()
 
 	DayNumberTextBlock = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("DayNumberTextBlock"));
 	FSlateFontInfo DayNumberFont = DayNumberTextBlock->GetFont();
-	DayNumberFont.Size = 22;
+	DayNumberFont.Size = 20;
 	DayNumberTextBlock->SetFont(DayNumberFont);
 	DayNumberTextBlock->SetJustification(ETextJustify::Right);
 	if (UVerticalBoxSlot* const DaySlot = ContentBox->AddChildToVerticalBox(DayNumberTextBlock))
@@ -206,33 +284,58 @@ void UCodexInvenAttendanceDayEntryWidget::BuildWidgetTreeIfNeeded()
 	}
 
 	USizeBox* const RewardIconSizeBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("RewardIconSizeBox"));
-	RewardIconSizeBox->SetWidthOverride(48.0f);
-	RewardIconSizeBox->SetHeightOverride(48.0f);
+	RewardIconSizeBox->SetWidthOverride(40.0f);
+	RewardIconSizeBox->SetHeightOverride(40.0f);
 	RewardIconImage = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("RewardIconImage"));
 	RewardIconSizeBox->SetContent(RewardIconImage);
 	if (UVerticalBoxSlot* const IconSlot = ContentBox->AddChildToVerticalBox(RewardIconSizeBox))
 	{
-		IconSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 10.0f));
+		IconSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 8.0f));
 		IconSlot->SetHorizontalAlignment(HAlign_Center);
 	}
 
 	RewardPanelBorder = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("RewardPanelBorder"));
-	RewardPanelBorder->SetPadding(FMargin(8.0f, 8.0f, 8.0f, 10.0f));
+	RewardPanelBorder->SetPadding(FMargin(1.0f));
 	if (UVerticalBoxSlot* const RewardPanelSlot = ContentBox->AddChildToVerticalBox(RewardPanelBorder))
 	{
 		RewardPanelSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-		RewardPanelSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 10.0f));
+		RewardPanelSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 8.0f));
+	}
+
+	RewardPanelInnerBorder = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("RewardPanelInnerBorder"));
+	RewardPanelInnerBorder->SetPadding(FMargin(7.0f, 6.0f, 7.0f, 7.0f));
+	RewardPanelBorder->SetContent(RewardPanelInnerBorder);
+
+	UVerticalBox* const RewardPanelContentBox = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("RewardPanelContentBox"));
+	RewardPanelInnerBorder->SetContent(RewardPanelContentBox);
+
+	USizeBox* const RewardAccentSizeBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("RewardAccentSizeBox"));
+	RewardAccentSizeBox->SetHeightOverride(4.0f);
+	RewardPanelAccentBorder = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("RewardPanelAccentBorder"));
+	RewardAccentSizeBox->SetContent(RewardPanelAccentBorder);
+	if (UVerticalBoxSlot* const AccentSlot = RewardPanelContentBox->AddChildToVerticalBox(RewardAccentSizeBox))
+	{
+		AccentSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 6.0f));
 	}
 
 	RewardTextBlock = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("RewardTextBlock"));
+	FSlateFontInfo RewardTextFont = RewardTextBlock->GetFont();
+	RewardTextFont.Size = 14;
+	RewardTextBlock->SetFont(RewardTextFont);
 	RewardTextBlock->SetAutoWrapText(true);
+	RewardTextBlock->SetLineHeightPercentage(0.86f);
 	RewardTextBlock->SetJustification(ETextJustify::Center);
-	RewardTextBlock->SetShadowColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.06f));
+	RewardTextBlock->SetTextOverflowPolicy(ETextOverflowPolicy::Clip);
+	RewardTextBlock->SetShadowColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.03f));
 	RewardTextBlock->SetShadowOffset(FVector2D(0.0f, 1.0f));
-	RewardPanelBorder->SetContent(RewardTextBlock);
+	if (UVerticalBoxSlot* const RewardTextSlot = RewardPanelContentBox->AddChildToVerticalBox(RewardTextBlock))
+	{
+		RewardTextSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+		RewardTextSlot->SetVerticalAlignment(VAlign_Center);
+	}
 
 	StateBadgeBorder = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("StateBadgeBorder"));
-	StateBadgeBorder->SetPadding(FMargin(10.0f, 4.0f));
+	StateBadgeBorder->SetPadding(FMargin(8.0f, 3.0f));
 	if (UVerticalBoxSlot* const BadgeSlot = ContentBox->AddChildToVerticalBox(StateBadgeBorder))
 	{
 		BadgeSlot->SetHorizontalAlignment(HAlign_Center);
@@ -248,8 +351,9 @@ void UCodexInvenAttendanceDayEntryWidget::BuildWidgetTreeIfNeeded()
 
 void UCodexInvenAttendanceDayEntryWidget::RefreshVisualState()
 {
-	if (!bHasPresentationData || RootBorder == nullptr || RewardPanelBorder == nullptr || StateBadgeBorder == nullptr ||
-		DayNumberTextBlock == nullptr || RewardTextBlock == nullptr || StateTextBlock == nullptr || RewardIconImage == nullptr)
+	if (!bHasPresentationData || RootBorder == nullptr || RewardPanelBorder == nullptr || RewardPanelInnerBorder == nullptr ||
+		RewardPanelAccentBorder == nullptr || StateBadgeBorder == nullptr || DayNumberTextBlock == nullptr ||
+		RewardTextBlock == nullptr || StateTextBlock == nullptr || RewardIconImage == nullptr)
 	{
 		return;
 	}
@@ -265,8 +369,26 @@ void UCodexInvenAttendanceDayEntryWidget::RefreshVisualState()
 		RootBorder->SetBrushColor(GetCardFallbackColor(PresentationData.State));
 	}
 
-	RewardPanelBorder->SetBrushColor(GetRewardPanelColor(PresentationData.State));
-	StateBadgeBorder->SetBrushColor(GetStateBadgeColor(PresentationData.State));
+	RewardPanelBorder->SetBrush(MakeRoundedBrush(
+		GetRewardPanelFrameColor(PresentationData.State),
+		GetRewardPanelOutlineColor(PresentationData.State),
+		9.0f,
+		1.0f));
+	RewardPanelInnerBorder->SetBrush(MakeRoundedBrush(
+		GetRewardPanelColor(PresentationData.State),
+		GetRewardPanelInnerOutlineColor(PresentationData.State),
+		8.0f,
+		1.0f));
+	RewardPanelAccentBorder->SetBrush(MakeRoundedBrush(
+		GetRewardPanelAccentColor(PresentationData.State),
+		FLinearColor(1.0f, 1.0f, 1.0f, 0.0f),
+		3.0f,
+		0.0f));
+	StateBadgeBorder->SetBrush(MakeRoundedBrush(
+		GetStateBadgeColor(PresentationData.State),
+		FLinearColor(1.0f, 1.0f, 1.0f, 0.0f),
+		6.0f,
+		0.0f));
 
 	DayNumberTextBlock->SetText(FText::FromString(FString::Printf(TEXT("%02d"), PresentationData.DayNumber)));
 	DayNumberTextBlock->SetColorAndOpacity(FSlateColor(GetTitleColor(PresentationData.State)));
