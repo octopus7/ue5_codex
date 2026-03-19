@@ -6,7 +6,11 @@
 #include "Blueprint/WidgetBlueprintGeneratedClass.h"
 #include "Blueprint/WidgetTree.h"
 #include "CodexInvenPickupPageWidget.h"
+#include "Components/Border.h"
 #include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Components/Image.h"
+#include "Components/SizeBox.h"
 #include "Engine/Texture2D.h"
 #include "Factories/TextureFactory.h"
 #include "Kismet2/BlueprintEditorUtils.h"
@@ -26,6 +30,9 @@ namespace
 	const TCHAR* PickupGuideTexturePackagePath = TEXT("/Game/Art/Pickups/Guides/T_PickupSafeGuide_2340x1440");
 	const TCHAR* PickupGuideSourcePath = TEXT("Content/Art/Pickups/Guides/PickupSafeGuide_2340x1440.png");
 	const FName PickupPageCreationContext(TEXT("CodexInvenPickupPageScaffold"));
+	const FLinearColor BleedTintColor(0.84f, 0.36f, 0.20f, 0.22f);
+	const FLinearColor SafeEdgeColor(0.18f, 0.92f, 0.62f, 0.96f);
+	const FLinearColor CenterLineColor(1.0f, 1.0f, 1.0f, 0.45f);
 
 	FString MakeObjectPath(const FString& InPackagePath)
 	{
@@ -144,14 +151,77 @@ namespace
 		InWidgetTree.RootWidget = nullptr;
 	}
 
+	void ConfigureCanvasChild(UCanvasPanelSlot& InSlot, const FAnchors& InAnchors, const FMargin& InOffsets, const FVector2D& InAlignment = FVector2D::ZeroVector)
+	{
+		InSlot.SetAnchors(InAnchors);
+		InSlot.SetOffsets(InOffsets);
+		InSlot.SetAlignment(InAlignment);
+		InSlot.SetAutoSize(false);
+	}
+
+	UBorder* CreateGuideBorder(UWidgetTree& InWidgetTree, UCanvasPanel& InParent, const TCHAR* InName, const FLinearColor& InColor)
+	{
+		UBorder* const Border = InWidgetTree.ConstructWidget<UBorder>(UBorder::StaticClass(), InName);
+		Border->bIsVariable = true;
+		Border->SetVisibility(ESlateVisibility::HitTestInvisible);
+		Border->SetBrushColor(InColor);
+		if (UCanvasPanelSlot* const Slot = InParent.AddChildToCanvas(Border))
+		{
+			ConfigureCanvasChild(*Slot, FAnchors(0.0f, 0.0f, 0.0f, 0.0f), FMargin(0.0f));
+		}
+		return Border;
+	}
+
 	void BuildPickupPageWidgetTree(UWidgetBlueprint& InWidgetBlueprint)
 	{
 		UWidgetTree& WidgetTree = *InWidgetBlueprint.WidgetTree;
 		RenameExistingWidgetsToTransient(WidgetTree);
 
 		UCanvasPanel* const RootCanvasPanel = WidgetTree.ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("RootCanvasPanel"));
+		RootCanvasPanel->bIsVariable = true;
 		RootCanvasPanel->SetClipping(EWidgetClipping::ClipToBounds);
 		WidgetTree.RootWidget = RootCanvasPanel;
+
+		USizeBox* const BackgroundSizeBox = WidgetTree.ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("BackgroundSizeBox"));
+		BackgroundSizeBox->bIsVariable = true;
+		BackgroundSizeBox->SetVisibility(ESlateVisibility::HitTestInvisible);
+		if (UCanvasPanelSlot* const BackgroundSlot = RootCanvasPanel->AddChildToCanvas(BackgroundSizeBox))
+		{
+			ConfigureCanvasChild(*BackgroundSlot, FAnchors(0.5f, 0.5f, 0.5f, 0.5f), FMargin(0.0f), FVector2D(0.5f, 0.5f));
+		}
+
+		UCanvasPanel* const BackgroundCanvasPanel = WidgetTree.ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("BackgroundCanvasPanel"));
+		BackgroundCanvasPanel->bIsVariable = true;
+		BackgroundCanvasPanel->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		BackgroundCanvasPanel->SetClipping(EWidgetClipping::Inherit);
+		BackgroundSizeBox->SetContent(BackgroundCanvasPanel);
+
+		UImage* const BackgroundImage = WidgetTree.ConstructWidget<UImage>(UImage::StaticClass(), TEXT("BackgroundImage"));
+		BackgroundImage->bIsVariable = true;
+		BackgroundImage->SetVisibility(ESlateVisibility::HitTestInvisible);
+		if (UCanvasPanelSlot* const ImageSlot = BackgroundCanvasPanel->AddChildToCanvas(BackgroundImage))
+		{
+			ConfigureCanvasChild(*ImageSlot, FAnchors(0.0f, 0.0f, 1.0f, 1.0f), FMargin(0.0f));
+		}
+
+		CreateGuideBorder(WidgetTree, *BackgroundCanvasPanel, TEXT("TopBleedTint"), BleedTintColor);
+		CreateGuideBorder(WidgetTree, *BackgroundCanvasPanel, TEXT("BottomBleedTint"), BleedTintColor);
+		CreateGuideBorder(WidgetTree, *BackgroundCanvasPanel, TEXT("LeftBleedTint"), BleedTintColor);
+		CreateGuideBorder(WidgetTree, *BackgroundCanvasPanel, TEXT("RightBleedTint"), BleedTintColor);
+		CreateGuideBorder(WidgetTree, *BackgroundCanvasPanel, TEXT("SafeTopEdge"), SafeEdgeColor);
+		CreateGuideBorder(WidgetTree, *BackgroundCanvasPanel, TEXT("SafeBottomEdge"), SafeEdgeColor);
+		CreateGuideBorder(WidgetTree, *BackgroundCanvasPanel, TEXT("SafeLeftEdge"), SafeEdgeColor);
+		CreateGuideBorder(WidgetTree, *BackgroundCanvasPanel, TEXT("SafeRightEdge"), SafeEdgeColor);
+		CreateGuideBorder(WidgetTree, *BackgroundCanvasPanel, TEXT("VerticalCenterLine"), CenterLineColor);
+		CreateGuideBorder(WidgetTree, *BackgroundCanvasPanel, TEXT("HorizontalCenterLine"), CenterLineColor);
+
+		UCanvasPanel* const ContentCanvasPanel = WidgetTree.ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("ContentCanvasPanel"));
+		ContentCanvasPanel->bIsVariable = true;
+		ContentCanvasPanel->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+		if (UCanvasPanelSlot* const ContentSlot = RootCanvasPanel->AddChildToCanvas(ContentCanvasPanel))
+		{
+			ConfigureCanvasChild(*ContentSlot, FAnchors(0.0f, 0.0f, 1.0f, 1.0f), FMargin(0.0f));
+		}
 	}
 
 	bool SetClassDefaultTextureProperty(UClass* InClass, const FName InPropertyName, UTexture2D* InValue, FString& OutError)
