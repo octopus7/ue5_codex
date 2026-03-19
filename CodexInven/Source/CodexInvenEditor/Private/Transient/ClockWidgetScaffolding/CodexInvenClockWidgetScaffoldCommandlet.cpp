@@ -7,15 +7,17 @@
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
+#include "Components/Image.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
-#include "Fonts/SlateFontInfo.h"
+#include "Engine/Texture2D.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Misc/PackageName.h"
 #include "Styling/SlateColor.h"
+#include "TextureCompiler.h"
 #include "UObject/Package.h"
 #include "UObject/SavePackage.h"
 #include "WidgetBlueprint.h"
@@ -26,14 +28,13 @@ DEFINE_LOG_CATEGORY_STATIC(LogCodexInvenClockWidgetScaffold, Log, All);
 namespace
 {
 	const TCHAR* ClockWidgetPackagePath = TEXT("/Game/UI/WBP_CodexClock");
+	const TCHAR* ClockFaceTexturePackagePath = TEXT("/Game/UI/T_ClockFace_Analog");
 	const FName ClockWidgetCreationContext(TEXT("CodexInvenClockWidgetScaffold"));
 	const FVector2D ClockCanvasSize(176.0f, 176.0f);
 	const FVector2D ClockCanvasCenter(ClockCanvasSize.X * 0.5f, ClockCanvasSize.Y * 0.5f);
+	constexpr int32 ClockFaceTextureSize = 256;
 	const FVector2D ContainerScreenOffset(0.0f, 18.0f);
 	const FLinearColor ContainerTint(0.02f, 0.04f, 0.08f, 0.86f);
-	const FLinearColor FaceTint(0.05f, 0.08f, 0.12f, 0.65f);
-	const FLinearColor MinorTickTint(0.62f, 0.68f, 0.78f, 0.70f);
-	const FLinearColor MajorTickTint(0.92f, 0.95f, 1.0f, 0.98f);
 	const FLinearColor HourHandTint(0.92f, 0.95f, 1.0f, 1.0f);
 	const FLinearColor MinuteHandTint(0.76f, 0.86f, 1.0f, 1.0f);
 	const FLinearColor SecondHandTint(1.0f, 0.40f, 0.34f, 1.0f);
@@ -65,6 +66,201 @@ namespace
 		}
 
 		return true;
+	}
+
+	FString GetAssetNameFromPackagePath(const FString& InPackagePath)
+	{
+		return FPackageName::GetLongPackageAssetName(InPackagePath);
+	}
+
+	bool SaveObjectPackage(UObject& InObject, FString& OutError)
+	{
+		UPackage* const Package = InObject.GetPackage();
+		if (Package == nullptr)
+		{
+			OutError = FString::Printf(TEXT("Object %s has no package."), *InObject.GetName());
+			return false;
+		}
+
+		const FString Filename = FPackageName::LongPackageNameToFilename(Package->GetName(), FPackageName::GetAssetPackageExtension());
+		FSavePackageArgs SaveArgs;
+		SaveArgs.TopLevelFlags = RF_Public | RF_Standalone;
+		SaveArgs.SaveFlags = SAVE_NoError;
+		SaveArgs.Error = GError;
+		if (!UPackage::SavePackage(Package, &InObject, *Filename, SaveArgs))
+		{
+			OutError = FString::Printf(TEXT("Failed to save package %s."), *Package->GetName());
+			return false;
+		}
+
+		return true;
+	}
+
+	void SetPixel(TArray64<uint8>& InOutPixels, const int32 InX, const int32 InY, const FColor& InColor)
+	{
+		if (InX < 0 || InX >= ClockFaceTextureSize || InY < 0 || InY >= ClockFaceTextureSize)
+		{
+			return;
+		}
+
+		const int64 PixelIndex = ((static_cast<int64>(InY) * ClockFaceTextureSize) + InX) * 4;
+		InOutPixels[PixelIndex + 0] = InColor.B;
+		InOutPixels[PixelIndex + 1] = InColor.G;
+		InOutPixels[PixelIndex + 2] = InColor.R;
+		InOutPixels[PixelIndex + 3] = InColor.A;
+	}
+
+	void FillCircle(TArray64<uint8>& InOutPixels, const FVector2D& InCenter, const float InRadius, const FColor& InColor)
+	{
+		const int32 MinX = FMath::FloorToInt(InCenter.X - InRadius);
+		const int32 MaxX = FMath::CeilToInt(InCenter.X + InRadius);
+		const int32 MinY = FMath::FloorToInt(InCenter.Y - InRadius);
+		const int32 MaxY = FMath::CeilToInt(InCenter.Y + InRadius);
+		const float RadiusSquared = InRadius * InRadius;
+
+		for (int32 Y = MinY; Y <= MaxY; ++Y)
+		{
+			for (int32 X = MinX; X <= MaxX; ++X)
+			{
+				const FVector2D Delta(static_cast<float>(X) + 0.5f - InCenter.X, static_cast<float>(Y) + 0.5f - InCenter.Y);
+				if (Delta.SizeSquared() <= RadiusSquared)
+				{
+					SetPixel(InOutPixels, X, Y, InColor);
+				}
+			}
+		}
+	}
+
+	void FillRing(
+		TArray64<uint8>& InOutPixels,
+		const FVector2D& InCenter,
+		const float InInnerRadius,
+		const float InOuterRadius,
+		const FColor& InColor)
+	{
+		const int32 MinX = FMath::FloorToInt(InCenter.X - InOuterRadius);
+		const int32 MaxX = FMath::CeilToInt(InCenter.X + InOuterRadius);
+		const int32 MinY = FMath::FloorToInt(InCenter.Y - InOuterRadius);
+		const int32 MaxY = FMath::CeilToInt(InCenter.Y + InOuterRadius);
+		const float InnerRadiusSquared = InInnerRadius * InInnerRadius;
+		const float OuterRadiusSquared = InOuterRadius * InOuterRadius;
+
+		for (int32 Y = MinY; Y <= MaxY; ++Y)
+		{
+			for (int32 X = MinX; X <= MaxX; ++X)
+			{
+				const FVector2D Delta(static_cast<float>(X) + 0.5f - InCenter.X, static_cast<float>(Y) + 0.5f - InCenter.Y);
+				const float DistanceSquared = Delta.SizeSquared();
+				if (DistanceSquared >= InnerRadiusSquared && DistanceSquared <= OuterRadiusSquared)
+				{
+					SetPixel(InOutPixels, X, Y, InColor);
+				}
+			}
+		}
+	}
+
+	void DrawLine(
+		TArray64<uint8>& InOutPixels,
+		const FVector2D& InStart,
+		const FVector2D& InEnd,
+		const float InThickness,
+		const FColor& InColor)
+	{
+		const FVector2D Segment = InEnd - InStart;
+		const float SegmentLengthSquared = Segment.SizeSquared();
+		if (SegmentLengthSquared <= KINDA_SMALL_NUMBER)
+		{
+			FillCircle(InOutPixels, InStart, InThickness, InColor);
+			return;
+		}
+
+		const float HalfThickness = InThickness * 0.5f;
+		const int32 MinX = FMath::FloorToInt(FMath::Min(InStart.X, InEnd.X) - HalfThickness - 1.0f);
+		const int32 MaxX = FMath::CeilToInt(FMath::Max(InStart.X, InEnd.X) + HalfThickness + 1.0f);
+		const int32 MinY = FMath::FloorToInt(FMath::Min(InStart.Y, InEnd.Y) - HalfThickness - 1.0f);
+		const int32 MaxY = FMath::CeilToInt(FMath::Max(InStart.Y, InEnd.Y) + HalfThickness + 1.0f);
+		const float ThresholdSquared = HalfThickness * HalfThickness;
+
+		for (int32 Y = MinY; Y <= MaxY; ++Y)
+		{
+			for (int32 X = MinX; X <= MaxX; ++X)
+			{
+				const FVector2D Sample(static_cast<float>(X) + 0.5f, static_cast<float>(Y) + 0.5f);
+				const float Projection = FMath::Clamp(FVector2D::DotProduct(Sample - InStart, Segment) / SegmentLengthSquared, 0.0f, 1.0f);
+				const FVector2D ClosestPoint = InStart + (Segment * Projection);
+				if ((Sample - ClosestPoint).SizeSquared() <= ThresholdSquared)
+				{
+					SetPixel(InOutPixels, X, Y, InColor);
+				}
+			}
+		}
+	}
+
+	void BuildClockFacePixels(TArray64<uint8>& OutPixels)
+	{
+		OutPixels.Init(0, static_cast<int64>(ClockFaceTextureSize) * ClockFaceTextureSize * 4);
+
+		const FVector2D Center(ClockFaceTextureSize * 0.5f, ClockFaceTextureSize * 0.5f);
+		const FColor OuterRing = FLinearColor(0.92f, 0.96f, 1.0f, 0.98f).ToFColorSRGB();
+		const FColor MidRing = FLinearColor(0.18f, 0.24f, 0.31f, 0.96f).ToFColorSRGB();
+		const FColor FaceFill = FLinearColor(0.03f, 0.06f, 0.10f, 0.86f).ToFColorSRGB();
+		const FColor InnerGlow = FLinearColor(0.08f, 0.12f, 0.18f, 0.72f).ToFColorSRGB();
+		const FColor MinorTick = FLinearColor(0.70f, 0.78f, 0.88f, 0.72f).ToFColorSRGB();
+		const FColor MajorTick = FLinearColor(0.96f, 0.98f, 1.0f, 1.0f).ToFColorSRGB();
+
+		FillCircle(OutPixels, Center, 120.0f, FaceFill);
+		FillCircle(OutPixels, Center, 108.0f, InnerGlow);
+		FillRing(OutPixels, Center, 112.0f, 120.0f, OuterRing);
+		FillRing(OutPixels, Center, 101.0f, 106.0f, MidRing);
+
+		for (int32 TickIndex = 0; TickIndex < 12; ++TickIndex)
+		{
+			const bool bIsMajorTick = (TickIndex % 3) == 0;
+			const float AngleRadians = FMath::DegreesToRadians(static_cast<float>(TickIndex) * 30.0f);
+			const FVector2D Direction(FMath::Sin(AngleRadians), -FMath::Cos(AngleRadians));
+			const FVector2D Start = Center + (Direction * (bIsMajorTick ? 83.0f : 90.0f));
+			const FVector2D End = Center + (Direction * 108.0f);
+			DrawLine(OutPixels, Start, End, bIsMajorTick ? 7.0f : 4.0f, bIsMajorTick ? MajorTick : MinorTick);
+		}
+	}
+
+	UTexture2D* CreateOrUpdateClockFaceTexture(FString& OutError)
+	{
+		UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, *MakeWidgetBlueprintObjectPath(ClockFaceTexturePackagePath));
+		if (Texture == nullptr)
+		{
+			UPackage* const Package = CreatePackage(ClockFaceTexturePackagePath);
+			Texture = NewObject<UTexture2D>(Package, *GetAssetNameFromPackagePath(ClockFaceTexturePackagePath), RF_Public | RF_Standalone);
+			if (Texture == nullptr)
+			{
+				OutError = TEXT("Failed to create the analog clock face texture asset.");
+				return nullptr;
+			}
+
+			FAssetRegistryModule::AssetCreated(Texture);
+		}
+
+		TArray64<uint8> PixelData;
+		BuildClockFacePixels(PixelData);
+
+		Texture->MipGenSettings = TMGS_NoMipmaps;
+		Texture->NeverStream = true;
+		Texture->SRGB = true;
+		Texture->LODGroup = TEXTUREGROUP_UI;
+		Texture->CompressionSettings = TC_EditorIcon;
+		Texture->Filter = TF_Bilinear;
+		Texture->Source.Init(ClockFaceTextureSize, ClockFaceTextureSize, 1, 1, TSF_BGRA8, PixelData.GetData());
+		Texture->UpdateResource();
+		Texture->PostEditChange();
+		FTextureCompilingManager::Get().FinishCompilation({ Texture });
+		Texture->MarkPackageDirty();
+
+		if (!SaveObjectPackage(*Texture, OutError))
+		{
+			return nullptr;
+		}
+
+		return Texture;
 	}
 
 	void SetCanvasSlotLayout(
@@ -125,34 +321,7 @@ namespace
 		return Hand;
 	}
 
-	void AddClockTick(UWidgetTree& InWidgetTree, UCanvasPanel& InCanvas, const int32 InTickIndex)
-	{
-		const bool bIsMajorTick = (InTickIndex % 3) == 0;
-		const float AngleDegrees = static_cast<float>(InTickIndex) * 30.0f;
-		const float AngleRadians = FMath::DegreesToRadians(AngleDegrees);
-		const FVector2D Direction(FMath::Sin(AngleRadians), -FMath::Cos(AngleRadians));
-		const float TickRadius = bIsMajorTick ? 72.0f : 70.0f;
-		const FVector2D TickSize = bIsMajorTick ? FVector2D(4.0f, 18.0f) : FVector2D(3.0f, 12.0f);
-		const FVector2D TickPosition = ClockCanvasCenter + (Direction * TickRadius);
-		const FName TickName(*FString::Printf(TEXT("TickMark%02d"), InTickIndex));
-
-		UBorder* const TickWidget = InWidgetTree.ConstructWidget<UBorder>(UBorder::StaticClass(), TickName);
-		TickWidget->SetBrushColor(bIsMajorTick ? MajorTickTint : MinorTickTint);
-		TickWidget->SetRenderTransformPivot(FVector2D(0.5f, 1.0f));
-		TickWidget->SetRenderTransformAngle(AngleDegrees);
-
-		if (UCanvasPanelSlot* const TickSlot = InCanvas.AddChildToCanvas(TickWidget))
-		{
-			SetCanvasSlotLayout(
-				*TickSlot,
-				TickPosition,
-				TickSize,
-				FAnchors(0.0f, 0.0f, 0.0f, 0.0f),
-				FVector2D(0.5f, 1.0f));
-		}
-	}
-
-	void BuildClockWidgetTree(UWidgetBlueprint& InWidgetBlueprint)
+	void BuildClockWidgetTree(UWidgetBlueprint& InWidgetBlueprint, UTexture2D& InClockFaceTexture)
 	{
 		UWidgetTree& WidgetTree = *InWidgetBlueprint.WidgetTree;
 		RenameExistingWidgetsToTransient(WidgetTree);
@@ -203,17 +372,12 @@ namespace
 		UCanvasPanel* const AnalogClockCanvas = WidgetTree.ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("AnalogClockCanvas"));
 		AnalogClockSizeBox->SetContent(AnalogClockCanvas);
 
-		UBorder* const ClockFaceBorder = WidgetTree.ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("ClockFaceBorder"));
-		ClockFaceBorder->SetBrushColor(FaceTint);
-		if (UCanvasPanelSlot* const FaceSlot = AnalogClockCanvas->AddChildToCanvas(ClockFaceBorder))
+		UImage* const ClockFaceImage = WidgetTree.ConstructWidget<UImage>(UImage::StaticClass(), TEXT("ClockFaceImage"));
+		ClockFaceImage->SetBrushFromTexture(&InClockFaceTexture, true);
+		if (UCanvasPanelSlot* const FaceSlot = AnalogClockCanvas->AddChildToCanvas(ClockFaceImage))
 		{
 			FaceSlot->SetAnchors(FAnchors(0.0f, 0.0f, 1.0f, 1.0f));
 			FaceSlot->SetOffsets(FMargin(0.0f));
-		}
-
-		for (int32 TickIndex = 0; TickIndex < 12; ++TickIndex)
-		{
-			AddClockTick(WidgetTree, *AnalogClockCanvas, TickIndex);
 		}
 
 		AddClockHand(WidgetTree, *AnalogClockCanvas, TEXT("HourHand"), FVector2D(6.0f, 44.0f), HourHandTint);
@@ -235,6 +399,12 @@ namespace
 
 	bool CreateOrUpdateClockWidgetBlueprint(UWidgetBlueprint*& OutWidgetBlueprint, FString& OutError)
 	{
+		UTexture2D* const ClockFaceTexture = CreateOrUpdateClockFaceTexture(OutError);
+		if (ClockFaceTexture == nullptr)
+		{
+			return false;
+		}
+
 		UWidgetBlueprint* WidgetBlueprint = LoadObject<UWidgetBlueprint>(nullptr, *MakeWidgetBlueprintObjectPath(ClockWidgetPackagePath));
 		bool bCreatedNewBlueprint = false;
 
@@ -278,7 +448,8 @@ namespace
 		WidgetBlueprint->WidgetTree->SetFlags(RF_Transactional);
 		WidgetBlueprint->WidgetTree->Modify();
 
-		BuildClockWidgetTree(*WidgetBlueprint);
+		BuildClockWidgetTree(*WidgetBlueprint, *ClockFaceTexture);
+		WidgetBlueprint->WidgetVariableNameToGuidMap.Reset();
 
 		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(WidgetBlueprint);
 		FKismetEditorUtilities::CompileBlueprint(WidgetBlueprint);
