@@ -1,0 +1,28 @@
+# Unreal Engine
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Visual Studio
+.vs/
+*.VC.db
+*.VC.opendb
+*.sln
+*.suo
+*.user
+*.userosscache
+*.sdf
+
+# Build and packaging artifacts
+Build/**/*.tmp
+Build/**/*.csprojAssemblyReference.cache
+
+# Logs and crash dumps
+*.log
+*.dmp
+
+# OS/editor noise
+Thumbs.db
+Desktop.ini
+.DS_Store
