@@ -10,6 +10,7 @@
 
 class ACodexInvenTopDownCharacter;
 class UCodexInvenClockWidget;
+class UCodexInvenClockMvvmWidget;
 class UEnhancedInputComponent;
 class UCodexInvenInputConfigDataAsset;
 class UCodexInvenPlayerHudWidget;
@@ -46,6 +47,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UCodexInvenClockWidget> ClockWidgetClass;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UCodexInvenClockMvvmWidget> ClockMvvmWidgetClass;
+
 private:
 	const UCodexInvenInputConfigDataAsset* GetInputConfig() const;
 	ACodexInvenTopDownCharacter* GetTopDownCharacter() const;
@@ -53,6 +57,7 @@ private:
 	void ApplyInputMappingContext();
 	void TryCreatePlayerHud();
 	void TryCreateClockWidget();
+	void TryCreateClockMvvmWidget();
 	void RefreshObservedOwnershipComponent();
 	bool TryGetCursorGroundPoint(FVector& OutWorldPoint) const;
 	void FireProjectileOnce();
@@ -72,6 +77,8 @@ private:
 	TObjectPtr<UCodexInvenPlayerHudWidget> RuntimePlayerHudWidget = nullptr;
 	UPROPERTY(Transient)
 	TObjectPtr<UCodexInvenClockWidget> RuntimeClockWidget = nullptr;
+	UPROPERTY(Transient)
+	TObjectPtr<UCodexInvenClockMvvmWidget> RuntimeClockMvvmWidget = nullptr;
 	bool bIsAutomaticFireActive = false;
 	float LastExplicitLookInputTime = -1.0f;
 };

@@ -24,6 +24,10 @@
 	],
 	"Plugins": [
 		{
+			"Name": "ModelViewViewModel",
+			"Enabled": true
+		},
+		{
 			"Name": "GeometryScripting",
 			"Enabled": true,
 			"TargetAllowList": [
