@@ -225,17 +225,31 @@ FText UCodexInvenOwnershipComponent::BuildDebugOwnershipText() const
 	TArray<FString> Lines;
 	Lines.Reserve(16);
 	Lines.Add(TEXT("Ownership Debug"));
-	Lines.Add(TEXT("Stacks"));
-	Lines.Add(FString::Printf(TEXT("Cylinder Red: %d"), GetStackCount(ECodexInvenPickupType::CylinderRed)));
-	Lines.Add(FString::Printf(TEXT("Cylinder Green: %d"), GetStackCount(ECodexInvenPickupType::CylinderGreen)));
-	Lines.Add(FString::Printf(TEXT("Cylinder Blue: %d"), GetStackCount(ECodexInvenPickupType::CylinderBlue)));
-	Lines.Add(FString::Printf(TEXT("Cylinder Gold: %d"), GetStackCount(ECodexInvenPickupType::CylinderGold)));
+	Lines.Add(TEXT("Consumables"));
+	for (const ECodexInvenPickupType PickupType : CodexInvenPickupData::GetAllPickupTypes())
+	{
+		const FCodexInvenPickupDefinition& Definition = CodexInvenPickupData::GetPickupDefinitionChecked(PickupType);
+		if (!Definition.bStackable)
+		{
+			continue;
+		}
+
+		Lines.Add(FString::Printf(TEXT("%s: %d"), *Definition.DisplayName, GetStackCount(PickupType)));
+	}
+
 	Lines.Add(TEXT(""));
-	Lines.Add(TEXT("Unique Cubes"));
-	Lines.Add(FString::Printf(TEXT("Cube Red: %s"), *BuildUniquePickupDebugList(Snapshot, ECodexInvenPickupType::CubeRed)));
-	Lines.Add(FString::Printf(TEXT("Cube Green: %s"), *BuildUniquePickupDebugList(Snapshot, ECodexInvenPickupType::CubeGreen)));
-	Lines.Add(FString::Printf(TEXT("Cube Blue: %s"), *BuildUniquePickupDebugList(Snapshot, ECodexInvenPickupType::CubeBlue)));
-	Lines.Add(FString::Printf(TEXT("Cube Gold: %s"), *BuildUniquePickupDebugList(Snapshot, ECodexInvenPickupType::CubeGold)));
+	Lines.Add(TEXT("Equipment"));
+	for (const ECodexInvenPickupType PickupType : CodexInvenPickupData::GetAllPickupTypes())
+	{
+		const FCodexInvenPickupDefinition& Definition = CodexInvenPickupData::GetPickupDefinitionChecked(PickupType);
+		if (Definition.bStackable)
+		{
+			continue;
+		}
+
+		Lines.Add(FString::Printf(TEXT("%s: %s"), *Definition.DisplayName, *BuildUniquePickupDebugList(Snapshot, PickupType)));
+	}
+
 	Lines.Add(TEXT(""));
 	Lines.Add(TEXT("Totals"));
 	Lines.Add(FString::Printf(TEXT("Stacked Items: %d"), TotalStackedItems));

@@ -20,9 +20,8 @@ public:
 	UTexture2D* GetInventorySlotBackground(ECodexInvenPickupRarity InRarity) const;
 
 private:
-	UTexture2D* CreateInventoryIconTexture(const FCodexInvenPickupDefinition& InDefinition) const;
+	UTexture2D* LoadInventoryIconTexture(const FCodexInvenPickupDefinition& InDefinition) const;
 	UTexture2D* CreateInventorySlotBackgroundTexture(ECodexInvenPickupRarity InRarity) const;
-	static void BuildInventoryIconPixels(const FCodexInvenPickupDefinition& InDefinition, TArray64<uint8>& OutPixels);
 	static void BuildInventorySlotBackgroundPixels(ECodexInvenPickupRarity InRarity, TArray64<uint8>& OutPixels);
 
 	UPROPERTY(Transient)

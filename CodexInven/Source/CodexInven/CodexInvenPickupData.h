@@ -3,7 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UObject/SoftObjectPath.h"
+#include "UObject/SoftObjectPtr.h"
 #include "CodexInvenPickupData.generated.h"
+
+class UStaticMesh;
+class UTexture2D;
+struct FCodexInvenPickupDefinition;
 
 UENUM()
 enum class ECodexInvenPickupType : uint8
@@ -24,6 +30,18 @@ enum class ECodexInvenPickupMeshKind : uint8
 	Cube,
 	Cylinder
 };
+
+namespace CodexInvenPickupData
+{
+	CODEXINVEN_API FString GetPickupAssetSlug(ECodexInvenPickupType InPickupType);
+	CODEXINVEN_API FString GetPickupMeshPackagePath(ECodexInvenPickupType InPickupType);
+	CODEXINVEN_API FString GetPickupIconPackagePath(ECodexInvenPickupType InPickupType);
+	CODEXINVEN_API FSoftObjectPath GetPickupMeshAssetPath(ECodexInvenPickupType InPickupType);
+	CODEXINVEN_API FSoftObjectPath GetPickupIconAssetPath(ECodexInvenPickupType InPickupType);
+	CODEXINVEN_API TConstArrayView<ECodexInvenPickupType> GetAllPickupTypes();
+	CODEXINVEN_API const FCodexInvenPickupDefinition* FindPickupDefinition(ECodexInvenPickupType InPickupType);
+	CODEXINVEN_API const FCodexInvenPickupDefinition& GetPickupDefinitionChecked(ECodexInvenPickupType InPickupType);
+}
 
 UENUM()
 enum class ECodexInvenPickupRarity : uint8
@@ -54,6 +72,8 @@ struct FCodexInvenPickupDefinition
 		, TintColor(InTintColor)
 		, Rarity(InRarity)
 		, bUseMetallicMaterial(bInUseMetallicMaterial)
+		, WorldMesh(CodexInvenPickupData::GetPickupMeshAssetPath(InType))
+		, InventoryIcon(CodexInvenPickupData::GetPickupIconAssetPath(InType))
 	{
 	}
 
@@ -77,11 +97,10 @@ struct FCodexInvenPickupDefinition
 
 	UPROPERTY()
 	bool bUseMetallicMaterial = false;
-};
 
-namespace CodexInvenPickupData
-{
-	CODEXINVEN_API TConstArrayView<ECodexInvenPickupType> GetAllPickupTypes();
-	CODEXINVEN_API const FCodexInvenPickupDefinition* FindPickupDefinition(ECodexInvenPickupType InPickupType);
-	CODEXINVEN_API const FCodexInvenPickupDefinition& GetPickupDefinitionChecked(ECodexInvenPickupType InPickupType);
-}
+	UPROPERTY()
+	TSoftObjectPtr<UStaticMesh> WorldMesh;
+
+	UPROPERTY()
+	TSoftObjectPtr<UTexture2D> InventoryIcon;
+};

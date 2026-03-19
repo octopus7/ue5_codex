@@ -19,7 +19,7 @@ namespace
 	constexpr int32 DragVisualNameFontSize = 8;
 	constexpr int32 DragVisualQuantityFontSize = 14;
 
-	FText BuildInventorySlotLabel(const FCodexInvenInventorySlotData& InSlotData)
+	FText BuildInventoryDragVisualSlotLabel(const FCodexInvenInventorySlotData& InSlotData)
 	{
 		if (!InSlotData.bStackable && InSlotData.UniqueInstanceId != INDEX_NONE)
 		{
@@ -40,7 +40,7 @@ void UCodexInvenInventoryDragVisualWidget::InitializeFromSlotData(const FCodexIn
 	}
 
 	IconImage->SetBrushFromTexture(InIconTexture, true);
-	NameTextBlock->SetText(BuildInventorySlotLabel(InSlotData));
+	NameTextBlock->SetText(BuildInventoryDragVisualSlotLabel(InSlotData));
 
 	if (InSlotData.bStackable)
 	{

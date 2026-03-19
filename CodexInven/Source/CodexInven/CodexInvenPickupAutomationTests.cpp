@@ -9,6 +9,7 @@
 #include "CodexInvenInventoryIconSubsystem.h"
 #include "CodexInvenPickupData.h"
 #include "CodexInvenPickupSpawner.h"
+#include "Engine/StaticMesh.h"
 #include "Engine/Texture2D.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(
@@ -32,6 +33,10 @@ bool FCodexInvenPickupDefinitionAutomationTest::RunTest(const FString& Parameter
 		}
 
 		TestFalse(TEXT("Display name is not empty"), Definition->DisplayName.IsEmpty());
+		TestTrue(TEXT("Pickup mesh path is configured"), Definition->WorldMesh.ToSoftObjectPath().IsValid());
+		TestTrue(TEXT("Pickup icon path is configured"), Definition->InventoryIcon.ToSoftObjectPath().IsValid());
+		TestNotNull(TEXT("Pickup mesh asset exists"), Definition->WorldMesh.LoadSynchronous());
+		TestNotNull(TEXT("Pickup icon asset exists"), Definition->InventoryIcon.LoadSynchronous());
 
 		switch (PickupType)
 		{
@@ -241,10 +246,12 @@ bool FCodexInvenOwnershipDebugTextAutomationTest::RunTest(const FString& Paramet
 
 	const FString EmptyText = OwnershipComponent->BuildDebugOwnershipText().ToString();
 	TestTrue(TEXT("Empty text includes header"), EmptyText.Contains(TEXT("Ownership Debug")));
-	TestTrue(TEXT("Empty text includes zero cylinder count"), EmptyText.Contains(TEXT("Cylinder Red: 0")));
-	TestTrue(TEXT("Empty text includes zero gold cylinder count"), EmptyText.Contains(TEXT("Cylinder Gold: 0")));
-	TestTrue(TEXT("Empty text includes empty cube entry"), EmptyText.Contains(TEXT("Cube Blue: None")));
-	TestTrue(TEXT("Empty text includes empty gold cube entry"), EmptyText.Contains(TEXT("Cube Gold: None")));
+	TestTrue(TEXT("Empty text includes consumables header"), EmptyText.Contains(TEXT("Consumables")));
+	TestTrue(TEXT("Empty text includes equipment header"), EmptyText.Contains(TEXT("Equipment")));
+	TestTrue(TEXT("Empty text includes zero medkit count"), EmptyText.Contains(TEXT("Medkit Pouch: 0")));
+	TestTrue(TEXT("Empty text includes zero pill bottle count"), EmptyText.Contains(TEXT("Pill Bottle: 0")));
+	TestTrue(TEXT("Empty text includes empty backpack entry"), EmptyText.Contains(TEXT("Utility Backpack: None")));
+	TestTrue(TEXT("Empty text includes empty tool case entry"), EmptyText.Contains(TEXT("Tool Case: None")));
 	TestTrue(TEXT("Empty text includes zero totals"), EmptyText.Contains(TEXT("Stacked Items: 0")) && EmptyText.Contains(TEXT("Unique Items: 0")));
 
 	TestTrue(TEXT("Cylinder green pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CylinderGreen));
@@ -253,8 +260,8 @@ bool FCodexInvenOwnershipDebugTextAutomationTest::RunTest(const FString& Paramet
 	TestTrue(TEXT("Second cube blue pickup is added"), OwnershipComponent->AddPickup(ECodexInvenPickupType::CubeBlue));
 
 	const FString PopulatedText = OwnershipComponent->BuildDebugOwnershipText().ToString();
-	TestTrue(TEXT("Populated text includes cylinder stack"), PopulatedText.Contains(TEXT("Cylinder Green: 2")));
-	TestTrue(TEXT("Populated text includes cube instance list"), PopulatedText.Contains(TEXT("Cube Blue: #1, #2")));
+	TestTrue(TEXT("Populated text includes energy drink stack"), PopulatedText.Contains(TEXT("Energy Drink Can: 2")));
+	TestTrue(TEXT("Populated text includes backpack instance list"), PopulatedText.Contains(TEXT("Utility Backpack: #1, #2")));
 	TestTrue(TEXT("Populated text includes updated totals"), PopulatedText.Contains(TEXT("Stacked Items: 2")) && PopulatedText.Contains(TEXT("Unique Items: 2")));
 
 	return true;
@@ -294,8 +301,10 @@ bool FCodexInvenInventoryIconSubsystemAutomationTest::RunTest(const FString& Par
 			continue;
 		}
 
-		TestEqual(TEXT("Inventory icon width is 64"), IconTexture->GetSizeX(), 64);
-		TestEqual(TEXT("Inventory icon height is 64"), IconTexture->GetSizeY(), 64);
+		const FIntPoint ImportedSize = IconTexture->GetImportedSize();
+		TestEqual(TEXT("Inventory icon width is 64"), ImportedSize.X, 64);
+		TestEqual(TEXT("Inventory icon height is 64"), ImportedSize.Y, 64);
+		TestTrue(TEXT("Inventory icon is a saved asset"), IconTexture->GetPathName().StartsWith(TEXT("/Game/Art/Pickups/Icons/")));
 	}
 
 	UTexture2D* GoldBackgroundTexture = IconSubsystem->GetInventorySlotBackground(ECodexInvenPickupRarity::Gold);

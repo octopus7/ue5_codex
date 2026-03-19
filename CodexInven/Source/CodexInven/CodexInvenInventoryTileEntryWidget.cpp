@@ -29,7 +29,7 @@ namespace
 	constexpr int32 InventoryTileNameFontSize = 8;
 	constexpr int32 InventoryTileQuantityFontSize = 14;
 
-	FText BuildInventorySlotLabel(const FCodexInvenInventorySlotData& InSlotData)
+	FText BuildInventoryTileSlotLabel(const FCodexInvenInventorySlotData& InSlotData)
 	{
 		if (!InSlotData.bStackable && InSlotData.UniqueInstanceId != INDEX_NONE)
 		{
@@ -299,7 +299,7 @@ void UCodexInvenInventoryTileEntryWidget::RefreshFromItemObject(UCodexInvenInven
 
 	IconImage->SetBrushFromTexture(InItemObject->GetIconTexture(), true);
 	IconImage->SetVisibility(ESlateVisibility::Visible);
-	NameTextBlock->SetText(BuildInventorySlotLabel(SlotData));
+	NameTextBlock->SetText(BuildInventoryTileSlotLabel(SlotData));
 
 	if (SlotData.bStackable)
 	{

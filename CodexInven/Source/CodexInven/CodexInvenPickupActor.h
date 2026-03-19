@@ -10,7 +10,6 @@
 class USphereComponent;
 class UStaticMeshComponent;
 class UPrimitiveComponent;
-class UMaterialInstanceDynamic;
 
 UCLASS()
 class CODEXINVEN_API ACodexInvenPickupActor : public AActor
@@ -35,17 +34,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Pickup", meta = (ClampMin = "0.0"))
 	float PickupRadius = 150.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Pickup")
-	FVector CubeVisualScale = FVector(1.0f, 1.0f, 1.0f);
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Pickup")
-	FVector CylinderVisualScale = FVector(1.0f, 1.0f, 0.5f);
-
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Pickup")
 	ECodexInvenPickupType PickupType = ECodexInvenPickupType::CubeRed;
-
-	UPROPERTY(Transient)
-	TObjectPtr<UMaterialInstanceDynamic> PickupMaterialInstance = nullptr;
 
 private:
 	void ApplyPickupDefinition();

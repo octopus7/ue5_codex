@@ -7,10 +7,9 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "GameFramework/Pawn.h"
-#include "Materials/MaterialInterface.h"
-#include "Materials/MaterialInstanceDynamic.h"
-#include "UObject/ConstructorHelpers.h"
-#include "UObject/UObjectGlobals.h"
+#include "Logging/LogMacros.h"
+
+DEFINE_LOG_CATEGORY_STATIC(LogCodexInvenPickupActor, Log, All);
 
 ACodexInvenPickupActor::ACodexInvenPickupActor()
 {
@@ -29,18 +28,6 @@ ACodexInvenPickupActor::ACodexInvenPickupActor()
 	PickupMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PickupMeshComponent"));
 	PickupMeshComponent->SetupAttachment(RootComponent);
 	PickupMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
-	if (CubeMesh.Succeeded())
-	{
-		PickupMeshComponent->SetStaticMesh(CubeMesh.Object);
-	}
-
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> BasicShapeMaterial(TEXT("/Engine/BasicShapes/BasicShapeMaterial_Inst.BasicShapeMaterial_Inst"));
-	if (BasicShapeMaterial.Succeeded())
-	{
-		PickupMeshComponent->SetMaterial(0, BasicShapeMaterial.Object);
-	}
 
 	PickupSphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::HandlePickupSphereBeginOverlap);
 }
@@ -65,55 +52,22 @@ ECodexInvenPickupType ACodexInvenPickupActor::GetPickupType() const
 
 void ACodexInvenPickupActor::ApplyPickupDefinition()
 {
-	static UStaticMesh* CubeMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube"));
-	static UStaticMesh* CylinderMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
-	static UMaterialInterface* StandardPickupMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial_Inst.BasicShapeMaterial_Inst"));
-	static UMaterialInterface* MetallicPickupMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/TemplateResources/MI_Template_BaseOrange_Metal.MI_Template_BaseOrange_Metal"));
+	static UStaticMesh* FallbackMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube"));
 
 	PickupSphereComponent->SetSphereRadius(PickupRadius);
 
 	const FCodexInvenPickupDefinition& Definition = CodexInvenPickupData::GetPickupDefinitionChecked(PickupType);
-	switch (Definition.MeshKind)
+	UStaticMesh* PickupMesh = Definition.WorldMesh.LoadSynchronous();
+	if (PickupMesh == nullptr)
 	{
-	case ECodexInvenPickupMeshKind::Cube:
-		if (CubeMesh != nullptr)
-		{
-			PickupMeshComponent->SetStaticMesh(CubeMesh);
-		}
-		PickupMeshComponent->SetRelativeScale3D(CubeVisualScale);
-		break;
-
-	case ECodexInvenPickupMeshKind::Cylinder:
-		if (CylinderMesh != nullptr)
-		{
-			PickupMeshComponent->SetStaticMesh(CylinderMesh);
-		}
-		PickupMeshComponent->SetRelativeScale3D(CylinderVisualScale);
-		break;
+		UE_LOG(LogCodexInvenPickupActor, Warning, TEXT("Pickup mesh asset is missing for %s. Falling back to Cube."), *Definition.DisplayName);
+		PickupMesh = FallbackMesh;
 	}
 
-	UMaterialInterface* BaseMaterial = Definition.bUseMetallicMaterial && MetallicPickupMaterial != nullptr
-		? MetallicPickupMaterial
-		: StandardPickupMaterial;
-
-	if (BaseMaterial != nullptr)
-	{
-		PickupMaterialInstance = UMaterialInstanceDynamic::Create(BaseMaterial, this);
-		if (PickupMaterialInstance != nullptr)
-		{
-			PickupMeshComponent->SetMaterial(0, PickupMaterialInstance);
-			PickupMaterialInstance->SetVectorParameterValue(TEXT("Color"), Definition.TintColor);
-			PickupMaterialInstance->SetVectorParameterValue(TEXT("BaseColor"), Definition.TintColor);
-			PickupMaterialInstance->SetVectorParameterValue(TEXT("Tint"), Definition.TintColor);
-			PickupMaterialInstance->SetVectorParameterValue(TEXT("TintColor"), Definition.TintColor);
-			PickupMaterialInstance->SetScalarParameterValue(TEXT("Metallic"), Definition.bUseMetallicMaterial ? 1.0f : 0.0f);
-			PickupMaterialInstance->SetScalarParameterValue(TEXT("Roughness"), Definition.bUseMetallicMaterial ? 0.18f : 0.55f);
-			PickupMaterialInstance->SetScalarParameterValue(TEXT("Specular"), Definition.bUseMetallicMaterial ? 0.85f : 0.5f);
-			return;
-		}
-	}
-
-	PickupMeshComponent->SetVectorParameterValueOnMaterials(TEXT("Color"), FVector(Definition.TintColor.R, Definition.TintColor.G, Definition.TintColor.B));
+	PickupMeshComponent->SetStaticMesh(PickupMesh);
+	PickupMeshComponent->SetRelativeLocation(FVector::ZeroVector);
+	PickupMeshComponent->SetRelativeRotation(FRotator::ZeroRotator);
+	PickupMeshComponent->SetRelativeScale3D(FVector::OneVector);
 }
 
 void ACodexInvenPickupActor::HandlePickupSphereBeginOverlap(
