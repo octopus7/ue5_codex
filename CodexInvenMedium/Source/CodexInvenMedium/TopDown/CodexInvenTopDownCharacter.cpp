@@ -31,6 +31,9 @@ ACodexInvenTopDownCharacter::ACodexInvenTopDownCharacter()
 	CameraBoom->SetRelativeRotation(FRotator(-60.0f, 0.0f, 0.0f));
 	CameraBoom->bDoCollisionTest = false;
 	CameraBoom->bUsePawnControlRotation = false;
+	CameraBoom->bInheritPitch = false;
+	CameraBoom->bInheritYaw = false;
+	CameraBoom->bInheritRoll = false;
 
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
@@ -105,9 +108,16 @@ void ACodexInvenTopDownCharacter::Move(const FInputActionValue& Value)
 		return;
 	}
 
-	const FRotator CameraYaw(0.0f, CameraBoom != nullptr ? CameraBoom->GetComponentRotation().Yaw : GetActorRotation().Yaw, 0.0f);
-	const FVector ForwardDirection = FRotationMatrix(CameraYaw).GetUnitAxis(EAxis::X);
-	const FVector RightDirection = FRotationMatrix(CameraYaw).GetUnitAxis(EAxis::Y);
+	const FVector CameraForward = FollowCamera != nullptr ? FollowCamera->GetForwardVector() : GetActorForwardVector();
+	const FVector CameraRight = FollowCamera != nullptr ? FollowCamera->GetRightVector() : GetActorRightVector();
+
+	FVector ForwardDirection = FVector(CameraForward.X, CameraForward.Y, 0.0f).GetSafeNormal();
+	FVector RightDirection = FVector(CameraRight.X, CameraRight.Y, 0.0f).GetSafeNormal();
+
+	if (ForwardDirection.IsNearlyZero() || RightDirection.IsNearlyZero())
+	{
+		return;
+	}
 
 	AddMovementInput(ForwardDirection, InputVector.Y);
 	AddMovementInput(RightDirection, InputVector.X);
