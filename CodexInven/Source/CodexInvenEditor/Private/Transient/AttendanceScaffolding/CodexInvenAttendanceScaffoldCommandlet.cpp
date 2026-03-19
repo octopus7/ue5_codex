@@ -1,6 +1,8 @@
 #include "Transient/AttendanceScaffolding/CodexInvenAttendanceScaffoldCommandlet.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "AssetImportTask.h"
+#include "AssetToolsModule.h"
 #include "Blueprint/WidgetBlueprintGeneratedClass.h"
 #include "Blueprint/WidgetTree.h"
 #include "CodexInvenAttendanceCompactWidget.h"
@@ -25,10 +27,13 @@
 #include "Engine/Blueprint.h"
 #include "Engine/Texture2D.h"
 #include "Engine/TextureDefines.h"
+#include "Factories/TextureFactory.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Misc/PackageName.h"
+#include "Misc/Paths.h"
 #include "Styling/SlateColor.h"
+#include "Styling/SlateBrush.h"
 #include "TextureCompiler.h"
 #include "UObject/Package.h"
 #include "UObject/SavePackage.h"
@@ -39,6 +44,13 @@ DEFINE_LOG_CATEGORY_STATIC(LogCodexInvenAttendanceScaffold, Log, All);
 
 namespace
 {
+	const TCHAR* AttendanceBannerSourceFilename = TEXT("banner.png");
+	const TCHAR* AttendanceDayBannerSourceFilename = TEXT("banner_day.png");
+	const TCHAR* AttendanceBannerTexturePackagePath = TEXT("/Game/UI/Attendance/T_AttendanceEventBanner");
+	const TCHAR* AttendanceDayBannerTexturePackagePath = TEXT("/Game/UI/Attendance/T_AttendanceEventDayBanner");
+	const TCHAR* AttendanceDayCardLockedTexturePackagePath = TEXT("/Game/UI/Attendance/T_AttendanceDayCardLocked");
+	const TCHAR* AttendanceDayCardClaimableTexturePackagePath = TEXT("/Game/UI/Attendance/T_AttendanceDayCardClaimable");
+	const TCHAR* AttendanceDayCardClaimedTexturePackagePath = TEXT("/Game/UI/Attendance/T_AttendanceDayCardClaimed");
 	const TCHAR* AttendancePanelTexturePackagePath = TEXT("/Game/UI/Attendance/T_AttendancePanelBackdrop");
 	const TCHAR* AttendanceRailTexturePackagePath = TEXT("/Game/UI/Attendance/T_AttendanceRailBackdrop");
 	const TCHAR* AttendanceConfigPackagePath = TEXT("/Game/Data/Attendance/DA_AttendanceConfig");
@@ -51,6 +63,11 @@ namespace
 	constexpr int32 PanelTextureHeight = 512;
 	constexpr int32 RailTextureWidth = 1024;
 	constexpr int32 RailTextureHeight = 192;
+	constexpr int32 DayCardTextureWidth = 384;
+	constexpr int32 DayCardTextureHeight = 512;
+	constexpr float AttendancePanelShellInset = 10.0f;
+	constexpr float AttendancePanelCornerRadius = 18.0f;
+	constexpr float AttendancePanelOutlineWidth = 1.5f;
 
 	struct FAttendanceWidgetSpec
 	{
@@ -64,9 +81,26 @@ namespace
 		float DayEntrySpacing = 12.0f;
 	};
 
+	struct FAttendanceDayCardTextureStyle
+	{
+		FLinearColor PaperTop;
+		FLinearColor PaperBottom;
+		FLinearColor FrameOuter;
+		FLinearColor FrameInner;
+		FLinearColor AccentPrimary;
+		FLinearColor AccentSecondary;
+		FLinearColor BottomBand;
+		FLinearColor Highlight;
+	};
+
 	FString MakeObjectPath(const FString& InPackagePath)
 	{
 		return InPackagePath + TEXT(".") + FPackageName::GetLongPackageAssetName(InPackagePath);
+	}
+
+	FString GetProjectImageSourcePath(const FString& InFilename)
+	{
+		return FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), InFilename));
 	}
 
 	bool SaveObjectPackage(UObject& InObject, FString& OutError)
@@ -182,6 +216,161 @@ namespace
 		}
 	}
 
+	float SmoothMask(const float InEdge0, const float InEdge1, const float InValue)
+	{
+		const float T = FMath::Clamp((InValue - InEdge0) / FMath::Max(InEdge1 - InEdge0, KINDA_SMALL_NUMBER), 0.0f, 1.0f);
+		return T * T * (3.0f - (2.0f * T));
+	}
+
+	float HashNoise(const float InX, const float InY)
+	{
+		return FMath::Frac(FMath::Sin((InX * 12.9898f) + (InY * 78.233f)) * 43758.5453f);
+	}
+
+	void BlendPixelColor(FLinearColor& InOutPixelColor, const FLinearColor& InOverlayColor, const float InAlpha)
+	{
+		const float BlendAlpha = FMath::Clamp(InAlpha * InOverlayColor.A, 0.0f, 1.0f);
+		InOutPixelColor = FMath::Lerp(InOutPixelColor, FLinearColor(InOverlayColor.R, InOverlayColor.G, InOverlayColor.B, InOutPixelColor.A), BlendAlpha);
+	}
+
+	void BuildAttendanceDayCardPixels(const FAttendanceDayCardTextureStyle& InStyle, TArray64<uint8>& OutPixels)
+	{
+		OutPixels.Init(0, static_cast<int64>(DayCardTextureWidth) * DayCardTextureHeight * 4);
+
+		constexpr int32 OuterFrameThickness = 8;
+		constexpr int32 InnerFrameThickness = 18;
+		const float HeaderBottom = DayCardTextureHeight * 0.20f;
+		const float AccentBandStart = DayCardTextureHeight * 0.74f;
+
+		for (int32 Y = 0; Y < DayCardTextureHeight; ++Y)
+		{
+			const float NormalizedY = static_cast<float>(Y) / static_cast<float>(DayCardTextureHeight - 1);
+			for (int32 X = 0; X < DayCardTextureWidth; ++X)
+			{
+				const float NormalizedX = static_cast<float>(X) / static_cast<float>(DayCardTextureWidth - 1);
+				const bool bIsOuterFrame =
+					X < OuterFrameThickness ||
+					Y < OuterFrameThickness ||
+					X >= DayCardTextureWidth - OuterFrameThickness ||
+					Y >= DayCardTextureHeight - OuterFrameThickness;
+				const bool bIsInnerFrame =
+					X < InnerFrameThickness ||
+					Y < InnerFrameThickness ||
+					X >= DayCardTextureWidth - InnerFrameThickness ||
+					Y >= DayCardTextureHeight - InnerFrameThickness;
+
+				FLinearColor PixelColor = FMath::Lerp(InStyle.PaperTop, InStyle.PaperBottom, FMath::InterpEaseInOut(0.0f, 1.0f, NormalizedY, 1.4f));
+
+				const float CenterGlow = FMath::Max(0.0f, 1.0f - FMath::Abs((NormalizedX * 2.0f) - 1.0f));
+				const float UpperGlow = FMath::Clamp(1.0f - (NormalizedY * 1.8f), 0.0f, 1.0f);
+				BlendPixelColor(PixelColor, InStyle.Highlight, CenterGlow * UpperGlow * 0.38f);
+
+				const float Noise = (HashNoise(static_cast<float>(X) * 0.08f, static_cast<float>(Y) * 0.08f) - 0.5f) * 0.030f;
+				PixelColor.R = FMath::Clamp(PixelColor.R + Noise, 0.0f, 1.0f);
+				PixelColor.G = FMath::Clamp(PixelColor.G + Noise, 0.0f, 1.0f);
+				PixelColor.B = FMath::Clamp(PixelColor.B + Noise, 0.0f, 1.0f);
+				PixelColor.A = 1.0f;
+
+				const float HeaderMask = 1.0f - SmoothMask(HeaderBottom - 24.0f, HeaderBottom + 10.0f, static_cast<float>(Y));
+				BlendPixelColor(PixelColor, FLinearColor(1.0f, 1.0f, 1.0f, 0.62f), HeaderMask * 0.72f);
+				BlendPixelColor(PixelColor, InStyle.AccentSecondary, HeaderMask * 0.10f);
+
+				const float LeftRailMask = 1.0f - SmoothMask(0.0f, 26.0f, static_cast<float>(X));
+				BlendPixelColor(PixelColor, InStyle.AccentPrimary, LeftRailMask * 0.26f);
+
+				const float AccentBandMask = SmoothMask(AccentBandStart, AccentBandStart + 48.0f, static_cast<float>(Y));
+				BlendPixelColor(PixelColor, InStyle.BottomBand, AccentBandMask * 0.95f);
+
+				const float DiagonalShardA =
+					FMath::Clamp(1.0f - FMath::Abs((NormalizedY - 0.84f) - ((NormalizedX - 0.20f) * 0.42f)) / 0.060f, 0.0f, 1.0f);
+				const float DiagonalShardB =
+					FMath::Clamp(1.0f - FMath::Abs((NormalizedY - 0.89f) + ((NormalizedX - 0.62f) * 0.36f)) / 0.045f, 0.0f, 1.0f);
+				const float DiagonalShardC =
+					FMath::Clamp(1.0f - FMath::Abs((NormalizedY - 0.77f) + ((NormalizedX - 0.48f) * 0.28f)) / 0.030f, 0.0f, 1.0f);
+				BlendPixelColor(PixelColor, InStyle.AccentPrimary, DiagonalShardA * AccentBandMask * 0.90f);
+				BlendPixelColor(PixelColor, InStyle.AccentSecondary, DiagonalShardB * AccentBandMask * 0.82f);
+				BlendPixelColor(PixelColor, FLinearColor(0.02f, 0.03f, 0.05f, 0.95f), DiagonalShardC * AccentBandMask * 0.65f);
+
+				const float EmblemDistance = FVector2D(NormalizedX - 0.76f, NormalizedY - 0.14f).Length();
+				const float EmblemRing = FMath::Clamp(1.0f - FMath::Abs(EmblemDistance - 0.10f) / 0.010f, 0.0f, 1.0f);
+				BlendPixelColor(PixelColor, InStyle.AccentSecondary, EmblemRing * 0.35f);
+
+				const bool bIsHeaderDivider = FMath::Abs(static_cast<float>(Y) - HeaderBottom) <= 1.5f;
+				if (bIsHeaderDivider && X > InnerFrameThickness && X < DayCardTextureWidth - InnerFrameThickness)
+				{
+					PixelColor = FMath::Lerp(PixelColor, InStyle.AccentPrimary, 0.55f);
+				}
+
+				const bool bIsOuterCornerAccent =
+					(X < 34 && Y < 34 && (X < 4 || Y < 4 || X + Y < 18)) ||
+					(X >= DayCardTextureWidth - 34 && Y < 34 && ((DayCardTextureWidth - 1 - X) < 4 || Y < 4 || (DayCardTextureWidth - 1 - X) + Y < 18));
+				if (bIsOuterCornerAccent)
+				{
+					PixelColor = FMath::Lerp(PixelColor, InStyle.AccentPrimary, 0.72f);
+				}
+
+				if (bIsOuterFrame)
+				{
+					PixelColor = InStyle.FrameOuter;
+				}
+				else if (bIsInnerFrame)
+				{
+					PixelColor = FMath::Lerp(PixelColor, InStyle.FrameInner, 0.86f);
+				}
+
+				SetPixel(OutPixels, DayCardTextureWidth, DayCardTextureHeight, X, Y, PixelColor.GetClamped().ToFColorSRGB());
+			}
+		}
+	}
+
+	void BuildLockedDayCardPixels(TArray64<uint8>& OutPixels)
+	{
+		BuildAttendanceDayCardPixels(
+			FAttendanceDayCardTextureStyle{
+				FLinearColor(0.97f, 0.98f, 1.0f, 1.0f),
+				FLinearColor(0.90f, 0.93f, 0.98f, 1.0f),
+				FLinearColor(0.18f, 0.23f, 0.34f, 1.0f),
+				FLinearColor(0.76f, 0.82f, 0.92f, 1.0f),
+				FLinearColor(0.26f, 0.43f, 0.70f, 0.96f),
+				FLinearColor(0.66f, 0.74f, 0.90f, 0.72f),
+				FLinearColor(0.09f, 0.12f, 0.18f, 0.98f),
+				FLinearColor(1.0f, 1.0f, 1.0f, 0.72f)
+			},
+			OutPixels);
+	}
+
+	void BuildClaimableDayCardPixels(TArray64<uint8>& OutPixels)
+	{
+		BuildAttendanceDayCardPixels(
+			FAttendanceDayCardTextureStyle{
+				FLinearColor(1.0f, 0.98f, 0.94f, 1.0f),
+				FLinearColor(0.96f, 0.90f, 0.78f, 1.0f),
+				FLinearColor(0.73f, 0.54f, 0.15f, 1.0f),
+				FLinearColor(0.99f, 0.95f, 0.82f, 1.0f),
+				FLinearColor(0.97f, 0.76f, 0.20f, 0.98f),
+				FLinearColor(0.82f, 0.28f, 0.40f, 0.74f),
+				FLinearColor(0.20f, 0.11f, 0.13f, 0.99f),
+				FLinearColor(1.0f, 0.98f, 0.94f, 0.75f)
+			},
+			OutPixels);
+	}
+
+	void BuildClaimedDayCardPixels(TArray64<uint8>& OutPixels)
+	{
+		BuildAttendanceDayCardPixels(
+			FAttendanceDayCardTextureStyle{
+				FLinearColor(0.94f, 1.0f, 0.98f, 1.0f),
+				FLinearColor(0.84f, 0.94f, 0.90f, 1.0f),
+				FLinearColor(0.10f, 0.40f, 0.34f, 1.0f),
+				FLinearColor(0.74f, 0.92f, 0.86f, 1.0f),
+				FLinearColor(0.24f, 0.82f, 0.64f, 0.96f),
+				FLinearColor(0.28f, 0.58f, 0.48f, 0.68f),
+				FLinearColor(0.07f, 0.16f, 0.15f, 0.99f),
+				FLinearColor(0.96f, 1.0f, 0.98f, 0.74f)
+			},
+			OutPixels);
+	}
+
 	UTexture2D* CreateOrUpdateTextureAsset(
 		const FString& InPackagePath,
 		const int32 InWidth,
@@ -224,6 +413,86 @@ namespace
 		}
 
 		return Texture;
+	}
+
+	UTexture2D* ImportOrUpdateTextureAsset(
+		const FString& InSourceFilename,
+		const FString& InPackagePath,
+		FString& OutError)
+	{
+		if (!FPaths::FileExists(InSourceFilename))
+		{
+			OutError = FString::Printf(TEXT("Source image does not exist: %s"), *InSourceFilename);
+			return nullptr;
+		}
+
+		UAssetImportTask* const ImportTask = NewObject<UAssetImportTask>(GetTransientPackage());
+		UTextureFactory* const TextureFactory = NewObject<UTextureFactory>(ImportTask);
+		if (ImportTask == nullptr || TextureFactory == nullptr)
+		{
+			OutError = TEXT("Failed to allocate import task objects for the attendance banner.");
+			return nullptr;
+		}
+
+		ImportTask->Filename = InSourceFilename;
+		ImportTask->DestinationPath = FPackageName::GetLongPackagePath(InPackagePath);
+		ImportTask->DestinationName = FPackageName::GetLongPackageAssetName(InPackagePath);
+		ImportTask->bReplaceExisting = true;
+		ImportTask->bReplaceExistingSettings = true;
+		ImportTask->bAutomated = true;
+		ImportTask->bSave = true;
+		ImportTask->bAsync = false;
+
+		TextureFactory->MipGenSettings = TMGS_NoMipmaps;
+		TextureFactory->LODGroup = TEXTUREGROUP_UI;
+		TextureFactory->CompressionSettings = TC_EditorIcon;
+		TextureFactory->bCreateMaterial = false;
+		TextureFactory->bDeferCompression = false;
+		ImportTask->Factory = TextureFactory;
+
+		TArray<UAssetImportTask*> ImportTasks;
+		ImportTasks.Add(ImportTask);
+		FAssetToolsModule::GetModule().Get().ImportAssetTasks(ImportTasks);
+
+		UTexture2D* ImportedTexture = nullptr;
+		for (UObject* const ImportedObject : ImportTask->GetObjects())
+		{
+			ImportedTexture = Cast<UTexture2D>(ImportedObject);
+			if (ImportedTexture != nullptr)
+			{
+				break;
+			}
+		}
+
+		if (ImportedTexture == nullptr)
+		{
+			ImportedTexture = LoadObject<UTexture2D>(nullptr, *MakeObjectPath(InPackagePath));
+		}
+
+		if (ImportedTexture == nullptr)
+		{
+			OutError = FString::Printf(TEXT("Failed to import the attendance banner from %s."), *InSourceFilename);
+			return nullptr;
+		}
+
+		ImportedTexture->Modify();
+		ImportedTexture->MipGenSettings = TMGS_NoMipmaps;
+		ImportedTexture->NeverStream = true;
+		ImportedTexture->SRGB = true;
+		ImportedTexture->LODGroup = TEXTUREGROUP_UI;
+		ImportedTexture->CompressionSettings = TC_EditorIcon;
+		ImportedTexture->Filter = TF_Bilinear;
+		ImportedTexture->UpdateResource();
+		ImportedTexture->PostEditChange();
+		FTextureCompilingManager::Get().FinishCompilation({ ImportedTexture });
+		ImportedTexture->MarkPackageDirty();
+
+		if (!SaveObjectPackage(*ImportedTexture, OutError))
+		{
+			return nullptr;
+		}
+
+		return ImportedTexture;
 	}
 
 	void RenameExistingWidgetsToTransient(UWidgetTree& InWidgetTree)
@@ -287,6 +556,14 @@ namespace
 		return Button;
 	}
 
+	FVector2D CalculateCoverSize(const FVector2D& InTargetSize, UTexture2D& InTexture)
+	{
+		const float TextureWidth = static_cast<float>(FMath::Max(InTexture.GetSurfaceWidth(), 1));
+		const float TextureHeight = static_cast<float>(FMath::Max(InTexture.GetSurfaceHeight(), 1));
+		const float Scale = FMath::Max(InTargetSize.X / TextureWidth, InTargetSize.Y / TextureHeight);
+		return FVector2D(TextureWidth * Scale, TextureHeight * Scale);
+	}
+
 	void BuildAttendanceWidgetTree(
 		UWidgetBlueprint& InWidgetBlueprint,
 		UTexture2D& InPanelTexture,
@@ -320,16 +597,52 @@ namespace
 				FVector2D(0.5f, 0.5f));
 		}
 
+		UBorder* const PanelShellBorder = WidgetTree.ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("PanelShellBorder"));
+		PanelShellBorder->SetPadding(FMargin(AttendancePanelShellInset));
+		FSlateBrush PanelShellBrush;
+		PanelShellBrush.DrawAs = ESlateBrushDrawType::RoundedBox;
+		PanelShellBrush.TintColor = FSlateColor(FLinearColor(0.04f, 0.06f, 0.10f, 0.96f));
+		PanelShellBrush.OutlineSettings = FSlateBrushOutlineSettings(
+			AttendancePanelCornerRadius,
+			FSlateColor(FLinearColor(0.97f, 0.94f, 0.84f, 0.42f)),
+			AttendancePanelOutlineWidth);
+		PanelShellBorder->SetBrush(PanelShellBrush);
+		PanelSizeBox->SetContent(PanelShellBorder);
+
 		UOverlay* const PanelOverlay = WidgetTree.ConstructWidget<UOverlay>(UOverlay::StaticClass(), TEXT("PanelOverlay"));
-		PanelSizeBox->SetContent(PanelOverlay);
+		PanelOverlay->SetClipping(EWidgetClipping::ClipToBounds);
+		PanelShellBorder->SetContent(PanelOverlay);
+
+		const FVector2D PanelContentSize(
+			FMath::Max(InWidgetSpec.PanelSize.X - (AttendancePanelShellInset * 2.0f), 1.0f),
+			FMath::Max(InWidgetSpec.PanelSize.Y - (AttendancePanelShellInset * 2.0f), 1.0f));
+		const FVector2D BackgroundCoverSize = CalculateCoverSize(PanelContentSize, InPanelTexture);
+
+		USizeBox* const PanelBackgroundSizeBox =
+			WidgetTree.ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("PanelBackgroundSizeBox"));
+		PanelBackgroundSizeBox->SetWidthOverride(BackgroundCoverSize.X);
+		PanelBackgroundSizeBox->SetHeightOverride(BackgroundCoverSize.Y);
+		if (UOverlaySlot* const BackgroundSizeSlot = PanelOverlay->AddChildToOverlay(PanelBackgroundSizeBox))
+		{
+			BackgroundSizeSlot->SetHorizontalAlignment(HAlign_Center);
+			BackgroundSizeSlot->SetVerticalAlignment(VAlign_Center);
+		}
 
 		UImage* const PanelBackgroundImage = WidgetTree.ConstructWidget<UImage>(UImage::StaticClass(), TEXT("PanelBackgroundImage"));
 		PanelBackgroundImage->SetBrushFromTexture(&InPanelTexture, true);
-		PanelOverlay->AddChildToOverlay(PanelBackgroundImage);
+		PanelBackgroundSizeBox->SetContent(PanelBackgroundImage);
+
+		UBorder* const PanelBackdropScrim = WidgetTree.ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("PanelBackdropScrim"));
+		PanelBackdropScrim->SetBrushColor(FLinearColor(0.02f, 0.04f, 0.08f, 0.18f));
+		if (UOverlaySlot* const ScrimSlot = PanelOverlay->AddChildToOverlay(PanelBackdropScrim))
+		{
+			ScrimSlot->SetHorizontalAlignment(HAlign_Fill);
+			ScrimSlot->SetVerticalAlignment(VAlign_Fill);
+		}
 
 		UBorder* const ContentBorder = WidgetTree.ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("ContentBorder"));
 		ContentBorder->SetPadding(FMargin(28.0f));
-		ContentBorder->SetBrushColor(FLinearColor::White);
+		ContentBorder->SetBrushColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
 		if (UOverlaySlot* const ContentSlot = PanelOverlay->AddChildToOverlay(ContentBorder))
 		{
 			ContentSlot->SetHorizontalAlignment(HAlign_Fill);
@@ -376,7 +689,7 @@ namespace
 
 		UBorder* const RailContentBorder = WidgetTree.ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("RailContentBorder"));
 		RailContentBorder->SetPadding(FMargin(18.0f, 16.0f));
-		RailContentBorder->SetBrushColor(FLinearColor::White);
+		RailContentBorder->SetBrushColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
 		if (UOverlaySlot* const RailContentSlot = RailOverlay->AddChildToOverlay(RailContentBorder))
 		{
 			RailContentSlot->SetHorizontalAlignment(HAlign_Fill);
@@ -701,16 +1014,28 @@ int32 UCodexInvenAttendanceScaffoldCommandlet::Main(const FString& InParams)
 	static_cast<void>(InParams);
 
 	FString ErrorMessage;
-	UTexture2D* const PanelTexture = CreateOrUpdateTextureAsset(
-		AttendancePanelTexturePackagePath,
-		PanelTextureWidth,
-		PanelTextureHeight,
-		&BuildPanelBackdropPixels,
+	UTexture2D* const BannerTexture = ImportOrUpdateTextureAsset(
+		GetProjectImageSourcePath(AttendanceBannerSourceFilename),
+		AttendanceBannerTexturePackagePath,
 		ErrorMessage);
-	if (PanelTexture == nullptr)
+	if (BannerTexture == nullptr)
 	{
 		UE_LOG(LogCodexInvenAttendanceScaffold, Error, TEXT("%s"), *ErrorMessage);
 		return 1;
+	}
+
+	UTexture2D* DayBannerTexture = ImportOrUpdateTextureAsset(
+		GetProjectImageSourcePath(AttendanceDayBannerSourceFilename),
+		AttendanceDayBannerTexturePackagePath,
+		ErrorMessage);
+	if (DayBannerTexture == nullptr)
+	{
+		UE_LOG(
+			LogCodexInvenAttendanceScaffold,
+			Warning,
+			TEXT("%s Using the default attendance banner for the long attendance page."),
+			*ErrorMessage);
+		DayBannerTexture = BannerTexture;
 	}
 
 	UTexture2D* const RailTexture = CreateOrUpdateTextureAsset(
@@ -725,25 +1050,48 @@ int32 UCodexInvenAttendanceScaffoldCommandlet::Main(const FString& InParams)
 		return 1;
 	}
 
+	if (CreateOrUpdateTextureAsset(
+			AttendanceDayCardLockedTexturePackagePath,
+			DayCardTextureWidth,
+			DayCardTextureHeight,
+			&BuildLockedDayCardPixels,
+			ErrorMessage) == nullptr ||
+		CreateOrUpdateTextureAsset(
+			AttendanceDayCardClaimableTexturePackagePath,
+			DayCardTextureWidth,
+			DayCardTextureHeight,
+			&BuildClaimableDayCardPixels,
+			ErrorMessage) == nullptr ||
+		CreateOrUpdateTextureAsset(
+			AttendanceDayCardClaimedTexturePackagePath,
+			DayCardTextureWidth,
+			DayCardTextureHeight,
+			&BuildClaimedDayCardPixels,
+			ErrorMessage) == nullptr)
+	{
+		UE_LOG(LogCodexInvenAttendanceScaffold, Error, TEXT("%s"), *ErrorMessage);
+		return 1;
+	}
+
 	UWidgetBlueprint* Widget5Day = nullptr;
 	UWidgetBlueprint* Widget7Day = nullptr;
 	UWidgetBlueprint* Widget14Day = nullptr;
 
 	if (!CreateOrUpdateAttendanceWidgetBlueprint(
 		FAttendanceWidgetSpec{ AttendanceWidget5PackagePath, UCodexInvenAttendanceCompactWidget::StaticClass(), FVector2D(980.0f, 500.0f), false, 5, 160.0f, 176.0f, 12.0f },
-		*PanelTexture,
+		*BannerTexture,
 		*RailTexture,
 		Widget5Day,
 		ErrorMessage) ||
 		!CreateOrUpdateAttendanceWidgetBlueprint(
 			FAttendanceWidgetSpec{ AttendanceWidget7PackagePath, UCodexInvenAttendanceCompactWidget::StaticClass(), FVector2D(1180.0f, 520.0f), false, 7, 136.0f, 176.0f, 10.0f },
-			*PanelTexture,
+			*BannerTexture,
 			*RailTexture,
 			Widget7Day,
 			ErrorMessage) ||
 		!CreateOrUpdateAttendanceWidgetBlueprint(
 			FAttendanceWidgetSpec{ AttendanceWidget14PackagePath, UCodexInvenAttendanceScrollableWidget::StaticClass(), FVector2D(1024.0f, 540.0f), true, 14, 132.0f, 176.0f, 12.0f },
-			*PanelTexture,
+			*DayBannerTexture,
 			*RailTexture,
 			Widget14Day,
 			ErrorMessage))
@@ -768,7 +1116,12 @@ int32 UCodexInvenAttendanceScaffoldCommandlet::Main(const FString& InParams)
 	UE_LOG(
 		LogCodexInvenAttendanceScaffold,
 		Display,
-		TEXT("Attendance assets are ready: %s, %s, %s, and %s."),
+		TEXT("Attendance assets are ready: %s, %s, %s, %s, %s, %s, %s, %s, and %s."),
+		AttendanceBannerTexturePackagePath,
+		AttendanceDayBannerTexturePackagePath,
+		AttendanceDayCardLockedTexturePackagePath,
+		AttendanceDayCardClaimableTexturePackagePath,
+		AttendanceDayCardClaimedTexturePackagePath,
 		AttendanceWidget5PackagePath,
 		AttendanceWidget7PackagePath,
 		AttendanceWidget14PackagePath,

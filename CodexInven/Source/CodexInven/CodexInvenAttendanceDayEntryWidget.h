@@ -6,6 +6,7 @@
 #include "CodexInvenAttendanceDayEntryWidget.generated.h"
 
 class UBorder;
+class UImage;
 class UTextBlock;
 
 UCLASS()
@@ -22,9 +23,19 @@ protected:
 private:
 	void BuildWidgetTreeIfNeeded();
 	void RefreshVisualState();
+	class UTexture2D* GetRewardIconTexture() const;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UBorder> RootBorder = nullptr;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UBorder> RewardPanelBorder = nullptr;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UBorder> StateBadgeBorder = nullptr;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UImage> RewardIconImage = nullptr;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> DayNumberTextBlock = nullptr;
