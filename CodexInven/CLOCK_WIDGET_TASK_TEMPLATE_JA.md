@@ -68,7 +68,7 @@
 
 ## 現在のプロジェクト例
 
-- `<EnginePath>`: `E:\WorkTemp\Epic Games\UE_5.7`
+- `<EnginePath>`: ローカルの Unreal Engine `5.7` インストールパス
 - `<ProjectRoot>`: `D:\github\ue5_codex\CodexInven`
 - `<ProjectName>`: `CodexInven`
 - `<ProjectEditorModuleName>`: `CodexInvenEditor`
@@ -78,7 +78,7 @@
 実行例:
 
 ```powershell
-& "E:\WorkTemp\Epic Games\UE_5.7\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" `
+& "<EnginePath>\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" `
   "D:\github\ue5_codex\CodexInven\CodexInven.uproject" `
   -run=CodexInvenClockWidgetScaffold `
   -unattended -nop4 -nosplash -NoSound

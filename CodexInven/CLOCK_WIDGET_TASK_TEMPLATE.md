@@ -68,7 +68,7 @@ Verification:
 
 ## Current Project Example
 
-- `<EnginePath>`: `E:\WorkTemp\Epic Games\UE_5.7`
+- `<EnginePath>`: your local Unreal Engine `5.7` installation path
 - `<ProjectRoot>`: `D:\github\ue5_codex\CodexInven`
 - `<ProjectName>`: `CodexInven`
 - `<ProjectEditorModuleName>`: `CodexInvenEditor`
@@ -78,7 +78,7 @@ Verification:
 Example run:
 
 ```powershell
-& "E:\WorkTemp\Epic Games\UE_5.7\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" `
+& "<EnginePath>\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" `
   "D:\github\ue5_codex\CodexInven\CodexInven.uproject" `
   -run=CodexInvenClockWidgetScaffold `
   -unattended -nop4 -nosplash -NoSound
