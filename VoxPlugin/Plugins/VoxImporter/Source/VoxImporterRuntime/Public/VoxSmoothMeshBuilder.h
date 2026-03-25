@@ -7,8 +7,8 @@ struct FMeshDescription;
 
 struct VOXIMPORTERRUNTIME_API FVoxSmoothBuildSettings
 {
-	static constexpr float DefaultDesiredResolutionScale = 3.0f;
-	static constexpr int32 DefaultMaxGridDimension = 192;
+	static constexpr float DefaultDesiredResolutionScale = 2.0f;
+	static constexpr int32 DefaultMaxGridDimension = 128;
 	static constexpr int32 DefaultPaddingVoxels = 1;
 	static constexpr float DefaultIsoValue = 0.5f;
 	static constexpr float DefaultDensityBlurBlend = 0.15f;

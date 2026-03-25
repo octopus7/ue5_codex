@@ -8,6 +8,7 @@
 #include "VoxMeshBuilder.h"
 #include "VoxParser.h"
 #include "VoxSmoothMeshBuilder.h"
+#include "VoxStaticMeshUtilities.h"
 
 namespace
 {
@@ -206,6 +207,44 @@ bool FVoxSmoothMeshBuilderSingleVoxelTest::RunTest(const FString& Parameters)
 
 	const FBox Bounds = ComputeVertexBounds(MeshDescription);
 	TestTrue(TEXT("Smooth bounds center is near origin"), Bounds.GetCenter().Equals(FVector::ZeroVector, KINDA_SMALL_NUMBER));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVoxSmoothMeshBuilderSimplifyTest, "VoxImporter.Reconstruction.SimplifyPercent", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FVoxSmoothMeshBuilderSimplifyTest::RunTest(const FString& Parameters)
+{
+	FVoxModelData Model;
+	Model.Size = FIntVector(8, 8, 8);
+	Model.Palette.Init(FColor(0, 0, 0, 0), 256);
+	Model.Palette[1] = FColor(255, 255, 255, 255);
+
+	for (int32 Z = 0; Z < 8; ++Z)
+	{
+		for (int32 Y = 0; Y < 8; ++Y)
+		{
+			for (int32 X = 0; X < 8; ++X)
+			{
+				FVoxVoxel& Voxel = Model.Voxels.AddDefaulted_GetRef();
+				Voxel.X = X;
+				Voxel.Y = Y;
+				Voxel.Z = Z;
+				Voxel.ColorIndex = 1;
+			}
+		}
+	}
+
+	FMeshDescription SmoothMeshDescription;
+	FString ErrorMessage;
+	TestTrue(TEXT("Dense smooth mesh build succeeds"), FVoxSmoothMeshBuilder::BuildSmoothMeshDescription(Model, SmoothMeshDescription, ErrorMessage));
+	const int32 OriginalTriangleCount = SmoothMeshDescription.Triangles().Num();
+	TestTrue(TEXT("Original smooth mesh has triangles"), OriginalTriangleCount > 0);
+
+	FMeshDescription SimplifiedMeshDescription;
+	ErrorMessage.Reset();
+	TestTrue(TEXT("Simplify succeeds"), VoxStaticMeshUtilities::SimplifyMeshDescription(SmoothMeshDescription, 0.03f, SimplifiedMeshDescription, ErrorMessage));
+	TestTrue(TEXT("Simplified mesh still has triangles"), SimplifiedMeshDescription.Triangles().Num() > 0);
+	TestTrue(TEXT("Simplified mesh has fewer triangles"), SimplifiedMeshDescription.Triangles().Num() < OriginalTriangleCount);
+
 	return true;
 }
 

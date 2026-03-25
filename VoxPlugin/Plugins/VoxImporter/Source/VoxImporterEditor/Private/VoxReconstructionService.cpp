@@ -67,6 +67,7 @@ namespace VoxReconstructionService
 			SourceFilename,
 			true,
 			BuildMetadata.ResolutionScaleUsed,
+			0.03f,
 			SourceMesh->GetPathName()
 		};
 

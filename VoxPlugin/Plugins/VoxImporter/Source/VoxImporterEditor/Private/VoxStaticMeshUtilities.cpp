@@ -5,14 +5,21 @@
 #include "Engine/Engine.h"
 #include "Engine/StaticMesh.h"
 #include "Factories/MaterialFactoryNew.h"
+#include "IMeshReductionInterfaces.h"
+#include "IMeshReductionManagerModule.h"
 #include "Materials/Material.h"
 #include "Materials/MaterialExpressionConstant.h"
 #include "Materials/MaterialExpressionVertexColor.h"
 #include "Materials/MaterialInterface.h"
 #include "MeshDescription.h"
+#include "MeshReductionSettings.h"
 #include "Misc/FeedbackContext.h"
 #include "Misc/Paths.h"
+#include "Modules/ModuleManager.h"
+#include "OverlappingCorners.h"
 #include "PhysicsEngine/BodySetup.h"
+#include "StaticMeshAttributes.h"
+#include "StaticMeshOperations.h"
 #include "VoxImportedAssetUserData.h"
 
 namespace
@@ -187,6 +194,61 @@ FString VoxStaticMeshUtilities::GetVoxSourceFilename(const UStaticMesh* StaticMe
 	return SourceFilename;
 }
 
+bool VoxStaticMeshUtilities::SimplifyMeshDescription(
+	const FMeshDescription& SourceMeshDescription,
+	float TargetPercentTriangles,
+	FMeshDescription& OutMeshDescription,
+	FString& OutError)
+{
+	const float ClampedTargetPercent = FMath::Clamp(TargetPercentTriangles, 0.0f, 1.0f);
+	if (ClampedTargetPercent >= 1.0f - KINDA_SMALL_NUMBER)
+	{
+		OutMeshDescription = SourceMeshDescription;
+		return true;
+	}
+
+	if (ClampedTargetPercent <= KINDA_SMALL_NUMBER)
+	{
+		OutError = TEXT("Simplify target percentage must be greater than zero.");
+		return false;
+	}
+
+	IMeshReduction* Reduction = FModuleManager::Get().LoadModuleChecked<IMeshReductionManagerModule>(TEXT("MeshReductionInterface")).GetStaticMeshReductionInterface();
+	if (!Reduction || !Reduction->IsSupported())
+	{
+		OutError = TEXT("Static mesh reduction is not available in this editor build.");
+		return false;
+	}
+
+	FOverlappingCorners OverlappingCorners;
+	FStaticMeshOperations::FindOverlappingCorners(OverlappingCorners, SourceMeshDescription, THRESH_POINTS_ARE_SAME);
+
+	FMeshReductionSettings ReductionSettings;
+	ReductionSettings.TerminationCriterion = EStaticMeshReductionTerimationCriterion::Triangles;
+	ReductionSettings.PercentTriangles = FMath::Max(0.001f, ClampedTargetPercent);
+	ReductionSettings.PercentVertices = 1.0f;
+	ReductionSettings.MaxNumOfTriangles = MAX_uint32;
+	ReductionSettings.MaxNumOfVerts = MAX_uint32;
+	ReductionSettings.TextureImportance = EMeshFeatureImportance::Off;
+	ReductionSettings.ShadingImportance = EMeshFeatureImportance::High;
+	ReductionSettings.SilhouetteImportance = EMeshFeatureImportance::Highest;
+	ReductionSettings.VertexColorImportance = EMeshFeatureImportance::Highest;
+
+	FStaticMeshAttributes OutputAttributes(OutMeshDescription);
+	OutputAttributes.Register();
+
+	float MaxDeviation = 0.0f;
+	Reduction->ReduceMeshDescription(OutMeshDescription, MaxDeviation, SourceMeshDescription, OverlappingCorners, ReductionSettings);
+
+	if (OutMeshDescription.Triangles().Num() == 0)
+	{
+		OutError = TEXT("Mesh reduction produced an empty result.");
+		return false;
+	}
+
+	return true;
+}
+
 bool VoxStaticMeshUtilities::BuildStaticMeshAsset(UStaticMesh* StaticMesh, const FMeshDescription& MeshDescription, const FVoxMeshAssetBuildParams& BuildParams, FFeedbackContext* Warn)
 {
 	if (!StaticMesh)
@@ -214,8 +276,25 @@ bool VoxStaticMeshUtilities::BuildStaticMeshAsset(UStaticMesh* StaticMesh, const
 	StaticMesh->GetStaticMaterials().Reset();
 	StaticMesh->GetStaticMaterials().Add(FStaticMaterial(ResolveVoxelMaterial(), MaterialSlotName, MaterialSlotName));
 
+	FMeshDescription WorkingMeshDescription;
+	const FMeshDescription* MeshDescriptionToBuild = &MeshDescription;
+	if (BuildParams.SimplifyPercentTriangles < 1.0f - KINDA_SMALL_NUMBER)
+	{
+		FString SimplifyError;
+		if (!SimplifyMeshDescription(MeshDescription, BuildParams.SimplifyPercentTriangles, WorkingMeshDescription, SimplifyError))
+		{
+			if (Warn)
+			{
+				Warn->Logf(ELogVerbosity::Error, TEXT("Failed to simplify %s: %s"), *StaticMesh->GetName(), *SimplifyError);
+			}
+			return false;
+		}
+
+		MeshDescriptionToBuild = &WorkingMeshDescription;
+	}
+
 	TArray<const FMeshDescription*> MeshDescriptions;
-	MeshDescriptions.Add(&MeshDescription);
+	MeshDescriptions.Add(MeshDescriptionToBuild);
 
 	UStaticMesh::FBuildMeshDescriptionsParams BuildMeshParams;
 	BuildMeshParams.bCommitMeshDescription = true;
