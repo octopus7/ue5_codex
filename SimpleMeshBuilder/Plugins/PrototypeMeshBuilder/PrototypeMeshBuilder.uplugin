@@ -1,0 +1,17 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.1.0",
+	"FriendlyName": "Prototype Mesh Builder",
+	"Description": "Codex-backed prototype mesh generation workflow for Unreal Editor.",
+	"Category": "Editor",
+	"CanContainContent": false,
+	"EnabledByDefault": true,
+	"Modules": [
+		{
+			"Name": "PrototypeMeshBuilder",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	]
+}
