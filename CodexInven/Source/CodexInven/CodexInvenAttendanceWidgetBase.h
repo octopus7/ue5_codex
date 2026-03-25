@@ -1,8 +1,7 @@
 #pragma once
 
-#include "Blueprint/UserWidget.h"
-
 #include "CodexInvenAttendanceTypes.h"
+#include "PopupWidgetBase.h"
 #include "CodexInvenAttendanceWidgetBase.generated.h"
 
 class UButton;
@@ -15,7 +14,7 @@ class UCodexInvenOwnershipComponent;
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnCodexInvenAttendanceWidgetClosed, FName);
 
 UCLASS(Abstract)
-class CODEXINVEN_API UCodexInvenAttendanceWidgetBase : public UUserWidget
+class CODEXINVEN_API UCodexInvenAttendanceWidgetBase : public UPopupWidgetBase
 {
 	GENERATED_BODY()
 
@@ -28,6 +27,7 @@ public:
 protected:
 	virtual void NativeOnInitialized() override;
 	virtual void NativeConstruct() override;
+	virtual void HandleBackRequested() override;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Attendance|Layout", meta = (ClampMin = "0"))
 	int32 ExpectedTotalDays = 0;
@@ -63,7 +63,7 @@ private:
 	void RebuildDayEntries(const FCodexInvenAttendanceEventPresentationData& InPresentationData);
 	bool CanCurrentRewardFitInventory(const FCodexInvenAttendanceEventPresentationData& InPresentationData) const;
 	FText BuildStatusText(const FCodexInvenAttendanceEventPresentationData& InPresentationData, bool bInCanFitReward) const;
-	void CloseAttendanceWidget();
+	void CloseAttendanceWidget(EPopupWidgetResult InPopupResult = EPopupWidgetResult::Dismissed);
 
 	UFUNCTION()
 	void HandleClaimButtonClicked();
@@ -81,5 +81,4 @@ private:
 	FName EventId;
 	FText StatusOverrideText;
 	bool bHasStatusOverrideText = false;
-	bool bHasClosed = false;
 };

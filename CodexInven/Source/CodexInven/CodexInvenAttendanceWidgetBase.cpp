@@ -49,8 +49,6 @@ void UCodexInvenAttendanceWidgetBase::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 
-	SetIsFocusable(true);
-
 	if (ClaimButton != nullptr)
 	{
 		ClaimButton->OnClicked.AddUniqueDynamic(this, &ThisClass::HandleClaimButtonClicked);
@@ -66,8 +64,12 @@ void UCodexInvenAttendanceWidgetBase::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	bHasClosed = false;
 	RefreshFromSubsystem();
+}
+
+void UCodexInvenAttendanceWidgetBase::HandleBackRequested()
+{
+	CloseAttendanceWidget();
 }
 
 UCodexInvenAttendanceSubsystem* UCodexInvenAttendanceWidgetBase::GetAttendanceSubsystem() const
@@ -225,16 +227,15 @@ FText UCodexInvenAttendanceWidgetBase::BuildStatusText(
 		FText::FromString(FString(ClaimReadyText)));
 }
 
-void UCodexInvenAttendanceWidgetBase::CloseAttendanceWidget()
+void UCodexInvenAttendanceWidgetBase::CloseAttendanceWidget(const EPopupWidgetResult InPopupResult)
 {
-	if (bHasClosed)
+	if (IsPopupClosed())
 	{
 		return;
 	}
 
-	bHasClosed = true;
 	AttendanceWidgetClosed.Broadcast(EventId);
-	RemoveFromParent();
+	ClosePopupWithResult(InPopupResult);
 }
 
 void UCodexInvenAttendanceWidgetBase::HandleClaimButtonClicked()
@@ -273,7 +274,7 @@ void UCodexInvenAttendanceWidgetBase::HandleClaimButtonClicked()
 
 	bHasStatusOverrideText = false;
 	RefreshFromSubsystem();
-	CloseAttendanceWidget();
+	CloseAttendanceWidget(EPopupWidgetResult::Confirmed);
 }
 
 void UCodexInvenAttendanceWidgetBase::HandleCloseButtonClicked()
