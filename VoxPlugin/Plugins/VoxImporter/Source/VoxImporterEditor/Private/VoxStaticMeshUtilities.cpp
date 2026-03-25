@@ -20,10 +20,48 @@
 #include "PhysicsEngine/BodySetup.h"
 #include "StaticMeshAttributes.h"
 #include "StaticMeshOperations.h"
+#include "VoxModel.h"
 #include "VoxImportedAssetUserData.h"
 
 namespace
 {
+	struct FVoxColorGrid
+	{
+		FIntVector Size = FIntVector::ZeroValue;
+		TArray<uint8> Cells;
+
+		void Initialize(const FIntVector& InSize)
+		{
+			Size = InSize;
+			Cells.Init(0, Size.X * Size.Y * Size.Z);
+		}
+
+		bool IsInside(int32 X, int32 Y, int32 Z) const
+		{
+			return X >= 0 && Y >= 0 && Z >= 0 && X < Size.X && Y < Size.Y && Z < Size.Z;
+		}
+
+		int32 ToIndex(int32 X, int32 Y, int32 Z) const
+		{
+			return X + (Y * Size.X) + (Z * Size.X * Size.Y);
+		}
+
+		uint8 Get(int32 X, int32 Y, int32 Z) const
+		{
+			if (!IsInside(X, Y, Z))
+			{
+				return 0;
+			}
+
+			return Cells[ToIndex(X, Y, Z)];
+		}
+
+		void Set(int32 X, int32 Y, int32 Z, uint8 ColorIndex)
+		{
+			Cells[ToIndex(X, Y, Z)] = ColorIndex;
+		}
+	};
+
 	const TCHAR* GVoxelMaterialPackagePath = TEXT("/Game/VoxImporter/Materials/M_VoxVertexColor");
 	const TCHAR* GVoxelMaterialObjectPath = TEXT("/Game/VoxImporter/Materials/M_VoxVertexColor.M_VoxVertexColor");
 	const TCHAR* GVoxelMaterialAssetName = TEXT("M_VoxVertexColor");
@@ -121,6 +159,141 @@ namespace
 		UserData->GeneratedFromAssetPath = BuildParams.GeneratedFromAssetPath;
 		StaticMesh->AddAssetUserData(UserData);
 	}
+
+	void ComputeOccupiedBounds(const FVoxModelData& Model, FIntVector& OutMin, FIntVector& OutMax)
+	{
+		OutMin = FIntVector(INT32_MAX, INT32_MAX, INT32_MAX);
+		OutMax = FIntVector(INT32_MIN, INT32_MIN, INT32_MIN);
+
+		for (const FVoxVoxel& Voxel : Model.Voxels)
+		{
+			OutMin.X = FMath::Min(OutMin.X, Voxel.X);
+			OutMin.Y = FMath::Min(OutMin.Y, Voxel.Y);
+			OutMin.Z = FMath::Min(OutMin.Z, Voxel.Z);
+
+			OutMax.X = FMath::Max(OutMax.X, Voxel.X + 1);
+			OutMax.Y = FMath::Max(OutMax.Y, Voxel.Y + 1);
+			OutMax.Z = FMath::Max(OutMax.Z, Voxel.Z + 1);
+		}
+	}
+
+	void BuildColorGrid(const FVoxModelData& Model, FVoxColorGrid& OutGrid)
+	{
+		OutGrid.Initialize(Model.Size);
+		for (const FVoxVoxel& Voxel : Model.Voxels)
+		{
+			if (OutGrid.IsInside(Voxel.X, Voxel.Y, Voxel.Z))
+			{
+				OutGrid.Set(Voxel.X, Voxel.Y, Voxel.Z, Voxel.ColorIndex);
+			}
+		}
+	}
+
+	float SquaredDistanceToVoxelBounds(const FVector& Position, int32 X, int32 Y, int32 Z)
+	{
+		const double MinX = static_cast<double>(X);
+		const double MinY = static_cast<double>(Y);
+		const double MinZ = static_cast<double>(Z);
+		const double MaxX = MinX + 1.0;
+		const double MaxY = MinY + 1.0;
+		const double MaxZ = MinZ + 1.0;
+
+		const double DX = Position.X < MinX ? MinX - Position.X : (Position.X > MaxX ? Position.X - MaxX : 0.0);
+		const double DY = Position.Y < MinY ? MinY - Position.Y : (Position.Y > MaxY ? Position.Y - MaxY : 0.0);
+		const double DZ = Position.Z < MinZ ? MinZ - Position.Z : (Position.Z > MaxZ ? Position.Z - MaxZ : 0.0);
+
+		return static_cast<float>((DX * DX) + (DY * DY) + (DZ * DZ));
+	}
+
+	uint8 FindNearestColorIndex(const FVoxColorGrid& Grid, TConstArrayView<FVoxVoxel> Voxels, const FVector& Position)
+	{
+		const FIntVector Base(
+			FMath::FloorToInt(Position.X),
+			FMath::FloorToInt(Position.Y),
+			FMath::FloorToInt(Position.Z));
+
+		for (int32 Radius = 1; Radius <= 3; ++Radius)
+		{
+			float BestDistanceSquared = TNumericLimits<float>::Max();
+			uint8 BestColorIndex = 0;
+
+			for (int32 Z = Base.Z - Radius; Z <= Base.Z + Radius; ++Z)
+			{
+				for (int32 Y = Base.Y - Radius; Y <= Base.Y + Radius; ++Y)
+				{
+					for (int32 X = Base.X - Radius; X <= Base.X + Radius; ++X)
+					{
+						const uint8 ColorIndex = Grid.Get(X, Y, Z);
+						if (ColorIndex == 0)
+						{
+							continue;
+						}
+
+						const float DistanceSquared = SquaredDistanceToVoxelBounds(Position, X, Y, Z);
+						if (DistanceSquared < BestDistanceSquared)
+						{
+							BestDistanceSquared = DistanceSquared;
+							BestColorIndex = ColorIndex;
+						}
+					}
+				}
+			}
+
+			if (BestColorIndex != 0)
+			{
+				return BestColorIndex;
+			}
+		}
+
+		float BestDistanceSquared = TNumericLimits<float>::Max();
+		uint8 BestColorIndex = 0;
+		for (const FVoxVoxel& Voxel : Voxels)
+		{
+			const float DistanceSquared = SquaredDistanceToVoxelBounds(Position, Voxel.X, Voxel.Y, Voxel.Z);
+			if (DistanceSquared < BestDistanceSquared)
+			{
+				BestDistanceSquared = DistanceSquared;
+				BestColorIndex = Voxel.ColorIndex;
+			}
+		}
+
+		return BestColorIndex;
+	}
+
+	void NeutralizeMeshDescriptionAttributes(FMeshDescription& MeshDescription)
+	{
+		FStaticMeshAttributes Attributes(MeshDescription);
+		Attributes.Register();
+
+		TVertexInstanceAttributesRef<FVector2f> VertexUVs = Attributes.GetVertexInstanceUVs();
+		TVertexInstanceAttributesRef<FVector3f> VertexNormals = Attributes.GetVertexInstanceNormals();
+		TVertexInstanceAttributesRef<FVector3f> VertexTangents = Attributes.GetVertexInstanceTangents();
+		TVertexInstanceAttributesRef<float> VertexBinormalSigns = Attributes.GetVertexInstanceBinormalSigns();
+		TVertexInstanceAttributesRef<FVector4f> VertexColors = Attributes.GetVertexInstanceColors();
+
+		VertexUVs.SetNumChannels(1);
+
+		for (const FVertexInstanceID VertexInstanceID : MeshDescription.VertexInstances().GetElementIDs())
+		{
+			VertexUVs.Set(VertexInstanceID, 0, FVector2f::ZeroVector);
+			VertexNormals[VertexInstanceID] = FVector3f::UpVector;
+			VertexTangents[VertexInstanceID] = FVector3f::RightVector;
+			VertexBinormalSigns[VertexInstanceID] = 1.0f;
+			VertexColors[VertexInstanceID] = FVector4f(1.0f, 1.0f, 1.0f, 1.0f);
+		}
+	}
+
+	void RecomputeMeshSurfaceAttributes(FMeshDescription& MeshDescription)
+	{
+		FStaticMeshAttributes Attributes(MeshDescription);
+		Attributes.Register();
+		Attributes.GetVertexInstanceUVs().SetNumChannels(1);
+
+		FStaticMeshOperations::ComputeTriangleTangentsAndNormals(MeshDescription, 0.0f, TEXT("VoxImporterReconstruction"));
+		FStaticMeshOperations::ComputeTangentsAndNormals(
+			MeshDescription,
+			EComputeNTBsFlags::Normals | EComputeNTBsFlags::Tangents | EComputeNTBsFlags::BlendOverlappingNormals);
+	}
 }
 
 UMaterialInterface* VoxStaticMeshUtilities::ResolveVoxelMaterial()
@@ -213,6 +386,9 @@ bool VoxStaticMeshUtilities::SimplifyMeshDescription(
 		return false;
 	}
 
+	FMeshDescription ReductionSourceMeshDescription = SourceMeshDescription;
+	NeutralizeMeshDescriptionAttributes(ReductionSourceMeshDescription);
+
 	IMeshReduction* Reduction = FModuleManager::Get().LoadModuleChecked<IMeshReductionManagerModule>(TEXT("MeshReductionInterface")).GetStaticMeshReductionInterface();
 	if (!Reduction || !Reduction->IsSupported())
 	{
@@ -221,7 +397,7 @@ bool VoxStaticMeshUtilities::SimplifyMeshDescription(
 	}
 
 	FOverlappingCorners OverlappingCorners;
-	FStaticMeshOperations::FindOverlappingCorners(OverlappingCorners, SourceMeshDescription, THRESH_POINTS_ARE_SAME);
+	FStaticMeshOperations::FindOverlappingCorners(OverlappingCorners, ReductionSourceMeshDescription, THRESH_POINTS_ARE_SAME);
 
 	FMeshReductionSettings ReductionSettings;
 	ReductionSettings.TerminationCriterion = EStaticMeshReductionTerimationCriterion::Triangles;
@@ -238,7 +414,7 @@ bool VoxStaticMeshUtilities::SimplifyMeshDescription(
 	OutputAttributes.Register();
 
 	float MaxDeviation = 0.0f;
-	Reduction->ReduceMeshDescription(OutMeshDescription, MaxDeviation, SourceMeshDescription, OverlappingCorners, ReductionSettings);
+	Reduction->ReduceMeshDescription(OutMeshDescription, MaxDeviation, ReductionSourceMeshDescription, OverlappingCorners, ReductionSettings);
 
 	if (OutMeshDescription.Triangles().Num() == 0)
 	{
@@ -246,6 +422,68 @@ bool VoxStaticMeshUtilities::SimplifyMeshDescription(
 		return false;
 	}
 
+	return true;
+}
+
+bool VoxStaticMeshUtilities::ReapplyVoxelVertexColors(const FVoxModelData& Model, FMeshDescription& MeshDescription, float VoxelSize, FString& OutError)
+{
+	if (VoxelSize <= 0.0f)
+	{
+		OutError = TEXT("Voxel size must be greater than zero.");
+		return false;
+	}
+
+	if (Model.Voxels.IsEmpty())
+	{
+		OutError = TEXT("Model has no voxels.");
+		return false;
+	}
+
+	RecomputeMeshSurfaceAttributes(MeshDescription);
+
+	FStaticMeshAttributes Attributes(MeshDescription);
+	TVertexAttributesConstRef<FVector3f> VertexPositions = MeshDescription.VertexAttributes().GetAttributesRef<FVector3f>(MeshAttribute::Vertex::Position);
+	TVertexInstanceAttributesRef<FVector4f> VertexColors = Attributes.GetVertexInstanceColors();
+
+	FVoxColorGrid ColorGrid;
+	BuildColorGrid(Model, ColorGrid);
+
+	FIntVector BoundsMin;
+	FIntVector BoundsMax;
+	ComputeOccupiedBounds(Model, BoundsMin, BoundsMax);
+	const FVector PivotOffset = (FVector(BoundsMin) + FVector(BoundsMax)) * 0.5f * VoxelSize;
+
+	for (const FVertexInstanceID VertexInstanceID : MeshDescription.VertexInstances().GetElementIDs())
+	{
+		const FVertexID VertexID = MeshDescription.GetVertexInstanceVertex(VertexInstanceID);
+		const FVector SamplePosition = (FVector(VertexPositions[VertexID]) + PivotOffset) / VoxelSize;
+		const uint8 ColorIndex = FindNearestColorIndex(ColorGrid, Model.Voxels, SamplePosition);
+		VertexColors[VertexInstanceID] = FVector4f(FLinearColor::FromSRGBColor(Model.GetColor(ColorIndex)));
+	}
+
+	return true;
+}
+
+bool VoxStaticMeshUtilities::SimplifyReconstructedMeshDescription(
+	const FMeshDescription& SourceMeshDescription,
+	const FVoxModelData& Model,
+	float VoxelSize,
+	float TargetPercentTriangles,
+	FMeshDescription& OutMeshDescription,
+	FString& OutError)
+{
+	FMeshDescription SimplifiedGeometry;
+	if (!SimplifyMeshDescription(SourceMeshDescription, TargetPercentTriangles, SimplifiedGeometry, OutError))
+	{
+		return false;
+	}
+
+	if (!ReapplyVoxelVertexColors(Model, SimplifiedGeometry, VoxelSize, OutError))
+	{
+		return false;
+	}
+
+	OutMeshDescription = MoveTemp(SimplifiedGeometry);
 	return true;
 }
 
@@ -276,25 +514,8 @@ bool VoxStaticMeshUtilities::BuildStaticMeshAsset(UStaticMesh* StaticMesh, const
 	StaticMesh->GetStaticMaterials().Reset();
 	StaticMesh->GetStaticMaterials().Add(FStaticMaterial(ResolveVoxelMaterial(), MaterialSlotName, MaterialSlotName));
 
-	FMeshDescription WorkingMeshDescription;
-	const FMeshDescription* MeshDescriptionToBuild = &MeshDescription;
-	if (BuildParams.SimplifyPercentTriangles < 1.0f - KINDA_SMALL_NUMBER)
-	{
-		FString SimplifyError;
-		if (!SimplifyMeshDescription(MeshDescription, BuildParams.SimplifyPercentTriangles, WorkingMeshDescription, SimplifyError))
-		{
-			if (Warn)
-			{
-				Warn->Logf(ELogVerbosity::Error, TEXT("Failed to simplify %s: %s"), *StaticMesh->GetName(), *SimplifyError);
-			}
-			return false;
-		}
-
-		MeshDescriptionToBuild = &WorkingMeshDescription;
-	}
-
 	TArray<const FMeshDescription*> MeshDescriptions;
-	MeshDescriptions.Add(MeshDescriptionToBuild);
+	MeshDescriptions.Add(&MeshDescription);
 
 	UStaticMesh::FBuildMeshDescriptionsParams BuildMeshParams;
 	BuildMeshParams.bCommitMeshDescription = true;

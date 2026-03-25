@@ -216,7 +216,7 @@ bool FVoxSmoothMeshBuilderSimplifyTest::RunTest(const FString& Parameters)
 	FVoxModelData Model;
 	Model.Size = FIntVector(8, 8, 8);
 	Model.Palette.Init(FColor(0, 0, 0, 0), 256);
-	Model.Palette[1] = FColor(255, 255, 255, 255);
+	Model.Palette[1] = FColor(255, 128, 0, 255);
 
 	for (int32 Z = 0; Z < 8; ++Z)
 	{
@@ -241,9 +241,22 @@ bool FVoxSmoothMeshBuilderSimplifyTest::RunTest(const FString& Parameters)
 
 	FMeshDescription SimplifiedMeshDescription;
 	ErrorMessage.Reset();
-	TestTrue(TEXT("Simplify succeeds"), VoxStaticMeshUtilities::SimplifyMeshDescription(SmoothMeshDescription, 0.03f, SimplifiedMeshDescription, ErrorMessage));
+	TestTrue(TEXT("Simplify succeeds"), VoxStaticMeshUtilities::SimplifyReconstructedMeshDescription(SmoothMeshDescription, Model, 1.0f, 0.03f, SimplifiedMeshDescription, ErrorMessage));
 	TestTrue(TEXT("Simplified mesh still has triangles"), SimplifiedMeshDescription.Triangles().Num() > 0);
 	TestTrue(TEXT("Simplified mesh has fewer triangles"), SimplifiedMeshDescription.Triangles().Num() < OriginalTriangleCount);
+
+	const TVertexInstanceAttributesConstRef<FVector4f> VertexInstanceColors =
+		SimplifiedMeshDescription.VertexInstanceAttributes().GetAttributesRef<FVector4f>(MeshAttribute::VertexInstance::Color);
+	const FLinearColor ExpectedLinear = FLinearColor::FromSRGBColor(Model.Palette[1]);
+	FVertexInstanceID FirstInstance;
+	for (const FVertexInstanceID VertexInstanceId : SimplifiedMeshDescription.VertexInstances().GetElementIDs())
+	{
+		FirstInstance = VertexInstanceId;
+		break;
+	}
+
+	const FVector4f StoredColor = VertexInstanceColors[FirstInstance];
+	TestTrue(TEXT("Simplified mesh color is reprojected from voxel data"), FMath::IsNearlyEqual(StoredColor.X, ExpectedLinear.R, KINDA_SMALL_NUMBER));
 
 	return true;
 }

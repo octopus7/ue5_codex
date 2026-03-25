@@ -43,6 +43,12 @@ namespace VoxReconstructionService
 			return false;
 		}
 
+		FMeshDescription FinalMeshDescription;
+		if (!VoxStaticMeshUtilities::SimplifyReconstructedMeshDescription(MeshDescription, Model, 1.0f, 0.03f, FinalMeshDescription, OutError))
+		{
+			return false;
+		}
+
 		FString UniquePackageName;
 		FString UniqueAssetName;
 		FAssetToolsModule& AssetToolsModule = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools");
@@ -67,11 +73,10 @@ namespace VoxReconstructionService
 			SourceFilename,
 			true,
 			BuildMetadata.ResolutionScaleUsed,
-			0.03f,
 			SourceMesh->GetPathName()
 		};
 
-		if (!VoxStaticMeshUtilities::BuildStaticMeshAsset(ReconstructedMesh, MeshDescription, BuildParams, GWarn))
+		if (!VoxStaticMeshUtilities::BuildStaticMeshAsset(ReconstructedMesh, FinalMeshDescription, BuildParams, GWarn))
 		{
 			OutError = TEXT("Failed to build the reconstructed Static Mesh asset.");
 			return false;

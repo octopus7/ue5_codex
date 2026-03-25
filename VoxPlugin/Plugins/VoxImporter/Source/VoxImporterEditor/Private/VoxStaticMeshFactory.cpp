@@ -157,7 +157,6 @@ UObject* UVoxStaticMeshFactory::ImportFromFile(
 		Filename,
 		false,
 		0.0f,
-		1.0f,
 		FString()
 	};
 
