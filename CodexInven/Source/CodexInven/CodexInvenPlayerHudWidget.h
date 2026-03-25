@@ -62,6 +62,9 @@ private:
 	UFUNCTION()
 	void HandlePickupPageToggleClicked();
 
+	UFUNCTION()
+	void HandleLightColorToggleClicked();
+
 	UPROPERTY(Transient)
 	TObjectPtr<UCanvasPanel> RootCanvasPanel = nullptr;
 
@@ -73,6 +76,9 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<UButton> PickupPageToggleButton = nullptr;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UButton> LightColorToggleButton = nullptr;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UBorder> InventoryPanelBorder = nullptr;

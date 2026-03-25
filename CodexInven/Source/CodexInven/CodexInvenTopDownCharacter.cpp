@@ -7,9 +7,30 @@
 #include "CodexInvenProjectile.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/PointLightComponent.h"
+#include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+
+namespace
+{
+	const FVector HeadLightRelativeLocation(0.0f, 0.0f, 120.0f);
+	constexpr float HeadLightIntensity = 3000.0f;
+	constexpr float HeadLightAttenuationRadius = 425.0f;
+	const FLinearColor HeadLightCycleColors[] =
+	{
+		FLinearColor::Red,
+		FLinearColor::Green,
+		FLinearColor::Blue
+	};
+	const TCHAR* HeadLightCycleColorNames[] =
+	{
+		TEXT("Red"),
+		TEXT("Green"),
+		TEXT("Blue")
+	};
+}
 
 ACodexInvenTopDownCharacter::ACodexInvenTopDownCharacter()
 {
@@ -42,7 +63,16 @@ ACodexInvenTopDownCharacter::ACodexInvenTopDownCharacter()
 	TopDownCameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	TopDownCameraComponent->bUsePawnControlRotation = false;
 
+	HeadLightComponent = CreateDefaultSubobject<UPointLightComponent>(TEXT("HeadLight"));
+	HeadLightComponent->SetupAttachment(RootComponent);
+	HeadLightComponent->SetRelativeLocation(HeadLightRelativeLocation);
+	HeadLightComponent->SetIntensity(HeadLightIntensity);
+	HeadLightComponent->SetAttenuationRadius(HeadLightAttenuationRadius);
+	HeadLightComponent->bUseInverseSquaredFalloff = false;
+
 	OwnershipComponent = CreateDefaultSubobject<UCodexInvenOwnershipComponent>(TEXT("OwnershipComponent"));
+
+	ApplyHeadLightColor();
 }
 
 void ACodexInvenTopDownCharacter::MoveInTopDownPlane(const FVector2D& InMoveInput)
@@ -112,6 +142,31 @@ void ACodexInvenTopDownCharacter::FireAtWorldLocation(const FVector& InWorldLoca
 	{
 		OnProjectileSpawned(SpawnedProjectile, SpawnLocation, SpawnDirection);
 	}
+}
+
+void ACodexInvenTopDownCharacter::LightColorToggle()
+{
+	CurrentHeadLightColorIndex = (CurrentHeadLightColorIndex + 1) % UE_ARRAY_COUNT(HeadLightCycleColors);
+	ApplyHeadLightColor();
+
+	if (GEngine != nullptr)
+	{
+		GEngine->AddOnScreenDebugMessage(
+			INDEX_NONE,
+			2.0f,
+			FColor::Yellow,
+			FString::Printf(TEXT("Head light color: %s"), HeadLightCycleColorNames[CurrentHeadLightColorIndex]));
+	}
+}
+
+void ACodexInvenTopDownCharacter::ApplyHeadLightColor()
+{
+	if (HeadLightComponent == nullptr)
+	{
+		return;
+	}
+
+	HeadLightComponent->SetLightColor(HeadLightCycleColors[CurrentHeadLightColorIndex]);
 }
 
 FVector ACodexInvenTopDownCharacter::GetPlanarDirectionTo(const FVector& InWorldLocation) const

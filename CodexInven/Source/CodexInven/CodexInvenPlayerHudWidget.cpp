@@ -8,6 +8,7 @@
 #include "CodexInvenInventoryTileItemObject.h"
 #include "CodexInvenOwnershipComponent.h"
 #include "CodexInvenOwnershipDebugWidget.h"
+#include "CodexInvenTopDownCharacter.h"
 #include "Components/Border.h"
 #include "Components/BorderSlot.h"
 #include "Components/Button.h"
@@ -38,6 +39,7 @@ namespace
 	const TCHAR* InventoryLabelText = TEXT("\uC18C\uC720\uBB3C");
 	const TCHAR* DebugLabelText = TEXT("\uB514\uBC84\uADF8");
 	const TCHAR* PickupPageLabelText = TEXT("\uD53D\uC5C5 \uD398\uC774\uC9C0");
+	const TCHAR* LightColorLabelText = TEXT("Light Color");
 
 	UButton* CreateHudButton(UWidgetTree& InWidgetTree, const FName InButtonName, const FText& InLabel)
 	{
@@ -171,6 +173,7 @@ bool UCodexInvenPlayerHudWidget::ShouldBlockFireInput() const
 		ActiveDragSourceSlotIndex != INDEX_NONE ||
 		IsButtonHovered(InventoryToggleButton) ||
 		IsButtonHovered(PickupPageToggleButton) ||
+		IsButtonHovered(LightColorToggleButton) ||
 		IsButtonHovered(DebugToggleButton);
 }
 
@@ -204,6 +207,11 @@ void UCodexInvenPlayerHudWidget::NativeOnInitialized()
 	if (PickupPageToggleButton != nullptr)
 	{
 		PickupPageToggleButton->OnClicked.AddUniqueDynamic(this, &ThisClass::HandlePickupPageToggleClicked);
+	}
+
+	if (LightColorToggleButton != nullptr)
+	{
+		LightColorToggleButton->OnClicked.AddUniqueDynamic(this, &ThisClass::HandleLightColorToggleClicked);
 	}
 
 	if (IncreaseCapacityButton != nullptr)
@@ -246,11 +254,12 @@ void UCodexInvenPlayerHudWidget::BuildWidgetTreeIfNeeded()
 		return;
 	}
 
-	if (InventoryToggleButton == nullptr || DebugToggleButton == nullptr || PickupPageToggleButton == nullptr)
+	if (InventoryToggleButton == nullptr || DebugToggleButton == nullptr || PickupPageToggleButton == nullptr || LightColorToggleButton == nullptr)
 	{
 		UHorizontalBox* ActionBarBox = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("ActionBarBox"));
 		InventoryToggleButton = CreateHudButton(*WidgetTree, TEXT("InventoryToggleButton"), FText::FromString(FString(InventoryLabelText)));
 		PickupPageToggleButton = CreateHudButton(*WidgetTree, TEXT("PickupPageToggleButton"), FText::FromString(FString(PickupPageLabelText)));
+		LightColorToggleButton = CreateHudButton(*WidgetTree, TEXT("LightColorToggleButton"), FText::FromString(FString(LightColorLabelText)));
 		DebugToggleButton = CreateHudButton(*WidgetTree, TEXT("DebugToggleButton"), FText::FromString(FString(DebugLabelText)));
 
 		if (UHorizontalBoxSlot* InventoryButtonSlot = ActionBarBox->AddChildToHorizontalBox(InventoryToggleButton))
@@ -261,6 +270,11 @@ void UCodexInvenPlayerHudWidget::BuildWidgetTreeIfNeeded()
 		if (UHorizontalBoxSlot* PickupPageButtonSlot = ActionBarBox->AddChildToHorizontalBox(PickupPageToggleButton))
 		{
 			PickupPageButtonSlot->SetPadding(FMargin(0.0f, 0.0f, 8.0f, 0.0f));
+		}
+
+		if (UHorizontalBoxSlot* LightColorButtonSlot = ActionBarBox->AddChildToHorizontalBox(LightColorToggleButton))
+		{
+			LightColorButtonSlot->SetPadding(FMargin(0.0f, 0.0f, 8.0f, 0.0f));
 		}
 
 		ActionBarBox->AddChildToHorizontalBox(DebugToggleButton);
@@ -522,4 +536,12 @@ void UCodexInvenPlayerHudWidget::HandleIncreaseCapacityClicked()
 void UCodexInvenPlayerHudWidget::HandlePickupPageToggleClicked()
 {
 	PickupPageToggleRequested.Broadcast();
+}
+
+void UCodexInvenPlayerHudWidget::HandleLightColorToggleClicked()
+{
+	if (ACodexInvenTopDownCharacter* const TopDownCharacter = Cast<ACodexInvenTopDownCharacter>(GetOwningPlayerPawn()))
+	{
+		TopDownCharacter->LightColorToggle();
+	}
 }

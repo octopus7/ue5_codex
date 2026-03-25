@@ -7,6 +7,7 @@
 #include "CodexInvenTopDownCharacter.generated.h"
 
 class UCameraComponent;
+class UPointLightComponent;
 class USpringArmComponent;
 class ACodexInvenProjectile;
 class UCodexInvenOwnershipComponent;
@@ -34,6 +35,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Character|Input")
 	void FireAtWorldLocation(const FVector& InWorldLocation);
 
+	UFUNCTION(BlueprintCallable, Category = "Character|Debug")
+	void LightColorToggle();
+
 	UFUNCTION(BlueprintPure, Category = "Character|Camera")
 	UCameraComponent* GetTopDownCameraComponent() const
 	{
@@ -56,6 +60,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character|Camera")
 	TObjectPtr<UCameraComponent> TopDownCameraComponent = nullptr;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character|Lighting")
+	TObjectPtr<UPointLightComponent> HeadLightComponent = nullptr;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character|Ownership")
 	TObjectPtr<UCodexInvenOwnershipComponent> OwnershipComponent = nullptr;
 
@@ -72,6 +79,9 @@ protected:
 	float ProjectileSpawnForwardDistance = 100.0f;
 
 private:
+	void ApplyHeadLightColor();
 	FVector GetPlanarDirectionTo(const FVector& InWorldLocation) const;
 	TSubclassOf<ACodexInvenProjectile> GetConfiguredProjectileClass() const;
+
+	int32 CurrentHeadLightColorIndex = 0;
 };
