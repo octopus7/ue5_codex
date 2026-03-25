@@ -7,6 +7,7 @@
 #include "StaticMeshAttributes.h"
 #include "VoxMeshBuilder.h"
 #include "VoxParser.h"
+#include "VoxSmoothMeshBuilder.h"
 
 namespace
 {
@@ -178,6 +179,33 @@ bool FVoxMeshBuilderUsesLinearVertexColorsTest::RunTest(const FString& Parameter
 	TestTrue(TEXT("Blue channel is stored as linear"), FMath::IsNearlyEqual(StoredColor.Z, ExpectedLinear.B, KINDA_SMALL_NUMBER));
 	TestTrue(TEXT("Alpha channel is preserved"), FMath::IsNearlyEqual(StoredColor.W, ExpectedLinear.A, KINDA_SMALL_NUMBER));
 
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVoxSmoothMeshBuilderSingleVoxelTest, "VoxImporter.Reconstruction.SingleVoxel", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FVoxSmoothMeshBuilderSingleVoxelTest::RunTest(const FString& Parameters)
+{
+	FVoxModelData Model;
+	Model.Size = FIntVector(1, 1, 1);
+	Model.Palette.Init(FColor(0, 0, 0, 0), 256);
+	Model.Palette[1] = FColor(255, 128, 0, 255);
+
+	FVoxVoxel Voxel;
+	Voxel.X = 0;
+	Voxel.Y = 0;
+	Voxel.Z = 0;
+	Voxel.ColorIndex = 1;
+	Model.Voxels.Add(Voxel);
+
+	FMeshDescription MeshDescription;
+	FString ErrorMessage;
+	FVoxSmoothBuildMetadata BuildMetadata;
+	TestTrue(TEXT("Smooth mesh build succeeds"), FVoxSmoothMeshBuilder::BuildSmoothMeshDescription(Model, MeshDescription, ErrorMessage, 1.0f, FVoxSmoothBuildSettings(), &BuildMetadata));
+	TestTrue(TEXT("Resolution scale is at least original resolution"), BuildMetadata.ResolutionScaleUsed >= 1.0f);
+	TestTrue(TEXT("Smooth mesh has triangles"), MeshDescription.Triangles().Num() > 0);
+
+	const FBox Bounds = ComputeVertexBounds(MeshDescription);
+	TestTrue(TEXT("Smooth bounds center is near origin"), Bounds.GetCenter().Equals(FVector::ZeroVector, KINDA_SMALL_NUMBER));
 	return true;
 }
 

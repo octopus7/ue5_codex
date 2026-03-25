@@ -19,9 +19,14 @@ public class VoxImporterEditor : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new[]
 			{
+				"AssetTools",
 				"AssetRegistry",
+				"ContentBrowser",
 				"MeshDescription",
-				"StaticMeshDescription"
+				"Slate",
+				"SlateCore",
+				"StaticMeshDescription",
+				"ToolMenus"
 			});
 	}
 }

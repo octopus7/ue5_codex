@@ -12,6 +12,7 @@ public class VoxImporterRuntime : ModuleRules
 				"Core",
 				"CoreUObject",
 				"Engine",
+				"GeometryCore",
 				"MeshConversion",
 				"MeshDescription",
 				"StaticMeshDescription"
