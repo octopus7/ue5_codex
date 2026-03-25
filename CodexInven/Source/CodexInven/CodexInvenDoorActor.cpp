@@ -5,6 +5,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/World.h"
 
 namespace
 {
@@ -80,11 +81,13 @@ void ACodexInvenDoorActor::Tick(const float DeltaTime)
 
 void ACodexInvenDoorActor::OpenDoor()
 {
+	ClearPendingDelayedClose();
 	SetDoorOpen(true);
 }
 
 void ACodexInvenDoorActor::CloseDoor()
 {
+	ClearPendingDelayedClose();
 	SetDoorOpen(false);
 }
 
@@ -109,6 +112,30 @@ void ACodexInvenDoorActor::SetDoorOpen(const bool bInShouldBeOpen)
 	UpdateDoorBlockerCollision();
 }
 
+void ACodexInvenDoorActor::RequestDelayedClose(const float InDelaySeconds)
+{
+	if (InDelaySeconds <= KINDA_SMALL_NUMBER)
+	{
+		CloseDoor();
+		return;
+	}
+
+	UWorld* const World = GetWorld();
+	if (World == nullptr)
+	{
+		CloseDoor();
+		return;
+	}
+
+	World->GetTimerManager().ClearTimer(DelayedCloseTimerHandle);
+	World->GetTimerManager().SetTimer(
+		DelayedCloseTimerHandle,
+		this,
+		&ThisClass::HandleDelayedCloseExpired,
+		InDelaySeconds,
+		false);
+}
+
 void ACodexInvenDoorActor::ApplyDoorVisualState()
 {
 	if (DoorPivotComponent == nullptr)
@@ -128,4 +155,17 @@ void ACodexInvenDoorActor::UpdateDoorBlockerCollision() const
 
 	const bool bShouldDisableCollision = bShouldBeOpen || DoorOpenAlpha > KINDA_SMALL_NUMBER;
 	DoorBlockerComponent->SetCollisionEnabled(bShouldDisableCollision ? ECollisionEnabled::NoCollision : ECollisionEnabled::QueryOnly);
+}
+
+void ACodexInvenDoorActor::ClearPendingDelayedClose()
+{
+	if (UWorld* const World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(DelayedCloseTimerHandle);
+	}
+}
+
+void ACodexInvenDoorActor::HandleDelayedCloseExpired()
+{
+	CloseDoor();
 }

@@ -138,11 +138,32 @@ void ACodexInvenPressurePlateActor::UpdateConnectedDoors() const
 
 		if (bShouldBePressed)
 		{
-			ConnectedDoor->OpenDoor();
+			switch (PressedDoorAction)
+			{
+			case ECodexInvenPressurePlatePressedDoorAction::Open:
+				ConnectedDoor->OpenDoor();
+				break;
+
+			case ECodexInvenPressurePlatePressedDoorAction::Close:
+				ConnectedDoor->CloseDoor();
+				break;
+			}
 		}
 		else
 		{
-			ConnectedDoor->CloseDoor();
+			switch (ReleasedDoorAction)
+			{
+			case ECodexInvenPressurePlateReleasedDoorAction::Close:
+				ConnectedDoor->CloseDoor();
+				break;
+
+			case ECodexInvenPressurePlateReleasedDoorAction::None:
+				break;
+
+			case ECodexInvenPressurePlateReleasedDoorAction::DelayedClose:
+				ConnectedDoor->RequestDelayedClose(ReleasedDoorDelaySeconds);
+				break;
+			}
 		}
 	}
 }

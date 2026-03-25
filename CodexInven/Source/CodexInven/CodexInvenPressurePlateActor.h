@@ -15,6 +15,21 @@ class USceneComponent;
 class UStaticMeshComponent;
 struct FHitResult;
 
+UENUM(BlueprintType)
+enum class ECodexInvenPressurePlatePressedDoorAction : uint8
+{
+	Open,
+	Close
+};
+
+UENUM(BlueprintType)
+enum class ECodexInvenPressurePlateReleasedDoorAction : uint8
+{
+	Close,
+	None,
+	DelayedClose
+};
+
 UCLASS()
 class CODEXINVEN_API ACodexInvenPressurePlateActor : public AActor
 {
@@ -41,6 +56,15 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pressure Plate", meta = (ClampMin = "0.0"))
 	float PlateMoveDuration = 0.2f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pressure Plate|Door")
+	ECodexInvenPressurePlatePressedDoorAction PressedDoorAction = ECodexInvenPressurePlatePressedDoorAction::Open;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pressure Plate|Door")
+	ECodexInvenPressurePlateReleasedDoorAction ReleasedDoorAction = ECodexInvenPressurePlateReleasedDoorAction::Close;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pressure Plate|Door", meta = (ClampMin = "0.0", EditCondition = "ReleasedDoorAction == ECodexInvenPressurePlateReleasedDoorAction::DelayedClose", EditConditionHides))
+	float ReleasedDoorDelaySeconds = 1.0f;
 
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Pressure Plate")
 	TArray<TObjectPtr<ACodexInvenDoorActor>> ConnectedDoors;

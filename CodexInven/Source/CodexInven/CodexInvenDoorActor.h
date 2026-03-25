@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "TimerManager.h"
 #include "CodexInvenDoorActor.generated.h"
 
 class UBoxComponent;
@@ -29,6 +30,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Door")
 	void SetDoorOpen(bool bInShouldBeOpen);
+
+	UFUNCTION(BlueprintCallable, Category = "Door")
+	void RequestDelayedClose(float InDelaySeconds);
 
 	UFUNCTION(BlueprintPure, Category = "Door")
 	bool IsDoorOpen() const
@@ -58,8 +62,11 @@ protected:
 private:
 	void ApplyDoorVisualState();
 	void UpdateDoorBlockerCollision() const;
+	void ClearPendingDelayedClose();
+	void HandleDelayedCloseExpired();
 
 	FRotator ClosedDoorRelativeRotation = FRotator::ZeroRotator;
+	FTimerHandle DelayedCloseTimerHandle;
 	float DoorOpenAlpha = 0.0f;
 	bool bShouldBeOpen = false;
 };

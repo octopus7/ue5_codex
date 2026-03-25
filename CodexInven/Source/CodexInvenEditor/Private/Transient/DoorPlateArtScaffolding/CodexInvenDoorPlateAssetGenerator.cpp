@@ -191,13 +191,15 @@ namespace
 		const FDoorPalette Palette = BuildDoorPalette();
 		constexpr float DoorFrontOverlayCenterX = 6.75f;
 		constexpr float DoorFrontOverlayThickness = 2.5f;
+		constexpr float DoorMetalBarCenterX = 9.5f;
+		constexpr float DoorMetalBarThickness = 5.0f;
 
 		AppendBoxPart(*Mesh, FVector(12.0f, 140.0f, 300.0f), FVector(0.0f, 0.0f, 150.0f), FRotator::ZeroRotator, Palette.MainWoodColor);
 		AppendBoxPart(*Mesh, FVector(DoorFrontOverlayThickness, 18.0f, 280.0f), FVector(DoorFrontOverlayCenterX, -52.0f, 150.0f), FRotator::ZeroRotator, Palette.DarkTrimColor);
 		AppendBoxPart(*Mesh, FVector(DoorFrontOverlayThickness, 18.0f, 280.0f), FVector(DoorFrontOverlayCenterX, 52.0f, 150.0f), FRotator::ZeroRotator, Palette.DarkTrimColor);
 		AppendBoxPart(*Mesh, FVector(DoorFrontOverlayThickness, 110.0f, 20.0f), FVector(DoorFrontOverlayCenterX, 0.0f, 52.0f), FRotator::ZeroRotator, Palette.DarkTrimColor);
 		AppendBoxPart(*Mesh, FVector(DoorFrontOverlayThickness, 110.0f, 20.0f), FVector(DoorFrontOverlayCenterX, 0.0f, 248.0f), FRotator::ZeroRotator, Palette.DarkTrimColor);
-		AppendBoxPart(*Mesh, FVector(DoorFrontOverlayThickness, 110.0f, 18.0f), FVector(DoorFrontOverlayCenterX, 0.0f, 160.0f), FRotator::ZeroRotator, Palette.MetalAccentColor);
+		AppendBoxPart(*Mesh, FVector(DoorMetalBarThickness, 110.0f, 18.0f), FVector(DoorMetalBarCenterX, 0.0f, 160.0f), FRotator::ZeroRotator, Palette.MetalAccentColor);
 		AppendBoxPart(*Mesh, FVector(DoorFrontOverlayThickness, 14.0f, 190.0f), FVector(DoorFrontOverlayCenterX, 0.0f, 150.0f), FRotator(0.0f, 0.0f, 32.0f), Palette.DarkTrimColor);
 		AppendBoxPart(*Mesh, FVector(8.0f, 18.0f, 16.0f), FVector(10.0f, 34.0f, 150.0f), FRotator::ZeroRotator, Palette.HandleColor);
 		AppendBoxPart(*Mesh, FVector(12.0f, 10.0f, 10.0f), FVector(20.0f, 34.0f, 150.0f), FRotator::ZeroRotator, Palette.HandleColor);
