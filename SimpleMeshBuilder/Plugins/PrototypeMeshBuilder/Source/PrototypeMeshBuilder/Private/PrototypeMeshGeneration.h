@@ -19,6 +19,8 @@ namespace PrototypeMeshBuilder
 	bool BuildMeshBuffers(const FPrototypeShapeDsl& Dsl, FGeneratedMeshBuffers& OutBuffers, FString& OutError);
 	bool BuildDynamicMesh(const FGeneratedMeshBuffers& Buffers, UE::Geometry::FDynamicMesh3& OutMesh, FString& OutError);
 	bool BuildStaticMeshAsset(const FString& PackagePath, const FString& AssetName, const UE::Geometry::FDynamicMesh3& DynamicMesh, UStaticMesh*& OutStaticMesh, FString& OutError);
+	bool WriteMeshBuffersObjFile(const FString& FilePath, const FGeneratedMeshBuffers& Buffers, FString& OutError);
+	bool WriteTextFileUtf8(const FString& FilePath, const FString& Contents, FString& OutError);
 	bool CreateVertexColorMaterialAsset(const FString& PackagePath, const FString& AssetName, UMaterialInstanceConstant*& OutMaterial, FString& OutError);
 	bool ApplyStaticMeshMaterial(UStaticMesh* StaticMesh, UMaterialInterface* Material, FString& OutError);
 	bool WriteAssetMetadata(UObject* Asset, const FString& MetadataJson, FString& OutError);

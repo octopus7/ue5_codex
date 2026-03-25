@@ -81,6 +81,7 @@ struct FPrototypeBridgeResult
 	bool bSuccess = false;
 	FString ErrorMessage;
 	FString RawDslJson;
+	FString RawLastMessage;
 	FString Diagnostics;
 };
 

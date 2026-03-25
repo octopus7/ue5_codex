@@ -153,7 +153,7 @@ def main() -> int:
         )
 
     try:
-        raw_dsl = pathlib.Path(output_path).read_text(encoding="utf-8").strip()
+        raw_last_message = pathlib.Path(output_path).read_text(encoding="utf-8")
     except Exception as exc:
         return emit(
             {
@@ -169,7 +169,7 @@ def main() -> int:
         except OSError:
             pass
 
-    raw_dsl = strip_code_fences(raw_dsl)
+    raw_dsl = strip_code_fences(raw_last_message)
     try:
         dsl_json = json.loads(raw_dsl)
     except json.JSONDecodeError as exc:
@@ -178,7 +178,7 @@ def main() -> int:
                 "success": False,
                 "error": f"codex output was not valid JSON: {exc}",
                 "diagnostics": diagnostics,
-                "raw_output": raw_dsl,
+                "raw_last_message": raw_last_message,
             },
             1,
         )
@@ -188,6 +188,7 @@ def main() -> int:
             "success": True,
             "dsl": dsl_json,
             "raw_json": json.dumps(dsl_json, ensure_ascii=False),
+            "raw_last_message": raw_last_message,
             "diagnostics": diagnostics,
         },
         0,

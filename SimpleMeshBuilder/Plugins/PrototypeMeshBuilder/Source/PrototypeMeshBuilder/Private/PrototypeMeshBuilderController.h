@@ -81,6 +81,7 @@ private:
 	void SetStatus(const FString& InStatus);
 	FString FormatElapsed(double ElapsedSeconds) const;
 	FString BuildJobSummary(const FString& Prefix, const FPrototypeMeshRequest& Request, double ElapsedSeconds) const;
+	bool ExportDebugArtifacts(const FPrototypeMeshRequest& Request, const FPrototypeBridgeResult& BridgeResult, const FPrototypeShapeDsl* Dsl, const FGeneratedMeshBuffers* Buffers, FString& OutDirectory, FString& OutError) const;
 	FVector GetNextPreviewLocation() const;
 	void DestroyAllPreviewActors();
 	AActor* GetSingleSelectedActor(FString& OutError) const;

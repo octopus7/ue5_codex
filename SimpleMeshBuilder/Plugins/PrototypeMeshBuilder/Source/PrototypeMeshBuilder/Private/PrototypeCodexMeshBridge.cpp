@@ -61,6 +61,7 @@ namespace
 
 		OutResult.bSuccess = true;
 		ResponseObject->TryGetStringField(TEXT("raw_json"), OutResult.RawDslJson);
+		ResponseObject->TryGetStringField(TEXT("raw_last_message"), OutResult.RawLastMessage);
 		ResponseObject->TryGetStringField(TEXT("diagnostics"), OutResult.Diagnostics);
 		if (OutResult.RawDslJson.IsEmpty())
 		{

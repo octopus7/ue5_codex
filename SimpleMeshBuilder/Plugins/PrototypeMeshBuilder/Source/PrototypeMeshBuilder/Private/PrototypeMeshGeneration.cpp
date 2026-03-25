@@ -1,6 +1,9 @@
 #include "PrototypeMeshGeneration.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "HAL/FileManager.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 #include "DynamicMesh/DynamicMesh3.h"
 #include "DynamicMesh/DynamicMeshAttributeSet.h"
 #include "DynamicMesh/DynamicMeshOverlay.h"
@@ -685,6 +688,87 @@ namespace PrototypeMeshBuilder
 		FAssetRegistryModule::AssetCreated(StaticMesh);
 
 		OutStaticMesh = StaticMesh;
+		return true;
+	}
+
+	bool WriteMeshBuffersObjFile(const FString& FilePath, const FGeneratedMeshBuffers& Buffers, FString& OutError)
+	{
+		if (!Buffers.IsValid())
+		{
+			OutError = TEXT("Cannot write OBJ for invalid mesh buffers.");
+			return false;
+		}
+
+		const FString DirectoryPath = FPaths::GetPath(FilePath);
+		if (!IFileManager::Get().DirectoryExists(*DirectoryPath) && !IFileManager::Get().MakeDirectory(*DirectoryPath, true))
+		{
+			OutError = FString::Printf(TEXT("Failed to create OBJ output directory: %s"), *DirectoryPath);
+			return false;
+		}
+
+		FString ObjText;
+		ObjText.Reserve(Buffers.Positions.Num() * 96);
+		ObjText += TEXT("# PrototypeMeshBuilder debug OBJ\n");
+		ObjText += TEXT("# Units: centimeters\n");
+		ObjText += TEXT("# Vertex format: v x y z r g b\n");
+
+		for (int32 VertexIndex = 0; VertexIndex < Buffers.Positions.Num(); ++VertexIndex)
+		{
+			const FVector3f& Position = Buffers.Positions[VertexIndex];
+			const FVector4f& Color = Buffers.Colors[VertexIndex];
+			ObjText += FString::Printf(
+				TEXT("v %.6f %.6f %.6f %.6f %.6f %.6f\n"),
+				Position.X,
+				Position.Y,
+				Position.Z,
+				Color.X,
+				Color.Y,
+				Color.Z);
+		}
+
+		for (const FVector2f& Uv : Buffers.UV0)
+		{
+			ObjText += FString::Printf(TEXT("vt %.6f %.6f\n"), Uv.X, Uv.Y);
+		}
+
+		for (const FVector3f& Normal : Buffers.Normals)
+		{
+			ObjText += FString::Printf(TEXT("vn %.6f %.6f %.6f\n"), Normal.X, Normal.Y, Normal.Z);
+		}
+
+		for (int32 TriangleIndex = 0; TriangleIndex < Buffers.GetTriangleCount(); ++TriangleIndex)
+		{
+			const int32 IndexBase = TriangleIndex * 3;
+			const int32 A = Buffers.Indices[IndexBase] + 1;
+			const int32 B = Buffers.Indices[IndexBase + 1] + 1;
+			const int32 C = Buffers.Indices[IndexBase + 2] + 1;
+			ObjText += FString::Printf(TEXT("f %d/%d/%d %d/%d/%d %d/%d/%d\n"), A, A, A, B, B, B, C, C, C);
+		}
+
+		if (!FFileHelper::SaveStringToFile(ObjText, *FilePath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
+		{
+			OutError = FString::Printf(TEXT("Failed to write OBJ file: %s"), *FilePath);
+			return false;
+		}
+
+		return true;
+	}
+
+	bool WriteTextFileUtf8(const FString& FilePath, const FString& Contents, FString& OutError)
+	{
+		const FString DirectoryPath = FPaths::GetPath(FilePath);
+		if (!IFileManager::Get().DirectoryExists(*DirectoryPath) && !IFileManager::Get().MakeDirectory(*DirectoryPath, true))
+		{
+			OutError = FString::Printf(TEXT("Failed to create text output directory: %s"), *DirectoryPath);
+			return false;
+		}
+
+		if (!FFileHelper::SaveStringToFile(Contents, *FilePath, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
+		{
+			OutError = FString::Printf(TEXT("Failed to write text file: %s"), *FilePath);
+			return false;
+		}
+
 		return true;
 	}
 

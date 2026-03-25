@@ -10,10 +10,13 @@
 #include "Engine/Engine.h"
 #include "Engine/Selection.h"
 #include "FileHelpers.h"
+#include "HAL/FileManager.h"
 #include "IAssetTools.h"
 #include "IContentBrowserSingleton.h"
 #include "Materials/MaterialInstanceConstant.h"
+#include "Misc/DateTime.h"
 #include "Misc/PackageName.h"
+#include "Misc/Paths.h"
 #include "PrototypeCodexMeshBridge.h"
 #include "PrototypeMeshBuilderBridge.h"
 #include "PrototypeMeshGeneration.h"
@@ -377,10 +380,16 @@ void FPrototypeMeshBuilderController::PollActiveJob()
 
 void FPrototypeMeshBuilderController::FinalizeCompletedJob(const FActiveGenerateJob& CompletedJob, const FPrototypeBridgeResult& BridgeResult)
 {
+	FString DebugDirectory;
+	FString DebugExportError;
+
 	if (!BridgeResult.bSuccess)
 	{
+		const bool bDebugExported = ExportDebugArtifacts(CompletedJob.Request, BridgeResult, nullptr, nullptr, DebugDirectory, DebugExportError);
 		const FString FailureReason = BridgeResult.ErrorMessage.IsEmpty() ? TEXT("unknown bridge failure") : BridgeResult.ErrorMessage;
-		SetStatus(FString::Printf(TEXT("Generate failed: %s"), *FailureReason));
+		SetStatus(bDebugExported
+			? FString::Printf(TEXT("Generate failed: %s Debug files: %s"), *FailureReason, *DebugDirectory)
+			: FString::Printf(TEXT("Generate failed: %s Debug export failed: %s"), *FailureReason, *DebugExportError));
 		return;
 	}
 
@@ -414,13 +423,24 @@ void FPrototypeMeshBuilderController::FinalizeCompletedJob(const FActiveGenerate
 		return;
 	}
 
+	const bool bDebugExported = ExportDebugArtifacts(CompletedJob.Request, BridgeResult, &ParsedDsl, &GeneratedBuffers, DebugDirectory, DebugExportError);
+
 	const int32 RemainingJobs = PendingJobs.Num() + (ActiveJob.IsSet() ? 1 : 0);
-	SetStatus(FString::Printf(
-		TEXT("Generated %s with %d primitive(s), %d triangle(s). %d job(s) remain queued/running."),
-		*ParsedDsl.MeshName,
-		ParsedDsl.Primitives.Num(),
-		GeneratedBuffers.GetTriangleCount(),
-		RemainingJobs));
+	SetStatus(bDebugExported
+		? FString::Printf(
+			TEXT("Generated %s with %d primitive(s), %d triangle(s). %d job(s) remain queued/running. Debug files: %s"),
+			*ParsedDsl.MeshName,
+			ParsedDsl.Primitives.Num(),
+			GeneratedBuffers.GetTriangleCount(),
+			RemainingJobs,
+			*DebugDirectory)
+		: FString::Printf(
+			TEXT("Generated %s with %d primitive(s), %d triangle(s). %d job(s) remain queued/running. Debug export failed: %s"),
+			*ParsedDsl.MeshName,
+			ParsedDsl.Primitives.Num(),
+			GeneratedBuffers.GetTriangleCount(),
+			RemainingJobs,
+			*DebugExportError));
 }
 
 void FPrototypeMeshBuilderController::RebuildJobDisplayItems()
@@ -456,6 +476,88 @@ FString FPrototypeMeshBuilderController::BuildJobSummary(const FString& Prefix, 
 {
 	const FString Title = Request.AssetName.IsEmpty() ? Request.Prompt.Left(32) : Request.AssetName;
 	return FString::Printf(TEXT("%s  %s  [%s]  %s"), *Prefix, *FormatElapsed(ElapsedSeconds), *Request.ReasoningEffort, *Title);
+}
+
+bool FPrototypeMeshBuilderController::ExportDebugArtifacts(const FPrototypeMeshRequest& Request, const FPrototypeBridgeResult& BridgeResult, const FPrototypeShapeDsl* Dsl, const FGeneratedMeshBuffers* Buffers, FString& OutDirectory, FString& OutError) const
+{
+	OutDirectory.Empty();
+	OutError.Empty();
+
+	const FString SafeAssetName = PrototypeMeshBuilder::SanitizeAssetName(Request.AssetName.IsEmpty() ? TEXT("PrototypeMesh") : Request.AssetName);
+	const FString Timestamp = FDateTime::Now().ToString(TEXT("%Y%m%d_%H%M%S"));
+	const FString ShortJobId = FGuid::NewGuid().ToString(EGuidFormats::Digits).Left(8);
+	OutDirectory = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("PrototypeMeshBuilder"), TEXT("Debug"), Timestamp + TEXT("_") + SafeAssetName + TEXT("_") + ShortJobId);
+
+	if (!IFileManager::Get().DirectoryExists(*OutDirectory) && !IFileManager::Get().MakeDirectory(*OutDirectory, true))
+	{
+		OutError = FString::Printf(TEXT("Failed to create debug directory: %s"), *OutDirectory);
+		return false;
+	}
+
+	TSharedRef<FJsonObject> RequestJson = MakeShared<FJsonObject>();
+	RequestJson->SetStringField(TEXT("prompt"), Request.Prompt);
+	RequestJson->SetStringField(TEXT("asset_name"), Request.AssetName);
+	RequestJson->SetStringField(TEXT("content_path"), Request.ContentPath);
+	RequestJson->SetStringField(TEXT("locale"), Request.Locale);
+	RequestJson->SetStringField(TEXT("reasoning_effort"), Request.ReasoningEffort);
+	RequestJson->SetNumberField(TEXT("max_primitive_count"), Request.MaxPrimitiveCount);
+
+	FString RequestPayload;
+	{
+		const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&RequestPayload);
+		FJsonSerializer::Serialize(RequestJson, Writer);
+	}
+
+	if (!PrototypeMeshBuilder::WriteTextFileUtf8(FPaths::Combine(OutDirectory, TEXT("request.json")), RequestPayload, OutError))
+	{
+		return false;
+	}
+
+	if (!BridgeResult.RawLastMessage.IsEmpty()
+		&& !PrototypeMeshBuilder::WriteTextFileUtf8(FPaths::Combine(OutDirectory, TEXT("codex_last_message.txt")), BridgeResult.RawLastMessage, OutError))
+	{
+		return false;
+	}
+
+	if (!BridgeResult.Diagnostics.IsEmpty()
+		&& !PrototypeMeshBuilder::WriteTextFileUtf8(FPaths::Combine(OutDirectory, TEXT("codex_cli_output.txt")), BridgeResult.Diagnostics, OutError))
+	{
+		return false;
+	}
+
+	if (!BridgeResult.RawDslJson.IsEmpty()
+		&& !PrototypeMeshBuilder::WriteTextFileUtf8(FPaths::Combine(OutDirectory, TEXT("shape_dsl.json")), BridgeResult.RawDslJson, OutError))
+	{
+		return false;
+	}
+
+	if (Buffers && Buffers->IsValid())
+	{
+		if (!PrototypeMeshBuilder::WriteMeshBuffersObjFile(FPaths::Combine(OutDirectory, TEXT("mesh.obj")), *Buffers, OutError))
+		{
+			return false;
+		}
+	}
+
+	if (Dsl)
+	{
+		TSharedRef<FJsonObject> SummaryJson = MakeShared<FJsonObject>();
+		SummaryJson->SetStringField(TEXT("mesh_name"), Dsl->MeshName);
+		SummaryJson->SetStringField(TEXT("units"), Dsl->Units);
+		SummaryJson->SetStringField(TEXT("pivot"), Dsl->Pivot);
+		SummaryJson->SetNumberField(TEXT("primitive_count"), Dsl->Primitives.Num());
+		SummaryJson->SetBoolField(TEXT("bridge_success"), BridgeResult.bSuccess);
+
+		FString SummaryPayload;
+		const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&SummaryPayload);
+		FJsonSerializer::Serialize(SummaryJson, Writer);
+		if (!PrototypeMeshBuilder::WriteTextFileUtf8(FPaths::Combine(OutDirectory, TEXT("summary.json")), SummaryPayload, OutError))
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 FVector FPrototypeMeshBuilderController::GetNextPreviewLocation() const
