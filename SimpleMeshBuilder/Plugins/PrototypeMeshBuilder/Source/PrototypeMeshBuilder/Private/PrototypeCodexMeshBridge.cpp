@@ -60,19 +60,19 @@ namespace
 		}
 
 		OutResult.bSuccess = true;
-		ResponseObject->TryGetStringField(TEXT("raw_json"), OutResult.RawDslJson);
+		ResponseObject->TryGetStringField(TEXT("raw_json"), OutResult.RawPayloadJson);
 		ResponseObject->TryGetStringField(TEXT("raw_last_message"), OutResult.RawLastMessage);
 		ResponseObject->TryGetStringField(TEXT("diagnostics"), OutResult.Diagnostics);
-		if (OutResult.RawDslJson.IsEmpty())
+		if (OutResult.RawPayloadJson.IsEmpty())
 		{
-			OutResult.ErrorMessage = TEXT("Mesh bridge succeeded but did not return DSL JSON.");
+			OutResult.ErrorMessage = TEXT("Mesh bridge succeeded but did not return payload JSON.");
 			OutResult.bSuccess = false;
 			return false;
 		}
 
 		if (ReturnCode != 0)
 		{
-			OutResult.ErrorMessage = FString::Printf(TEXT("Python bridge exited with code %d despite returning DSL output."), ReturnCode);
+			OutResult.ErrorMessage = FString::Printf(TEXT("Python bridge exited with code %d despite returning payload output."), ReturnCode);
 			OutResult.bSuccess = false;
 			return false;
 		}
@@ -88,7 +88,9 @@ namespace
 		RequestJson->SetStringField(TEXT("content_path"), Request.ContentPath);
 		RequestJson->SetStringField(TEXT("locale"), Request.Locale);
 		RequestJson->SetStringField(TEXT("reasoning_effort"), Request.ReasoningEffort);
+		RequestJson->SetStringField(TEXT("generation_mode"), PrototypeGenerationModeToString(Request.GenerationMode));
 		RequestJson->SetNumberField(TEXT("max_primitive_count"), Request.MaxPrimitiveCount);
+		RequestJson->SetNumberField(TEXT("voxel_resolution"), Request.VoxelResolution);
 		RequestJson->SetNumberField(TEXT("timeout_seconds"), 150.0);
 		RequestJson->SetStringField(TEXT("project_dir"), FPaths::ProjectDir());
 

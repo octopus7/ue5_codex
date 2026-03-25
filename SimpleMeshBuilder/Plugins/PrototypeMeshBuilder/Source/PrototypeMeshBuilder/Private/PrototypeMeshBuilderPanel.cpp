@@ -3,6 +3,7 @@
 #include "PrototypeMeshBuilderController.h"
 #include "Styling/AppStyle.h"
 #include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SCheckBox.h"
 #include "Widgets/Input/SEditableTextBox.h"
 #include "Widgets/Input/SMultiLineEditableTextBox.h"
 #include "Widgets/Input/STextComboBox.h"
@@ -19,10 +20,21 @@
 void SPrototypeMeshBuilderPanel::Construct(const FArguments& InArgs)
 {
 	Controller = InArgs._Controller;
+	GenerationModeOptions = {
+		MakeShared<FString>(TEXT("primitive")),
+		MakeShared<FString>(TEXT("voxel"))
+	};
 	ReasoningEffortOptions = {
 		MakeShared<FString>(TEXT("medium")),
 		MakeShared<FString>(TEXT("high")),
 		MakeShared<FString>(TEXT("xhigh"))
+	};
+	VoxelResolutionOptions = {
+		MakeShared<FString>(TEXT("16")),
+		MakeShared<FString>(TEXT("32")),
+		MakeShared<FString>(TEXT("64")),
+		MakeShared<FString>(TEXT("128")),
+		MakeShared<FString>(TEXT("256"))
 	};
 
 	ChildSlot
@@ -81,6 +93,22 @@ void SPrototypeMeshBuilderPanel::Construct(const FArguments& InArgs)
 				.Padding(FMargin(0.0f, 0.0f, 0.0f, 4.0f))
 				[
 					SNew(STextBlock)
+					.Text(FText::FromString(TEXT("Generation Mode")))
+				]
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(FMargin(0.0f, 0.0f, 0.0f, 12.0f))
+				[
+					SAssignNew(GenerationModeComboBox, STextComboBox)
+					.OptionsSource(&GenerationModeOptions)
+					.InitiallySelectedItem(GenerationModeOptions[0])
+					.OnSelectionChanged(this, &SPrototypeMeshBuilderPanel::HandleGenerationModeChanged)
+				]
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(FMargin(0.0f, 0.0f, 0.0f, 4.0f))
+				[
+					SNew(STextBlock)
 					.Text(FText::FromString(TEXT("Reasoning Effort")))
 				]
 				+ SVerticalBox::Slot()
@@ -97,6 +125,34 @@ void SPrototypeMeshBuilderPanel::Construct(const FArguments& InArgs)
 				.Padding(FMargin(0.0f, 0.0f, 0.0f, 4.0f))
 				[
 					SNew(STextBlock)
+					.Text(FText::FromString(TEXT("Voxel Resolution")))
+					.Visibility_Lambda([this]()
+					{
+						return Controller.IsValid() && Controller->GetGenerationMode() == EPrototypeGenerationMode::Voxel
+							? EVisibility::Visible
+							: EVisibility::Collapsed;
+					})
+				]
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(FMargin(0.0f, 0.0f, 0.0f, 12.0f))
+				[
+					SAssignNew(VoxelResolutionComboBox, STextComboBox)
+					.OptionsSource(&VoxelResolutionOptions)
+					.InitiallySelectedItem(VoxelResolutionOptions[1])
+					.OnSelectionChanged(this, &SPrototypeMeshBuilderPanel::HandleVoxelResolutionChanged)
+					.Visibility_Lambda([this]()
+					{
+						return Controller.IsValid() && Controller->GetGenerationMode() == EPrototypeGenerationMode::Voxel
+							? EVisibility::Visible
+							: EVisibility::Collapsed;
+					})
+				]
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(FMargin(0.0f, 0.0f, 0.0f, 4.0f))
+				[
+					SNew(STextBlock)
 					.Text(FText::FromString(TEXT("Content Path")))
 				]
 				+ SVerticalBox::Slot()
@@ -105,6 +161,17 @@ void SPrototypeMeshBuilderPanel::Construct(const FArguments& InArgs)
 				[
 					SAssignNew(ContentPathTextBox, SEditableTextBox)
 					.Text(FText::FromString(Controller.IsValid() ? Controller->GetContentPath() : TEXT("/Game/Generated/PrototypeMeshes")))
+				]
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(FMargin(0.0f, 0.0f, 0.0f, 12.0f))
+				[
+					SAssignNew(UseSharedMaterialCheckBox, SCheckBox)
+					.IsChecked(Controller.IsValid() && Controller->GetUseSharedMaterial() ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
+					[
+						SNew(STextBlock)
+						.Text(FText::FromString(TEXT("Use Shared Lit Vertex Color Material")))
+					]
 				]
 				+ SVerticalBox::Slot()
 				.AutoHeight()
@@ -128,7 +195,14 @@ void SPrototypeMeshBuilderPanel::Construct(const FArguments& InArgs)
 					+ SUniformGridPanel::Slot(2, 0)
 					[
 						SNew(SButton)
-						.Text(FText::FromString(TEXT("Clear")))
+						.Text(FText::FromString(TEXT("Delete")))
+						.IsEnabled_Lambda([this]() { return Controller.IsValid() && Controller->CanDeleteSelectedPreview(); })
+						.OnClicked(this, &SPrototypeMeshBuilderPanel::HandleDeleteClicked)
+					]
+					+ SUniformGridPanel::Slot(3, 0)
+					[
+						SNew(SButton)
+						.Text(FText::FromString(TEXT("Clear All")))
 						.OnClicked(this, &SPrototypeMeshBuilderPanel::HandleClearClicked)
 					]
 				]
@@ -218,6 +292,17 @@ FReply SPrototypeMeshBuilderPanel::HandleSaveClicked()
 	return FReply::Handled();
 }
 
+FReply SPrototypeMeshBuilderPanel::HandleDeleteClicked()
+{
+	if (Controller.IsValid())
+	{
+		Controller->DeleteSelectedPreview();
+		RefreshWidgetFields();
+	}
+
+	return FReply::Handled();
+}
+
 FReply SPrototypeMeshBuilderPanel::HandleClearClicked()
 {
 	if (Controller.IsValid())
@@ -234,6 +319,22 @@ void SPrototypeMeshBuilderPanel::HandleReasoningEffortChanged(TSharedPtr<FString
 	if (Controller.IsValid() && NewSelection.IsValid())
 	{
 		Controller->SetReasoningEffort(*NewSelection);
+	}
+}
+
+void SPrototypeMeshBuilderPanel::HandleGenerationModeChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo)
+{
+	if (Controller.IsValid() && NewSelection.IsValid())
+	{
+		Controller->SetGenerationMode(PrototypeGenerationModeFromString(*NewSelection));
+	}
+}
+
+void SPrototypeMeshBuilderPanel::HandleVoxelResolutionChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo)
+{
+	if (Controller.IsValid() && NewSelection.IsValid())
+	{
+		Controller->SetVoxelResolution(FCString::Atoi(**NewSelection));
 	}
 }
 
@@ -267,9 +368,18 @@ void SPrototypeMeshBuilderPanel::SyncControllerFromWidgets() const
 	Controller->SetPrompt(PromptTextBox.IsValid() ? PromptTextBox->GetText().ToString() : FString());
 	Controller->SetAssetName(AssetNameTextBox.IsValid() ? AssetNameTextBox->GetText().ToString() : FString());
 	Controller->SetContentPath(ContentPathTextBox.IsValid() ? ContentPathTextBox->GetText().ToString() : FString());
+	Controller->SetUseSharedMaterial(UseSharedMaterialCheckBox.IsValid() && UseSharedMaterialCheckBox->GetCheckedState() == ECheckBoxState::Checked);
+	if (GenerationModeComboBox.IsValid() && GenerationModeComboBox->GetSelectedItem().IsValid())
+	{
+		Controller->SetGenerationMode(PrototypeGenerationModeFromString(*GenerationModeComboBox->GetSelectedItem()));
+	}
 	if (ReasoningEffortComboBox.IsValid() && ReasoningEffortComboBox->GetSelectedItem().IsValid())
 	{
 		Controller->SetReasoningEffort(*ReasoningEffortComboBox->GetSelectedItem());
+	}
+	if (VoxelResolutionComboBox.IsValid() && VoxelResolutionComboBox->GetSelectedItem().IsValid())
+	{
+		Controller->SetVoxelResolution(FCString::Atoi(**VoxelResolutionComboBox->GetSelectedItem()));
 	}
 }
 
@@ -290,6 +400,24 @@ void SPrototypeMeshBuilderPanel::RefreshWidgetFields() const
 		ContentPathTextBox->SetText(FText::FromString(Controller->GetContentPath()));
 	}
 
+	if (UseSharedMaterialCheckBox.IsValid())
+	{
+		UseSharedMaterialCheckBox->SetIsChecked(Controller->GetUseSharedMaterial() ? ECheckBoxState::Checked : ECheckBoxState::Unchecked);
+	}
+
+	if (GenerationModeComboBox.IsValid())
+	{
+		const FString SelectedMode = PrototypeGenerationModeToString(Controller->GetGenerationMode());
+		for (const TSharedPtr<FString>& Option : GenerationModeOptions)
+		{
+			if (Option.IsValid() && *Option == SelectedMode)
+			{
+				GenerationModeComboBox->SetSelectedItem(Option);
+				break;
+			}
+		}
+	}
+
 	if (ReasoningEffortComboBox.IsValid())
 	{
 		for (const TSharedPtr<FString>& Option : ReasoningEffortOptions)
@@ -297,6 +425,19 @@ void SPrototypeMeshBuilderPanel::RefreshWidgetFields() const
 			if (Option.IsValid() && *Option == Controller->GetReasoningEffort())
 			{
 				ReasoningEffortComboBox->SetSelectedItem(Option);
+				break;
+			}
+		}
+	}
+
+	if (VoxelResolutionComboBox.IsValid())
+	{
+		const FString ResolutionText = FString::FromInt(Controller->GetVoxelResolution());
+		for (const TSharedPtr<FString>& Option : VoxelResolutionOptions)
+		{
+			if (Option.IsValid() && *Option == ResolutionText)
+			{
+				VoxelResolutionComboBox->SetSelectedItem(Option);
 				break;
 			}
 		}

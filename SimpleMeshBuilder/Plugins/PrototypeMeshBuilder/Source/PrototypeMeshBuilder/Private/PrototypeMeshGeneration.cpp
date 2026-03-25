@@ -11,7 +11,9 @@
 #include "Engine/Engine.h"
 #include "Engine/StaticMesh.h"
 #include "Materials/Material.h"
-#include "Materials/MaterialInstanceConstant.h"
+#include "Materials/MaterialExpressionConstant.h"
+#include "Materials/MaterialExpressionVertexColor.h"
+#include "Materials/MaterialInterface.h"
 #include "MeshDescription.h"
 #include "ObjectTools.h"
 #include "Serialization/JsonReader.h"
@@ -23,7 +25,8 @@ using namespace UE::Geometry;
 
 namespace
 {
-	constexpr int32 MaxTriangleCount = 50000;
+	constexpr int32 MaxPrimitiveTriangleCount = 50000;
+	constexpr int32 MaxVoxelTriangleCount = 2000000;
 	constexpr int32 MaxSegments = 128;
 	constexpr int32 MaxSteps = 32;
 
@@ -110,28 +113,79 @@ namespace
 		return true;
 	}
 
+	bool ReadIntVectorField(const TSharedPtr<FJsonObject>& Object, const TCHAR* FieldName, FIntVector& OutVector, FString& OutError, const FString& Context)
+	{
+		const TSharedPtr<FJsonObject>* VectorObject = nullptr;
+		if (!Object->TryGetObjectField(FieldName, VectorObject) || !VectorObject || !VectorObject->IsValid())
+		{
+			OutError = FString::Printf(TEXT("%s is missing object field '%s'."), *Context, FieldName);
+			return false;
+		}
+
+		static const TSet<FString> AllowedKeys{TEXT("x"), TEXT("y"), TEXT("z")};
+		if (!HasOnlyKeys(*VectorObject, AllowedKeys, OutError, FString::Printf(TEXT("%s.%s"), *Context, FieldName)))
+		{
+			return false;
+		}
+
+		int32 X = 0;
+		int32 Y = 0;
+		int32 Z = 0;
+		if (!ReadIntegerField(*VectorObject, TEXT("x"), X, OutError, FString::Printf(TEXT("%s.%s"), *Context, FieldName))
+			|| !ReadIntegerField(*VectorObject, TEXT("y"), Y, OutError, FString::Printf(TEXT("%s.%s"), *Context, FieldName))
+			|| !ReadIntegerField(*VectorObject, TEXT("z"), Z, OutError, FString::Printf(TEXT("%s.%s"), *Context, FieldName)))
+		{
+			return false;
+		}
+
+		OutVector = FIntVector(X, Y, Z);
+		return true;
+	}
+
+	bool ReadColorField(const TSharedPtr<FJsonObject>& Object, const TCHAR* FieldName, FLinearColor& OutColor, FString& OutError, const FString& Context)
+	{
+		const TSharedPtr<FJsonObject>* ColorObject = nullptr;
+		if (!Object->TryGetObjectField(FieldName, ColorObject) || !ColorObject || !ColorObject->IsValid())
+		{
+			OutError = FString::Printf(TEXT("%s is missing object field '%s'."), *Context, FieldName);
+			return false;
+		}
+
+		static const TSet<FString> AllowedKeys{TEXT("r"), TEXT("g"), TEXT("b"), TEXT("a")};
+		if (!HasOnlyKeys(*ColorObject, AllowedKeys, OutError, FString::Printf(TEXT("%s.%s"), *Context, FieldName)))
+		{
+			return false;
+		}
+
+		double R = 0.0;
+		double G = 0.0;
+		double B = 0.0;
+		double A = 0.0;
+		if (!ReadNumberField(*ColorObject, TEXT("r"), R, OutError, FString::Printf(TEXT("%s.%s"), *Context, FieldName))
+			|| !ReadNumberField(*ColorObject, TEXT("g"), G, OutError, FString::Printf(TEXT("%s.%s"), *Context, FieldName))
+			|| !ReadNumberField(*ColorObject, TEXT("b"), B, OutError, FString::Printf(TEXT("%s.%s"), *Context, FieldName))
+			|| !ReadNumberField(*ColorObject, TEXT("a"), A, OutError, FString::Printf(TEXT("%s.%s"), *Context, FieldName)))
+		{
+			return false;
+		}
+
+		OutColor = FLinearColor(static_cast<float>(R), static_cast<float>(G), static_cast<float>(B), static_cast<float>(A));
+		return true;
+	}
+
 	bool IsFiniteVector(const FVector& Vector)
 	{
 		return FMath::IsFinite(Vector.X) && FMath::IsFinite(Vector.Y) && FMath::IsFinite(Vector.Z);
 	}
 
-	FVector4f GetPrimitiveColor(const FPrototypePrimitiveSpec& Spec, int32 PrimitiveIndex)
+	bool IsFiniteColor(const FLinearColor& Color)
 	{
-		static const FVector4f Palette[] = {
-			FVector4f(0.95f, 0.76f, 0.28f, 1.0f),
-			FVector4f(0.29f, 0.66f, 0.94f, 1.0f),
-			FVector4f(0.33f, 0.84f, 0.56f, 1.0f),
-			FVector4f(0.96f, 0.43f, 0.33f, 1.0f),
-			FVector4f(0.64f, 0.51f, 0.93f, 1.0f),
-			FVector4f(0.96f, 0.63f, 0.23f, 1.0f),
-			FVector4f(0.22f, 0.78f, 0.78f, 1.0f),
-			FVector4f(0.90f, 0.42f, 0.70f, 1.0f)
-		};
+		return FMath::IsFinite(Color.R) && FMath::IsFinite(Color.G) && FMath::IsFinite(Color.B) && FMath::IsFinite(Color.A);
+	}
 
-		uint32 Hash = GetTypeHash(Spec.Type);
-		Hash = HashCombine(Hash, GetTypeHash(PrimitiveIndex));
-		Hash = HashCombine(Hash, GetTypeHash(Spec.Name));
-		return Palette[Hash % UE_ARRAY_COUNT(Palette)];
+	FVector4f GetPrimitiveColor(const FPrototypePrimitiveSpec& Spec)
+	{
+		return FVector4f(Spec.Color.R, Spec.Color.G, Spec.Color.B, Spec.Color.A);
 	}
 
 	void AppendTriangle(FGeneratedMeshBuffers& Buffers, const FTransform& Transform, const FVector& A, const FVector& B, const FVector& C, const FVector2D& UvA, const FVector2D& UvB, const FVector2D& UvC, const FVector4f& Color)
@@ -165,36 +219,26 @@ namespace
 		AppendTriangle(Buffers, Transform, A, C, D, FVector2D(0.0, 0.0), FVector2D(1.0, 1.0), FVector2D(0.0, 1.0), Color);
 	}
 
-	void BuildPlane(const FPrototypePrimitiveSpec& Spec, int32 PrimitiveIndex, FGeneratedMeshBuffers& Buffers)
+	FTransform MakePrimitiveTransform(const FPrototypePrimitiveTransform& PrimitiveTransform)
 	{
-		const double HalfDepth = Spec.Depth * 0.5;
-		const double HalfWidth = Spec.Width * 0.5;
-		const FTransform Transform(FRotator::MakeFromEuler(Spec.Transform.RotationDeg), Spec.Transform.LocationCm, Spec.Transform.Scale);
-		const FVector4f Color = GetPrimitiveColor(Spec, PrimitiveIndex);
-
-		const FVector A(-HalfDepth, -HalfWidth, 0.0);
-		const FVector B(HalfDepth, -HalfWidth, 0.0);
-		const FVector C(HalfDepth, HalfWidth, 0.0);
-		const FVector D(-HalfDepth, HalfWidth, 0.0);
-		AppendQuad(Buffers, Transform, A, B, C, D, Color);
+		// Primitive transforms are authored around the primitive bounds center.
+		return FTransform(FRotator::MakeFromEuler(PrimitiveTransform.RotationDeg), PrimitiveTransform.LocationCm, PrimitiveTransform.Scale);
 	}
 
-	void BuildBox(const FPrototypePrimitiveSpec& Spec, int32 PrimitiveIndex, FGeneratedMeshBuffers& Buffers)
+	void BuildCenteredBoxGeometry(FGeneratedMeshBuffers& Buffers, const FTransform& Transform, double Width, double Depth, double Height, const FVector4f& Color)
 	{
-		const double HalfDepth = Spec.Depth * 0.5;
-		const double HalfWidth = Spec.Width * 0.5;
-		const double Height = Spec.Height;
-		const FTransform Transform(FRotator::MakeFromEuler(Spec.Transform.RotationDeg), Spec.Transform.LocationCm, Spec.Transform.Scale);
-		const FVector4f Color = GetPrimitiveColor(Spec, PrimitiveIndex);
+		const double HalfDepth = Depth * 0.5;
+		const double HalfWidth = Width * 0.5;
+		const double HalfHeight = Height * 0.5;
 
-		const FVector P000(-HalfDepth, -HalfWidth, 0.0);
-		const FVector P100(HalfDepth, -HalfWidth, 0.0);
-		const FVector P110(HalfDepth, HalfWidth, 0.0);
-		const FVector P010(-HalfDepth, HalfWidth, 0.0);
-		const FVector P001(-HalfDepth, -HalfWidth, Height);
-		const FVector P101(HalfDepth, -HalfWidth, Height);
-		const FVector P111(HalfDepth, HalfWidth, Height);
-		const FVector P011(-HalfDepth, HalfWidth, Height);
+		const FVector P000(-HalfDepth, -HalfWidth, -HalfHeight);
+		const FVector P100(HalfDepth, -HalfWidth, -HalfHeight);
+		const FVector P110(HalfDepth, HalfWidth, -HalfHeight);
+		const FVector P010(-HalfDepth, HalfWidth, -HalfHeight);
+		const FVector P001(-HalfDepth, -HalfWidth, HalfHeight);
+		const FVector P101(HalfDepth, -HalfWidth, HalfHeight);
+		const FVector P111(HalfDepth, HalfWidth, HalfHeight);
+		const FVector P011(-HalfDepth, HalfWidth, HalfHeight);
 
 		AppendQuad(Buffers, Transform, P000, P010, P110, P100, Color);
 		AppendQuad(Buffers, Transform, P001, P101, P111, P011, Color);
@@ -204,63 +248,86 @@ namespace
 		AppendQuad(Buffers, Transform, P000, P100, P101, P001, Color);
 	}
 
-	void BuildCylinder(const FPrototypePrimitiveSpec& Spec, int32 PrimitiveIndex, FGeneratedMeshBuffers& Buffers)
-	{
-		const FTransform Transform(FRotator::MakeFromEuler(Spec.Transform.RotationDeg), Spec.Transform.LocationCm, Spec.Transform.Scale);
-		const double Height = Spec.Height;
-		const int32 Segments = Spec.Segments;
-		const FVector4f Color = GetPrimitiveColor(Spec, PrimitiveIndex);
-
-		for (int32 SegmentIndex = 0; SegmentIndex < Segments; ++SegmentIndex)
-		{
-			const double Angle0 = (2.0 * PI * SegmentIndex) / Segments;
-			const double Angle1 = (2.0 * PI * (SegmentIndex + 1)) / Segments;
-
-			const FVector Bottom0(Spec.Radius * FMath::Cos(Angle0), Spec.Radius * FMath::Sin(Angle0), 0.0);
-			const FVector Bottom1(Spec.Radius * FMath::Cos(Angle1), Spec.Radius * FMath::Sin(Angle1), 0.0);
-			const FVector Top0(Bottom0.X, Bottom0.Y, Height);
-			const FVector Top1(Bottom1.X, Bottom1.Y, Height);
-
-			AppendQuad(Buffers, Transform, Bottom0, Bottom1, Top1, Top0, Color);
-			AppendTriangle(Buffers, Transform, Top0, Top1, FVector(0.0, 0.0, Height), FVector2D(0.0, 0.0), FVector2D(1.0, 0.0), FVector2D(0.5, 0.5), Color);
-			AppendTriangle(Buffers, Transform, Bottom0, FVector(0.0, 0.0, 0.0), Bottom1, FVector2D(0.0, 0.0), FVector2D(0.5, 0.5), FVector2D(1.0, 0.0), Color);
-		}
-	}
-
-	void BuildCone(const FPrototypePrimitiveSpec& Spec, int32 PrimitiveIndex, FGeneratedMeshBuffers& Buffers)
-	{
-		const FTransform Transform(FRotator::MakeFromEuler(Spec.Transform.RotationDeg), Spec.Transform.LocationCm, Spec.Transform.Scale);
-		const FVector Apex(0.0, 0.0, Spec.Height);
-		const int32 Segments = Spec.Segments;
-		const FVector4f Color = GetPrimitiveColor(Spec, PrimitiveIndex);
-
-		for (int32 SegmentIndex = 0; SegmentIndex < Segments; ++SegmentIndex)
-		{
-			const double Angle0 = (2.0 * PI * SegmentIndex) / Segments;
-			const double Angle1 = (2.0 * PI * (SegmentIndex + 1)) / Segments;
-
-			const FVector Bottom0(Spec.Radius * FMath::Cos(Angle0), Spec.Radius * FMath::Sin(Angle0), 0.0);
-			const FVector Bottom1(Spec.Radius * FMath::Cos(Angle1), Spec.Radius * FMath::Sin(Angle1), 0.0);
-
-			AppendTriangle(Buffers, Transform, Bottom0, Bottom1, Apex, FVector2D(0.0, 0.0), FVector2D(1.0, 0.0), FVector2D(0.5, 1.0), Color);
-			AppendTriangle(Buffers, Transform, Bottom0, FVector(0.0, 0.0, 0.0), Bottom1, FVector2D(0.0, 0.0), FVector2D(0.5, 0.5), FVector2D(1.0, 0.0), Color);
-		}
-	}
-
-	void BuildRamp(const FPrototypePrimitiveSpec& Spec, int32 PrimitiveIndex, FGeneratedMeshBuffers& Buffers)
+	void BuildPlane(const FPrototypePrimitiveSpec& Spec, FGeneratedMeshBuffers& Buffers)
 	{
 		const double HalfDepth = Spec.Depth * 0.5;
 		const double HalfWidth = Spec.Width * 0.5;
-		const double Height = Spec.Height;
-		const FTransform Transform(FRotator::MakeFromEuler(Spec.Transform.RotationDeg), Spec.Transform.LocationCm, Spec.Transform.Scale);
-		const FVector4f Color = GetPrimitiveColor(Spec, PrimitiveIndex);
+		const FTransform Transform = MakePrimitiveTransform(Spec.Transform);
+		const FVector4f Color = GetPrimitiveColor(Spec);
 
 		const FVector A(-HalfDepth, -HalfWidth, 0.0);
 		const FVector B(HalfDepth, -HalfWidth, 0.0);
 		const FVector C(HalfDepth, HalfWidth, 0.0);
 		const FVector D(-HalfDepth, HalfWidth, 0.0);
-		const FVector E(HalfDepth, -HalfWidth, Height);
-		const FVector F(HalfDepth, HalfWidth, Height);
+		AppendQuad(Buffers, Transform, A, B, C, D, Color);
+	}
+
+	void BuildBox(const FPrototypePrimitiveSpec& Spec, FGeneratedMeshBuffers& Buffers)
+	{
+		const FTransform Transform = MakePrimitiveTransform(Spec.Transform);
+		const FVector4f Color = GetPrimitiveColor(Spec);
+		BuildCenteredBoxGeometry(Buffers, Transform, Spec.Width, Spec.Depth, Spec.Height, Color);
+	}
+
+	void BuildCylinder(const FPrototypePrimitiveSpec& Spec, FGeneratedMeshBuffers& Buffers)
+	{
+		const FTransform Transform = MakePrimitiveTransform(Spec.Transform);
+		const double Height = Spec.Height;
+		const double HalfHeight = Height * 0.5;
+		const int32 Segments = Spec.Segments;
+		const FVector4f Color = GetPrimitiveColor(Spec);
+
+		for (int32 SegmentIndex = 0; SegmentIndex < Segments; ++SegmentIndex)
+		{
+			const double Angle0 = (2.0 * PI * SegmentIndex) / Segments;
+			const double Angle1 = (2.0 * PI * (SegmentIndex + 1)) / Segments;
+
+			const FVector Bottom0(Spec.Radius * FMath::Cos(Angle0), Spec.Radius * FMath::Sin(Angle0), -HalfHeight);
+			const FVector Bottom1(Spec.Radius * FMath::Cos(Angle1), Spec.Radius * FMath::Sin(Angle1), -HalfHeight);
+			const FVector Top0(Bottom0.X, Bottom0.Y, HalfHeight);
+			const FVector Top1(Bottom1.X, Bottom1.Y, HalfHeight);
+
+			AppendQuad(Buffers, Transform, Bottom0, Bottom1, Top1, Top0, Color);
+			AppendTriangle(Buffers, Transform, Top0, Top1, FVector(0.0, 0.0, HalfHeight), FVector2D(0.0, 0.0), FVector2D(1.0, 0.0), FVector2D(0.5, 0.5), Color);
+			AppendTriangle(Buffers, Transform, Bottom0, FVector(0.0, 0.0, -HalfHeight), Bottom1, FVector2D(0.0, 0.0), FVector2D(0.5, 0.5), FVector2D(1.0, 0.0), Color);
+		}
+	}
+
+	void BuildCone(const FPrototypePrimitiveSpec& Spec, FGeneratedMeshBuffers& Buffers)
+	{
+		const FTransform Transform = MakePrimitiveTransform(Spec.Transform);
+		const double HalfHeight = Spec.Height * 0.5;
+		const FVector Apex(0.0, 0.0, HalfHeight);
+		const int32 Segments = Spec.Segments;
+		const FVector4f Color = GetPrimitiveColor(Spec);
+
+		for (int32 SegmentIndex = 0; SegmentIndex < Segments; ++SegmentIndex)
+		{
+			const double Angle0 = (2.0 * PI * SegmentIndex) / Segments;
+			const double Angle1 = (2.0 * PI * (SegmentIndex + 1)) / Segments;
+
+			const FVector Bottom0(Spec.Radius * FMath::Cos(Angle0), Spec.Radius * FMath::Sin(Angle0), -HalfHeight);
+			const FVector Bottom1(Spec.Radius * FMath::Cos(Angle1), Spec.Radius * FMath::Sin(Angle1), -HalfHeight);
+
+			AppendTriangle(Buffers, Transform, Bottom0, Bottom1, Apex, FVector2D(0.0, 0.0), FVector2D(1.0, 0.0), FVector2D(0.5, 1.0), Color);
+			AppendTriangle(Buffers, Transform, Bottom0, FVector(0.0, 0.0, -HalfHeight), Bottom1, FVector2D(0.0, 0.0), FVector2D(0.5, 0.5), FVector2D(1.0, 0.0), Color);
+		}
+	}
+
+	void BuildRamp(const FPrototypePrimitiveSpec& Spec, FGeneratedMeshBuffers& Buffers)
+	{
+		const double HalfDepth = Spec.Depth * 0.5;
+		const double HalfWidth = Spec.Width * 0.5;
+		const double HalfHeight = Spec.Height * 0.5;
+		const FTransform Transform = MakePrimitiveTransform(Spec.Transform);
+		const FVector4f Color = GetPrimitiveColor(Spec);
+
+		const FVector A(-HalfDepth, -HalfWidth, -HalfHeight);
+		const FVector B(HalfDepth, -HalfWidth, -HalfHeight);
+		const FVector C(HalfDepth, HalfWidth, -HalfHeight);
+		const FVector D(-HalfDepth, HalfWidth, -HalfHeight);
+		const FVector E(HalfDepth, -HalfWidth, HalfHeight);
+		const FVector F(HalfDepth, HalfWidth, HalfHeight);
 
 		AppendQuad(Buffers, Transform, A, D, C, B, Color);
 		AppendQuad(Buffers, Transform, B, C, F, E, Color);
@@ -269,20 +336,22 @@ namespace
 		AppendTriangle(Buffers, Transform, D, F, C, FVector2D(0.0, 0.0), FVector2D(1.0, 1.0), FVector2D(1.0, 0.0), Color);
 	}
 
-	void BuildStair(const FPrototypePrimitiveSpec& Spec, int32 PrimitiveIndex, FGeneratedMeshBuffers& Buffers)
+	void BuildStair(const FPrototypePrimitiveSpec& Spec, FGeneratedMeshBuffers& Buffers)
 	{
 		const double StepDepth = Spec.Depth / Spec.Steps;
 		const double StepHeight = Spec.Height / Spec.Steps;
+		const double HalfDepth = Spec.Depth * 0.5;
+		const double HalfHeight = Spec.Height * 0.5;
+		const FTransform ParentTransform = MakePrimitiveTransform(Spec.Transform);
+		const FVector4f Color = GetPrimitiveColor(Spec);
 
 		for (int32 StepIndex = 0; StepIndex < Spec.Steps; ++StepIndex)
 		{
-			FPrototypePrimitiveSpec StepSpec = Spec;
-			StepSpec.Type = TEXT("box");
-			StepSpec.Depth = StepDepth;
-			StepSpec.Height = StepHeight * (StepIndex + 1);
-			StepSpec.Transform.LocationCm = Spec.Transform.LocationCm;
-			StepSpec.Transform.LocationCm.X += (-Spec.Depth * 0.5) + (StepDepth * StepIndex) + (StepDepth * 0.5);
-			BuildBox(StepSpec, PrimitiveIndex, Buffers);
+			const double LocalCenterX = -HalfDepth + (StepDepth * StepIndex) + (StepDepth * 0.5);
+			const double LocalCenterZ = -HalfHeight + (StepHeight * (StepIndex + 1) * 0.5);
+			FTransform CombinedTransform = ParentTransform;
+			CombinedTransform.AddToTranslation(ParentTransform.TransformVector(FVector(LocalCenterX, 0.0, LocalCenterZ)));
+			BuildCenteredBoxGeometry(Buffers, CombinedTransform, Spec.Width, StepDepth, StepHeight * (StepIndex + 1), Color);
 		}
 	}
 
@@ -296,39 +365,25 @@ namespace
 
 		return true;
 	}
-}
 
-namespace PrototypeMeshBuilder
-{
-	bool ParseShapeDslJson(const FString& RawJson, FPrototypeShapeDsl& OutDsl, FString& OutError)
+	bool ParsePrimitiveMeshObject(const TSharedPtr<FJsonObject>& Object, FPrototypeShapeDsl& OutDsl, FString& OutError, const FString& Context)
 	{
-		TSharedPtr<FJsonObject> RootObject;
-		const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(RawJson);
-		if (!FJsonSerializer::Deserialize(Reader, RootObject) || !RootObject.IsValid())
-		{
-			OutError = TEXT("Bridge output was not valid JSON.");
-			return false;
-		}
-
-		static const TSet<FString> TopLevelKeys{TEXT("version"), TEXT("mesh_name"), TEXT("units"), TEXT("pivot"), TEXT("primitives"), TEXT("notes")};
-		if (!HasOnlyKeys(RootObject, TopLevelKeys, OutError, TEXT("Shape DSL")))
+		static const TSet<FString> PrimitiveMeshKeys{TEXT("units"), TEXT("pivot"), TEXT("primitives")};
+		if (!HasOnlyKeys(Object, PrimitiveMeshKeys, OutError, Context))
 		{
 			return false;
 		}
 
-		if (!ReadStringField(RootObject, TEXT("version"), OutDsl.Version, OutError, TEXT("Shape DSL"))
-			|| !ReadStringField(RootObject, TEXT("mesh_name"), OutDsl.MeshName, OutError, TEXT("Shape DSL"))
-			|| !ReadStringField(RootObject, TEXT("units"), OutDsl.Units, OutError, TEXT("Shape DSL"))
-			|| !ReadStringField(RootObject, TEXT("pivot"), OutDsl.Pivot, OutError, TEXT("Shape DSL"))
-			|| !ReadStringField(RootObject, TEXT("notes"), OutDsl.Notes, OutError, TEXT("Shape DSL")))
+		if (!ReadStringField(Object, TEXT("units"), OutDsl.Units, OutError, Context)
+			|| !ReadStringField(Object, TEXT("pivot"), OutDsl.Pivot, OutError, Context))
 		{
 			return false;
 		}
 
 		const TArray<TSharedPtr<FJsonValue>>* PrimitiveValues = nullptr;
-		if (!RootObject->TryGetArrayField(TEXT("primitives"), PrimitiveValues) || !PrimitiveValues)
+		if (!Object->TryGetArrayField(TEXT("primitives"), PrimitiveValues) || !PrimitiveValues)
 		{
-			OutError = TEXT("Shape DSL is missing the 'primitives' array.");
+			OutError = Context + TEXT(" is missing the 'primitives' array.");
 			return false;
 		}
 
@@ -338,12 +393,12 @@ namespace PrototypeMeshBuilder
 			const TSharedPtr<FJsonObject>* PrimitiveObject = nullptr;
 			if (!(*PrimitiveValues)[PrimitiveIndex]->TryGetObject(PrimitiveObject) || !PrimitiveObject || !PrimitiveObject->IsValid())
 			{
-				OutError = FString::Printf(TEXT("Primitive %d is not an object."), PrimitiveIndex);
+				OutError = FString::Printf(TEXT("%s primitive %d is not an object."), *Context, PrimitiveIndex);
 				return false;
 			}
 
-			static const TSet<FString> PrimitiveKeys{TEXT("name"), TEXT("type"), TEXT("transform"), TEXT("width"), TEXT("depth"), TEXT("height"), TEXT("radius"), TEXT("segments"), TEXT("steps")};
-			const FString PrimitiveContext = FString::Printf(TEXT("Primitive %d"), PrimitiveIndex);
+			static const TSet<FString> PrimitiveKeys{TEXT("name"), TEXT("type"), TEXT("transform"), TEXT("color"), TEXT("width"), TEXT("depth"), TEXT("height"), TEXT("radius"), TEXT("segments"), TEXT("steps")};
+			const FString PrimitiveContext = FString::Printf(TEXT("%s primitive %d"), *Context, PrimitiveIndex);
 			if (!HasOnlyKeys(*PrimitiveObject, PrimitiveKeys, OutError, PrimitiveContext))
 			{
 				return false;
@@ -351,7 +406,8 @@ namespace PrototypeMeshBuilder
 
 			FPrototypePrimitiveSpec Primitive;
 			if (!ReadStringField(*PrimitiveObject, TEXT("name"), Primitive.Name, OutError, PrimitiveContext)
-				|| !ReadStringField(*PrimitiveObject, TEXT("type"), Primitive.Type, OutError, PrimitiveContext))
+				|| !ReadStringField(*PrimitiveObject, TEXT("type"), Primitive.Type, OutError, PrimitiveContext)
+				|| !ReadColorField(*PrimitiveObject, TEXT("color"), Primitive.Color, OutError, PrimitiveContext))
 			{
 				return false;
 			}
@@ -409,6 +465,302 @@ namespace PrototypeMeshBuilder
 			OutDsl.Primitives.Add(MoveTemp(Primitive));
 		}
 
+		return true;
+	}
+
+	bool ParseVoxelGridObject(const TSharedPtr<FJsonObject>& Object, FPrototypeVoxelGrid& OutGrid, FString& OutError, const FString& Context)
+	{
+		static const TSet<FString> VoxelGridKeys{TEXT("resolution"), TEXT("color_hex_stream"), TEXT("voxels_hex")};
+		if (!HasOnlyKeys(Object, VoxelGridKeys, OutError, Context))
+		{
+			return false;
+		}
+
+		if (!ReadIntVectorField(Object, TEXT("resolution"), OutGrid.Resolution, OutError, Context))
+		{
+			return false;
+		}
+
+		if (!Object->TryGetStringField(TEXT("color_hex_stream"), OutGrid.VoxelsHex)
+			&& !Object->TryGetStringField(TEXT("voxels_hex"), OutGrid.VoxelsHex))
+		{
+			OutError = Context + TEXT(" is missing string field 'color_hex_stream'.");
+			return false;
+		}
+
+		return true;
+	}
+
+	int32 HexNibble(TCHAR Character)
+	{
+		if (Character >= TEXT('0') && Character <= TEXT('9'))
+		{
+			return Character - TEXT('0');
+		}
+
+		if (Character >= TEXT('a') && Character <= TEXT('f'))
+		{
+			return 10 + (Character - TEXT('a'));
+		}
+
+		if (Character >= TEXT('A') && Character <= TEXT('F'))
+		{
+			return 10 + (Character - TEXT('A'));
+		}
+
+		return INDEX_NONE;
+	}
+
+	bool DecodeVoxelHexStream(const FPrototypeVoxelGrid& Grid, TArray<uint32>& OutColors, int32& OutOccupiedCount, FString& OutError)
+	{
+		OutColors.Reset();
+		OutOccupiedCount = 0;
+
+		const int64 VoxelCount = static_cast<int64>(Grid.Resolution.X) * static_cast<int64>(Grid.Resolution.Y) * static_cast<int64>(Grid.Resolution.Z);
+		if (VoxelCount <= 0)
+		{
+			OutError = TEXT("Voxel grid resolution must be positive.");
+			return false;
+		}
+
+		const int64 ExpectedHexLength = VoxelCount * 6;
+		if (Grid.VoxelsHex.Len() != ExpectedHexLength)
+		{
+			OutError = FString::Printf(TEXT("Voxel grid color_hex_stream length mismatch: expected %lld hex chars, got %d."), ExpectedHexLength, Grid.VoxelsHex.Len());
+			return false;
+		}
+
+		OutColors.Reserve(static_cast<int32>(VoxelCount));
+		for (int32 Offset = 0; Offset < Grid.VoxelsHex.Len(); Offset += 6)
+		{
+			int32 R0 = HexNibble(Grid.VoxelsHex[Offset]);
+			int32 R1 = HexNibble(Grid.VoxelsHex[Offset + 1]);
+			int32 G0 = HexNibble(Grid.VoxelsHex[Offset + 2]);
+			int32 G1 = HexNibble(Grid.VoxelsHex[Offset + 3]);
+			int32 B0 = HexNibble(Grid.VoxelsHex[Offset + 4]);
+			int32 B1 = HexNibble(Grid.VoxelsHex[Offset + 5]);
+			if (R0 == INDEX_NONE || R1 == INDEX_NONE || G0 == INDEX_NONE || G1 == INDEX_NONE || B0 == INDEX_NONE || B1 == INDEX_NONE)
+			{
+				OutError = FString::Printf(TEXT("Voxel grid color_hex_stream contains invalid hex at character offset %d."), Offset);
+				return false;
+			}
+
+			const uint32 Color = static_cast<uint32>((R0 << 20) | (R1 << 16) | (G0 << 12) | (G1 << 8) | (B0 << 4) | B1);
+			OutColors.Add(Color);
+			if (Color != 0)
+			{
+				++OutOccupiedCount;
+			}
+		}
+
+		return true;
+	}
+
+	FVector4f ColorToVector4f(uint32 PackedColor)
+	{
+		const float R = static_cast<float>((PackedColor >> 16) & 0xFF) / 255.0f;
+		const float G = static_cast<float>((PackedColor >> 8) & 0xFF) / 255.0f;
+		const float B = static_cast<float>(PackedColor & 0xFF) / 255.0f;
+		return FVector4f(R, G, B, 1.0f);
+	}
+
+	FVector GetVoxelGridMinCorner(const FIntVector& Resolution, float VoxelSizeCm)
+	{
+		return FVector(
+			-static_cast<double>(Resolution.X) * VoxelSizeCm * 0.5,
+			-static_cast<double>(Resolution.Y) * VoxelSizeCm * 0.5,
+			0.0);
+	}
+
+	void AppendVoxelQuad(FGeneratedMeshBuffers& Buffers, const FIntVector& Resolution, float VoxelSizeCm, int32 Axis, int32 NormalSign, int32 Plane, int32 StartU, int32 StartV, int32 SizeU, int32 SizeV, uint32 PackedColor)
+	{
+		const int32 UAxis = (Axis + 1) % 3;
+		const int32 VAxis = (Axis + 2) % 3;
+		const FVector MinCorner = GetVoxelGridMinCorner(Resolution, VoxelSizeCm);
+
+		FVector Origin = MinCorner;
+		Origin[Axis] += static_cast<double>(Plane) * VoxelSizeCm;
+		Origin[UAxis] += static_cast<double>(StartU) * VoxelSizeCm;
+		Origin[VAxis] += static_cast<double>(StartV) * VoxelSizeCm;
+
+		FVector DeltaU = FVector::ZeroVector;
+		DeltaU[UAxis] = static_cast<double>(SizeU) * VoxelSizeCm;
+		FVector DeltaV = FVector::ZeroVector;
+		DeltaV[VAxis] = static_cast<double>(SizeV) * VoxelSizeCm;
+
+		const FVector4f Color = ColorToVector4f(PackedColor);
+		if (NormalSign > 0)
+		{
+			AppendQuad(Buffers, FTransform::Identity, Origin, Origin + DeltaU, Origin + DeltaU + DeltaV, Origin + DeltaV, Color);
+		}
+		else
+		{
+			AppendQuad(Buffers, FTransform::Identity, Origin, Origin + DeltaV, Origin + DeltaV + DeltaU, Origin + DeltaU, Color);
+		}
+	}
+
+	struct FVoxelMaskCell
+	{
+		uint32 Color = 0;
+		int8 NormalSign = 0;
+
+		bool IsVisible() const
+		{
+			return Color != 0 && NormalSign != 0;
+		}
+
+		bool Matches(const FVoxelMaskCell& Other) const
+		{
+			return Color == Other.Color && NormalSign == Other.NormalSign;
+		}
+	};
+
+	int32 GetVoxelLinearIndex(const FIntVector& Resolution, int32 X, int32 Y, int32 Z)
+	{
+		return X + (Y * Resolution.X) + (Z * Resolution.X * Resolution.Y);
+	}
+
+	uint32 GetVoxelColorAt(const TArray<uint32>& Colors, const FIntVector& Resolution, int32 X, int32 Y, int32 Z)
+	{
+		if (X < 0 || Y < 0 || Z < 0 || X >= Resolution.X || Y >= Resolution.Y || Z >= Resolution.Z)
+		{
+			return 0;
+		}
+
+		return Colors[GetVoxelLinearIndex(Resolution, X, Y, Z)];
+	}
+
+	void CenterBuffersBasePivot(FGeneratedMeshBuffers& Buffers)
+	{
+		if (Buffers.Positions.IsEmpty())
+		{
+			return;
+		}
+
+		FBox3f Bounds(EForceInit::ForceInitToZero);
+		for (const FVector3f& Position : Buffers.Positions)
+		{
+			Bounds += Position;
+		}
+
+		const FVector3f PivotOffset(
+			-(Bounds.Min.X + Bounds.Max.X) * 0.5f,
+			-(Bounds.Min.Y + Bounds.Max.Y) * 0.5f,
+			-Bounds.Min.Z);
+
+		for (FVector3f& Position : Buffers.Positions)
+		{
+			Position += PivotOffset;
+		}
+	}
+}
+
+namespace PrototypeMeshBuilder
+{
+	bool ParseMeshPayloadJson(const FString& RawJson, FPrototypeMeshPayload& OutPayload, FString& OutError)
+	{
+		TSharedPtr<FJsonObject> RootObject;
+		const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(RawJson);
+		if (!FJsonSerializer::Deserialize(Reader, RootObject) || !RootObject.IsValid())
+		{
+			OutError = TEXT("Bridge output was not valid JSON.");
+			return false;
+		}
+
+		static const TSet<FString> TopLevelKeys{TEXT("version"), TEXT("mesh_name"), TEXT("generation_mode"), TEXT("notes"), TEXT("primitive_mesh"), TEXT("voxel_grid")};
+		if (!HasOnlyKeys(RootObject, TopLevelKeys, OutError, TEXT("Mesh payload")))
+		{
+			return false;
+		}
+
+		FString GenerationModeString;
+		if (!ReadStringField(RootObject, TEXT("version"), OutPayload.Version, OutError, TEXT("Mesh payload"))
+			|| !ReadStringField(RootObject, TEXT("mesh_name"), OutPayload.MeshName, OutError, TEXT("Mesh payload"))
+			|| !ReadStringField(RootObject, TEXT("generation_mode"), GenerationModeString, OutError, TEXT("Mesh payload"))
+			|| !ReadStringField(RootObject, TEXT("notes"), OutPayload.Notes, OutError, TEXT("Mesh payload")))
+		{
+			return false;
+		}
+
+		OutPayload.GenerationMode = PrototypeGenerationModeFromString(GenerationModeString);
+		if (!GenerationModeString.Equals(PrototypeGenerationModeToString(OutPayload.GenerationMode), ESearchCase::IgnoreCase))
+		{
+			OutError = FString::Printf(TEXT("Unsupported generation_mode '%s'."), *GenerationModeString);
+			return false;
+		}
+
+		OutPayload.PrimitiveShape = FPrototypeShapeDsl();
+		OutPayload.PrimitiveShape.Version = OutPayload.Version;
+		OutPayload.PrimitiveShape.MeshName = OutPayload.MeshName;
+		OutPayload.PrimitiveShape.Notes = OutPayload.Notes;
+		OutPayload.PrimitiveShape.RawJson = RawJson;
+		OutPayload.VoxelGrid = FPrototypeVoxelGrid();
+		OutPayload.VoxelGrid.Version = OutPayload.Version;
+		OutPayload.VoxelGrid.MeshName = OutPayload.MeshName;
+		OutPayload.VoxelGrid.Notes = OutPayload.Notes;
+		OutPayload.VoxelGrid.RawJson = RawJson;
+		OutPayload.RawJson = RawJson;
+
+		if (OutPayload.GenerationMode == EPrototypeGenerationMode::Primitive)
+		{
+			const TSharedPtr<FJsonObject>* PrimitiveMeshObject = nullptr;
+			if (!RootObject->TryGetObjectField(TEXT("primitive_mesh"), PrimitiveMeshObject) || !PrimitiveMeshObject || !PrimitiveMeshObject->IsValid())
+			{
+				OutError = TEXT("Mesh payload is missing object field 'primitive_mesh' for primitive mode.");
+				return false;
+			}
+
+			if (!ParsePrimitiveMeshObject(*PrimitiveMeshObject, OutPayload.PrimitiveShape, OutError, TEXT("Mesh payload.primitive_mesh")))
+			{
+				return false;
+			}
+		}
+		else
+		{
+			const TSharedPtr<FJsonObject>* VoxelGridObject = nullptr;
+			if (!RootObject->TryGetObjectField(TEXT("voxel_grid"), VoxelGridObject) || !VoxelGridObject || !VoxelGridObject->IsValid())
+			{
+				OutError = TEXT("Mesh payload is missing object field 'voxel_grid' for voxel mode.");
+				return false;
+			}
+
+			if (!ParseVoxelGridObject(*VoxelGridObject, OutPayload.VoxelGrid, OutError, TEXT("Mesh payload.voxel_grid")))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	bool ParseShapeDslJson(const FString& RawJson, FPrototypeShapeDsl& OutDsl, FString& OutError)
+	{
+		TSharedPtr<FJsonObject> RootObject;
+		const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(RawJson);
+		if (!FJsonSerializer::Deserialize(Reader, RootObject) || !RootObject.IsValid())
+		{
+			OutError = TEXT("Bridge output was not valid JSON.");
+			return false;
+		}
+
+		static const TSet<FString> TopLevelKeys{TEXT("version"), TEXT("mesh_name"), TEXT("units"), TEXT("pivot"), TEXT("primitives"), TEXT("notes")};
+		if (!HasOnlyKeys(RootObject, TopLevelKeys, OutError, TEXT("Shape DSL")))
+		{
+			return false;
+		}
+
+		if (!ReadStringField(RootObject, TEXT("version"), OutDsl.Version, OutError, TEXT("Shape DSL"))
+			|| !ReadStringField(RootObject, TEXT("mesh_name"), OutDsl.MeshName, OutError, TEXT("Shape DSL"))
+			|| !ReadStringField(RootObject, TEXT("notes"), OutDsl.Notes, OutError, TEXT("Shape DSL")))
+		{
+			return false;
+		}
+
+		if (!ParsePrimitiveMeshObject(RootObject, OutDsl, OutError, TEXT("Shape DSL")))
+		{
+			return false;
+		}
+
 		OutDsl.RawJson = RawJson;
 		return true;
 	}
@@ -449,6 +801,21 @@ namespace PrototypeMeshBuilder
 				|| !IsFiniteVector(Primitive.Transform.Scale))
 			{
 				OutError = Context + TEXT(" contains non-finite transform values.");
+				return false;
+			}
+
+			if (!IsFiniteColor(Primitive.Color))
+			{
+				OutError = Context + TEXT(" contains non-finite color values.");
+				return false;
+			}
+
+			if (Primitive.Color.R < 0.0f || Primitive.Color.R > 1.0f
+				|| Primitive.Color.G < 0.0f || Primitive.Color.G > 1.0f
+				|| Primitive.Color.B < 0.0f || Primitive.Color.B > 1.0f
+				|| Primitive.Color.A < 0.0f || Primitive.Color.A > 1.0f)
+			{
+				OutError = Context + TEXT(" color channels must stay within the 0..1 range.");
 				return false;
 			}
 
@@ -522,27 +889,27 @@ namespace PrototypeMeshBuilder
 			const FPrototypePrimitiveSpec& Primitive = Dsl.Primitives[PrimitiveIndex];
 			if (Primitive.Type.Equals(TEXT("plane")))
 			{
-				BuildPlane(Primitive, PrimitiveIndex, OutBuffers);
+				BuildPlane(Primitive, OutBuffers);
 			}
 			else if (Primitive.Type.Equals(TEXT("box")))
 			{
-				BuildBox(Primitive, PrimitiveIndex, OutBuffers);
+				BuildBox(Primitive, OutBuffers);
 			}
 			else if (Primitive.Type.Equals(TEXT("cylinder")))
 			{
-				BuildCylinder(Primitive, PrimitiveIndex, OutBuffers);
+				BuildCylinder(Primitive, OutBuffers);
 			}
 			else if (Primitive.Type.Equals(TEXT("cone")))
 			{
-				BuildCone(Primitive, PrimitiveIndex, OutBuffers);
+				BuildCone(Primitive, OutBuffers);
 			}
 			else if (Primitive.Type.Equals(TEXT("ramp")))
 			{
-				BuildRamp(Primitive, PrimitiveIndex, OutBuffers);
+				BuildRamp(Primitive, OutBuffers);
 			}
 			else if (Primitive.Type.Equals(TEXT("stair")))
 			{
-				BuildStair(Primitive, PrimitiveIndex, OutBuffers);
+				BuildStair(Primitive, OutBuffers);
 			}
 		}
 
@@ -552,9 +919,9 @@ namespace PrototypeMeshBuilder
 			return false;
 		}
 
-		if (OutBuffers.GetTriangleCount() > MaxTriangleCount)
+		if (OutBuffers.GetTriangleCount() > MaxPrimitiveTriangleCount)
 		{
-			OutError = FString::Printf(TEXT("Triangle budget exceeded: %d > %d."), OutBuffers.GetTriangleCount(), MaxTriangleCount);
+			OutError = FString::Printf(TEXT("Triangle budget exceeded: %d > %d."), OutBuffers.GetTriangleCount(), MaxPrimitiveTriangleCount);
 			return false;
 		}
 
@@ -580,6 +947,234 @@ namespace PrototypeMeshBuilder
 		}
 
 		return true;
+	}
+
+	bool ParseVoxelGridJson(const FString& RawJson, FPrototypeVoxelGrid& OutGrid, FString& OutError)
+	{
+		TSharedPtr<FJsonObject> RootObject;
+		const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(RawJson);
+		if (!FJsonSerializer::Deserialize(Reader, RootObject) || !RootObject.IsValid())
+		{
+			OutError = TEXT("Bridge output was not valid JSON.");
+			return false;
+		}
+
+		static const TSet<FString> TopLevelKeys{TEXT("version"), TEXT("mesh_name"), TEXT("resolution"), TEXT("color_hex_stream"), TEXT("voxels_hex"), TEXT("notes")};
+		if (!HasOnlyKeys(RootObject, TopLevelKeys, OutError, TEXT("Voxel grid")))
+		{
+			return false;
+		}
+
+		if (!ReadStringField(RootObject, TEXT("version"), OutGrid.Version, OutError, TEXT("Voxel grid"))
+			|| !ReadStringField(RootObject, TEXT("mesh_name"), OutGrid.MeshName, OutError, TEXT("Voxel grid"))
+			|| !ReadStringField(RootObject, TEXT("notes"), OutGrid.Notes, OutError, TEXT("Voxel grid")))
+		{
+			return false;
+		}
+
+		if (!ParseVoxelGridObject(RootObject, OutGrid, OutError, TEXT("Voxel grid")))
+		{
+			return false;
+		}
+
+		OutGrid.RawJson = RawJson;
+		return true;
+	}
+
+	bool ValidateVoxelGrid(const FPrototypeVoxelGrid& Grid, FString& OutError)
+	{
+		if (Grid.Resolution.X <= 0 || Grid.Resolution.Y <= 0 || Grid.Resolution.Z <= 0)
+		{
+			OutError = TEXT("Voxel grid resolution must be positive on all axes.");
+			return false;
+		}
+
+		if (Grid.Resolution.X != Grid.Resolution.Y || Grid.Resolution.X != Grid.Resolution.Z)
+		{
+			OutError = TEXT("Voxel grid resolution must be cubic (x == y == z).");
+			return false;
+		}
+
+		if (!PrototypeIsSupportedVoxelResolution(Grid.Resolution.X))
+		{
+			OutError = TEXT("Voxel grid resolution must be one of 16, 32, 64, 128, or 256.");
+			return false;
+		}
+
+		TArray<uint32> DecodedColors;
+		int32 OccupiedCount = 0;
+		return DecodeVoxelHexStream(Grid, DecodedColors, OccupiedCount, OutError);
+	}
+
+	bool CountOccupiedVoxels(const FPrototypeVoxelGrid& Grid, int32& OutOccupiedCount, FString& OutError)
+	{
+		if (Grid.Resolution.X <= 0 || Grid.Resolution.Y <= 0 || Grid.Resolution.Z <= 0)
+		{
+			OutError = TEXT("Voxel grid resolution must be positive on all axes.");
+			return false;
+		}
+
+		if (Grid.Resolution.X != Grid.Resolution.Y || Grid.Resolution.X != Grid.Resolution.Z)
+		{
+			OutError = TEXT("Voxel grid resolution must be cubic (x == y == z).");
+			return false;
+		}
+
+		if (!PrototypeIsSupportedVoxelResolution(Grid.Resolution.X))
+		{
+			OutError = TEXT("Voxel grid resolution must be one of 16, 32, 64, 128, or 256.");
+			return false;
+		}
+
+		TArray<uint32> DecodedColors;
+		return DecodeVoxelHexStream(Grid, DecodedColors, OutOccupiedCount, OutError);
+	}
+
+	bool BuildVoxelMeshBuffers(const FPrototypeVoxelGrid& Grid, FGeneratedMeshBuffers& OutBuffers, FString& OutError)
+	{
+		OutBuffers.Reset();
+
+		if (!ValidateVoxelGrid(Grid, OutError))
+		{
+			return false;
+		}
+
+		TArray<uint32> Colors;
+		int32 OccupiedCount = 0;
+		if (!DecodeVoxelHexStream(Grid, Colors, OccupiedCount, OutError))
+		{
+			return false;
+		}
+
+		if (OccupiedCount == 0)
+		{
+			OutError = TEXT("Voxel grid does not contain any filled voxels.");
+			return false;
+		}
+
+		const FIntVector Resolution = Grid.Resolution;
+		const float VoxelSizeCm = 100.0f / static_cast<float>(Resolution.X);
+		TArray<FVoxelMaskCell> Mask;
+
+		for (int32 Axis = 0; Axis < 3; ++Axis)
+		{
+			const int32 UAxis = (Axis + 1) % 3;
+			const int32 VAxis = (Axis + 2) % 3;
+			const int32 PlaneWidth = Resolution[UAxis];
+			const int32 PlaneHeight = Resolution[VAxis];
+			Mask.SetNumZeroed(PlaneWidth * PlaneHeight);
+
+			for (int32 Plane = 0; Plane <= Resolution[Axis]; ++Plane)
+			{
+				int32 MaskIndex = 0;
+				for (int32 V = 0; V < PlaneHeight; ++V)
+				{
+					for (int32 U = 0; U < PlaneWidth; ++U)
+					{
+						FIntVector NegativeCoord = FIntVector::ZeroValue;
+						NegativeCoord[Axis] = Plane - 1;
+						NegativeCoord[UAxis] = U;
+						NegativeCoord[VAxis] = V;
+
+						FIntVector PositiveCoord = FIntVector::ZeroValue;
+						PositiveCoord[Axis] = Plane;
+						PositiveCoord[UAxis] = U;
+						PositiveCoord[VAxis] = V;
+
+						const uint32 NegativeColor = GetVoxelColorAt(Colors, Resolution, NegativeCoord.X, NegativeCoord.Y, NegativeCoord.Z);
+						const uint32 PositiveColor = GetVoxelColorAt(Colors, Resolution, PositiveCoord.X, PositiveCoord.Y, PositiveCoord.Z);
+
+						FVoxelMaskCell& Cell = Mask[MaskIndex++];
+						Cell = FVoxelMaskCell();
+						if (NegativeColor != 0 && PositiveColor == 0)
+						{
+							Cell.Color = NegativeColor;
+							Cell.NormalSign = 1;
+						}
+						else if (NegativeColor == 0 && PositiveColor != 0)
+						{
+							Cell.Color = PositiveColor;
+							Cell.NormalSign = -1;
+						}
+					}
+				}
+
+				for (int32 V = 0; V < PlaneHeight; ++V)
+				{
+					for (int32 U = 0; U < PlaneWidth;)
+					{
+						const FVoxelMaskCell Cell = Mask[U + (V * PlaneWidth)];
+						if (!Cell.IsVisible())
+						{
+							++U;
+							continue;
+						}
+
+						int32 Width = 1;
+						while (U + Width < PlaneWidth && Mask[(U + Width) + (V * PlaneWidth)].Matches(Cell))
+						{
+							++Width;
+						}
+
+						int32 Height = 1;
+						bool bCanGrow = true;
+						while (V + Height < PlaneHeight && bCanGrow)
+						{
+							for (int32 RowU = 0; RowU < Width; ++RowU)
+							{
+								if (!Mask[(U + RowU) + ((V + Height) * PlaneWidth)].Matches(Cell))
+								{
+									bCanGrow = false;
+									break;
+								}
+							}
+
+							if (bCanGrow)
+							{
+								++Height;
+							}
+						}
+
+						AppendVoxelQuad(OutBuffers, Resolution, VoxelSizeCm, Axis, Cell.NormalSign, Plane, U, V, Width, Height, Cell.Color);
+
+						for (int32 ClearV = 0; ClearV < Height; ++ClearV)
+						{
+							for (int32 ClearU = 0; ClearU < Width; ++ClearU)
+							{
+								Mask[(U + ClearU) + ((V + ClearV) * PlaneWidth)] = FVoxelMaskCell();
+							}
+						}
+
+						U += Width;
+					}
+				}
+			}
+		}
+
+		if (!OutBuffers.IsValid())
+		{
+			OutError = TEXT("Generated voxel mesh buffers were empty or inconsistent.");
+			return false;
+		}
+
+		if (OutBuffers.GetTriangleCount() > MaxVoxelTriangleCount)
+		{
+			OutError = FString::Printf(TEXT("Voxel triangle budget exceeded: %d > %d."), OutBuffers.GetTriangleCount(), MaxVoxelTriangleCount);
+			return false;
+		}
+
+		CenterBuffersBasePivot(OutBuffers);
+		return true;
+	}
+
+	bool BuildMeshBuffers(const FPrototypeMeshPayload& Payload, FGeneratedMeshBuffers& OutBuffers, FString& OutError)
+	{
+		if (Payload.GenerationMode == EPrototypeGenerationMode::Voxel)
+		{
+			return BuildVoxelMeshBuffers(Payload.VoxelGrid, OutBuffers, OutError);
+		}
+
+		return BuildMeshBuffers(Payload.PrimitiveShape, OutBuffers, OutError);
 	}
 
 	bool BuildDynamicMesh(const FGeneratedMeshBuffers& Buffers, FDynamicMesh3& OutMesh, FString& OutError)
@@ -772,15 +1367,9 @@ namespace PrototypeMeshBuilder
 		return true;
 	}
 
-	bool CreateVertexColorMaterialAsset(const FString& PackagePath, const FString& AssetName, UMaterialInstanceConstant*& OutMaterial, FString& OutError)
+	bool CreateVertexColorLitMaterialAsset(const FString& PackagePath, const FString& AssetName, UMaterialInterface*& OutMaterial, FString& OutError)
 	{
 		OutMaterial = nullptr;
-
-		if (!GEngine || !GEngine->VertexColorViewModeMaterial_ColorOnly)
-		{
-			OutError = TEXT("Engine vertex color material is not available.");
-			return false;
-		}
 
 		UPackage* Package = CreatePackage(*PackagePath);
 		if (!Package)
@@ -789,18 +1378,55 @@ namespace PrototypeMeshBuilder
 			return false;
 		}
 
-		UMaterialInstanceConstant* MaterialInstance = NewObject<UMaterialInstanceConstant>(Package, *AssetName, RF_Public | RF_Standalone | RF_Transactional);
-		if (!MaterialInstance)
+		UMaterial* Material = NewObject<UMaterial>(Package, *AssetName, RF_Public | RF_Standalone | RF_Transactional);
+		if (!Material)
 		{
-			OutError = TEXT("Failed to allocate a vertex-color material instance.");
+			OutError = TEXT("Failed to allocate a lit vertex-color material.");
 			return false;
 		}
 
-		MaterialInstance->SetParentEditorOnly(GEngine->VertexColorViewModeMaterial_ColorOnly);
-		MaterialInstance->PostEditChange();
+		Material->MaterialDomain = MD_Surface;
+		Material->BlendMode = BLEND_Opaque;
+		Material->TwoSided = false;
+		Material->SetShadingModel(MSM_DefaultLit);
+
+		UMaterialEditorOnlyData* MaterialEditorOnly = Material->GetEditorOnlyData();
+		if (!MaterialEditorOnly)
+		{
+			OutError = TEXT("Material editor data is not available.");
+			return false;
+		}
+
+		UMaterialExpressionVertexColor* VertexColorExpression = NewObject<UMaterialExpressionVertexColor>(Material);
+		UMaterialExpressionConstant* RoughnessExpression = NewObject<UMaterialExpressionConstant>(Material);
+		UMaterialExpressionConstant* SpecularExpression = NewObject<UMaterialExpressionConstant>(Material);
+		if (!VertexColorExpression || !RoughnessExpression || !SpecularExpression)
+		{
+			OutError = TEXT("Failed to allocate material expressions.");
+			return false;
+		}
+
+		VertexColorExpression->MaterialExpressionEditorX = -420;
+		VertexColorExpression->MaterialExpressionEditorY = -40;
+		RoughnessExpression->MaterialExpressionEditorX = -420;
+		RoughnessExpression->MaterialExpressionEditorY = 120;
+		RoughnessExpression->R = 0.85f;
+		SpecularExpression->MaterialExpressionEditorX = -420;
+		SpecularExpression->MaterialExpressionEditorY = 220;
+		SpecularExpression->R = 0.25f;
+
+		Material->GetExpressionCollection().AddExpression(VertexColorExpression);
+		Material->GetExpressionCollection().AddExpression(RoughnessExpression);
+		Material->GetExpressionCollection().AddExpression(SpecularExpression);
+		MaterialEditorOnly->BaseColor.Connect(0, VertexColorExpression);
+		MaterialEditorOnly->Roughness.Connect(0, RoughnessExpression);
+		MaterialEditorOnly->Specular.Connect(0, SpecularExpression);
+
+		Material->PreEditChange(nullptr);
+		Material->PostEditChange();
 		Package->MarkPackageDirty();
-		FAssetRegistryModule::AssetCreated(MaterialInstance);
-		OutMaterial = MaterialInstance;
+		FAssetRegistryModule::AssetCreated(Material);
+		OutMaterial = Material;
 		return true;
 	}
 

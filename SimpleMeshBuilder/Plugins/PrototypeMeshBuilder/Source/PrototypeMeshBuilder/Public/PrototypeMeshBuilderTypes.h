@@ -2,6 +2,29 @@
 
 #include "CoreMinimal.h"
 
+enum class EPrototypeGenerationMode : uint8
+{
+	Primitive,
+	Voxel
+};
+
+inline FString PrototypeGenerationModeToString(EPrototypeGenerationMode Mode)
+{
+	return Mode == EPrototypeGenerationMode::Voxel ? TEXT("voxel") : TEXT("primitive");
+}
+
+inline EPrototypeGenerationMode PrototypeGenerationModeFromString(const FString& Value)
+{
+	return Value.Equals(TEXT("voxel"), ESearchCase::IgnoreCase)
+		? EPrototypeGenerationMode::Voxel
+		: EPrototypeGenerationMode::Primitive;
+}
+
+inline bool PrototypeIsSupportedVoxelResolution(int32 Resolution)
+{
+	return Resolution == 16 || Resolution == 32 || Resolution == 64 || Resolution == 128 || Resolution == 256;
+}
+
 struct FPrototypeMeshRequest
 {
 	FString Prompt;
@@ -9,7 +32,9 @@ struct FPrototypeMeshRequest
 	FString ContentPath = TEXT("/Game/Generated/PrototypeMeshes");
 	FString Locale = TEXT("ko-KR");
 	FString ReasoningEffort = TEXT("medium");
+	EPrototypeGenerationMode GenerationMode = EPrototypeGenerationMode::Primitive;
 	int32 MaxPrimitiveCount = 32;
+	int32 VoxelResolution = 32;
 };
 
 struct FPrototypePrimitiveTransform
@@ -24,6 +49,7 @@ struct FPrototypePrimitiveSpec
 	FString Name;
 	FString Type;
 	FPrototypePrimitiveTransform Transform;
+	FLinearColor Color = FLinearColor::White;
 	double Width = 0.0;
 	double Depth = 0.0;
 	double Height = 0.0;
@@ -40,6 +66,27 @@ struct FPrototypeShapeDsl
 	FString Pivot;
 	TArray<FPrototypePrimitiveSpec> Primitives;
 	FString Notes;
+	FString RawJson;
+};
+
+struct FPrototypeVoxelGrid
+{
+	FString Version;
+	FString MeshName;
+	FIntVector Resolution = FIntVector::ZeroValue;
+	FString VoxelsHex;
+	FString Notes;
+	FString RawJson;
+};
+
+struct FPrototypeMeshPayload
+{
+	FString Version;
+	FString MeshName;
+	EPrototypeGenerationMode GenerationMode = EPrototypeGenerationMode::Primitive;
+	FString Notes;
+	FPrototypeShapeDsl PrimitiveShape;
+	FPrototypeVoxelGrid VoxelGrid;
 	FString RawJson;
 };
 
@@ -80,7 +127,7 @@ struct FPrototypeBridgeResult
 {
 	bool bSuccess = false;
 	FString ErrorMessage;
-	FString RawDslJson;
+	FString RawPayloadJson;
 	FString RawLastMessage;
 	FString Diagnostics;
 };

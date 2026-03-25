@@ -13,7 +13,7 @@
 #include "HAL/FileManager.h"
 #include "IAssetTools.h"
 #include "IContentBrowserSingleton.h"
-#include "Materials/MaterialInstanceConstant.h"
+#include "Materials/MaterialInterface.h"
 #include "Misc/DateTime.h"
 #include "Misc/PackageName.h"
 #include "Misc/Paths.h"
@@ -27,6 +27,18 @@
 namespace
 {
 	constexpr double PreviewOffsetCm = 200.0;
+	constexpr int32 MaxEmbeddedSourcePayloadChars = 65536;
+	const TCHAR* SharedVertexColorMaterialAssetName = TEXT("M_PrototypeVertexColorLit");
+
+	FString BuildModeLabel(const FPrototypeMeshRequest& Request)
+	{
+		if (Request.GenerationMode == EPrototypeGenerationMode::Voxel)
+		{
+			return FString::Printf(TEXT("voxel %d^3"), Request.VoxelResolution);
+		}
+
+		return TEXT("primitive");
+	}
 }
 
 FPrototypeMeshBuilderController::FPrototypeMeshBuilderController()
@@ -80,6 +92,21 @@ void FPrototypeMeshBuilderController::SetReasoningEffort(const FString& InReason
 	ReasoningEffort = TEXT("medium");
 }
 
+void FPrototypeMeshBuilderController::SetGenerationMode(EPrototypeGenerationMode InGenerationMode)
+{
+	GenerationMode = InGenerationMode;
+}
+
+void FPrototypeMeshBuilderController::SetVoxelResolution(int32 InVoxelResolution)
+{
+	VoxelResolution = PrototypeIsSupportedVoxelResolution(InVoxelResolution) ? InVoxelResolution : 32;
+}
+
+void FPrototypeMeshBuilderController::SetUseSharedMaterial(bool bInUseSharedMaterial)
+{
+	bUseSharedMaterial = bInUseSharedMaterial;
+}
+
 const FString& FPrototypeMeshBuilderController::GetPrompt() const
 {
 	return Prompt;
@@ -100,6 +127,21 @@ const FString& FPrototypeMeshBuilderController::GetReasoningEffort() const
 	return ReasoningEffort;
 }
 
+EPrototypeGenerationMode FPrototypeMeshBuilderController::GetGenerationMode() const
+{
+	return GenerationMode;
+}
+
+int32 FPrototypeMeshBuilderController::GetVoxelResolution() const
+{
+	return VoxelResolution;
+}
+
+bool FPrototypeMeshBuilderController::GetUseSharedMaterial() const
+{
+	return bUseSharedMaterial;
+}
+
 FText FPrototypeMeshBuilderController::GetStatusText() const
 {
 	return FText::FromString(StatusMessage);
@@ -117,10 +159,14 @@ FText FPrototypeMeshBuilderController::GetSelectedActorText() const
 	const bool bSavable = GetSavableDynamicMeshComponent(SelectedActor) != nullptr;
 	if (const FPreviewRecord* PreviewRecord = FindPreviewRecord(SelectedActor))
 	{
+		const FString ModeLabel = PreviewRecord->GenerationMode == EPrototypeGenerationMode::Voxel
+			? FString::Printf(TEXT("voxel %d x %d x %d"), PreviewRecord->VoxelResolution.X, PreviewRecord->VoxelResolution.Y, PreviewRecord->VoxelResolution.Z)
+			: FString::Printf(TEXT("primitive %d part(s)"), PreviewRecord->PrimitiveCount);
 		return FText::FromString(FString::Printf(
-			TEXT("Selected Actor: %s (%s, %d triangle(s))"),
+			TEXT("Selected Actor: %s (%s, %s, %d triangle(s))"),
 			*SelectedActor->GetActorLabel(),
 			bSavable ? TEXT("saveable preview") : TEXT("preview only"),
+			*ModeLabel,
 			PreviewRecord->TriangleCount));
 	}
 
@@ -147,6 +193,13 @@ bool FPrototypeMeshBuilderController::CanSave() const
 	return SelectedActor && GetSavableDynamicMeshComponent(SelectedActor) != nullptr;
 }
 
+bool FPrototypeMeshBuilderController::CanDeleteSelectedPreview() const
+{
+	FString Error;
+	AActor* SelectedActor = GetSingleSelectedActor(Error);
+	return SelectedActor && FindPreviewRecord(SelectedActor) != nullptr;
+}
+
 void FPrototypeMeshBuilderController::Generate()
 {
 	if (Prompt.TrimStartAndEnd().IsEmpty())
@@ -161,11 +214,14 @@ void FPrototypeMeshBuilderController::Generate()
 	Request.ContentPath = PrototypeMeshBuilder::NormalizeContentPath(ContentPath);
 	Request.Locale = TEXT("ko-KR");
 	Request.ReasoningEffort = ReasoningEffort;
+	Request.GenerationMode = GenerationMode;
 	Request.MaxPrimitiveCount = 32;
+	Request.VoxelResolution = VoxelResolution;
 
 	FQueuedGenerateRequest& QueuedJob = PendingJobs.AddDefaulted_GetRef();
 	QueuedJob.Request = MoveTemp(Request);
 	QueuedJob.EnqueuedAtSeconds = FPlatformTime::Seconds();
+	const FString QueuedModeLabel = BuildModeLabel(QueuedJob.Request);
 
 	TryStartNextQueuedJob();
 	RebuildJobDisplayItems();
@@ -173,7 +229,7 @@ void FPrototypeMeshBuilderController::Generate()
 	const int32 QueuedCount = PendingJobs.Num() + (ActiveJob.IsSet() ? 1 : 0);
 	if (QueuedCount > 0)
 	{
-		SetStatus(FString::Printf(TEXT("Queued generation job. Active + queued jobs: %d."), QueuedCount));
+		SetStatus(FString::Printf(TEXT("Queued %s generation job. Active + queued jobs: %d."), *QueuedModeLabel, QueuedCount));
 	}
 }
 
@@ -203,7 +259,7 @@ void FPrototypeMeshBuilderController::Save()
 
 	const FPreviewRecord* PreviewRecord = FindPreviewRecord(SelectedActor);
 	const FString SuggestedAssetName = PreviewRecord
-		? (PreviewRecord->RequestedAssetName.IsEmpty() ? PreviewRecord->Dsl.MeshName : PreviewRecord->RequestedAssetName)
+		? (PreviewRecord->RequestedAssetName.IsEmpty() ? PreviewRecord->MeshName : PreviewRecord->RequestedAssetName)
 		: SelectedActor->GetActorLabel();
 	const FString SanitizedAssetName = PrototypeMeshBuilder::SanitizeAssetName(AssetName.IsEmpty() ? SuggestedAssetName : AssetName);
 
@@ -233,20 +289,56 @@ void FPrototypeMeshBuilderController::Save()
 		return;
 	}
 
-	const FString BaseMaterialPackagePath = NormalizedContentPath / FString::Printf(TEXT("%s_MAT"), *FinalMeshAssetName);
-	FString FinalMaterialPackagePath = BaseMaterialPackagePath;
-	FString FinalMaterialAssetName = FString::Printf(TEXT("%s_MAT"), *FinalMeshAssetName);
-	if (FPackageName::DoesPackageExist(BaseMaterialPackagePath))
-	{
-		FAssetToolsModule& AssetToolsModule = FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools"));
-		AssetToolsModule.Get().CreateUniqueAssetName(BaseMaterialPackagePath, TEXT("_001"), FinalMaterialPackagePath, FinalMaterialAssetName);
-	}
+	FString FinalMaterialPackagePath;
+	FString FinalMaterialAssetName;
+	UMaterialInterface* SavedMaterial = nullptr;
+	bool bCreatedMaterialAsset = false;
+	const bool bUsingSharedMaterial = bUseSharedMaterial;
 
-	UMaterialInstanceConstant* SavedMaterial = nullptr;
-	if (!PrototypeMeshBuilder::CreateVertexColorMaterialAsset(FinalMaterialPackagePath, FinalMaterialAssetName, SavedMaterial, SaveError))
+	if (bUsingSharedMaterial)
 	{
-		SetStatus(FString::Printf(TEXT("Material save failed: %s"), *SaveError));
-		return;
+		FinalMaterialAssetName = SharedVertexColorMaterialAssetName;
+		FinalMaterialPackagePath = NormalizedContentPath / FinalMaterialAssetName;
+
+		if (FPackageName::DoesPackageExist(FinalMaterialPackagePath))
+		{
+			const FString MaterialObjectPath = FinalMaterialPackagePath + TEXT(".") + FinalMaterialAssetName;
+			SavedMaterial = LoadObject<UMaterialInterface>(nullptr, *MaterialObjectPath);
+			if (!SavedMaterial)
+			{
+				SetStatus(FString::Printf(TEXT("Shared material exists but could not be loaded: %s"), *MaterialObjectPath));
+				return;
+			}
+		}
+		else if (!PrototypeMeshBuilder::CreateVertexColorLitMaterialAsset(FinalMaterialPackagePath, FinalMaterialAssetName, SavedMaterial, SaveError))
+		{
+			SetStatus(FString::Printf(TEXT("Shared material creation failed: %s"), *SaveError));
+			return;
+		}
+		else
+		{
+			bCreatedMaterialAsset = true;
+		}
+	}
+	else
+	{
+		const FString BaseMaterialAssetName = FString::Printf(TEXT("M_%s_VertexColorLit"), *FinalMeshAssetName);
+		const FString BaseMaterialPackagePath = NormalizedContentPath / BaseMaterialAssetName;
+		FinalMaterialPackagePath = BaseMaterialPackagePath;
+		FinalMaterialAssetName = BaseMaterialAssetName;
+		if (FPackageName::DoesPackageExist(BaseMaterialPackagePath))
+		{
+			FAssetToolsModule& AssetToolsModule = FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools"));
+			AssetToolsModule.Get().CreateUniqueAssetName(BaseMaterialPackagePath, TEXT("_001"), FinalMaterialPackagePath, FinalMaterialAssetName);
+		}
+
+		if (!PrototypeMeshBuilder::CreateVertexColorLitMaterialAsset(FinalMaterialPackagePath, FinalMaterialAssetName, SavedMaterial, SaveError))
+		{
+			SetStatus(FString::Printf(TEXT("Material save failed: %s"), *SaveError));
+			return;
+		}
+
+		bCreatedMaterialAsset = true;
 	}
 
 	if (!PrototypeMeshBuilder::ApplyStaticMeshMaterial(SavedMesh, SavedMaterial, SaveError))
@@ -255,15 +347,22 @@ void FPrototypeMeshBuilderController::Save()
 		return;
 	}
 
-	FString MetadataJson;
-	if (!BuildSelectedActorMetadataJson(*SelectedActor, PreviewRecord, FinalMeshPackagePath, FinalMaterialPackagePath, MetadataJson))
+	FString MeshMetadataJson;
+	if (!BuildSelectedActorMetadataJson(*SelectedActor, PreviewRecord, FinalMeshPackagePath, FinalMaterialPackagePath, bUsingSharedMaterial, MeshMetadataJson))
 	{
 		SetStatus(TEXT("Failed to build mesh metadata."));
 		return;
 	}
 
-	if (!PrototypeMeshBuilder::WriteAssetMetadata(SavedMesh, MetadataJson, SaveError)
-		|| !PrototypeMeshBuilder::WriteAssetMetadata(SavedMaterial, MetadataJson, SaveError))
+	FString MaterialMetadataJson;
+	if (!BuildMaterialMetadataJson(FinalMaterialPackagePath, FinalMeshPackagePath, bUsingSharedMaterial, MaterialMetadataJson))
+	{
+		SetStatus(TEXT("Failed to build material metadata."));
+		return;
+	}
+
+	if (!PrototypeMeshBuilder::WriteAssetMetadata(SavedMesh, MeshMetadataJson, SaveError)
+		|| !PrototypeMeshBuilder::WriteAssetMetadata(SavedMaterial, MaterialMetadataJson, SaveError))
 	{
 		SetStatus(FString::Printf(TEXT("Metadata save failed: %s"), *SaveError));
 		return;
@@ -285,7 +384,47 @@ void FPrototypeMeshBuilderController::Save()
 	FContentBrowserModule& ContentBrowserModule = FModuleManager::LoadModuleChecked<FContentBrowserModule>(TEXT("ContentBrowser"));
 	ContentBrowserModule.Get().SyncBrowserToAssets(AssetsToSync);
 
-	SetStatus(FString::Printf(TEXT("Saved StaticMesh to %s and material to %s"), *FinalMeshPackagePath, *FinalMaterialPackagePath));
+	const FString MaterialModeText = bUsingSharedMaterial
+		? (bCreatedMaterialAsset ? TEXT("created shared material") : TEXT("reused shared material"))
+		: TEXT("created dedicated material");
+	SetStatus(FString::Printf(TEXT("Saved StaticMesh to %s and %s at %s"), *FinalMeshPackagePath, *MaterialModeText, *FinalMaterialPackagePath));
+}
+
+void FPrototypeMeshBuilderController::DeleteSelectedPreview()
+{
+	FString SelectionError;
+	AActor* SelectedActor = GetSingleSelectedActor(SelectionError);
+	if (!SelectedActor)
+	{
+		SetStatus(SelectionError);
+		return;
+	}
+
+	int32 PreviewIndex = INDEX_NONE;
+	for (int32 Index = 0; Index < PreviewRecords.Num(); ++Index)
+	{
+		if (PreviewRecords[Index].PreviewActor.Get() == SelectedActor)
+		{
+			PreviewIndex = Index;
+			break;
+		}
+	}
+
+	if (PreviewIndex == INDEX_NONE)
+	{
+		SetStatus(TEXT("Selected actor is not a preview generated by this tool."));
+		return;
+	}
+
+	const FString DeletedActorLabel = SelectedActor->GetActorLabel();
+	if (UWorld* World = SelectedActor->GetWorld())
+	{
+		World->DestroyActor(SelectedActor);
+	}
+
+	PreviewRecords.RemoveAt(PreviewIndex);
+	RefreshPreviewActorOffsets();
+	SetStatus(FString::Printf(TEXT("Deleted preview actor: %s"), *DeletedActorLabel));
 }
 
 void FPrototypeMeshBuilderController::Clear()
@@ -393,17 +532,45 @@ void FPrototypeMeshBuilderController::FinalizeCompletedJob(const FActiveGenerate
 		return;
 	}
 
-	FPrototypeShapeDsl ParsedDsl;
+	FPrototypeMeshPayload ParsedPayload;
 	FString ParseError;
-	if (!PrototypeMeshBuilder::ParseShapeDslJson(BridgeResult.RawDslJson, ParsedDsl, ParseError))
+	if (!PrototypeMeshBuilder::ParseMeshPayloadJson(BridgeResult.RawPayloadJson, ParsedPayload, ParseError))
 	{
-		SetStatus(FString::Printf(TEXT("DSL parse failed: %s"), *ParseError));
+		SetStatus(FString::Printf(TEXT("Payload parse failed: %s"), *ParseError));
 		return;
 	}
 
+	if (ParsedPayload.GenerationMode != CompletedJob.Request.GenerationMode)
+	{
+		SetStatus(FString::Printf(
+			TEXT("Payload mode mismatch: requested %s but bridge returned %s."),
+			*PrototypeGenerationModeToString(CompletedJob.Request.GenerationMode),
+			*PrototypeGenerationModeToString(ParsedPayload.GenerationMode)));
+		return;
+	}
+
+	FGeneratedPreviewData PreviewData;
+	PreviewData.GenerationMode = ParsedPayload.GenerationMode;
+	PreviewData.MeshName = ParsedPayload.MeshName;
+	PreviewData.SourcePayloadJson = BridgeResult.RawPayloadJson;
+
 	FGeneratedMeshBuffers GeneratedBuffers;
 	FString BuildError;
-	if (!PrototypeMeshBuilder::BuildMeshBuffers(ParsedDsl, GeneratedBuffers, BuildError))
+	if (ParsedPayload.GenerationMode == EPrototypeGenerationMode::Voxel)
+	{
+		PreviewData.VoxelResolution = ParsedPayload.VoxelGrid.Resolution;
+		if (!PrototypeMeshBuilder::CountOccupiedVoxels(ParsedPayload.VoxelGrid, PreviewData.OccupiedVoxelCount, BuildError))
+		{
+			SetStatus(FString::Printf(TEXT("Voxel grid validation failed: %s"), *BuildError));
+			return;
+		}
+	}
+	else
+	{
+		PreviewData.PrimitiveCount = ParsedPayload.PrimitiveShape.Primitives.Num();
+	}
+
+	if (!PrototypeMeshBuilder::BuildMeshBuffers(ParsedPayload, GeneratedBuffers, BuildError))
 	{
 		SetStatus(FString::Printf(TEXT("Mesh build failed: %s"), *BuildError));
 		return;
@@ -417,30 +584,39 @@ void FPrototypeMeshBuilderController::FinalizeCompletedJob(const FActiveGenerate
 	}
 
 	FString PreviewError;
-	if (!SpawnPreviewActor(CompletedJob, ParsedDsl, GeneratedBuffers, GeneratedDynamicMesh, BridgeResult, PreviewError))
+	if (!SpawnPreviewActor(CompletedJob, PreviewData, GeneratedBuffers, GeneratedDynamicMesh, BridgeResult, PreviewError))
 	{
 		SetStatus(FString::Printf(TEXT("Preview spawn failed: %s"), *PreviewError));
 		return;
 	}
 
-	const bool bDebugExported = ExportDebugArtifacts(CompletedJob.Request, BridgeResult, &ParsedDsl, &GeneratedBuffers, DebugDirectory, DebugExportError);
+	const bool bDebugExported = ExportDebugArtifacts(CompletedJob.Request, BridgeResult, &PreviewData, &GeneratedBuffers, DebugDirectory, DebugExportError);
 
 	const int32 RemainingJobs = PendingJobs.Num() + (ActiveJob.IsSet() ? 1 : 0);
+	if (PreviewData.GenerationMode == EPrototypeGenerationMode::Voxel)
+	{
+		const FString Status = FString::Printf(
+			TEXT("Generated %s with %d^3 voxels (%d filled), %d triangle(s). %d job(s) remain queued/running."),
+			*PreviewData.MeshName,
+			PreviewData.VoxelResolution.X,
+			PreviewData.OccupiedVoxelCount,
+			GeneratedBuffers.GetTriangleCount(),
+			RemainingJobs);
+		SetStatus(bDebugExported
+			? FString::Printf(TEXT("%s Debug files: %s"), *Status, *DebugDirectory)
+			: FString::Printf(TEXT("%s Debug export failed: %s"), *Status, *DebugExportError));
+		return;
+	}
+
+	const FString Status = FString::Printf(
+		TEXT("Generated %s with %d primitive(s), %d triangle(s). %d job(s) remain queued/running."),
+		*PreviewData.MeshName,
+		PreviewData.PrimitiveCount,
+		GeneratedBuffers.GetTriangleCount(),
+		RemainingJobs);
 	SetStatus(bDebugExported
-		? FString::Printf(
-			TEXT("Generated %s with %d primitive(s), %d triangle(s). %d job(s) remain queued/running. Debug files: %s"),
-			*ParsedDsl.MeshName,
-			ParsedDsl.Primitives.Num(),
-			GeneratedBuffers.GetTriangleCount(),
-			RemainingJobs,
-			*DebugDirectory)
-		: FString::Printf(
-			TEXT("Generated %s with %d primitive(s), %d triangle(s). %d job(s) remain queued/running. Debug export failed: %s"),
-			*ParsedDsl.MeshName,
-			ParsedDsl.Primitives.Num(),
-			GeneratedBuffers.GetTriangleCount(),
-			RemainingJobs,
-			*DebugExportError));
+		? FString::Printf(TEXT("%s Debug files: %s"), *Status, *DebugDirectory)
+		: FString::Printf(TEXT("%s Debug export failed: %s"), *Status, *DebugExportError));
 }
 
 void FPrototypeMeshBuilderController::RebuildJobDisplayItems()
@@ -475,10 +651,10 @@ FString FPrototypeMeshBuilderController::FormatElapsed(double ElapsedSeconds) co
 FString FPrototypeMeshBuilderController::BuildJobSummary(const FString& Prefix, const FPrototypeMeshRequest& Request, double ElapsedSeconds) const
 {
 	const FString Title = Request.AssetName.IsEmpty() ? Request.Prompt.Left(32) : Request.AssetName;
-	return FString::Printf(TEXT("%s  %s  [%s]  %s"), *Prefix, *FormatElapsed(ElapsedSeconds), *Request.ReasoningEffort, *Title);
+	return FString::Printf(TEXT("%s  %s  [%s|%s]  %s"), *Prefix, *FormatElapsed(ElapsedSeconds), *Request.ReasoningEffort, *BuildModeLabel(Request), *Title);
 }
 
-bool FPrototypeMeshBuilderController::ExportDebugArtifacts(const FPrototypeMeshRequest& Request, const FPrototypeBridgeResult& BridgeResult, const FPrototypeShapeDsl* Dsl, const FGeneratedMeshBuffers* Buffers, FString& OutDirectory, FString& OutError) const
+bool FPrototypeMeshBuilderController::ExportDebugArtifacts(const FPrototypeMeshRequest& Request, const FPrototypeBridgeResult& BridgeResult, const FGeneratedPreviewData* PreviewData, const FGeneratedMeshBuffers* Buffers, FString& OutDirectory, FString& OutError) const
 {
 	OutDirectory.Empty();
 	OutError.Empty();
@@ -500,7 +676,9 @@ bool FPrototypeMeshBuilderController::ExportDebugArtifacts(const FPrototypeMeshR
 	RequestJson->SetStringField(TEXT("content_path"), Request.ContentPath);
 	RequestJson->SetStringField(TEXT("locale"), Request.Locale);
 	RequestJson->SetStringField(TEXT("reasoning_effort"), Request.ReasoningEffort);
+	RequestJson->SetStringField(TEXT("generation_mode"), PrototypeGenerationModeToString(Request.GenerationMode));
 	RequestJson->SetNumberField(TEXT("max_primitive_count"), Request.MaxPrimitiveCount);
+	RequestJson->SetNumberField(TEXT("voxel_resolution"), Request.VoxelResolution);
 
 	FString RequestPayload;
 	{
@@ -525,8 +703,8 @@ bool FPrototypeMeshBuilderController::ExportDebugArtifacts(const FPrototypeMeshR
 		return false;
 	}
 
-	if (!BridgeResult.RawDslJson.IsEmpty()
-		&& !PrototypeMeshBuilder::WriteTextFileUtf8(FPaths::Combine(OutDirectory, TEXT("shape_dsl.json")), BridgeResult.RawDslJson, OutError))
+	if (!BridgeResult.RawPayloadJson.IsEmpty()
+		&& !PrototypeMeshBuilder::WriteTextFileUtf8(FPaths::Combine(OutDirectory, TEXT("mesh_payload.json")), BridgeResult.RawPayloadJson, OutError))
 	{
 		return false;
 	}
@@ -539,13 +717,16 @@ bool FPrototypeMeshBuilderController::ExportDebugArtifacts(const FPrototypeMeshR
 		}
 	}
 
-	if (Dsl)
+	if (PreviewData)
 	{
 		TSharedRef<FJsonObject> SummaryJson = MakeShared<FJsonObject>();
-		SummaryJson->SetStringField(TEXT("mesh_name"), Dsl->MeshName);
-		SummaryJson->SetStringField(TEXT("units"), Dsl->Units);
-		SummaryJson->SetStringField(TEXT("pivot"), Dsl->Pivot);
-		SummaryJson->SetNumberField(TEXT("primitive_count"), Dsl->Primitives.Num());
+		SummaryJson->SetStringField(TEXT("mesh_name"), PreviewData->MeshName);
+		SummaryJson->SetStringField(TEXT("generation_mode"), PrototypeGenerationModeToString(PreviewData->GenerationMode));
+		SummaryJson->SetNumberField(TEXT("primitive_count"), PreviewData->PrimitiveCount);
+		SummaryJson->SetNumberField(TEXT("voxel_resolution_x"), PreviewData->VoxelResolution.X);
+		SummaryJson->SetNumberField(TEXT("voxel_resolution_y"), PreviewData->VoxelResolution.Y);
+		SummaryJson->SetNumberField(TEXT("voxel_resolution_z"), PreviewData->VoxelResolution.Z);
+		SummaryJson->SetNumberField(TEXT("occupied_voxel_count"), PreviewData->OccupiedVoxelCount);
 		SummaryJson->SetBoolField(TEXT("bridge_success"), BridgeResult.bSuccess);
 
 		FString SummaryPayload;
@@ -562,7 +743,12 @@ bool FPrototypeMeshBuilderController::ExportDebugArtifacts(const FPrototypeMeshR
 
 FVector FPrototypeMeshBuilderController::GetNextPreviewLocation() const
 {
-	return FVector(0.0, PreviewRecords.Num() * PreviewOffsetCm, 0.0);
+	return GetPreviewLocationForIndex(PreviewRecords.Num());
+}
+
+FVector FPrototypeMeshBuilderController::GetPreviewLocationForIndex(int32 PreviewIndex) const
+{
+	return FVector(0.0, PreviewIndex * PreviewOffsetCm, 0.0);
 }
 
 void FPrototypeMeshBuilderController::DestroyAllPreviewActors()
@@ -575,6 +761,19 @@ void FPrototypeMeshBuilderController::DestroyAllPreviewActors()
 			{
 				World->DestroyActor(PreviewRecord.PreviewActor.Get());
 			}
+		}
+	}
+}
+
+void FPrototypeMeshBuilderController::RefreshPreviewActorOffsets()
+{
+	for (int32 Index = 0; Index < PreviewRecords.Num(); ++Index)
+	{
+		FPreviewRecord& PreviewRecord = PreviewRecords[Index];
+		PreviewRecord.PreviewOffsetIndex = Index;
+		if (PreviewRecord.PreviewActor.IsValid())
+		{
+			PreviewRecord.PreviewActor->SetActorLocation(GetPreviewLocationForIndex(Index));
 		}
 	}
 }
@@ -646,7 +845,7 @@ const FPrototypeMeshBuilderController::FPreviewRecord* FPrototypeMeshBuilderCont
 	return nullptr;
 }
 
-bool FPrototypeMeshBuilderController::SpawnPreviewActor(const FActiveGenerateJob& CompletedJob, const FPrototypeShapeDsl& Dsl, const FGeneratedMeshBuffers& Buffers, const UE::Geometry::FDynamicMesh3& DynamicMesh, const FPrototypeBridgeResult& BridgeResult, FString& OutError)
+bool FPrototypeMeshBuilderController::SpawnPreviewActor(const FActiveGenerateJob& CompletedJob, const FGeneratedPreviewData& PreviewData, const FGeneratedMeshBuffers& Buffers, const UE::Geometry::FDynamicMesh3& DynamicMesh, const FPrototypeBridgeResult& BridgeResult, FString& OutError)
 {
 	UWorld* EditorWorld = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
 	if (!EditorWorld)
@@ -668,7 +867,7 @@ bool FPrototypeMeshBuilderController::SpawnPreviewActor(const FActiveGenerateJob
 		return false;
 	}
 
-	const FString PreviewLabel = FString::Printf(TEXT("PrototypeMeshPreview_%s"), *PrototypeMeshBuilder::SanitizeAssetName(Dsl.MeshName));
+	const FString PreviewLabel = FString::Printf(TEXT("PrototypeMeshPreview_%s"), *PrototypeMeshBuilder::SanitizeAssetName(PreviewData.MeshName));
 	SpawnedActor->SetActorLabel(PreviewLabel);
 	SpawnedActor->SetActorEnableCollision(false);
 	SpawnedActor->SetActorLocation(GetNextPreviewLocation());
@@ -694,7 +893,9 @@ bool FPrototypeMeshBuilderController::SpawnPreviewActor(const FActiveGenerateJob
 	FPreviewRecord& PreviewRecord = PreviewRecords.AddDefaulted_GetRef();
 	PreviewRecord.PreviewActor = SpawnedActor;
 	PreviewRecord.JobId = CompletedJob.Handle.Id;
-	PreviewRecord.Dsl = Dsl;
+	PreviewRecord.GenerationMode = PreviewData.GenerationMode;
+	PreviewRecord.MeshName = PreviewData.MeshName;
+	PreviewRecord.SourcePayloadJson = PreviewData.SourcePayloadJson;
 	PreviewRecord.Prompt = CompletedJob.Request.Prompt;
 	PreviewRecord.ReasoningEffort = CompletedJob.Request.ReasoningEffort;
 	PreviewRecord.RequestedAssetName = CompletedJob.Request.AssetName;
@@ -704,13 +905,15 @@ bool FPrototypeMeshBuilderController::SpawnPreviewActor(const FActiveGenerateJob
 	PreviewRecord.StartedAtSeconds = CompletedJob.StartedAtSeconds;
 	PreviewRecord.CompletedAtSeconds = FPlatformTime::Seconds();
 	PreviewRecord.TriangleCount = Buffers.GetTriangleCount();
-	PreviewRecord.PrimitiveCount = Dsl.Primitives.Num();
+	PreviewRecord.PrimitiveCount = PreviewData.PrimitiveCount;
+	PreviewRecord.VoxelResolution = PreviewData.VoxelResolution;
+	PreviewRecord.OccupiedVoxelCount = PreviewData.OccupiedVoxelCount;
 	PreviewRecord.PreviewOffsetIndex = PreviewRecords.Num() - 1;
 
 	return true;
 }
 
-bool FPrototypeMeshBuilderController::BuildSelectedActorMetadataJson(const AActor& SelectedActor, const FPreviewRecord* PreviewRecord, const FString& SavedMeshPath, const FString& SavedMaterialPath, FString& OutJson) const
+bool FPrototypeMeshBuilderController::BuildSelectedActorMetadataJson(const AActor& SelectedActor, const FPreviewRecord* PreviewRecord, const FString& SavedMeshPath, const FString& SavedMaterialPath, bool bUsingSharedMaterial, FString& OutJson) const
 {
 	TSharedRef<FJsonObject> RootObject = MakeShared<FJsonObject>();
 	RootObject->SetStringField(TEXT("version"), TEXT("1.0"));
@@ -718,6 +921,8 @@ bool FPrototypeMeshBuilderController::BuildSelectedActorMetadataJson(const AActo
 	RootObject->SetStringField(TEXT("saved_mesh_path"), SavedMeshPath);
 	RootObject->SetStringField(TEXT("saved_material_path"), SavedMaterialPath);
 	RootObject->SetStringField(TEXT("saved_utc"), FDateTime::UtcNow().ToIso8601());
+	RootObject->SetBoolField(TEXT("use_shared_material"), bUsingSharedMaterial);
+	RootObject->SetStringField(TEXT("material_scope"), bUsingSharedMaterial ? TEXT("shared") : TEXT("per_mesh"));
 	RootObject->SetStringField(TEXT("source_actor_label"), SelectedActor.GetActorLabel());
 	RootObject->SetStringField(TEXT("source_actor_path"), SelectedActor.GetPathName());
 	RootObject->SetStringField(TEXT("source_actor_class"), SelectedActor.GetClass()->GetPathName());
@@ -729,18 +934,52 @@ bool FPrototypeMeshBuilderController::BuildSelectedActorMetadataJson(const AActo
 		RootObject->SetStringField(TEXT("reasoning_effort"), PreviewRecord->ReasoningEffort);
 		RootObject->SetStringField(TEXT("request_asset_name"), PreviewRecord->RequestedAssetName);
 		RootObject->SetStringField(TEXT("request_content_path"), PreviewRecord->RequestedContentPath);
-		RootObject->SetStringField(TEXT("mesh_name"), PreviewRecord->Dsl.MeshName);
+		RootObject->SetStringField(TEXT("generation_mode"), PrototypeGenerationModeToString(PreviewRecord->GenerationMode));
+		RootObject->SetStringField(TEXT("mesh_name"), PreviewRecord->MeshName);
 		RootObject->SetNumberField(TEXT("primitive_count"), PreviewRecord->PrimitiveCount);
+		RootObject->SetNumberField(TEXT("voxel_resolution_x"), PreviewRecord->VoxelResolution.X);
+		RootObject->SetNumberField(TEXT("voxel_resolution_y"), PreviewRecord->VoxelResolution.Y);
+		RootObject->SetNumberField(TEXT("voxel_resolution_z"), PreviewRecord->VoxelResolution.Z);
+		RootObject->SetNumberField(TEXT("occupied_voxel_count"), PreviewRecord->OccupiedVoxelCount);
 		RootObject->SetNumberField(TEXT("triangle_count"), PreviewRecord->TriangleCount);
 		RootObject->SetNumberField(TEXT("preview_offset_cm"), PreviewRecord->PreviewOffsetIndex * PreviewOffsetCm);
 		RootObject->SetNumberField(TEXT("queue_wait_seconds"), FMath::Max(0.0, PreviewRecord->StartedAtSeconds - PreviewRecord->EnqueuedAtSeconds));
 		RootObject->SetNumberField(TEXT("generation_seconds"), FMath::Max(0.0, PreviewRecord->CompletedAtSeconds - PreviewRecord->StartedAtSeconds));
-		RootObject->SetStringField(TEXT("dsl_json"), PreviewRecord->Dsl.RawJson);
+		RootObject->SetNumberField(TEXT("source_payload_char_count"), PreviewRecord->SourcePayloadJson.Len());
+		if (!PreviewRecord->SourcePayloadJson.IsEmpty() && PreviewRecord->SourcePayloadJson.Len() <= MaxEmbeddedSourcePayloadChars)
+		{
+			RootObject->SetStringField(TEXT("source_payload_json"), PreviewRecord->SourcePayloadJson);
+		}
+		else
+		{
+			RootObject->SetBoolField(TEXT("source_payload_json_omitted"), true);
+		}
 		RootObject->SetStringField(TEXT("bridge_diagnostics"), PreviewRecord->Diagnostics);
 	}
 	else
 	{
 		RootObject->SetStringField(TEXT("source_type"), TEXT("selected_dynamic_mesh_actor"));
+	}
+
+	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutJson);
+	return FJsonSerializer::Serialize(RootObject, Writer);
+}
+
+bool FPrototypeMeshBuilderController::BuildMaterialMetadataJson(const FString& SavedMaterialPath, const FString& SavedMeshPath, bool bUsingSharedMaterial, FString& OutJson) const
+{
+	TSharedRef<FJsonObject> RootObject = MakeShared<FJsonObject>();
+	RootObject->SetStringField(TEXT("version"), TEXT("1.0"));
+	RootObject->SetStringField(TEXT("tool"), TEXT("PrototypeMeshBuilder"));
+	RootObject->SetStringField(TEXT("asset_type"), TEXT("material"));
+	RootObject->SetStringField(TEXT("material_path"), SavedMaterialPath);
+	RootObject->SetStringField(TEXT("material_scope"), bUsingSharedMaterial ? TEXT("shared") : TEXT("per_mesh"));
+	RootObject->SetBoolField(TEXT("use_shared_material"), bUsingSharedMaterial);
+	RootObject->SetStringField(TEXT("shading_model"), TEXT("DefaultLit"));
+	RootObject->SetStringField(TEXT("vertex_color_source"), TEXT("mesh_vertex_color"));
+
+	if (!bUsingSharedMaterial)
+	{
+		RootObject->SetStringField(TEXT("linked_mesh_path"), SavedMeshPath);
 	}
 
 	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutJson);
