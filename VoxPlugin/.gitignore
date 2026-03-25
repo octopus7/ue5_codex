@@ -1,0 +1,27 @@
+# Unreal Engine 5 generated files
+/.vs/
+/Binaries/
+/DerivedDataCache/
+/Intermediate/
+/Saved/
+
+# Visual Studio / IDE generated files
+*.sln
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.VC.db
+*.VC.opendb
+
+# JetBrains / VS Code
+/.idea/
+/.vscode/
+
+# Unreal per-user content
+/Content/Developers/
+
+# Plugin generated files
+/Plugins/*/Binaries/
+/Plugins/*/Intermediate/
+/Plugins/*/Saved/
