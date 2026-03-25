@@ -1,11 +1,10 @@
 import argparse
 import json
+import os
 import sys
 import time
 from pathlib import Path
 
-
-DEFAULT_ENGINE_ROOT = Path(r"E:\WorkTemp\Epic Games\UE_5.7\Engine")
 DEFAULT_PROJECT_NAME = "CodexInven"
 DEFAULT_ASSET_PATH = "/Game/UI/WBP_CodexClock"
 DEFAULT_WIDGET_NAME = "ClockContainerBorder"
@@ -18,8 +17,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--engine-root",
-        default=str(DEFAULT_ENGINE_ROOT),
-        help="Unreal Engine root that contains the PythonScriptPlugin.",
+        default=None,
+        help="Optional Unreal Engine root that contains the PythonScriptPlugin.",
     )
     parser.add_argument(
         "--project-name",
@@ -51,6 +50,28 @@ def parse_args() -> argparse.Namespace:
         help="How long to wait for a matching Unreal Editor remote node.",
     )
     return parser.parse_args()
+
+
+def resolve_engine_root(engine_root_arg: str | None) -> Path:
+    candidates = []
+    if engine_root_arg:
+        candidates.append(Path(engine_root_arg))
+
+    env_engine_root = os.environ.get("UE_ENGINE_ROOT")
+    if env_engine_root:
+        candidates.append(Path(env_engine_root))
+
+    for candidate in candidates:
+        plugin_python_dir = candidate / "Plugins" / "Experimental" / "PythonScriptPlugin" / "Content" / "Python"
+        if plugin_python_dir.is_dir():
+            return candidate
+
+    searched_paths = "\n".join(f"- {candidate}" for candidate in candidates) or "- <none>"
+    raise RuntimeError(
+        "Unable to locate a valid Unreal Engine root.\n"
+        "Pass --engine-root or set UE_ENGINE_ROOT.\n"
+        f"Searched:\n{searched_paths}"
+    )
 
 
 def import_remote_execution(engine_root: Path):
@@ -123,7 +144,7 @@ print(
 
 def main() -> int:
     args = parse_args()
-    remote_execution = import_remote_execution(Path(args.engine_root))
+    remote_execution = import_remote_execution(resolve_engine_root(args.engine_root))
 
     remote_exec = remote_execution.RemoteExecution()
     remote_exec.start()
