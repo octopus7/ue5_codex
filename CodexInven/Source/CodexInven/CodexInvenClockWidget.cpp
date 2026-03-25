@@ -1,11 +1,33 @@
 #include "CodexInvenClockWidget.h"
 
+#include "Components/CanvasPanelSlot.h"
 #include "Components/Border.h"
 #include "Components/TextBlock.h"
+
+namespace
+{
+	constexpr float ClockContainerRenderScale = 0.5f;
+	const FVector2D ClockContainerPivot(0.0f, 0.5f);
+	const FVector2D ClockContainerViewportPosition(108.0f, 0.0f);
+}
 
 void UCodexInvenClockWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+
+	if (UWidget* const ClockContainerWidget = GetWidgetFromName(TEXT("ClockContainerBorder")))
+	{
+		ClockContainerWidget->SetRenderTransformPivot(ClockContainerPivot);
+		ClockContainerWidget->SetRenderScale(FVector2D(ClockContainerRenderScale, ClockContainerRenderScale));
+
+		if (UCanvasPanelSlot* const ClockContainerSlot = Cast<UCanvasPanelSlot>(ClockContainerWidget->Slot))
+		{
+			ClockContainerSlot->SetAnchors(FAnchors(0.0f, 0.5f, 0.0f, 0.5f));
+			ClockContainerSlot->SetAlignment(ClockContainerPivot);
+			ClockContainerSlot->SetPosition(ClockContainerViewportPosition);
+			ClockContainerSlot->SetAutoSize(true);
+		}
+	}
 
 	SetIsFocusable(false);
 	SetVisibility(ESlateVisibility::SelfHitTestInvisible);
