@@ -1,0 +1,38 @@
+# Unreal Engine 5 generated folders
+/Binaries/
+/DerivedDataCache/
+/Intermediate/
+/Saved/
+
+# Unreal plugins generated folders
+/Plugins/*/Binaries/
+/Plugins/*/Intermediate/
+
+# Visual Studio / Rider / VS Code
+/.vs/
+/.idea/
+/.vscode/
+*.sln
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.VC.db
+*.VC.opendb
+
+# Build outputs and logs
+*.log
+*.tmp
+*.pidb
+*.obj
+*.pdb
+*.ipch
+
+# Unreal build receipts and generated files
+*.target
+*.modules
+*.version
+
+# OS-specific files
+.DS_Store
+Thumbs.db
