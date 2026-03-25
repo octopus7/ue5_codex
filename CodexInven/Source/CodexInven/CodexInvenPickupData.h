@@ -21,14 +21,16 @@ enum class ECodexInvenPickupType : uint8
 	CylinderRed,
 	CylinderGreen,
 	CylinderBlue,
-	CylinderGold
+	CylinderGold,
+	Key
 };
 
 UENUM()
 enum class ECodexInvenPickupMeshKind : uint8
 {
 	Cube,
-	Cylinder
+	Cylinder,
+	Key
 };
 
 namespace CodexInvenPickupData
@@ -39,6 +41,7 @@ namespace CodexInvenPickupData
 	CODEXINVEN_API FSoftObjectPath GetPickupMeshAssetPath(ECodexInvenPickupType InPickupType);
 	CODEXINVEN_API FSoftObjectPath GetPickupIconAssetPath(ECodexInvenPickupType InPickupType);
 	CODEXINVEN_API TConstArrayView<ECodexInvenPickupType> GetAllPickupTypes();
+	CODEXINVEN_API TConstArrayView<ECodexInvenPickupType> GetSpawnerPickupTypes();
 	CODEXINVEN_API const FCodexInvenPickupDefinition* FindPickupDefinition(ECodexInvenPickupType InPickupType);
 	CODEXINVEN_API const FCodexInvenPickupDefinition& GetPickupDefinitionChecked(ECodexInvenPickupType InPickupType);
 }

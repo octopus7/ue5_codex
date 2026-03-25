@@ -288,6 +288,15 @@ namespace
 			AppendBoxPart(*Mesh, FVector(12.0f, 6.0f, 6.0f), FVector(-18.0f, 22.0f, 18.0f), FRotator::ZeroRotator, Palette.AccentColor);
 			AppendBoxPart(*Mesh, FVector(12.0f, 6.0f, 6.0f), FVector(18.0f, 22.0f, 18.0f), FRotator::ZeroRotator, Palette.AccentColor);
 			break;
+
+		case ECodexInvenPickupType::Key:
+			AppendCylinderPart(*Mesh, 18.0f, 8.0f, FVector(-18.0f, 0.0f, 24.0f), FRotator::ZeroRotator, Palette.HighlightColor, 18);
+			AppendCylinderPart(*Mesh, 9.0f, 10.0f, FVector(-18.0f, 0.0f, 24.0f), FRotator::ZeroRotator, Palette.DetailColor, 18);
+			AppendBoxPart(*Mesh, FVector(54.0f, 10.0f, 8.0f), FVector(10.0f, 0.0f, 24.0f), FRotator::ZeroRotator, Palette.AccentColor);
+			AppendBoxPart(*Mesh, FVector(10.0f, 18.0f, 8.0f), FVector(24.0f, 0.0f, 16.0f), FRotator::ZeroRotator, Palette.HighlightColor);
+			AppendBoxPart(*Mesh, FVector(10.0f, 12.0f, 8.0f), FVector(36.0f, 0.0f, 14.0f), FRotator::ZeroRotator, Palette.HighlightColor);
+			AppendBoxPart(*Mesh, FVector(8.0f, 10.0f, 8.0f), FVector(46.0f, 0.0f, 18.0f), FRotator::ZeroRotator, Palette.BodyColor);
+			break;
 		}
 
 		UGeometryScriptLibrary_MeshNormalsFunctions::SetPerFaceNormals(Mesh);
@@ -540,6 +549,14 @@ namespace
 			FillRect(OutPixels, 18, 28, 24, 34, Highlight);
 			FillRect(OutPixels, 40, 28, 46, 34, Highlight);
 			break;
+
+		case ECodexInvenPickupType::Key:
+			FillEllipse(OutPixels, 20, 30, 12, 12, Highlight);
+			FillEllipse(OutPixels, 20, 30, 6, 6, Detail);
+			FillRect(OutPixels, 20, 27, 48, 33, Accent);
+			FillRect(OutPixels, 30, 34, 36, 42, Highlight);
+			FillRect(OutPixels, 40, 34, 46, 39, Highlight);
+			break;
 		}
 	}
 
@@ -644,7 +661,7 @@ namespace
 
 bool FCodexInvenPickupAssetGenerator::GenerateAssets(FString& OutMessage)
 {
-	FScopedSlowTask SlowTask(11.0f, FText::FromString(TEXT("Generating pickup assets...")));
+	FScopedSlowTask SlowTask(3.0f + static_cast<float>(CodexInvenPickupData::GetAllPickupTypes().Num()), FText::FromString(TEXT("Generating pickup assets...")));
 	SlowTask.MakeDialog(false);
 
 	FString ErrorMessage;

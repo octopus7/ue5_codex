@@ -22,7 +22,8 @@ namespace
 			FCodexInvenPickupDefinition(ECodexInvenPickupType::CylinderRed, TEXT("Medkit Pouch"), true, ECodexInvenPickupMeshKind::Cylinder, FLinearColor(0.88f, 0.25f, 0.20f, 1.0f), ECodexInvenPickupRarity::Common),
 			FCodexInvenPickupDefinition(ECodexInvenPickupType::CylinderGreen, TEXT("Energy Drink Can"), true, ECodexInvenPickupMeshKind::Cylinder, FLinearColor(0.22f, 0.84f, 0.34f, 1.0f), ECodexInvenPickupRarity::Common),
 			FCodexInvenPickupDefinition(ECodexInvenPickupType::CylinderBlue, TEXT("Ration Pack"), true, ECodexInvenPickupMeshKind::Cylinder, FLinearColor(0.24f, 0.48f, 0.96f, 1.0f), ECodexInvenPickupRarity::Common),
-			FCodexInvenPickupDefinition(ECodexInvenPickupType::CylinderGold, TEXT("Pill Bottle"), true, ECodexInvenPickupMeshKind::Cylinder, FLinearColor(0.98f, 0.80f, 0.22f, 1.0f), ECodexInvenPickupRarity::Gold, true)
+			FCodexInvenPickupDefinition(ECodexInvenPickupType::CylinderGold, TEXT("Pill Bottle"), true, ECodexInvenPickupMeshKind::Cylinder, FLinearColor(0.98f, 0.80f, 0.22f, 1.0f), ECodexInvenPickupRarity::Gold, true),
+			FCodexInvenPickupDefinition(ECodexInvenPickupType::Key, TEXT("Key"), false, ECodexInvenPickupMeshKind::Key, FLinearColor(0.96f, 0.80f, 0.22f, 1.0f), ECodexInvenPickupRarity::Gold, true)
 		};
 
 		for (const FCodexInvenPickupDefinition& Definition : Definitions)
@@ -64,6 +65,9 @@ FString CodexInvenPickupData::GetPickupAssetSlug(const ECodexInvenPickupType InP
 
 	case ECodexInvenPickupType::CylinderGold:
 		return TEXT("PillBottle");
+
+	case ECodexInvenPickupType::Key:
+		return TEXT("Key");
 	}
 
 	return TEXT("UnknownPickup");
@@ -90,6 +94,24 @@ FSoftObjectPath CodexInvenPickupData::GetPickupIconAssetPath(const ECodexInvenPi
 }
 
 TConstArrayView<ECodexInvenPickupType> CodexInvenPickupData::GetAllPickupTypes()
+{
+	static const ECodexInvenPickupType PickupTypes[] =
+	{
+		ECodexInvenPickupType::CubeRed,
+		ECodexInvenPickupType::CubeGreen,
+		ECodexInvenPickupType::CubeBlue,
+		ECodexInvenPickupType::CubeGold,
+		ECodexInvenPickupType::CylinderRed,
+		ECodexInvenPickupType::CylinderGreen,
+		ECodexInvenPickupType::CylinderBlue,
+		ECodexInvenPickupType::CylinderGold,
+		ECodexInvenPickupType::Key
+	};
+
+	return TConstArrayView<ECodexInvenPickupType>(PickupTypes);
+}
+
+TConstArrayView<ECodexInvenPickupType> CodexInvenPickupData::GetSpawnerPickupTypes()
 {
 	static const ECodexInvenPickupType PickupTypes[] =
 	{

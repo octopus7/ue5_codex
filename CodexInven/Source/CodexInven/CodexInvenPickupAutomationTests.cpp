@@ -20,7 +20,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(
 bool FCodexInvenPickupDefinitionAutomationTest::RunTest(const FString& Parameters)
 {
 	const TConstArrayView<ECodexInvenPickupType> PickupTypes = CodexInvenPickupData::GetAllPickupTypes();
-	TestEqual(TEXT("All eight pickup types are registered"), PickupTypes.Num(), 8);
+	TestEqual(TEXT("All nine pickup types are registered"), PickupTypes.Num(), 9);
 
 	for (const ECodexInvenPickupType PickupType : PickupTypes)
 	{
@@ -70,6 +70,13 @@ bool FCodexInvenPickupDefinitionAutomationTest::RunTest(const FString& Parameter
 			TestTrue(TEXT("Gold cylinder uses metallic material"), Definition->bUseMetallicMaterial);
 			TestTrue(TEXT("Cylinder pickups are stackable"), Definition->bStackable);
 			TestEqual(TEXT("Cylinder pickups use cylinder mesh"), Definition->MeshKind, ECodexInvenPickupMeshKind::Cylinder);
+			break;
+
+		case ECodexInvenPickupType::Key:
+			TestEqual(TEXT("Key uses gold rarity"), Definition->Rarity, ECodexInvenPickupRarity::Gold);
+			TestTrue(TEXT("Key uses metallic material"), Definition->bUseMetallicMaterial);
+			TestFalse(TEXT("Key remains unique"), Definition->bStackable);
+			TestEqual(TEXT("Key uses key mesh"), Definition->MeshKind, ECodexInvenPickupMeshKind::Key);
 			break;
 		}
 	}

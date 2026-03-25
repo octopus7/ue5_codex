@@ -106,7 +106,7 @@ void ACodexInvenPickupSpawner::HandleSpawnTimerElapsed()
 
 ECodexInvenPickupType ACodexInvenPickupSpawner::ChooseRandomPickupType()
 {
-	const TConstArrayView<ECodexInvenPickupType> PickupTypes = CodexInvenPickupData::GetAllPickupTypes();
+	const TConstArrayView<ECodexInvenPickupType> PickupTypes = CodexInvenPickupData::GetSpawnerPickupTypes();
 	check(PickupTypes.Num() > 0);
 	return PickupTypes[RandomStream.RandRange(0, PickupTypes.Num() - 1)];
 }
