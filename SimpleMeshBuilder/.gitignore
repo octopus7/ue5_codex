@@ -28,6 +28,10 @@
 *.pdb
 *.ipch
 
+# Generated export assets
+/Generated/**/*.obj
+/Generated/**/*.mtl
+
 # Unreal build receipts and generated files
 *.target
 *.modules

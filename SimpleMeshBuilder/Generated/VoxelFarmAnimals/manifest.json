@@ -1,0 +1,242 @@
+[
+  {
+    "name": "chick_res64_codex",
+    "description": "Extra-cute standing farm chick with a round fluffy body, tiny beak, and stubby legs.",
+    "resolution": 64,
+    "occupied_voxels": 4061,
+    "quad_faces": 2728,
+    "triangles": 5456,
+    "bounds": {
+      "min": [
+        17,
+        24,
+        1
+      ],
+      "max": [
+        48,
+        40,
+        46
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\chick_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\chick_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\chick_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\chick_res64_codex.mtl"
+  },
+  {
+    "name": "chicken_res64_codex",
+    "description": "Cute standing farm chicken with an oversized head, rounded body, bright comb, and short legs.",
+    "resolution": 64,
+    "occupied_voxels": 6834,
+    "quad_faces": 4064,
+    "triangles": 8128,
+    "bounds": {
+      "min": [
+        13,
+        23,
+        2
+      ],
+      "max": [
+        59,
+        41,
+        43
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\chicken_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\chicken_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\chicken_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\chicken_res64_codex.mtl"
+  },
+  {
+    "name": "cow_res64_codex",
+    "description": "Cute farm cow with a rounded standing pose, small horns, floppy ears, and soft patch coloring.",
+    "resolution": 64,
+    "occupied_voxels": 6923,
+    "quad_faces": 4036,
+    "triangles": 8072,
+    "bounds": {
+      "min": [
+        14,
+        23,
+        2
+      ],
+      "max": [
+        55,
+        41,
+        41
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\cow_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\cow_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\cow_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\cow_res64_codex.mtl"
+  },
+  {
+    "name": "donkey_res64_codex",
+    "description": "Cute farm donkey with oversized ears, a rounded standing body, short sturdy legs, and a soft gray coat.",
+    "resolution": 64,
+    "occupied_voxels": 8355,
+    "quad_faces": 4900,
+    "triangles": 9800,
+    "bounds": {
+      "min": [
+        11,
+        22,
+        2
+      ],
+      "max": [
+        59,
+        42,
+        42
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\donkey_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\donkey_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\donkey_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\donkey_res64_codex.mtl"
+  },
+  {
+    "name": "duck_res64_codex",
+    "description": "Cute standing farm duck with a rounded body, short neck, bright beak, and sturdy little legs.",
+    "resolution": 64,
+    "occupied_voxels": 5218,
+    "quad_faces": 3124,
+    "triangles": 6248,
+    "bounds": {
+      "min": [
+        4,
+        21,
+        5
+      ],
+      "max": [
+        44,
+        43,
+        45
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\duck_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\duck_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\duck_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\duck_res64_codex.mtl"
+  },
+  {
+    "name": "goat_res64_codex",
+    "description": "Cute standing farm goat with a chunky body, short muzzle, tiny horns, floppy ears, and sturdy legs.",
+    "resolution": 64,
+    "occupied_voxels": 8406,
+    "quad_faces": 5016,
+    "triangles": 10032,
+    "bounds": {
+      "min": [
+        8,
+        23,
+        4
+      ],
+      "max": [
+        48,
+        41,
+        51
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\goat_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\goat_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\goat_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\goat_res64_codex.mtl"
+  },
+  {
+    "name": "horse_res64_codex",
+    "description": "Cute farm horse with a rounded pony body, short sturdy legs, and a friendly standing pose.",
+    "resolution": 64,
+    "occupied_voxels": 10195,
+    "quad_faces": 5566,
+    "triangles": 11132,
+    "bounds": {
+      "min": [
+        11,
+        21,
+        2
+      ],
+      "max": [
+        52,
+        43,
+        48
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\horse_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\horse_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\horse_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\horse_res64_codex.mtl"
+  },
+  {
+    "name": "pig_res64_codex",
+    "description": "Cute farm pig with oversized head, round body, short legs, floppy ears, and a small curled tail.",
+    "resolution": 64,
+    "occupied_voxels": 7490,
+    "quad_faces": 4582,
+    "triangles": 9164,
+    "bounds": {
+      "min": [
+        10,
+        23,
+        2
+      ],
+      "max": [
+        60,
+        41,
+        43
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\pig_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\pig_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\pig_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\pig_res64_codex.mtl"
+  },
+  {
+    "name": "rabbit_res64_codex",
+    "description": "Cute standing farm rabbit with oversized upright ears, rounded cheeks, and a soft fluffy silhouette.",
+    "resolution": 64,
+    "occupied_voxels": 4844,
+    "quad_faces": 3158,
+    "triangles": 6316,
+    "bounds": {
+      "min": [
+        16,
+        24,
+        2
+      ],
+      "max": [
+        52,
+        40,
+        54
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\rabbit_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\rabbit_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\rabbit_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\rabbit_res64_codex.mtl"
+  },
+  {
+    "name": "sheep_res64_codex",
+    "description": "Cute standing farm sheep with fluffy wool, a rounded face, and compact legs.",
+    "resolution": 64,
+    "occupied_voxels": 7453,
+    "quad_faces": 4540,
+    "triangles": 9080,
+    "bounds": {
+      "min": [
+        13,
+        23,
+        3
+      ],
+      "max": [
+        52,
+        41,
+        43
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\sheep_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\sheep_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\sheep_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\sheep_res64_codex.mtl"
+  }
+]

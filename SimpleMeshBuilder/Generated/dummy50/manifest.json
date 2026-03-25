@@ -1,0 +1,1202 @@
+[
+  {
+    "name": "antibiotic_vial_res64_codex",
+    "description": "Cute antibiotic vial with a slim glass body, blue medicine, and a clean warning stripe.",
+    "resolution": 64,
+    "occupied_voxels": 2446,
+    "quad_faces": 1610,
+    "triangles": 3220,
+    "bounds": {
+      "min": [
+        26,
+        25,
+        7
+      ],
+      "max": [
+        38,
+        39,
+        38
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\antibiotic_vial_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\antibiotic_vial_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\antibiotic_vial_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\antibiotic_vial_res64_codex.mtl"
+  },
+  {
+    "name": "apple_pie_res64_codex",
+    "description": "Cute farm-style apple pie with a domed crust and bright fruit filling.",
+    "resolution": 64,
+    "occupied_voxels": 5661,
+    "quad_faces": 2744,
+    "triangles": 5488,
+    "bounds": {
+      "min": [
+        19,
+        19,
+        16
+      ],
+      "max": [
+        45,
+        45,
+        26
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\apple_pie_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\apple_pie_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\apple_pie_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\apple_pie_res64_codex.mtl"
+  },
+  {
+    "name": "bandage_roll_res64_codex",
+    "description": "Cute rolled bandage with soft wraps and a little red medical stripe.",
+    "resolution": 64,
+    "occupied_voxels": 7861,
+    "quad_faces": 2964,
+    "triangles": 5928,
+    "bounds": {
+      "min": [
+        15,
+        21,
+        11
+      ],
+      "max": [
+        49,
+        41,
+        29
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\bandage_roll_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\bandage_roll_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\bandage_roll_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\bandage_roll_res64_codex.mtl"
+  },
+  {
+    "name": "battery_cell_res64_codex",
+    "description": "Cute cylindrical battery cell with a bold label band and shiny top cap.",
+    "resolution": 64,
+    "occupied_voxels": 7861,
+    "quad_faces": 2934,
+    "triangles": 5868,
+    "bounds": {
+      "min": [
+        23,
+        23,
+        12
+      ],
+      "max": [
+        41,
+        41,
+        44
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\battery_cell_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\battery_cell_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\battery_cell_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\battery_cell_res64_codex.mtl"
+  },
+  {
+    "name": "bearing_ring_res64_codex",
+    "description": "Cute metallic bearing ring with evenly spaced balls and a clean toy-engineering look.",
+    "resolution": 64,
+    "occupied_voxels": 3788,
+    "quad_faces": 2408,
+    "triangles": 4816,
+    "bounds": {
+      "min": [
+        17,
+        17,
+        24
+      ],
+      "max": [
+        47,
+        47,
+        32
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\bearing_ring_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\bearing_ring_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\bearing_ring_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\bearing_ring_res64_codex.mtl"
+  },
+  {
+    "name": "bolt_box_res64_codex",
+    "description": "Cute hardware crate packed with chunky bolts and a toy workshop label.",
+    "resolution": 64,
+    "occupied_voxels": 11145,
+    "quad_faces": 3038,
+    "triangles": 6076,
+    "bounds": {
+      "min": [
+        21,
+        21,
+        16
+      ],
+      "max": [
+        43,
+        43,
+        37
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\bolt_box_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\bolt_box_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\bolt_box_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\bolt_box_res64_codex.mtl"
+  },
+  {
+    "name": "bread_loaf_res64_codex",
+    "description": "Cute stylized bread loaf with a rounded crust and soft, pillowy body.",
+    "resolution": 64,
+    "occupied_voxels": 3496,
+    "quad_faces": 1746,
+    "triangles": 3492,
+    "bounds": {
+      "min": [
+        18,
+        23,
+        18
+      ],
+      "max": [
+        46,
+        41,
+        31
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\bread_loaf_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\bread_loaf_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\bread_loaf_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\bread_loaf_res64_codex.mtl"
+  },
+  {
+    "name": "burger_stack_res64_codex",
+    "description": "Cute stacked burger with a chubby bun, layered fillings, and sesame seeds.",
+    "resolution": 64,
+    "occupied_voxels": 6437,
+    "quad_faces": 3312,
+    "triangles": 6624,
+    "bounds": {
+      "min": [
+        20,
+        23,
+        15
+      ],
+      "max": [
+        44,
+        41,
+        39
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\burger_stack_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\burger_stack_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\burger_stack_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\burger_stack_res64_codex.mtl"
+  },
+  {
+    "name": "carrot_bunch_res64_codex",
+    "description": "Cute bunch of carrots tied together with leafy tops and a soft harvest bundle silhouette.",
+    "resolution": 64,
+    "occupied_voxels": 1406,
+    "quad_faces": 1936,
+    "triangles": 3872,
+    "bounds": {
+      "min": [
+        23,
+        25,
+        10
+      ],
+      "max": [
+        38,
+        37,
+        39
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\carrot_bunch_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\carrot_bunch_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\carrot_bunch_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\carrot_bunch_res64_codex.mtl"
+  },
+  {
+    "name": "cheese_wedge_res64_codex",
+    "description": "Cute chunky cheese wedge with a tapered silhouette and round holes.",
+    "resolution": 64,
+    "occupied_voxels": 7053,
+    "quad_faces": 2504,
+    "triangles": 5008,
+    "bounds": {
+      "min": [
+        16,
+        23,
+        15
+      ],
+      "max": [
+        42,
+        41,
+        30
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\cheese_wedge_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\cheese_wedge_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\cheese_wedge_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\cheese_wedge_res64_codex.mtl"
+  },
+  {
+    "name": "circuit_board_res64_codex",
+    "description": "Cute stylized circuit board with chunky chips, bright traces, and a clean toy electronics look.",
+    "resolution": 64,
+    "occupied_voxels": 5505,
+    "quad_faces": 2828,
+    "triangles": 5656,
+    "bounds": {
+      "min": [
+        14,
+        19,
+        25
+      ],
+      "max": [
+        50,
+        44,
+        34
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\circuit_board_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\circuit_board_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\circuit_board_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\circuit_board_res64_codex.mtl"
+  },
+  {
+    "name": "coffee_cup_res64_codex",
+    "description": "Cute takeaway coffee cup with a lid, warm sleeve, and slightly tapered friendly shape.",
+    "resolution": 64,
+    "occupied_voxels": 3939,
+    "quad_faces": 1980,
+    "triangles": 3960,
+    "bounds": {
+      "min": [
+        25,
+        25,
+        7
+      ],
+      "max": [
+        40,
+        39,
+        34
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\coffee_cup_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\coffee_cup_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\coffee_cup_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\coffee_cup_res64_codex.mtl"
+  },
+  {
+    "name": "copper_coil_res64_codex",
+    "description": "Cute copper wire coil bundled on a small spool, with soft rounded workshop shapes.",
+    "resolution": 64,
+    "occupied_voxels": 7652,
+    "quad_faces": 3360,
+    "triangles": 6720,
+    "bounds": {
+      "min": [
+        20,
+        20,
+        16
+      ],
+      "max": [
+        50,
+        44,
+        36
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\copper_coil_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\copper_coil_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\copper_coil_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\copper_coil_res64_codex.mtl"
+  },
+  {
+    "name": "croissant_butter_res64_codex",
+    "description": "Cute bakery croissant with a butter pat, soft layered shape, and a tiny serving plate silhouette.",
+    "resolution": 64,
+    "occupied_voxels": 1866,
+    "quad_faces": 1744,
+    "triangles": 3488,
+    "bounds": {
+      "min": [
+        21,
+        23,
+        10
+      ],
+      "max": [
+        43,
+        41,
+        28
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\croissant_butter_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\croissant_butter_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\croissant_butter_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\croissant_butter_res64_codex.mtl"
+  },
+  {
+    "name": "cupcake_frosted_res64_codex",
+    "description": "Cute frosted cupcake with a rounded frosting cap and a bright cherry on top.",
+    "resolution": 64,
+    "occupied_voxels": 6654,
+    "quad_faces": 2868,
+    "triangles": 5736,
+    "bounds": {
+      "min": [
+        22,
+        22,
+        12
+      ],
+      "max": [
+        42,
+        42,
+        39
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\cupcake_frosted_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\cupcake_frosted_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\cupcake_frosted_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\cupcake_frosted_res64_codex.mtl"
+  },
+  {
+    "name": "disinfectant_spray_res64_codex",
+    "description": "Cute disinfectant spray bottle with a rounded trigger, glossy cap, and bright label stripe.",
+    "resolution": 64,
+    "occupied_voxels": 8267,
+    "quad_faces": 2934,
+    "triangles": 5868,
+    "bounds": {
+      "min": [
+        12,
+        24,
+        12
+      ],
+      "max": [
+        41,
+        40,
+        47
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\disinfectant_spray_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\disinfectant_spray_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\disinfectant_spray_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\disinfectant_spray_res64_codex.mtl"
+  },
+  {
+    "name": "donut_glazed_res64_codex",
+    "description": "Cute glazed donut with a thick ring, soft hole, and bright icing.",
+    "resolution": 64,
+    "occupied_voxels": 2446,
+    "quad_faces": 1626,
+    "triangles": 3252,
+    "bounds": {
+      "min": [
+        22,
+        22,
+        20
+      ],
+      "max": [
+        42,
+        42,
+        30
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\donut_glazed_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\donut_glazed_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\donut_glazed_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\donut_glazed_res64_codex.mtl"
+  },
+  {
+    "name": "egg_carton_res64_codex",
+    "description": "Cute open egg carton with six oversized eggs in a tidy tray.",
+    "resolution": 64,
+    "occupied_voxels": 5313,
+    "quad_faces": 2674,
+    "triangles": 5348,
+    "bounds": {
+      "min": [
+        17,
+        23,
+        10
+      ],
+      "max": [
+        45,
+        41,
+        27
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\egg_carton_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\egg_carton_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\egg_carton_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\egg_carton_res64_codex.mtl"
+  },
+  {
+    "name": "energy_drink_res64_codex",
+    "description": "Cute energy drink can with a lightning stripe, slim shape, and bright sporty colors.",
+    "resolution": 64,
+    "occupied_voxels": 2940,
+    "quad_faces": 1582,
+    "triangles": 3164,
+    "bounds": {
+      "min": [
+        26,
+        26,
+        7
+      ],
+      "max": [
+        38,
+        38,
+        37
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\energy_drink_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\energy_drink_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\energy_drink_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\energy_drink_res64_codex.mtl"
+  },
+  {
+    "name": "first_aid_kit_res64_codex",
+    "description": "Cute first aid kit with rounded corners, a carry handle, and a bold white cross.",
+    "resolution": 64,
+    "occupied_voxels": 9082,
+    "quad_faces": 3004,
+    "triangles": 6008,
+    "bounds": {
+      "min": [
+        18,
+        20,
+        11
+      ],
+      "max": [
+        46,
+        44,
+        32
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\first_aid_kit_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\first_aid_kit_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\first_aid_kit_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\first_aid_kit_res64_codex.mtl"
+  },
+  {
+    "name": "flour_bag_res64_codex",
+    "description": "Cute paper flour sack with a folded top and a big stamped patch.",
+    "resolution": 64,
+    "occupied_voxels": 9753,
+    "quad_faces": 2938,
+    "triangles": 5876,
+    "bounds": {
+      "min": [
+        22,
+        21,
+        7
+      ],
+      "max": [
+        40,
+        40,
+        38
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\flour_bag_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\flour_bag_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\flour_bag_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\flour_bag_res64_codex.mtl"
+  },
+  {
+    "name": "fuel_canister_res64_codex",
+    "description": "Cute jerrycan-style fuel canister with a chunky handle, bold stripe, and toy utility look.",
+    "resolution": 64,
+    "occupied_voxels": 11413,
+    "quad_faces": 3546,
+    "triangles": 7092,
+    "bounds": {
+      "min": [
+        22,
+        24,
+        13
+      ],
+      "max": [
+        47,
+        42,
+        48
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\fuel_canister_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\fuel_canister_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\fuel_canister_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\fuel_canister_res64_codex.mtl"
+  },
+  {
+    "name": "gauze_stack_res64_codex",
+    "description": "Cute stacked gauze pads tied with a small band, like a soft medical prop.",
+    "resolution": 64,
+    "occupied_voxels": 3409,
+    "quad_faces": 1588,
+    "triangles": 3176,
+    "bounds": {
+      "min": [
+        20,
+        24,
+        18
+      ],
+      "max": [
+        42,
+        40,
+        30
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\gauze_stack_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\gauze_stack_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\gauze_stack_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\gauze_stack_res64_codex.mtl"
+  },
+  {
+    "name": "gear_large_res64_codex",
+    "description": "Cute oversized metal gear with chunky teeth, a bold hub, and a toy-like industrial silhouette.",
+    "resolution": 64,
+    "occupied_voxels": 5875,
+    "quad_faces": 2870,
+    "triangles": 5740,
+    "bounds": {
+      "min": [
+        17,
+        17,
+        23
+      ],
+      "max": [
+        47,
+        47,
+        35
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\gear_large_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\gear_large_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\gear_large_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\gear_large_res64_codex.mtl"
+  },
+  {
+    "name": "herb_bundle_res64_codex",
+    "description": "Cute tied herb bundle with several leafy stems and a bright twine knot.",
+    "resolution": 64,
+    "occupied_voxels": 617,
+    "quad_faces": 1420,
+    "triangles": 2840,
+    "bounds": {
+      "min": [
+        22,
+        26,
+        10
+      ],
+      "max": [
+        39,
+        40,
+        43
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\herb_bundle_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\herb_bundle_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\herb_bundle_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\herb_bundle_res64_codex.mtl"
+  },
+  {
+    "name": "honey_jar_res64_codex",
+    "description": "Cute honey jar with a golden body, soft lid, and a little drip of sweetness.",
+    "resolution": 64,
+    "occupied_voxels": 3772,
+    "quad_faces": 2012,
+    "triangles": 4024,
+    "bounds": {
+      "min": [
+        25,
+        26,
+        3
+      ],
+      "max": [
+        37,
+        38,
+        40
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\honey_jar_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\honey_jar_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\honey_jar_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\honey_jar_res64_codex.mtl"
+  },
+  {
+    "name": "inhaler_blue_res64_codex",
+    "description": "Cute blue inhaler with a chunky body, small button, and a stubby mouthpiece.",
+    "resolution": 64,
+    "occupied_voxels": 7038,
+    "quad_faces": 2418,
+    "triangles": 4836,
+    "bounds": {
+      "min": [
+        16,
+        25,
+        14
+      ],
+      "max": [
+        40,
+        39,
+        41
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\inhaler_blue_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\inhaler_blue_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\inhaler_blue_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\inhaler_blue_res64_codex.mtl"
+  },
+  {
+    "name": "juice_carton_res64_codex",
+    "description": "Cute juice carton with a folded top, bright fruit stripe, and friendly square silhouette.",
+    "resolution": 64,
+    "occupied_voxels": 7978,
+    "quad_faces": 2778,
+    "triangles": 5556,
+    "bounds": {
+      "min": [
+        24,
+        26,
+        10
+      ],
+      "max": [
+        41,
+        38,
+        48
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\juice_carton_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\juice_carton_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\juice_carton_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\juice_carton_res64_codex.mtl"
+  },
+  {
+    "name": "med_gel_tube_res64_codex",
+    "description": "Cute medical gel tube with a soft rounded body, friendly label band, and a chunky cap.",
+    "resolution": 64,
+    "occupied_voxels": 6573,
+    "quad_faces": 3206,
+    "triangles": 6412,
+    "bounds": {
+      "min": [
+        25,
+        25,
+        8
+      ],
+      "max": [
+        39,
+        39,
+        52
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\med_gel_tube_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\med_gel_tube_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\med_gel_tube_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\med_gel_tube_res64_codex.mtl"
+  },
+  {
+    "name": "milk_bottle_res64_codex",
+    "description": "Cute glass milk bottle with a rounded body, little cap, and a friendly label band.",
+    "resolution": 64,
+    "occupied_voxels": 5829,
+    "quad_faces": 3022,
+    "triangles": 6044,
+    "bounds": {
+      "min": [
+        25,
+        25,
+        6
+      ],
+      "max": [
+        39,
+        39,
+        54
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\milk_bottle_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\milk_bottle_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\milk_bottle_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\milk_bottle_res64_codex.mtl"
+  },
+  {
+    "name": "milk_canister_res64_codex",
+    "description": "Cute farm milk canister with a sturdy handle, bright cap, and friendly rounded body.",
+    "resolution": 64,
+    "occupied_voxels": 5184,
+    "quad_faces": 2960,
+    "triangles": 5920,
+    "bounds": {
+      "min": [
+        19,
+        25,
+        10
+      ],
+      "max": [
+        40,
+        39,
+        42
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\milk_canister_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\milk_canister_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\milk_canister_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\milk_canister_res64_codex.mtl"
+  },
+  {
+    "name": "onion_sack_res64_codex",
+    "description": "Cute burlap sack stuffed with three plump onions and tiny green tops.",
+    "resolution": 64,
+    "occupied_voxels": 4525,
+    "quad_faces": 2682,
+    "triangles": 5364,
+    "bounds": {
+      "min": [
+        21,
+        23,
+        11
+      ],
+      "max": [
+        41,
+        41,
+        52
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\onion_sack_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\onion_sack_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\onion_sack_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\onion_sack_res64_codex.mtl"
+  },
+  {
+    "name": "painkiller_blister_res64_codex",
+    "description": "Cute pill blister pack with rounded tablets and a bright foil backing.",
+    "resolution": 64,
+    "occupied_voxels": 1467,
+    "quad_faces": 1438,
+    "triangles": 2876,
+    "bounds": {
+      "min": [
+        20,
+        24,
+        23
+      ],
+      "max": [
+        44,
+        40,
+        29
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\painkiller_blister_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\painkiller_blister_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\painkiller_blister_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\painkiller_blister_res64_codex.mtl"
+  },
+  {
+    "name": "pill_bottle_res64_codex",
+    "description": "Cute pill bottle with a rounded orange body, white cap, and a few scattered tablets.",
+    "resolution": 64,
+    "occupied_voxels": 6413,
+    "quad_faces": 2624,
+    "triangles": 5248,
+    "bounds": {
+      "min": [
+        23,
+        23,
+        5
+      ],
+      "max": [
+        41,
+        43,
+        34
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\pill_bottle_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\pill_bottle_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\pill_bottle_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\pill_bottle_res64_codex.mtl"
+  },
+  {
+    "name": "pipe_valve_res64_codex",
+    "description": "Cute chunky pipe valve with a friendly wheel handle and toy-like industrial proportions.",
+    "resolution": 64,
+    "occupied_voxels": 7165,
+    "quad_faces": 3614,
+    "triangles": 7228,
+    "bounds": {
+      "min": [
+        14,
+        23,
+        23
+      ],
+      "max": [
+        50,
+        41,
+        47
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\pipe_valve_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\pipe_valve_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\pipe_valve_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\pipe_valve_res64_codex.mtl"
+  },
+  {
+    "name": "piston_rod_res64_codex",
+    "description": "Cute piston rod assembly with a rounded piston head and a long tidy chrome shaft.",
+    "resolution": 64,
+    "occupied_voxels": 5244,
+    "quad_faces": 2884,
+    "triangles": 5768,
+    "bounds": {
+      "min": [
+        15,
+        23,
+        23
+      ],
+      "max": [
+        57,
+        41,
+        41
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\piston_rod_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\piston_rod_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\piston_rod_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\piston_rod_res64_codex.mtl"
+  },
+  {
+    "name": "pizza_slice_res64_codex",
+    "description": "Cute exaggerated pizza slice with a broad crust and stacked toppings.",
+    "resolution": 64,
+    "occupied_voxels": 4273,
+    "quad_faces": 1878,
+    "triangles": 3756,
+    "bounds": {
+      "min": [
+        14,
+        23,
+        16
+      ],
+      "max": [
+        39,
+        41,
+        28
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\pizza_slice_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\pizza_slice_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\pizza_slice_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\pizza_slice_res64_codex.mtl"
+  },
+  {
+    "name": "potion_antidote_res64_codex",
+    "description": "Cute antidote potion with a rounded glass body, mint liquid, and a bold medical cross.",
+    "resolution": 64,
+    "occupied_voxels": 4262,
+    "quad_faces": 2228,
+    "triangles": 4456,
+    "bounds": {
+      "min": [
+        24,
+        20,
+        7
+      ],
+      "max": [
+        40,
+        36,
+        41
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\potion_antidote_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\potion_antidote_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\potion_antidote_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\potion_antidote_res64_codex.mtl"
+  },
+  {
+    "name": "potion_elixir_res64_codex",
+    "description": "Cute elixir bottle with bright blue liquid, glowing orbs, and a little star crest.",
+    "resolution": 64,
+    "occupied_voxels": 4927,
+    "quad_faces": 2514,
+    "triangles": 5028,
+    "bounds": {
+      "min": [
+        22,
+        19,
+        6
+      ],
+      "max": [
+        42,
+        37,
+        42
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\potion_elixir_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\potion_elixir_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\potion_elixir_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\potion_elixir_res64_codex.mtl"
+  },
+  {
+    "name": "potion_health_res64_codex",
+    "description": "Cute glass health potion with a round flask, cork stopper, and a bright heart label.",
+    "resolution": 64,
+    "occupied_voxels": 2192,
+    "quad_faces": 1572,
+    "triangles": 3144,
+    "bounds": {
+      "min": [
+        26,
+        26,
+        11
+      ],
+      "max": [
+        38,
+        38,
+        43
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\potion_health_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\potion_health_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\potion_health_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\potion_health_res64_codex.mtl"
+  },
+  {
+    "name": "potion_mana_res64_codex",
+    "description": "Cute glass mana potion with a blue liquid glow, cork top, and a soft star label.",
+    "resolution": 64,
+    "occupied_voxels": 2192,
+    "quad_faces": 1572,
+    "triangles": 3144,
+    "bounds": {
+      "min": [
+        26,
+        26,
+        11
+      ],
+      "max": [
+        38,
+        38,
+        43
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\potion_mana_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\potion_mana_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\potion_mana_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\potion_mana_res64_codex.mtl"
+  },
+  {
+    "name": "potion_stamina_res64_codex",
+    "description": "Cute stamina potion bottle with a soft green glow, leaf accents, and a chunky cork.",
+    "resolution": 64,
+    "occupied_voxels": 3967,
+    "quad_faces": 2346,
+    "triangles": 4692,
+    "bounds": {
+      "min": [
+        24,
+        20,
+        7
+      ],
+      "max": [
+        40,
+        37,
+        41
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\potion_stamina_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\potion_stamina_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\potion_stamina_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\potion_stamina_res64_codex.mtl"
+  },
+  {
+    "name": "sandwich_club_res64_codex",
+    "description": "Cute triple-decker club sandwich with soft bread, fillings, and a neat stacked look.",
+    "resolution": 64,
+    "occupied_voxels": 9478,
+    "quad_faces": 3114,
+    "triangles": 6228,
+    "bounds": {
+      "min": [
+        20,
+        23,
+        16
+      ],
+      "max": [
+        44,
+        41,
+        39
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\sandwich_club_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\sandwich_club_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\sandwich_club_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\sandwich_club_res64_codex.mtl"
+  },
+  {
+    "name": "sensor_module_res64_codex",
+    "description": "Cute sensor module with a bright lens, tiny antenna, and a compact gadget body.",
+    "resolution": 64,
+    "occupied_voxels": 4212,
+    "quad_faces": 2260,
+    "triangles": 4520,
+    "bounds": {
+      "min": [
+        21,
+        24,
+        18
+      ],
+      "max": [
+        45,
+        40,
+        40
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\sensor_module_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\sensor_module_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\sensor_module_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\sensor_module_res64_codex.mtl"
+  },
+  {
+    "name": "soda_can_res64_codex",
+    "description": "Cute soda can with a glossy band, pull-tab top, and a bold playful label stripe.",
+    "resolution": 64,
+    "occupied_voxels": 3322,
+    "quad_faces": 1820,
+    "triangles": 3640,
+    "bounds": {
+      "min": [
+        26,
+        26,
+        7
+      ],
+      "max": [
+        38,
+        38,
+        37
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\soda_can_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\soda_can_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\soda_can_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\soda_can_res64_codex.mtl"
+  },
+  {
+    "name": "spice_tin_res64_codex",
+    "description": "Cute round spice tin with a snug lid and a bold little label band.",
+    "resolution": 64,
+    "occupied_voxels": 2719,
+    "quad_faces": 1470,
+    "triangles": 2940,
+    "bounds": {
+      "min": [
+        25,
+        26,
+        11
+      ],
+      "max": [
+        37,
+        38,
+        33
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\spice_tin_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\spice_tin_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\spice_tin_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\spice_tin_res64_codex.mtl"
+  },
+  {
+    "name": "sushi_roll_res64_codex",
+    "description": "Cute maki roll with a compact cylindrical silhouette and colorful filling.",
+    "resolution": 64,
+    "occupied_voxels": 3973,
+    "quad_faces": 1782,
+    "triangles": 3564,
+    "bounds": {
+      "min": [
+        18,
+        26,
+        22
+      ],
+      "max": [
+        46,
+        38,
+        34
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\sushi_roll_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\sushi_roll_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\sushi_roll_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\sushi_roll_res64_codex.mtl"
+  },
+  {
+    "name": "syringe_pack_res64_codex",
+    "description": "Cute compact syringe pack with two visible syringes, a soft case, and clean medical colors.",
+    "resolution": 64,
+    "occupied_voxels": 10012,
+    "quad_faces": 3266,
+    "triangles": 6532,
+    "bounds": {
+      "min": [
+        14,
+        23,
+        11
+      ],
+      "max": [
+        50,
+        41,
+        32
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\syringe_pack_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\syringe_pack_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\syringe_pack_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\syringe_pack_res64_codex.mtl"
+  },
+  {
+    "name": "tomato_crate_res64_codex",
+    "description": "Cute farm tomato crate with open slats and a pile of glossy tomatoes.",
+    "resolution": 64,
+    "occupied_voxels": 4850,
+    "quad_faces": 3836,
+    "triangles": 7672,
+    "bounds": {
+      "min": [
+        21,
+        23,
+        13
+      ],
+      "max": [
+        43,
+        41,
+        38
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\tomato_crate_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\tomato_crate_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\tomato_crate_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\tomato_crate_res64_codex.mtl"
+  },
+  {
+    "name": "wheat_bundle_res64_codex",
+    "description": "Cute tied wheat bundle with tall stems, puffy grain heads, and a bright ribbon knot.",
+    "resolution": 64,
+    "occupied_voxels": 1466,
+    "quad_faces": 2296,
+    "triangles": 4592,
+    "bounds": {
+      "min": [
+        24,
+        26,
+        7
+      ],
+      "max": [
+        40,
+        36,
+        48
+      ]
+    },
+    "source_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Tools\\voxel_farm_animals\\specs\\dummy50\\wheat_bundle_res64_codex.json",
+    "vox_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\wheat_bundle_res64_codex.vox",
+    "obj_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\wheat_bundle_res64_codex.obj",
+    "mtl_path": "D:\\github\\ue5_codex\\SimpleMeshBuilder\\Generated\\VoxelFarmAnimals\\dummy50\\wheat_bundle_res64_codex.mtl"
+  }
+]
