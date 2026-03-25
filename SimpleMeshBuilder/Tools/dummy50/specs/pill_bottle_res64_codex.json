@@ -1,0 +1,71 @@
+{
+  "name": "pill_bottle_res64_codex",
+  "resolution": 64,
+  "description": "Cute pill bottle with a rounded orange body, white cap, and a few scattered tablets.",
+  "palette": {
+    "bottle": "F2B24B",
+    "cap": "EDEDED",
+    "label": "FFF7E8",
+    "pill_white": "FAFAFA",
+    "pill_blue": "5A97F2",
+    "outline": "C07B26"
+  },
+  "primitives": [
+    {
+      "name": "body",
+      "shape": "cylinder_z",
+      "material": "bottle",
+      "center": [32, 31, 17],
+      "size": [16, 16, 24],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "neck",
+      "shape": "cylinder_z",
+      "material": "bottle",
+      "center": [32, 31, 27],
+      "size": [10, 10, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cap",
+      "shape": "box",
+      "material": "cap",
+      "center": [32, 31, 31],
+      "size": [14, 14, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "label",
+      "shape": "box",
+      "material": "label",
+      "center": [32, 38, 18],
+      "size": [12, 2, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "pill_left",
+      "shape": "ellipsoid",
+      "material": "pill_white",
+      "center": [25, 24, 19],
+      "size": [4, 3, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "pill_right",
+      "shape": "ellipsoid",
+      "material": "pill_blue",
+      "center": [39, 24, 19],
+      "size": [4, 3, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "pill_front",
+      "shape": "ellipsoid",
+      "material": "pill_white",
+      "center": [32, 42, 15],
+      "size": [5, 3, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

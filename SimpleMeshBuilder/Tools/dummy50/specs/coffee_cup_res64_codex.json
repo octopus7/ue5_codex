@@ -1,0 +1,68 @@
+{
+  "name": "coffee_cup_res64_codex",
+  "resolution": 64,
+  "description": "Cute takeaway coffee cup with a lid, warm sleeve, and slightly tapered friendly shape.",
+  "palette": {
+    "cup": "F1E3D0",
+    "lid": "5D4A3C",
+    "sleeve": "C98652",
+    "coffee": "6B4B34",
+    "logo": "FFF5E5"
+  },
+  "primitives": [
+    {
+      "name": "cup_body",
+      "shape": "cylinder_z",
+      "material": "cup",
+      "operation": "add",
+      "center": [32, 32, 18],
+      "size": [14, 14, 22],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "coffee_fill",
+      "shape": "cylinder_z",
+      "material": "coffee",
+      "operation": "paint",
+      "center": [32, 32, 24],
+      "size": [12, 12, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "sleeve",
+      "shape": "cylinder_z",
+      "material": "sleeve",
+      "operation": "paint",
+      "center": [32, 32, 16],
+      "size": [14, 14, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "lid",
+      "shape": "ellipsoid",
+      "material": "lid",
+      "operation": "add",
+      "center": [32, 32, 31],
+      "size": [15, 15, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "sip_spout",
+      "shape": "box",
+      "material": "lid",
+      "operation": "add",
+      "center": [38, 32, 33],
+      "size": [4, 4, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "logo_patch",
+      "shape": "box",
+      "material": "logo",
+      "operation": "paint",
+      "center": [32, 32, 16],
+      "size": [5, 5, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "name": "potion_elixir_res64_codex",
+  "resolution": 64,
+  "description": "Cute elixir bottle with bright blue liquid, glowing orbs, and a little star crest.",
+  "palette": {
+    "glass": "E9ECFA",
+    "liquid": "7DAEFF",
+    "cork": "B98E68",
+    "aura": "BFE0FF",
+    "star": "FFD968",
+    "label": "F5E6FF"
+  },
+  "primitives": [
+    {
+      "name": "body_glass",
+      "shape": "ellipsoid",
+      "material": "glass",
+      "center": [32, 28, 18],
+      "size": [18, 18, 24],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "inner_liquid",
+      "shape": "ellipsoid",
+      "material": "liquid",
+      "center": [32, 28, 14],
+      "size": [14, 14, 14],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "neck",
+      "shape": "cylinder_z",
+      "material": "glass",
+      "center": [32, 28, 33],
+      "size": [8, 8, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cork",
+      "shape": "box",
+      "material": "cork",
+      "center": [32, 28, 40],
+      "size": [8, 8, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "star_vertical",
+      "shape": "box",
+      "material": "star",
+      "center": [32, 28, 29],
+      "size": [2, 8, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "star_horizontal",
+      "shape": "box",
+      "material": "star",
+      "center": [32, 28, 29],
+      "size": [8, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "left_aura",
+      "shape": "ellipsoid",
+      "material": "aura",
+      "center": [24, 22, 24],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_aura",
+      "shape": "ellipsoid",
+      "material": "aura",
+      "center": [40, 22, 24],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

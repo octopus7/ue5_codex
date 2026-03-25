@@ -1,0 +1,105 @@
+{
+  "name": "disinfectant_spray_res64_codex",
+  "resolution": 64,
+  "description": "Cute disinfectant spray bottle with a rounded trigger, glossy cap, and bright label stripe.",
+  "palette": {
+    "bottle": "74C7A4",
+    "bottle_dark": "3D8F6F",
+    "label": "F5F6E8",
+    "label_accent": "D9E36D",
+    "trigger": "D9DEE8",
+    "nozzle": "5A6272"
+  },
+  "primitives": [
+    {
+      "name": "bottle_body",
+      "shape": "box",
+      "material": "bottle",
+      "operation": "add",
+      "center": [32, 32, 24],
+      "size": [18, 16, 20],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "body_rounding",
+      "shape": "ellipsoid",
+      "material": "bottle",
+      "operation": "add",
+      "center": [32, 32, 24],
+      "size": [11, 10, 13],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "neck",
+      "shape": "box",
+      "material": "bottle_dark",
+      "operation": "add",
+      "center": [32, 32, 37],
+      "size": [10, 9, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "trigger_body",
+      "shape": "box",
+      "material": "trigger",
+      "operation": "add",
+      "center": [23, 32, 40],
+      "size": [7, 6, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "trigger_handle",
+      "shape": "ellipsoid",
+      "material": "trigger",
+      "operation": "add",
+      "center": [20, 32, 45],
+      "size": [4, 5, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "nozzle",
+      "shape": "box",
+      "material": "nozzle",
+      "operation": "add",
+      "center": [17, 32, 41],
+      "size": [5, 4, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "nozzle_tip",
+      "shape": "ellipsoid",
+      "material": "nozzle",
+      "operation": "add",
+      "center": [13, 32, 41],
+      "size": [3, 3, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "label_panel",
+      "shape": "box",
+      "material": "label",
+      "operation": "add",
+      "center": [32, 32, 23],
+      "size": [16, 12, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "label_accent",
+      "shape": "box",
+      "material": "label_accent",
+      "operation": "paint",
+      "center": [32, 32, 24],
+      "size": [12, 3, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "base",
+      "shape": "box",
+      "material": "bottle_dark",
+      "operation": "add",
+      "center": [32, 32, 14],
+      "size": [16, 14, 4],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

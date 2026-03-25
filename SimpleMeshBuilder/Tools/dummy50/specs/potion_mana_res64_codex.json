@@ -1,0 +1,68 @@
+{
+  "name": "potion_mana_res64_codex",
+  "resolution": 64,
+  "description": "Cute glass mana potion with a blue liquid glow, cork top, and a soft star label.",
+  "palette": {
+    "glass": "E3F1FF",
+    "liquid": "4A8EF0",
+    "cork": "9D744D",
+    "label": "F8F9FF",
+    "star": "A7D7FF"
+  },
+  "primitives": [
+    {
+      "name": "flask_body",
+      "shape": "ellipsoid",
+      "material": "liquid",
+      "operation": "add",
+      "center": [32, 32, 19],
+      "size": [13, 13, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "glass_shell",
+      "shape": "ellipsoid",
+      "material": "glass",
+      "operation": "paint",
+      "center": [32, 32, 20],
+      "size": [14, 14, 17],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "neck",
+      "shape": "cylinder_z",
+      "material": "glass",
+      "operation": "add",
+      "center": [32, 32, 34],
+      "size": [7, 7, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cork",
+      "shape": "box",
+      "material": "cork",
+      "operation": "add",
+      "center": [32, 32, 41],
+      "size": [8, 8, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "label",
+      "shape": "box",
+      "material": "label",
+      "operation": "paint",
+      "center": [32, 32, 15],
+      "size": [10, 8, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "star",
+      "shape": "box",
+      "material": "star",
+      "operation": "paint",
+      "center": [32, 32, 15],
+      "size": [4, 4, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

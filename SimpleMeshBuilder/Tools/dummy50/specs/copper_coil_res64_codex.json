@@ -1,0 +1,104 @@
+{
+  "name": "copper_coil_res64_codex",
+  "resolution": 64,
+  "description": "Cute copper wire coil bundled on a small spool, with soft rounded workshop shapes.",
+  "palette": {
+    "copper": "C67A3E",
+    "copper_dark": "8C4E27",
+    "spool_gray": "B7BFC7",
+    "paper_cream": "F1E1B6",
+    "accent_teal": "6FB3A7"
+  },
+  "primitives": [
+    {
+      "name": "spool_core",
+      "shape": "cylinder_z",
+      "material": "spool_gray",
+      "operation": "add",
+      "center": [32, 32, 26],
+      "size": [16, 16, 20],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "flange_bottom",
+      "shape": "cylinder_z",
+      "material": "spool_gray",
+      "operation": "add",
+      "center": [32, 32, 18],
+      "size": [24, 24, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "flange_top",
+      "shape": "cylinder_z",
+      "material": "spool_gray",
+      "operation": "add",
+      "center": [32, 32, 34],
+      "size": [24, 24, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "coil_ring_1",
+      "shape": "cylinder_z",
+      "material": "copper",
+      "operation": "add",
+      "center": [32, 32, 22],
+      "size": [20, 20, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "coil_ring_2",
+      "shape": "cylinder_z",
+      "material": "copper_dark",
+      "operation": "add",
+      "center": [32, 32, 25],
+      "size": [18, 18, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "coil_ring_3",
+      "shape": "cylinder_z",
+      "material": "copper",
+      "operation": "add",
+      "center": [32, 32, 28],
+      "size": [20, 20, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "coil_ring_4",
+      "shape": "cylinder_z",
+      "material": "copper_dark",
+      "operation": "add",
+      "center": [32, 32, 31],
+      "size": [18, 18, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tail_strip",
+      "shape": "box",
+      "material": "copper",
+      "operation": "add",
+      "center": [44, 32, 24],
+      "size": [10, 2, 2],
+      "rotation_deg": [0, 0, 18]
+    },
+    {
+      "name": "tail_tip",
+      "shape": "sphere",
+      "material": "accent_teal",
+      "operation": "add",
+      "center": [49, 34, 25],
+      "size": [2, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "label_tag",
+      "shape": "box",
+      "material": "paper_cream",
+      "operation": "add",
+      "center": [32, 40, 26],
+      "size": [6, 2, 6],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

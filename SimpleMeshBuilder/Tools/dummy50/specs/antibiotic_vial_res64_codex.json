@@ -1,0 +1,79 @@
+{
+  "name": "antibiotic_vial_res64_codex",
+  "resolution": 64,
+  "description": "Cute antibiotic vial with a slim glass body, blue medicine, and a clean warning stripe.",
+  "palette": {
+    "glass": "EAF8F4",
+    "medicine": "86CAE7",
+    "cap": "A66D58",
+    "label": "F7F6EF",
+    "stripe": "3EA86D",
+    "cross": "D94E4E"
+  },
+  "primitives": [
+    {
+      "name": "body_glass",
+      "shape": "ellipsoid",
+      "material": "glass",
+      "center": [32, 31, 18],
+      "size": [12, 12, 22],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "medicine",
+      "shape": "ellipsoid",
+      "material": "medicine",
+      "center": [32, 31, 14],
+      "size": [9, 9, 14],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "neck",
+      "shape": "cylinder_z",
+      "material": "glass",
+      "center": [32, 31, 29],
+      "size": [7, 7, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cap",
+      "shape": "box",
+      "material": "cap",
+      "center": [32, 31, 36],
+      "size": [7, 7, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "label",
+      "shape": "box",
+      "material": "label",
+      "center": [32, 38, 18],
+      "size": [10, 2, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "stripe",
+      "shape": "box",
+      "material": "stripe",
+      "center": [32, 38, 18],
+      "size": [10, 1, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cross_vertical",
+      "shape": "box",
+      "material": "cross",
+      "center": [32, 38, 18],
+      "size": [2, 1, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cross_horizontal",
+      "shape": "box",
+      "material": "cross",
+      "center": [32, 38, 18],
+      "size": [6, 1, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

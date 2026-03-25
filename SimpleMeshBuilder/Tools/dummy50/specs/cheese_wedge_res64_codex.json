@@ -1,0 +1,66 @@
+{
+  "name": "cheese_wedge_res64_codex",
+  "resolution": 64,
+  "description": "Cute chunky cheese wedge with a tapered silhouette and round holes.",
+  "palette": {
+    "cheese": "F4C542",
+    "rind": "E09B2D",
+    "shadow": "D9A52F"
+  },
+  "primitives": [
+    {
+      "name": "wedge_base",
+      "shape": "box",
+      "material": "cheese",
+      "operation": "add",
+      "center": [29, 32, 20],
+      "size": [26, 18, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "wedge_top",
+      "shape": "box",
+      "material": "cheese",
+      "operation": "add",
+      "center": [25, 32, 26],
+      "size": [18, 14, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "rind_edge",
+      "shape": "box",
+      "material": "rind",
+      "operation": "add",
+      "center": [17, 32, 23],
+      "size": [2, 16, 11],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "hole_1",
+      "shape": "sphere",
+      "material": "shadow",
+      "operation": "remove",
+      "center": [26, 31, 24],
+      "size": [3, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "hole_2",
+      "shape": "sphere",
+      "material": "shadow",
+      "operation": "remove",
+      "center": [31, 35, 22],
+      "size": [2, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "hole_3",
+      "shape": "sphere",
+      "material": "shadow",
+      "operation": "remove",
+      "center": [21, 28, 21],
+      "size": [2, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

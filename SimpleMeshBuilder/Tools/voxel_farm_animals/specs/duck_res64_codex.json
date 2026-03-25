@@ -1,0 +1,142 @@
+{
+  "name": "duck_res64_codex",
+  "resolution": 64,
+  "description": "Cute standing farm duck with a rounded body, short neck, bright beak, and sturdy little legs.",
+  "palette": {
+    "feather": "D9E9E6",
+    "shadow": "B9C9C4",
+    "beak": "F2A23A",
+    "beak_shadow": "D37A1E",
+    "leg": "D28A2E",
+    "foot": "B56B20",
+    "eye": "2B2522"
+  },
+  "primitives": [
+    {
+      "name": "body",
+      "shape": "ellipsoid",
+      "material": "feather",
+      "operation": "add",
+      "center": [31, 32, 27],
+      "size": [24, 18, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "chest",
+      "shape": "ellipsoid",
+      "material": "shadow",
+      "operation": "add",
+      "center": [24, 32, 28],
+      "size": [12, 14, 14],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tail",
+      "shape": "ellipsoid",
+      "material": "shadow",
+      "operation": "add",
+      "center": [41, 32, 29],
+      "size": [7, 7, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "neck",
+      "shape": "ellipsoid",
+      "material": "feather",
+      "operation": "add",
+      "center": [23, 32, 35],
+      "size": [7, 8, 10],
+      "rotation_deg": [0, 0, -6]
+    },
+    {
+      "name": "head",
+      "shape": "ellipsoid",
+      "material": "feather",
+      "operation": "add",
+      "center": [16, 32, 40],
+      "size": [11, 10, 10],
+      "rotation_deg": [0, 0, -8]
+    },
+    {
+      "name": "beak_base",
+      "shape": "ellipsoid",
+      "material": "beak",
+      "operation": "add",
+      "center": [9, 32, 39],
+      "size": [8, 6, 4],
+      "rotation_deg": [0, 0, -8]
+    },
+    {
+      "name": "beak_tip",
+      "shape": "ellipsoid",
+      "material": "beak_shadow",
+      "operation": "add",
+      "center": [5, 32, 39],
+      "size": [3, 4, 3],
+      "rotation_deg": [0, 0, -8]
+    },
+    {
+      "name": "left_wing",
+      "shape": "ellipsoid",
+      "material": "shadow",
+      "operation": "add",
+      "center": [30, 23, 27],
+      "size": [7, 5, 8],
+      "rotation_deg": [0, 0, 18]
+    },
+    {
+      "name": "right_wing",
+      "shape": "ellipsoid",
+      "material": "shadow",
+      "operation": "add",
+      "center": [30, 41, 27],
+      "size": [7, 5, 8],
+      "rotation_deg": [0, 0, -18]
+    },
+    {
+      "name": "left_leg",
+      "shape": "cylinder_z",
+      "material": "leg",
+      "operation": "add",
+      "center": [26, 28, 15],
+      "size": [3, 3, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_leg",
+      "shape": "cylinder_z",
+      "material": "leg",
+      "operation": "add",
+      "center": [26, 36, 15],
+      "size": [3, 3, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "left_foot",
+      "shape": "box",
+      "material": "foot",
+      "operation": "add",
+      "center": [26, 28, 6],
+      "size": [5, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_foot",
+      "shape": "box",
+      "material": "foot",
+      "operation": "add",
+      "center": [26, 36, 6],
+      "size": [5, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "eye",
+      "shape": "box",
+      "material": "eye",
+      "operation": "add",
+      "center": [16, 30, 41],
+      "size": [1, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

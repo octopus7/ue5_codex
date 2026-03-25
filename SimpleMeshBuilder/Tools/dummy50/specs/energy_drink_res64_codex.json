@@ -1,0 +1,59 @@
+{
+  "name": "energy_drink_res64_codex",
+  "resolution": 64,
+  "description": "Cute energy drink can with a lightning stripe, slim shape, and bright sporty colors.",
+  "palette": {
+    "can": "173F8A",
+    "lightning": "F7C447",
+    "cap": "EDEFF4",
+    "text": "FFFFFF",
+    "accent": "70C4FF"
+  },
+  "primitives": [
+    {
+      "name": "body",
+      "shape": "cylinder_z",
+      "material": "can",
+      "operation": "add",
+      "center": [32, 32, 21],
+      "size": [11, 11, 28],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "top",
+      "shape": "ellipsoid",
+      "material": "cap",
+      "operation": "add",
+      "center": [32, 32, 35],
+      "size": [12, 12, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tab",
+      "shape": "box",
+      "material": "accent",
+      "operation": "add",
+      "center": [36, 32, 36],
+      "size": [4, 4, 2],
+      "rotation_deg": [0, 0, 20]
+    },
+    {
+      "name": "lightning_stripe",
+      "shape": "box",
+      "material": "lightning",
+      "operation": "paint",
+      "center": [32, 32, 20],
+      "size": [7, 3, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "logo_text",
+      "shape": "box",
+      "material": "text",
+      "operation": "paint",
+      "center": [32, 32, 18],
+      "size": [5, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "name": "bandage_roll_res64_codex",
+  "resolution": 64,
+  "description": "Cute rolled bandage with soft wraps and a little red medical stripe.",
+  "palette": {
+    "bandage": "F1E3BF",
+    "shadow": "D3BE94",
+    "wrap": "D56B62",
+    "thread": "B58E63",
+    "highlight": "FFF9F2"
+  },
+  "primitives": [
+    {
+      "name": "roll_body",
+      "shape": "cylinder_x",
+      "material": "bandage",
+      "center": [32, 32, 20],
+      "size": [28, 18, 18],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "left_end_shadow",
+      "shape": "ellipsoid",
+      "material": "shadow",
+      "center": [18, 32, 20],
+      "size": [6, 14, 14],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_end_shadow",
+      "shape": "ellipsoid",
+      "material": "shadow",
+      "center": [46, 32, 20],
+      "size": [6, 14, 14],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "upper_wrap",
+      "shape": "box",
+      "material": "wrap",
+      "center": [32, 29, 20],
+      "size": [30, 3, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "lower_wrap",
+      "shape": "box",
+      "material": "wrap",
+      "center": [32, 35, 20],
+      "size": [30, 3, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "center_thread",
+      "shape": "box",
+      "material": "thread",
+      "center": [32, 32, 20],
+      "size": [4, 18, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "shine_strip",
+      "shape": "box",
+      "material": "highlight",
+      "center": [24, 26, 24],
+      "size": [3, 10, 3],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

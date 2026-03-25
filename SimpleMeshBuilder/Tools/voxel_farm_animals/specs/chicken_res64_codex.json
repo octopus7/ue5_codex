@@ -1,0 +1,152 @@
+{
+  "name": "chicken_res64_codex",
+  "resolution": 64,
+  "description": "Cute standing farm chicken with an oversized head, rounded body, bright comb, and short legs.",
+  "palette": {
+    "chicken_body": "F5F1E8",
+    "chicken_belly": "FFF7E8",
+    "chicken_wing": "D8D0C3",
+    "chicken_beak": "F2B544",
+    "chicken_leg": "D98C2C",
+    "chicken_comb": "D94B4B",
+    "chicken_eye": "2B201C"
+  },
+  "primitives": [
+    {
+      "name": "body",
+      "shape": "ellipsoid",
+      "material": "chicken_body",
+      "center": [28, 32, 23],
+      "size": [24, 18, 18],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "belly",
+      "shape": "ellipsoid",
+      "material": "chicken_belly",
+      "center": [26, 32, 21],
+      "size": [15, 10, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "head",
+      "shape": "ellipsoid",
+      "material": "chicken_body",
+      "center": [45, 32, 31],
+      "size": [16, 14, 14],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "beak",
+      "shape": "ellipsoid",
+      "material": "chicken_beak",
+      "center": [56, 32, 30],
+      "size": [7, 5, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "comb",
+      "shape": "ellipsoid",
+      "material": "chicken_comb",
+      "center": [45, 32, 40],
+      "size": [7, 5, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "comb_lobe_left",
+      "shape": "sphere",
+      "material": "chicken_comb",
+      "center": [43, 29, 38],
+      "size": [3, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "comb_lobe_right",
+      "shape": "sphere",
+      "material": "chicken_comb",
+      "center": [47, 35, 38],
+      "size": [3, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "wattle",
+      "shape": "ellipsoid",
+      "material": "chicken_comb",
+      "center": [50, 32, 26],
+      "size": [4, 3, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "eye",
+      "shape": "box",
+      "material": "chicken_eye",
+      "center": [49, 35, 31],
+      "size": [1, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "wing_left",
+      "shape": "ellipsoid",
+      "material": "chicken_wing",
+      "center": [31, 26, 24],
+      "size": [9, 4, 11],
+      "rotation_deg": [0, -12, 18]
+    },
+    {
+      "name": "wing_right",
+      "shape": "ellipsoid",
+      "material": "chicken_wing",
+      "center": [31, 38, 24],
+      "size": [9, 4, 11],
+      "rotation_deg": [0, 12, -18]
+    },
+    {
+      "name": "tail_feather_1",
+      "shape": "ellipsoid",
+      "material": "chicken_wing",
+      "center": [16, 30, 29],
+      "size": [7, 4, 8],
+      "rotation_deg": [0, 0, -28]
+    },
+    {
+      "name": "tail_feather_2",
+      "shape": "ellipsoid",
+      "material": "chicken_wing",
+      "center": [15, 34, 27],
+      "size": [6, 4, 7],
+      "rotation_deg": [0, 0, 18]
+    },
+    {
+      "name": "left_leg",
+      "shape": "box",
+      "material": "chicken_leg",
+      "center": [24, 27, 8],
+      "size": [4, 4, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_leg",
+      "shape": "box",
+      "material": "chicken_leg",
+      "center": [24, 37, 8],
+      "size": [4, 4, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "left_foot",
+      "shape": "box",
+      "material": "chicken_leg",
+      "center": [23, 27, 3],
+      "size": [6, 4, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_foot",
+      "shape": "box",
+      "material": "chicken_leg",
+      "center": [23, 37, 3],
+      "size": [6, 4, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "name": "inhaler_blue_res64_codex",
+  "resolution": 64,
+  "description": "Cute blue inhaler with a chunky body, small button, and a stubby mouthpiece.",
+  "palette": {
+    "blue": "5F99E6",
+    "blue_dark": "3868B7",
+    "white": "EEF3F8",
+    "gray": "B9C2CE",
+    "mint": "92D7C4",
+    "nib": "2A2E36"
+  },
+  "primitives": [
+    {
+      "name": "main_body",
+      "shape": "box",
+      "material": "blue",
+      "operation": "add",
+      "center": [32, 32, 28],
+      "size": [16, 14, 22],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "body_rounding",
+      "shape": "ellipsoid",
+      "material": "blue",
+      "operation": "add",
+      "center": [32, 32, 28],
+      "size": [9, 8, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "top_cap",
+      "shape": "box",
+      "material": "white",
+      "operation": "add",
+      "center": [32, 32, 39],
+      "size": [14, 12, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "mouthpiece",
+      "shape": "box",
+      "material": "gray",
+      "operation": "add",
+      "center": [22, 32, 24],
+      "size": [7, 6, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "mouthpiece_tip",
+      "shape": "ellipsoid",
+      "material": "gray",
+      "operation": "add",
+      "center": [18, 32, 24],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "button",
+      "shape": "box",
+      "material": "mint",
+      "operation": "add",
+      "center": [36, 29, 31],
+      "size": [4, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "button_shadow",
+      "shape": "box",
+      "material": "blue_dark",
+      "operation": "paint",
+      "center": [36, 29, 30],
+      "size": [3, 2, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "brand_band",
+      "shape": "box",
+      "material": "blue_dark",
+      "operation": "paint",
+      "center": [32, 32, 23],
+      "size": [12, 10, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "bottom_base",
+      "shape": "box",
+      "material": "white",
+      "operation": "add",
+      "center": [32, 32, 16],
+      "size": [14, 12, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "base_shadow",
+      "shape": "box",
+      "material": "gray",
+      "operation": "paint",
+      "center": [32, 32, 15],
+      "size": [12, 10, 1],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

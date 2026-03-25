@@ -1,0 +1,213 @@
+{
+  "name": "rabbit_res64_codex",
+  "resolution": 64,
+  "description": "Cute standing farm rabbit with oversized upright ears, rounded cheeks, and a soft fluffy silhouette.",
+  "palette": {
+    "white": "F4F0EA",
+    "gray": "B8B2AA",
+    "pink": "E6B2B0",
+    "cream": "D7C9A4",
+    "brown": "8B6B52",
+    "nose": "C98E88"
+  },
+  "primitives": [
+    {
+      "name": "body",
+      "shape": "ellipsoid",
+      "material": "white",
+      "operation": "add",
+      "center": [31, 32, 22],
+      "size": [18, 16, 20],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "chest",
+      "shape": "ellipsoid",
+      "material": "white",
+      "operation": "add",
+      "center": [24, 32, 20],
+      "size": [12, 12, 14],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "head",
+      "shape": "ellipsoid",
+      "material": "white",
+      "operation": "add",
+      "center": [43, 31, 31],
+      "size": [12, 11, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cheek",
+      "shape": "ellipsoid",
+      "material": "white",
+      "operation": "paint",
+      "center": [44, 31, 28],
+      "size": [8, 7, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "muzzle",
+      "shape": "ellipsoid",
+      "material": "nose",
+      "operation": "add",
+      "center": [49, 31, 28],
+      "size": [6, 5, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "nose_patch",
+      "shape": "ellipsoid",
+      "material": "pink",
+      "operation": "paint",
+      "center": [49, 31, 29],
+      "size": [3, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "left_eye_patch",
+      "shape": "ellipsoid",
+      "material": "gray",
+      "operation": "paint",
+      "center": [41, 35, 33],
+      "size": [4, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_eye_patch",
+      "shape": "ellipsoid",
+      "material": "gray",
+      "operation": "paint",
+      "center": [41, 27, 33],
+      "size": [4, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "inner_left_ear",
+      "shape": "cylinder_z",
+      "material": "pink",
+      "operation": "add",
+      "center": [44, 27, 46],
+      "size": [1, 1, 16],
+      "rotation_deg": [0, 0, -8]
+    },
+    {
+      "name": "inner_right_ear",
+      "shape": "cylinder_z",
+      "material": "pink",
+      "operation": "add",
+      "center": [44, 35, 46],
+      "size": [1, 1, 16],
+      "rotation_deg": [0, 0, 8]
+    },
+    {
+      "name": "left_ear",
+      "shape": "cylinder_z",
+      "material": "white",
+      "operation": "add",
+      "center": [44, 27, 45],
+      "size": [2, 2, 18],
+      "rotation_deg": [0, 0, -8]
+    },
+    {
+      "name": "right_ear",
+      "shape": "cylinder_z",
+      "material": "white",
+      "operation": "add",
+      "center": [44, 35, 45],
+      "size": [2, 2, 18],
+      "rotation_deg": [0, 0, 8]
+    },
+    {
+      "name": "front_left_leg",
+      "shape": "box",
+      "material": "white",
+      "operation": "add",
+      "center": [24, 28, 9],
+      "size": [2, 2, 14],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "front_right_leg",
+      "shape": "box",
+      "material": "white",
+      "operation": "add",
+      "center": [24, 36, 9],
+      "size": [2, 2, 14],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "rear_left_leg",
+      "shape": "box",
+      "material": "white",
+      "operation": "add",
+      "center": [34, 28, 9],
+      "size": [2, 2, 14],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "rear_right_leg",
+      "shape": "box",
+      "material": "white",
+      "operation": "add",
+      "center": [34, 36, 9],
+      "size": [2, 2, 14],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "paw_tint_front_left",
+      "shape": "box",
+      "material": "cream",
+      "operation": "paint",
+      "center": [24, 28, 3],
+      "size": [2, 2, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "paw_tint_front_right",
+      "shape": "box",
+      "material": "cream",
+      "operation": "paint",
+      "center": [24, 36, 3],
+      "size": [2, 2, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "paw_tint_rear_left",
+      "shape": "box",
+      "material": "cream",
+      "operation": "paint",
+      "center": [34, 28, 3],
+      "size": [2, 2, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "paw_tint_rear_right",
+      "shape": "box",
+      "material": "cream",
+      "operation": "paint",
+      "center": [34, 36, 3],
+      "size": [2, 2, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tail",
+      "shape": "sphere",
+      "material": "white",
+      "operation": "add",
+      "center": [18, 32, 24],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tail_shadow",
+      "shape": "sphere",
+      "material": "gray",
+      "operation": "paint",
+      "center": [18, 32, 24],
+      "size": [2, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

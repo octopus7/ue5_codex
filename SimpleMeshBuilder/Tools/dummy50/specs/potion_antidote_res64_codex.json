@@ -1,0 +1,79 @@
+{
+  "name": "potion_antidote_res64_codex",
+  "resolution": 64,
+  "description": "Cute antidote potion with a rounded glass body, mint liquid, and a bold medical cross.",
+  "palette": {
+    "glass": "F5F2E6",
+    "liquid": "90E676",
+    "cork": "B78C63",
+    "label": "FFF5D9",
+    "cross": "E05252",
+    "shine": "FFFFFF"
+  },
+  "primitives": [
+    {
+      "name": "body_glass",
+      "shape": "ellipsoid",
+      "material": "glass",
+      "center": [32, 28, 18],
+      "size": [17, 17, 22],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "inner_liquid",
+      "shape": "ellipsoid",
+      "material": "liquid",
+      "center": [32, 28, 13],
+      "size": [13, 13, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "neck",
+      "shape": "cylinder_z",
+      "material": "glass",
+      "center": [32, 28, 31],
+      "size": [8, 8, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cork",
+      "shape": "box",
+      "material": "cork",
+      "center": [32, 28, 39],
+      "size": [8, 8, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "label",
+      "shape": "box",
+      "material": "label",
+      "center": [32, 35, 19],
+      "size": [10, 2, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cross_vertical",
+      "shape": "box",
+      "material": "cross",
+      "center": [32, 35, 19],
+      "size": [2, 2, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cross_horizontal",
+      "shape": "box",
+      "material": "cross",
+      "center": [32, 35, 19],
+      "size": [8, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "shine_orb",
+      "shape": "ellipsoid",
+      "material": "shine",
+      "center": [38, 24, 28],
+      "size": [3, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

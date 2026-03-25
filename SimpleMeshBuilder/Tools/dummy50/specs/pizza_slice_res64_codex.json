@@ -1,0 +1,77 @@
+{
+  "name": "pizza_slice_res64_codex",
+  "resolution": 64,
+  "description": "Cute exaggerated pizza slice with a broad crust and stacked toppings.",
+  "palette": {
+    "crust": "C88B43",
+    "cheese": "F5D65A",
+    "sauce": "D95A43",
+    "pepperoni": "B34035",
+    "shadow": "9C5B2A"
+  },
+  "primitives": [
+    {
+      "name": "crust",
+      "shape": "box",
+      "material": "crust",
+      "operation": "add",
+      "center": [26, 32, 18],
+      "size": [24, 18, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cheese_body",
+      "shape": "box",
+      "material": "cheese",
+      "operation": "add",
+      "center": [29, 32, 22],
+      "size": [20, 16, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "sauce_layer",
+      "shape": "box",
+      "material": "sauce",
+      "operation": "add",
+      "center": [31, 32, 25],
+      "size": [16, 12, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "pepperoni_1",
+      "shape": "sphere",
+      "material": "pepperoni",
+      "operation": "add",
+      "center": [28, 29, 26],
+      "size": [3, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "pepperoni_2",
+      "shape": "sphere",
+      "material": "pepperoni",
+      "operation": "add",
+      "center": [34, 35, 25],
+      "size": [3, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "pepperoni_3",
+      "shape": "sphere",
+      "material": "pepperoni",
+      "operation": "add",
+      "center": [24, 33, 24],
+      "size": [2, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "pepperoni_4",
+      "shape": "sphere",
+      "material": "pepperoni",
+      "operation": "add",
+      "center": [32, 28, 27],
+      "size": [2, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "name": "sushi_roll_res64_codex",
+  "resolution": 64,
+  "description": "Cute maki roll with a compact cylindrical silhouette and colorful filling.",
+  "palette": {
+    "nori": "2D3B36",
+    "rice": "F1F0E6",
+    "salmon": "F49A64",
+    "avocado": "93C47D"
+  },
+  "primitives": [
+    {
+      "name": "outer_nori",
+      "shape": "cylinder_x",
+      "material": "nori",
+      "operation": "add",
+      "center": [32, 32, 28],
+      "size": [28, 13, 13],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "rice_layer",
+      "shape": "cylinder_x",
+      "material": "rice",
+      "operation": "add",
+      "center": [32, 32, 28],
+      "size": [24, 10, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "salmon_core",
+      "shape": "cylinder_x",
+      "material": "salmon",
+      "operation": "add",
+      "center": [32, 32, 28],
+      "size": [18, 5, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "avocado_core",
+      "shape": "cylinder_x",
+      "material": "avocado",
+      "operation": "add",
+      "center": [32, 32, 28],
+      "size": [12, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

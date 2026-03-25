@@ -1,0 +1,121 @@
+{
+  "name": "syringe_pack_res64_codex",
+  "resolution": 64,
+  "description": "Cute compact syringe pack with two visible syringes, a soft case, and clean medical colors.",
+  "palette": {
+    "case": "DCE8F6",
+    "case_shadow": "AFC4DA",
+    "barrel": "FBFBFB",
+    "plunger": "6D7F93",
+    "fluid": "68CDE8",
+    "needle": "9FB6CB",
+    "label": "4B85D8",
+    "cross": "E24A4A"
+  },
+  "primitives": [
+    {
+      "name": "case_body",
+      "shape": "box",
+      "material": "case",
+      "center": [32, 32, 18],
+      "size": [26, 18, 14],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "case_lid",
+      "shape": "box",
+      "material": "case_shadow",
+      "center": [32, 32, 26],
+      "size": [26, 18, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "label",
+      "shape": "box",
+      "material": "label",
+      "center": [32, 35, 18],
+      "size": [14, 2, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cross_vertical",
+      "shape": "box",
+      "material": "cross",
+      "center": [32, 35, 18],
+      "size": [2, 2, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cross_horizontal",
+      "shape": "box",
+      "material": "cross",
+      "center": [32, 35, 18],
+      "size": [6, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "syringe_left_barrel",
+      "shape": "cylinder_x",
+      "material": "barrel",
+      "center": [24, 27, 29],
+      "size": [16, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "syringe_left_plunger",
+      "shape": "box",
+      "material": "plunger",
+      "center": [16, 27, 29],
+      "size": [4, 6, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "syringe_left_fluid",
+      "shape": "box",
+      "material": "fluid",
+      "center": [24, 27, 29],
+      "size": [10, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "syringe_left_needle",
+      "shape": "box",
+      "material": "needle",
+      "center": [33, 27, 29],
+      "size": [4, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "syringe_right_barrel",
+      "shape": "cylinder_x",
+      "material": "barrel",
+      "center": [40, 37, 29],
+      "size": [16, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "syringe_right_plunger",
+      "shape": "box",
+      "material": "plunger",
+      "center": [48, 37, 29],
+      "size": [4, 6, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "syringe_right_fluid",
+      "shape": "box",
+      "material": "fluid",
+      "center": [40, 37, 29],
+      "size": [10, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "syringe_right_needle",
+      "shape": "box",
+      "material": "needle",
+      "center": [31, 37, 29],
+      "size": [4, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

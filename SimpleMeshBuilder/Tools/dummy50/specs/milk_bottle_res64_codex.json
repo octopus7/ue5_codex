@@ -1,0 +1,68 @@
+{
+  "name": "milk_bottle_res64_codex",
+  "resolution": 64,
+  "description": "Cute glass milk bottle with a rounded body, little cap, and a friendly label band.",
+  "palette": {
+    "glass": "EAF4FF",
+    "milk": "F8F7F1",
+    "cap": "6A7D8F",
+    "label": "DCD1B8",
+    "label_text": "7A5537"
+  },
+  "primitives": [
+    {
+      "name": "body",
+      "shape": "cylinder_z",
+      "material": "milk",
+      "operation": "add",
+      "center": [32, 32, 20],
+      "size": [14, 14, 28],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "shoulder",
+      "shape": "ellipsoid",
+      "material": "glass",
+      "operation": "add",
+      "center": [32, 32, 37],
+      "size": [11, 11, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "neck",
+      "shape": "cylinder_z",
+      "material": "glass",
+      "operation": "add",
+      "center": [32, 32, 43],
+      "size": [8, 8, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cap",
+      "shape": "box",
+      "material": "cap",
+      "operation": "add",
+      "center": [32, 32, 52],
+      "size": [10, 10, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "label_band",
+      "shape": "cylinder_z",
+      "material": "label",
+      "operation": "paint",
+      "center": [32, 32, 18],
+      "size": [13, 13, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "label_text_patch",
+      "shape": "box",
+      "material": "label_text",
+      "operation": "paint",
+      "center": [32, 32, 18],
+      "size": [6, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

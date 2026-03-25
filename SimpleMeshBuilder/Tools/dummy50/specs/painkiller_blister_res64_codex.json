@@ -1,0 +1,105 @@
+{
+  "name": "painkiller_blister_res64_codex",
+  "resolution": 64,
+  "description": "Cute pill blister pack with rounded tablets and a bright foil backing.",
+  "palette": {
+    "foil": "D8DEE8",
+    "foil_dark": "AAB4C2",
+    "pill": "F4E8A7",
+    "pill_dark": "D6C568",
+    "accent": "E98982",
+    "ink": "3A3A44"
+  },
+  "primitives": [
+    {
+      "name": "backing",
+      "shape": "box",
+      "material": "foil",
+      "operation": "add",
+      "center": [32, 32, 24],
+      "size": [24, 16, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "foil_bevel",
+      "shape": "box",
+      "material": "foil_dark",
+      "operation": "paint",
+      "center": [32, 32, 23],
+      "size": [22, 14, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "pill_1",
+      "shape": "sphere",
+      "material": "pill",
+      "operation": "add",
+      "center": [24, 26, 27],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "pill_2",
+      "shape": "sphere",
+      "material": "pill",
+      "operation": "add",
+      "center": [24, 32, 27],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "pill_3",
+      "shape": "sphere",
+      "material": "pill",
+      "operation": "add",
+      "center": [24, 38, 27],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "pill_4",
+      "shape": "sphere",
+      "material": "pill",
+      "operation": "add",
+      "center": [32, 26, 27],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "pill_5",
+      "shape": "sphere",
+      "material": "pill",
+      "operation": "add",
+      "center": [32, 32, 27],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "pill_6",
+      "shape": "sphere",
+      "material": "pill",
+      "operation": "add",
+      "center": [32, 38, 27],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "pill_highlight",
+      "shape": "sphere",
+      "material": "accent",
+      "operation": "paint",
+      "center": [32, 32, 28],
+      "size": [2, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "pack_label",
+      "shape": "box",
+      "material": "accent",
+      "operation": "paint",
+      "center": [36, 32, 24],
+      "size": [8, 3, 1],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

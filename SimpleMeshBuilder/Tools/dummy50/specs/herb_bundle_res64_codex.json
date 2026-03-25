@@ -1,0 +1,105 @@
+{
+  "name": "herb_bundle_res64_codex",
+  "resolution": 64,
+  "description": "Cute tied herb bundle with several leafy stems and a bright twine knot.",
+  "palette": {
+    "leaf_light": "87B86A",
+    "leaf": "5E9B4C",
+    "leaf_dark": "44753A",
+    "twine": "C89A5A",
+    "twine_dark": "9A703E",
+    "shadow": "3E5D2E"
+  },
+  "primitives": [
+    {
+      "name": "stem_1",
+      "shape": "cylinder_z",
+      "material": "leaf",
+      "operation": "add",
+      "center": [27, 29, 24],
+      "size": [2, 2, 26],
+      "rotation_deg": [0, 0, -10]
+    },
+    {
+      "name": "stem_2",
+      "shape": "cylinder_z",
+      "material": "leaf_light",
+      "operation": "add",
+      "center": [30, 32, 24],
+      "size": [2, 2, 28],
+      "rotation_deg": [0, 0, 6]
+    },
+    {
+      "name": "stem_3",
+      "shape": "cylinder_z",
+      "material": "leaf_dark",
+      "operation": "add",
+      "center": [34, 35, 23],
+      "size": [2, 2, 24],
+      "rotation_deg": [0, 0, 14]
+    },
+    {
+      "name": "leaf_1",
+      "shape": "ellipsoid",
+      "material": "leaf_light",
+      "operation": "add",
+      "center": [25, 28, 39],
+      "size": [7, 4, 3],
+      "rotation_deg": [0, 0, -35]
+    },
+    {
+      "name": "leaf_2",
+      "shape": "ellipsoid",
+      "material": "leaf",
+      "operation": "add",
+      "center": [31, 34, 41],
+      "size": [8, 5, 4],
+      "rotation_deg": [0, 0, 20]
+    },
+    {
+      "name": "leaf_3",
+      "shape": "ellipsoid",
+      "material": "leaf_dark",
+      "operation": "add",
+      "center": [36, 38, 37],
+      "size": [7, 4, 3],
+      "rotation_deg": [0, 0, 36]
+    },
+    {
+      "name": "leaf_4",
+      "shape": "ellipsoid",
+      "material": "leaf",
+      "operation": "add",
+      "center": [34, 31, 36],
+      "size": [6, 4, 3],
+      "rotation_deg": [0, 0, -18]
+    },
+    {
+      "name": "tie_band",
+      "shape": "box",
+      "material": "twine_dark",
+      "operation": "paint",
+      "center": [31, 32, 18],
+      "size": [8, 8, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "twine_wrap",
+      "shape": "box",
+      "material": "twine",
+      "operation": "paint",
+      "center": [31, 32, 17],
+      "size": [6, 6, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "leaf_shadow",
+      "shape": "ellipsoid",
+      "material": "shadow",
+      "operation": "paint",
+      "center": [31, 32, 31],
+      "size": [10, 7, 4],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

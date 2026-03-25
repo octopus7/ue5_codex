@@ -1,0 +1,232 @@
+{
+  "name": "horse_res64_codex",
+  "resolution": 64,
+  "description": "Cute farm horse with a rounded pony body, short sturdy legs, and a friendly standing pose.",
+  "palette": {
+    "body": "B78E6A",
+    "belly": "D8C4A7",
+    "mane": "5A3A28",
+    "muzzle": "EAD7C2",
+    "hoof": "2D221B",
+    "eye": "1B120D",
+    "white_mark": "F4F1EC"
+  },
+  "primitives": [
+    {
+      "name": "body_main",
+      "shape": "ellipsoid",
+      "material": "body",
+      "operation": "add",
+      "center": [32, 33, 28],
+      "size": [28, 20, 20],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "body_hind",
+      "shape": "ellipsoid",
+      "material": "body",
+      "operation": "add",
+      "center": [42, 35, 29],
+      "size": [18, 16, 18],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "body_chest",
+      "shape": "ellipsoid",
+      "material": "body",
+      "operation": "add",
+      "center": [24, 31, 29],
+      "size": [16, 14, 17],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "belly_patch",
+      "shape": "ellipsoid",
+      "material": "belly",
+      "operation": "paint",
+      "center": [33, 33, 22],
+      "size": [20, 14, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "neck",
+      "shape": "box",
+      "material": "body",
+      "operation": "add",
+      "center": [24, 29, 35],
+      "size": [9, 10, 16],
+      "rotation_deg": [18, 0, -18]
+    },
+    {
+      "name": "head",
+      "shape": "ellipsoid",
+      "material": "body",
+      "operation": "add",
+      "center": [18, 28, 39],
+      "size": [14, 12, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "muzzle",
+      "shape": "ellipsoid",
+      "material": "muzzle",
+      "operation": "paint",
+      "center": [12, 27, 36],
+      "size": [8, 7, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "white_blaze",
+      "shape": "ellipsoid",
+      "material": "white_mark",
+      "operation": "paint",
+      "center": [16, 28, 42],
+      "size": [4, 4, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "mane_strip",
+      "shape": "box",
+      "material": "mane",
+      "operation": "add",
+      "center": [22, 30, 40],
+      "size": [4, 8, 16],
+      "rotation_deg": [18, 0, -18]
+    },
+    {
+      "name": "mane_top",
+      "shape": "box",
+      "material": "mane",
+      "operation": "add",
+      "center": [19, 28, 45],
+      "size": [3, 7, 5],
+      "rotation_deg": [0, 0, -10]
+    },
+    {
+      "name": "ear_left",
+      "shape": "box",
+      "material": "body",
+      "operation": "add",
+      "center": [15, 24, 46],
+      "size": [2, 3, 5],
+      "rotation_deg": [0, 0, 20]
+    },
+    {
+      "name": "ear_right",
+      "shape": "box",
+      "material": "body",
+      "operation": "add",
+      "center": [18, 23, 46],
+      "size": [2, 3, 5],
+      "rotation_deg": [0, 0, -20]
+    },
+    {
+      "name": "eye_left",
+      "shape": "box",
+      "material": "eye",
+      "operation": "add",
+      "center": [14, 26, 40],
+      "size": [1, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "eye_right",
+      "shape": "box",
+      "material": "eye",
+      "operation": "add",
+      "center": [17, 25, 40],
+      "size": [1, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "front_left_upper_leg",
+      "shape": "cylinder_z",
+      "material": "body",
+      "operation": "add",
+      "center": [21, 25, 15],
+      "size": [4, 4, 18],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "front_right_upper_leg",
+      "shape": "cylinder_z",
+      "material": "body",
+      "operation": "add",
+      "center": [21, 39, 15],
+      "size": [4, 4, 18],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "rear_left_upper_leg",
+      "shape": "cylinder_z",
+      "material": "body",
+      "operation": "add",
+      "center": [41, 25, 15],
+      "size": [4, 4, 18],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "rear_right_upper_leg",
+      "shape": "cylinder_z",
+      "material": "body",
+      "operation": "add",
+      "center": [41, 39, 15],
+      "size": [4, 4, 18],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "front_left_hoof",
+      "shape": "box",
+      "material": "hoof",
+      "operation": "add",
+      "center": [21, 25, 4],
+      "size": [3, 3, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "front_right_hoof",
+      "shape": "box",
+      "material": "hoof",
+      "operation": "add",
+      "center": [21, 39, 4],
+      "size": [3, 3, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "rear_left_hoof",
+      "shape": "box",
+      "material": "hoof",
+      "operation": "add",
+      "center": [41, 25, 4],
+      "size": [3, 3, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "rear_right_hoof",
+      "shape": "box",
+      "material": "hoof",
+      "operation": "add",
+      "center": [41, 39, 4],
+      "size": [3, 3, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tail_root",
+      "shape": "box",
+      "material": "mane",
+      "operation": "add",
+      "center": [49, 34, 31],
+      "size": [3, 3, 10],
+      "rotation_deg": [0, 0, -18]
+    },
+    {
+      "name": "tail_tip",
+      "shape": "box",
+      "material": "mane",
+      "operation": "add",
+      "center": [51, 33, 26],
+      "size": [2, 2, 6],
+      "rotation_deg": [0, 0, -28]
+    }
+  ]
+}

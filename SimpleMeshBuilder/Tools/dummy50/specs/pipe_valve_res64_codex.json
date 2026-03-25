@@ -1,0 +1,95 @@
+{
+  "name": "pipe_valve_res64_codex",
+  "resolution": 64,
+  "description": "Cute chunky pipe valve with a friendly wheel handle and toy-like industrial proportions.",
+  "palette": {
+    "pipe_blue": "5E87B8",
+    "metal_light": "C8D0D8",
+    "metal_dark": "6A7480",
+    "valve_red": "D86B5C",
+    "gasket_black": "2A2B2E"
+  },
+  "primitives": [
+    {
+      "name": "pipe_body",
+      "shape": "cylinder_x",
+      "material": "pipe_blue",
+      "operation": "add",
+      "center": [32, 32, 32],
+      "size": [30, 14, 14],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "left_flange",
+      "shape": "cylinder_x",
+      "material": "metal_dark",
+      "operation": "add",
+      "center": [16, 32, 32],
+      "size": [5, 18, 18],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_flange",
+      "shape": "cylinder_x",
+      "material": "metal_dark",
+      "operation": "add",
+      "center": [48, 32, 32],
+      "size": [5, 18, 18],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "valve_core",
+      "shape": "cylinder_z",
+      "material": "metal_light",
+      "operation": "add",
+      "center": [32, 32, 34],
+      "size": [10, 10, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "valve_trim",
+      "shape": "cylinder_z",
+      "material": "valve_red",
+      "operation": "add",
+      "center": [32, 32, 38],
+      "size": [6, 6, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "wheel_hub",
+      "shape": "cylinder_z",
+      "material": "metal_dark",
+      "operation": "add",
+      "center": [32, 32, 44],
+      "size": [8, 8, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "wheel_cross_a",
+      "shape": "box",
+      "material": "metal_light",
+      "operation": "add",
+      "center": [32, 32, 46],
+      "size": [2, 14, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "wheel_cross_b",
+      "shape": "box",
+      "material": "metal_light",
+      "operation": "add",
+      "center": [32, 32, 46],
+      "size": [14, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "gasket",
+      "shape": "cylinder_z",
+      "material": "gasket_black",
+      "operation": "add",
+      "center": [32, 32, 31],
+      "size": [12, 12, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

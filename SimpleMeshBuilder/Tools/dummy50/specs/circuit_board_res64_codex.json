@@ -1,0 +1,132 @@
+{
+  "name": "circuit_board_res64_codex",
+  "resolution": 64,
+  "description": "Cute stylized circuit board with chunky chips, bright traces, and a clean toy electronics look.",
+  "palette": {
+    "board_green": "4F8D63",
+    "board_dark": "2E5A3C",
+    "chip_black": "1F2328",
+    "trace_gold": "D6B76B",
+    "indicator_red": "D95D5D",
+    "socket_gray": "A9B1B8"
+  },
+  "primitives": [
+    {
+      "name": "main_board",
+      "shape": "box",
+      "material": "board_green",
+      "operation": "add",
+      "center": [32, 32, 28],
+      "size": [34, 24, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "board_backing",
+      "shape": "box",
+      "material": "board_dark",
+      "operation": "add",
+      "center": [32, 32, 26],
+      "size": [30, 20, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "chip_a",
+      "shape": "box",
+      "material": "chip_black",
+      "operation": "add",
+      "center": [24, 28, 31],
+      "size": [8, 5, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "chip_b",
+      "shape": "box",
+      "material": "chip_black",
+      "operation": "add",
+      "center": [40, 36, 31],
+      "size": [10, 6, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "chip_c",
+      "shape": "box",
+      "material": "chip_black",
+      "operation": "add",
+      "center": [40, 24, 31],
+      "size": [8, 5, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "capacitor_left",
+      "shape": "cylinder_z",
+      "material": "socket_gray",
+      "operation": "add",
+      "center": [20, 40, 31],
+      "size": [3, 3, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "capacitor_right",
+      "shape": "cylinder_z",
+      "material": "socket_gray",
+      "operation": "add",
+      "center": [46, 30, 31],
+      "size": [3, 3, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "trace_main",
+      "shape": "box",
+      "material": "trace_gold",
+      "operation": "add",
+      "center": [32, 32, 29],
+      "size": [28, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "trace_vertical",
+      "shape": "box",
+      "material": "trace_gold",
+      "operation": "add",
+      "center": [26, 32, 29],
+      "size": [1, 18, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "trace_drop",
+      "shape": "box",
+      "material": "trace_gold",
+      "operation": "add",
+      "center": [44, 27, 29],
+      "size": [1, 12, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "contact_pad_left",
+      "shape": "box",
+      "material": "trace_gold",
+      "operation": "add",
+      "center": [18, 20, 28],
+      "size": [8, 3, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "contact_pad_right",
+      "shape": "box",
+      "material": "trace_gold",
+      "operation": "add",
+      "center": [46, 20, 28],
+      "size": [8, 3, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "status_light",
+      "shape": "sphere",
+      "material": "indicator_red",
+      "operation": "add",
+      "center": [34, 24, 32],
+      "size": [2, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

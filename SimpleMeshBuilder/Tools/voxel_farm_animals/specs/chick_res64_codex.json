@@ -1,0 +1,135 @@
+{
+  "name": "chick_res64_codex",
+  "resolution": 64,
+  "description": "Extra-cute standing farm chick with a round fluffy body, tiny beak, and stubby legs.",
+  "palette": {
+    "down": "F7D94C",
+    "down_shadow": "E8C73A",
+    "beak": "F39A2E",
+    "feet": "D77B27",
+    "eye": "1F1B18",
+    "wing": "F2C53D",
+    "tuft": "FFF0A8"
+  },
+  "primitives": [
+    {
+      "name": "body_core",
+      "shape": "ellipsoid",
+      "material": "down",
+      "center": [31, 32, 26],
+      "size": [18, 16, 16]
+    },
+    {
+      "name": "body_upper",
+      "shape": "ellipsoid",
+      "material": "down",
+      "center": [31, 32, 34],
+      "size": [16, 14, 10]
+    },
+    {
+      "name": "chest_round",
+      "shape": "ellipsoid",
+      "material": "down_shadow",
+      "center": [35, 32, 23],
+      "size": [10, 10, 8]
+    },
+    {
+      "name": "head",
+      "shape": "ellipsoid",
+      "material": "down",
+      "center": [41, 32, 37],
+      "size": [10, 10, 10]
+    },
+    {
+      "name": "cheek_round",
+      "shape": "ellipsoid",
+      "material": "down",
+      "center": [38, 32, 35],
+      "size": [6, 8, 6]
+    },
+    {
+      "name": "beak_upper",
+      "shape": "box",
+      "material": "beak",
+      "center": [46, 32, 36],
+      "size": [4, 4, 3]
+    },
+    {
+      "name": "beak_lower",
+      "shape": "box",
+      "material": "beak",
+      "center": [46, 32, 34],
+      "size": [3, 3, 2]
+    },
+    {
+      "name": "eye_left",
+      "shape": "box",
+      "material": "eye",
+      "center": [43, 30, 39],
+      "size": [1, 1, 1]
+    },
+    {
+      "name": "eye_right",
+      "shape": "box",
+      "material": "eye",
+      "center": [43, 34, 39],
+      "size": [1, 1, 1]
+    },
+    {
+      "name": "wing_left",
+      "shape": "ellipsoid",
+      "material": "wing",
+      "center": [28, 27, 26],
+      "size": [6, 4, 8]
+    },
+    {
+      "name": "wing_right",
+      "shape": "ellipsoid",
+      "material": "wing",
+      "center": [28, 37, 26],
+      "size": [6, 4, 8]
+    },
+    {
+      "name": "tuft",
+      "shape": "sphere",
+      "material": "tuft",
+      "center": [42, 32, 45],
+      "size": [3, 3, 3]
+    },
+    {
+      "name": "left_leg",
+      "shape": "cylinder_z",
+      "material": "feet",
+      "center": [24, 30, 8],
+      "size": [2, 2, 14]
+    },
+    {
+      "name": "right_leg",
+      "shape": "cylinder_z",
+      "material": "feet",
+      "center": [24, 34, 8],
+      "size": [2, 2, 14]
+    },
+    {
+      "name": "left_foot",
+      "shape": "box",
+      "material": "feet",
+      "center": [19, 30, 2],
+      "size": [4, 3, 2]
+    },
+    {
+      "name": "right_foot",
+      "shape": "box",
+      "material": "feet",
+      "center": [19, 34, 2],
+      "size": [4, 3, 2]
+    },
+    {
+      "name": "tail_puff",
+      "shape": "sphere",
+      "material": "down_shadow",
+      "center": [21, 32, 29],
+      "size": [3, 3, 3]
+    }
+  ]
+}

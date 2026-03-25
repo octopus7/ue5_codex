@@ -1,0 +1,105 @@
+{
+  "name": "gauze_stack_res64_codex",
+  "resolution": 64,
+  "description": "Cute stacked gauze pads tied with a small band, like a soft medical prop.",
+  "palette": {
+    "gauze": "F1EFE8",
+    "gauze_shadow": "C9C4B5",
+    "band": "C9D8E8",
+    "band_dark": "8CA0BC",
+    "stitch": "8E8B83",
+    "pink": "E6B6BC"
+  },
+  "primitives": [
+    {
+      "name": "bottom_pad",
+      "shape": "box",
+      "material": "gauze",
+      "operation": "add",
+      "center": [32, 32, 20],
+      "size": [20, 14, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "middle_pad",
+      "shape": "box",
+      "material": "gauze",
+      "operation": "add",
+      "center": [32, 32, 24],
+      "size": [18, 12, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "top_pad",
+      "shape": "box",
+      "material": "gauze",
+      "operation": "add",
+      "center": [32, 32, 28],
+      "size": [16, 10, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "soft_rounding",
+      "shape": "ellipsoid",
+      "material": "gauze_shadow",
+      "operation": "paint",
+      "center": [32, 32, 24],
+      "size": [14, 10, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cross_band_x",
+      "shape": "box",
+      "material": "band",
+      "operation": "add",
+      "center": [32, 32, 25],
+      "size": [20, 4, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cross_band_y",
+      "shape": "box",
+      "material": "band",
+      "operation": "add",
+      "center": [32, 32, 25],
+      "size": [4, 16, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "band_shadow",
+      "shape": "box",
+      "material": "band_dark",
+      "operation": "paint",
+      "center": [32, 32, 24],
+      "size": [18, 2, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "stitched_edge",
+      "shape": "box",
+      "material": "stitch",
+      "operation": "paint",
+      "center": [32, 25, 25],
+      "size": [10, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "stitched_edge_2",
+      "shape": "box",
+      "material": "stitch",
+      "operation": "paint",
+      "center": [32, 39, 25],
+      "size": [10, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tiny_tag",
+      "shape": "ellipsoid",
+      "material": "pink",
+      "operation": "add",
+      "center": [21, 32, 24],
+      "size": [3, 3, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

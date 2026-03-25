@@ -1,0 +1,77 @@
+{
+  "name": "piston_rod_res64_codex",
+  "resolution": 64,
+  "description": "Cute piston rod assembly with a rounded piston head and a long tidy chrome shaft.",
+  "palette": {
+    "rod_gray": "B7C0C8",
+    "metal_light": "D8E0E6",
+    "metal_dark": "68717C",
+    "seal_red": "D76A5A",
+    "accent_black": "23262B"
+  },
+  "primitives": [
+    {
+      "name": "piston_head",
+      "shape": "cylinder_x",
+      "material": "metal_light",
+      "operation": "add",
+      "center": [20, 32, 32],
+      "size": [10, 18, 18],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "piston_collar",
+      "shape": "cylinder_x",
+      "material": "metal_dark",
+      "operation": "add",
+      "center": [25, 32, 32],
+      "size": [6, 14, 14],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "main_rod",
+      "shape": "box",
+      "material": "rod_gray",
+      "operation": "add",
+      "center": [40, 32, 32],
+      "size": [26, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "guide_rail",
+      "shape": "box",
+      "material": "metal_dark",
+      "operation": "add",
+      "center": [38, 32, 28],
+      "size": [18, 2, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "rear_cap",
+      "shape": "cylinder_x",
+      "material": "metal_dark",
+      "operation": "add",
+      "center": [53, 32, 32],
+      "size": [8, 12, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "seal_ring",
+      "shape": "cylinder_x",
+      "material": "seal_red",
+      "operation": "add",
+      "center": [28, 32, 32],
+      "size": [4, 10, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "bolt_cap",
+      "shape": "sphere",
+      "material": "accent_black",
+      "operation": "add",
+      "center": [20, 32, 39],
+      "size": [2, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

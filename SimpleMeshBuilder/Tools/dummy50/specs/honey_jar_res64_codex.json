@@ -1,0 +1,78 @@
+{
+  "name": "honey_jar_res64_codex",
+  "resolution": 64,
+  "description": "Cute honey jar with a golden body, soft lid, and a little drip of sweetness.",
+  "palette": {
+    "honey": "D98E2F",
+    "honey_light": "F2C86A",
+    "lid": "8C6B42",
+    "glass": "F2D88E",
+    "label": "C45F4A",
+    "drip": "E7B64C"
+  },
+  "primitives": [
+    {
+      "name": "jar_body",
+      "shape": "cylinder_z",
+      "material": "honey",
+      "operation": "add",
+      "center": [31, 32, 20],
+      "size": [13, 13, 22],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "jar_shoulder",
+      "shape": "ellipsoid",
+      "material": "honey_light",
+      "operation": "paint",
+      "center": [31, 32, 30],
+      "size": [12, 12, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "lid",
+      "shape": "cylinder_z",
+      "material": "lid",
+      "operation": "add",
+      "center": [31, 32, 37],
+      "size": [10, 10, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "lid_top",
+      "shape": "box",
+      "material": "glass",
+      "operation": "paint",
+      "center": [31, 32, 40],
+      "size": [8, 8, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "front_label",
+      "shape": "box",
+      "material": "label",
+      "operation": "paint",
+      "center": [31, 23, 20],
+      "size": [10, 2, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "honey_drip",
+      "shape": "ellipsoid",
+      "material": "drip",
+      "operation": "add",
+      "center": [31, 32, 10],
+      "size": [4, 4, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "drip_tip",
+      "shape": "box",
+      "material": "drip",
+      "operation": "add",
+      "center": [31, 32, 5],
+      "size": [2, 2, 4],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

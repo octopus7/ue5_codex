@@ -1,0 +1,57 @@
+{
+  "name": "donut_glazed_res64_codex",
+  "resolution": 64,
+  "description": "Cute glazed donut with a thick ring, soft hole, and bright icing.",
+  "palette": {
+    "dough": "D9A35F",
+    "glaze": "F2A6C6",
+    "shadow": "B47B3F"
+  },
+  "primitives": [
+    {
+      "name": "donut_body",
+      "shape": "cylinder_z",
+      "material": "dough",
+      "operation": "add",
+      "center": [32, 32, 24],
+      "size": [20, 20, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "donut_hole",
+      "shape": "cylinder_z",
+      "material": "shadow",
+      "operation": "remove",
+      "center": [32, 32, 24],
+      "size": [9, 9, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "glaze_cap",
+      "shape": "cylinder_z",
+      "material": "glaze",
+      "operation": "add",
+      "center": [32, 32, 26],
+      "size": [18, 18, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "glaze_drop_1",
+      "shape": "sphere",
+      "material": "glaze",
+      "operation": "add",
+      "center": [26, 30, 29],
+      "size": [2, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "glaze_drop_2",
+      "shape": "sphere",
+      "material": "glaze",
+      "operation": "add",
+      "center": [38, 34, 28],
+      "size": [2, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

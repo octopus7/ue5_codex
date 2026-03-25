@@ -1,0 +1,114 @@
+{
+  "name": "wheat_bundle_res64_codex",
+  "resolution": 64,
+  "description": "Cute tied wheat bundle with tall stems, puffy grain heads, and a bright ribbon knot.",
+  "palette": {
+    "straw": "D9B85C",
+    "straw_dark": "B78F33",
+    "grain": "F0D98A",
+    "grain_dark": "C6A54A",
+    "ribbon": "D97B5A",
+    "ribbon_shadow": "B85E42"
+  },
+  "primitives": [
+    {
+      "name": "stems_1",
+      "shape": "cylinder_z",
+      "material": "straw",
+      "operation": "add",
+      "center": [28, 29, 22],
+      "size": [2, 2, 26],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "stems_2",
+      "shape": "cylinder_z",
+      "material": "straw",
+      "operation": "add",
+      "center": [30, 31, 22],
+      "size": [2, 2, 28],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "stems_3",
+      "shape": "cylinder_z",
+      "material": "straw",
+      "operation": "add",
+      "center": [32, 33, 22],
+      "size": [2, 2, 30],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "stems_4",
+      "shape": "cylinder_z",
+      "material": "straw",
+      "operation": "add",
+      "center": [34, 31, 22],
+      "size": [2, 2, 28],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "stems_5",
+      "shape": "cylinder_z",
+      "material": "straw",
+      "operation": "add",
+      "center": [36, 29, 22],
+      "size": [2, 2, 26],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "grain_left",
+      "shape": "ellipsoid",
+      "material": "grain",
+      "operation": "add",
+      "center": [26, 28, 43],
+      "size": [4, 4, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "grain_center",
+      "shape": "ellipsoid",
+      "material": "grain",
+      "operation": "add",
+      "center": [32, 32, 45],
+      "size": [5, 5, 7],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "grain_right",
+      "shape": "ellipsoid",
+      "material": "grain",
+      "operation": "add",
+      "center": [38, 28, 43],
+      "size": [4, 4, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "grain_shadow",
+      "shape": "ellipsoid",
+      "material": "grain_dark",
+      "operation": "paint",
+      "center": [32, 30, 43],
+      "size": [10, 8, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tie_ribbon",
+      "shape": "box",
+      "material": "ribbon",
+      "operation": "add",
+      "center": [32, 32, 20],
+      "size": [14, 8, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tie_shadow",
+      "shape": "box",
+      "material": "ribbon_shadow",
+      "operation": "paint",
+      "center": [32, 32, 19],
+      "size": [12, 2, 1],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

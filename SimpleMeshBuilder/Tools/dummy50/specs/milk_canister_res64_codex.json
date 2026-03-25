@@ -1,0 +1,96 @@
+{
+  "name": "milk_canister_res64_codex",
+  "resolution": 64,
+  "description": "Cute farm milk canister with a sturdy handle, bright cap, and friendly rounded body.",
+  "palette": {
+    "milk": "F4F1E7",
+    "milk_shadow": "D6D1C0",
+    "cap_blue": "4F78C8",
+    "cap_dark": "32539A",
+    "handle": "A9A28A",
+    "label": "8FB7E8"
+  },
+  "primitives": [
+    {
+      "name": "body",
+      "shape": "cylinder_z",
+      "material": "milk",
+      "operation": "add",
+      "center": [31, 32, 22],
+      "size": [14, 14, 24],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "shoulder",
+      "shape": "ellipsoid",
+      "material": "milk_shadow",
+      "operation": "paint",
+      "center": [31, 32, 34],
+      "size": [13, 13, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cap",
+      "shape": "cylinder_z",
+      "material": "cap_blue",
+      "operation": "add",
+      "center": [31, 32, 39],
+      "size": [8, 8, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cap_top",
+      "shape": "box",
+      "material": "cap_dark",
+      "operation": "paint",
+      "center": [31, 32, 42],
+      "size": [6, 6, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "handle_bridge",
+      "shape": "box",
+      "material": "handle",
+      "operation": "add",
+      "center": [23, 32, 30],
+      "size": [4, 10, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "handle_top",
+      "shape": "box",
+      "material": "handle",
+      "operation": "add",
+      "center": [23, 32, 40],
+      "size": [8, 12, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "handle_cutout",
+      "shape": "box",
+      "material": "milk",
+      "operation": "remove",
+      "center": [23, 32, 36],
+      "size": [4, 6, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "spout",
+      "shape": "box",
+      "material": "milk",
+      "operation": "add",
+      "center": [38, 32, 32],
+      "size": [4, 6, 4],
+      "rotation_deg": [0, 0, 18]
+    },
+    {
+      "name": "label",
+      "shape": "box",
+      "material": "label",
+      "operation": "paint",
+      "center": [31, 23, 20],
+      "size": [12, 2, 10],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

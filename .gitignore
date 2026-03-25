@@ -1,3 +1,4 @@
 /RigReserch/Scripts/__pycache__
 *.blend1
 /RigReserch/Blender/textures
+/SimpleMeshBuilder/Tools/voxel_farm_animals/__pycache__

@@ -1,0 +1,105 @@
+{
+  "name": "sensor_module_res64_codex",
+  "resolution": 64,
+  "description": "Cute sensor module with a bright lens, tiny antenna, and a compact gadget body.",
+  "palette": {
+    "sensor_gray": "A6ADB5",
+    "sensor_black": "20242A",
+    "lens_cyan": "79D7E8",
+    "light_green": "84C97A",
+    "alert_orange": "E29B58",
+    "circuit_teal": "4F9A93"
+  },
+  "primitives": [
+    {
+      "name": "body",
+      "shape": "box",
+      "material": "sensor_gray",
+      "operation": "add",
+      "center": [32, 32, 28],
+      "size": [18, 16, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "base",
+      "shape": "box",
+      "material": "sensor_black",
+      "operation": "add",
+      "center": [32, 32, 20],
+      "size": [14, 12, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "lens",
+      "shape": "sphere",
+      "material": "lens_cyan",
+      "operation": "add",
+      "center": [41, 32, 29],
+      "size": [8, 8, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "lens_hood",
+      "shape": "cylinder_x",
+      "material": "sensor_black",
+      "operation": "add",
+      "center": [39, 32, 29],
+      "size": [6, 10, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "antenna",
+      "shape": "cylinder_z",
+      "material": "sensor_black",
+      "operation": "add",
+      "center": [25, 36, 34],
+      "size": [2, 2, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "antenna_tip",
+      "shape": "sphere",
+      "material": "light_green",
+      "operation": "add",
+      "center": [25, 36, 39],
+      "size": [3, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "indicator_a",
+      "shape": "box",
+      "material": "alert_orange",
+      "operation": "add",
+      "center": [28, 27, 31],
+      "size": [1, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "indicator_b",
+      "shape": "box",
+      "material": "circuit_teal",
+      "operation": "add",
+      "center": [30, 27, 31],
+      "size": [1, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "indicator_c",
+      "shape": "box",
+      "material": "light_green",
+      "operation": "add",
+      "center": [32, 27, 31],
+      "size": [1, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "side_fin",
+      "shape": "box",
+      "material": "sensor_black",
+      "operation": "add",
+      "center": [23, 32, 28],
+      "size": [4, 6, 6],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "name": "med_gel_tube_res64_codex",
+  "resolution": 64,
+  "description": "Cute medical gel tube with a soft rounded body, friendly label band, and a chunky cap.",
+  "palette": {
+    "tube": "68B7C8",
+    "tube_dark": "3D8C9E",
+    "label": "F4F7F2",
+    "label_accent": "8FD36E",
+    "cap": "E9EEE8",
+    "cap_shadow": "B8C1B8"
+  },
+  "primitives": [
+    {
+      "name": "tube_body",
+      "shape": "cylinder_z",
+      "material": "tube",
+      "operation": "add",
+      "center": [32, 32, 26],
+      "size": [14, 14, 28],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tube_top_round",
+      "shape": "ellipsoid",
+      "material": "tube",
+      "operation": "add",
+      "center": [32, 32, 41],
+      "size": [11, 11, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tube_cap",
+      "shape": "box",
+      "material": "cap",
+      "operation": "add",
+      "center": [32, 32, 49],
+      "size": [15, 15, 7],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cap_shadow",
+      "shape": "box",
+      "material": "cap_shadow",
+      "operation": "paint",
+      "center": [32, 32, 46],
+      "size": [13, 13, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "label_band",
+      "shape": "box",
+      "material": "label",
+      "operation": "add",
+      "center": [32, 32, 24],
+      "size": [15, 10, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "label_accent",
+      "shape": "box",
+      "material": "label_accent",
+      "operation": "paint",
+      "center": [32, 32, 24],
+      "size": [10, 2, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tube_dark_band",
+      "shape": "box",
+      "material": "tube_dark",
+      "operation": "paint",
+      "center": [32, 32, 18],
+      "size": [11, 11, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "squeeze_tail",
+      "shape": "ellipsoid",
+      "material": "tube_dark",
+      "operation": "add",
+      "center": [32, 32, 12],
+      "size": [7, 7, 8],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

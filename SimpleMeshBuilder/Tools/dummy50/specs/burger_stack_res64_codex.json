@@ -1,0 +1,96 @@
+{
+  "name": "burger_stack_res64_codex",
+  "resolution": 64,
+  "description": "Cute stacked burger with a chubby bun, layered fillings, and sesame seeds.",
+  "palette": {
+    "bun": "D8A15A",
+    "patty": "7B4A2C",
+    "lettuce": "62A43C",
+    "tomato": "D84A3A",
+    "cheese": "F1C94F",
+    "seed": "F7E7B1"
+  },
+  "primitives": [
+    {
+      "name": "bottom_bun",
+      "shape": "ellipsoid",
+      "material": "bun",
+      "operation": "add",
+      "center": [32, 32, 18],
+      "size": [24, 18, 7],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "lettuce",
+      "shape": "ellipsoid",
+      "material": "lettuce",
+      "operation": "add",
+      "center": [32, 32, 23],
+      "size": [24, 18, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "patty",
+      "shape": "box",
+      "material": "patty",
+      "operation": "add",
+      "center": [32, 32, 24],
+      "size": [22, 16, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cheese",
+      "shape": "box",
+      "material": "cheese",
+      "operation": "add",
+      "center": [32, 32, 27],
+      "size": [20, 14, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tomato",
+      "shape": "box",
+      "material": "tomato",
+      "operation": "add",
+      "center": [32, 32, 29],
+      "size": [18, 12, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "top_bun",
+      "shape": "ellipsoid",
+      "material": "bun",
+      "operation": "add",
+      "center": [32, 32, 34],
+      "size": [24, 18, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "sesame_1",
+      "shape": "sphere",
+      "material": "seed",
+      "operation": "add",
+      "center": [27, 29, 38],
+      "size": [1, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "sesame_2",
+      "shape": "sphere",
+      "material": "seed",
+      "operation": "add",
+      "center": [32, 31, 39],
+      "size": [1, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "sesame_3",
+      "shape": "sphere",
+      "material": "seed",
+      "operation": "add",
+      "center": [36, 28, 38],
+      "size": [1, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

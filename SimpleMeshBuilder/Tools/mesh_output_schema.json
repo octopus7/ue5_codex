@@ -1,0 +1,296 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "mesh_name",
+    "generation_mode",
+    "notes",
+    "primitive_mesh",
+    "voxel_grid"
+  ],
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "mesh_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generation_mode": {
+      "type": "string",
+      "enum": [
+        "primitive",
+        "voxel"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    },
+    "primitive_mesh": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/primitive_mesh"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "voxel_grid": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/voxel_grid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "primitive_mesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "units",
+        "pivot",
+        "primitives"
+      ],
+      "properties": {
+        "units": {
+          "type": "string",
+          "enum": [
+            "cm"
+          ]
+        },
+        "pivot": {
+          "type": "string",
+          "enum": [
+            "base_center",
+            "center"
+          ]
+        },
+        "primitives": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "type",
+              "transform",
+              "color",
+              "width",
+              "depth",
+              "height",
+              "radius",
+              "segments",
+              "steps"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "box",
+                  "plane",
+                  "cylinder",
+                  "cone",
+                  "ramp",
+                  "stair"
+                ]
+              },
+              "transform": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "location_cm",
+                  "rotation_deg",
+                  "scale"
+                ],
+                "properties": {
+                  "location_cm": {
+                    "$ref": "#/$defs/vector3"
+                  },
+                  "rotation_deg": {
+                    "$ref": "#/$defs/vector3"
+                  },
+                  "scale": {
+                    "$ref": "#/$defs/vector3_positive"
+                  }
+                }
+              },
+              "color": {
+                "$ref": "#/$defs/color4"
+              },
+              "width": {
+                "type": "number",
+                "minimum": 0
+              },
+              "depth": {
+                "type": "number",
+                "minimum": 0
+              },
+              "height": {
+                "type": "number",
+                "minimum": 0
+              },
+              "radius": {
+                "type": "number",
+                "minimum": 0
+              },
+              "segments": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 128
+              },
+              "steps": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 32
+              }
+            }
+          }
+        }
+      }
+    },
+    "voxel_grid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resolution",
+        "color_hex_stream"
+      ],
+      "properties": {
+        "resolution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "x",
+            "y",
+            "z"
+          ],
+          "properties": {
+            "x": {
+              "type": "integer",
+              "enum": [
+                16,
+                32,
+                64,
+                128,
+                256
+              ]
+            },
+            "y": {
+              "type": "integer",
+              "enum": [
+                16,
+                32,
+                64,
+                128,
+                256
+              ]
+            },
+            "z": {
+              "type": "integer",
+              "enum": [
+                16,
+                32,
+                64,
+                128,
+                256
+              ]
+            }
+          }
+        },
+        "color_hex_stream": {
+          "type": "string",
+          "pattern": "^[0-9A-Fa-f]+$",
+          "minLength": 6
+        }
+      }
+    },
+    "vector3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        }
+      }
+    },
+    "vector3_positive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "y": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "z": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "color4": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "r",
+        "g",
+        "b",
+        "a"
+      ],
+      "properties": {
+        "r": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "g": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "b": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "a": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "name": "juice_carton_res64_codex",
+  "resolution": 64,
+  "description": "Cute juice carton with a folded top, bright fruit stripe, and friendly square silhouette.",
+  "palette": {
+    "carton": "F6E6C8",
+    "fold": "D8B77E",
+    "stripe": "E86C4E",
+    "cap": "C94F3D",
+    "text": "7B5335"
+  },
+  "primitives": [
+    {
+      "name": "main_carton",
+      "shape": "box",
+      "material": "carton",
+      "operation": "add",
+      "center": [32, 32, 24],
+      "size": [16, 12, 28],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "top_fold",
+      "shape": "box",
+      "material": "fold",
+      "operation": "add",
+      "center": [32, 32, 42],
+      "size": [14, 10, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "roof_left",
+      "shape": "box",
+      "material": "fold",
+      "operation": "add",
+      "center": [28, 32, 46],
+      "size": [6, 10, 4],
+      "rotation_deg": [0, 0, 28]
+    },
+    {
+      "name": "roof_right",
+      "shape": "box",
+      "material": "fold",
+      "operation": "add",
+      "center": [36, 32, 46],
+      "size": [6, 10, 4],
+      "rotation_deg": [0, 0, -28]
+    },
+    {
+      "name": "fruit_stripe",
+      "shape": "box",
+      "material": "stripe",
+      "operation": "paint",
+      "center": [32, 32, 22],
+      "size": [16, 12, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cap",
+      "shape": "cylinder_z",
+      "material": "cap",
+      "operation": "add",
+      "center": [39, 32, 31],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "label_text",
+      "shape": "box",
+      "material": "text",
+      "operation": "paint",
+      "center": [32, 32, 20],
+      "size": [8, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

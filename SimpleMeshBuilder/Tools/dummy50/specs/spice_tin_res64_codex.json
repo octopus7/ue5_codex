@@ -1,0 +1,78 @@
+{
+  "name": "spice_tin_res64_codex",
+  "resolution": 64,
+  "description": "Cute round spice tin with a snug lid and a bold little label band.",
+  "palette": {
+    "tin": "AFAAA0",
+    "tin_dark": "7D786F",
+    "lid": "C9C4B4",
+    "lid_shadow": "908A7D",
+    "label_red": "C85A43",
+    "label_cream": "F4E8CA"
+  },
+  "primitives": [
+    {
+      "name": "tin_body",
+      "shape": "cylinder_z",
+      "material": "tin",
+      "operation": "add",
+      "center": [31, 32, 20],
+      "size": [12, 12, 18],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tin_shoulder",
+      "shape": "ellipsoid",
+      "material": "tin_dark",
+      "operation": "paint",
+      "center": [31, 32, 26],
+      "size": [12, 12, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "lid",
+      "shape": "cylinder_z",
+      "material": "lid",
+      "operation": "add",
+      "center": [31, 32, 31],
+      "size": [13, 13, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "lid_top",
+      "shape": "box",
+      "material": "lid_shadow",
+      "operation": "paint",
+      "center": [31, 32, 33],
+      "size": [9, 9, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "label_band",
+      "shape": "box",
+      "material": "label_red",
+      "operation": "paint",
+      "center": [31, 23, 18],
+      "size": [12, 2, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "label_patch",
+      "shape": "box",
+      "material": "label_cream",
+      "operation": "paint",
+      "center": [31, 23, 22],
+      "size": [8, 2, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "side_higlight",
+      "shape": "ellipsoid",
+      "material": "label_cream",
+      "operation": "paint",
+      "center": [24, 32, 22],
+      "size": [3, 3, 5],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

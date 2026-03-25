@@ -1,0 +1,122 @@
+{
+  "name": "bearing_ring_res64_codex",
+  "resolution": 64,
+  "description": "Cute metallic bearing ring with evenly spaced balls and a clean toy-engineering look.",
+  "palette": {
+    "ring_silver": "C7CFD6",
+    "ring_dark": "7B8792",
+    "ball_silver": "DDE4E8",
+    "grease_blue": "6DA1D4",
+    "bolt_gold": "D7B45B"
+  },
+  "primitives": [
+    {
+      "name": "outer_ring",
+      "shape": "cylinder_z",
+      "material": "ring_silver",
+      "operation": "add",
+      "center": [32, 32, 28],
+      "size": [26, 26, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "inner_lip",
+      "shape": "cylinder_z",
+      "material": "ring_dark",
+      "operation": "add",
+      "center": [32, 32, 28],
+      "size": [18, 18, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "inner_hole",
+      "shape": "cylinder_z",
+      "material": "ring_dark",
+      "operation": "remove",
+      "center": [32, 32, 28],
+      "size": [12, 12, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "ball_north",
+      "shape": "sphere",
+      "material": "ball_silver",
+      "operation": "add",
+      "center": [32, 45, 28],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "ball_south",
+      "shape": "sphere",
+      "material": "ball_silver",
+      "operation": "add",
+      "center": [32, 19, 28],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "ball_east",
+      "shape": "sphere",
+      "material": "ball_silver",
+      "operation": "add",
+      "center": [45, 32, 28],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "ball_west",
+      "shape": "sphere",
+      "material": "ball_silver",
+      "operation": "add",
+      "center": [19, 32, 28],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "ball_ne",
+      "shape": "sphere",
+      "material": "ball_silver",
+      "operation": "add",
+      "center": [41, 41, 28],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "ball_nw",
+      "shape": "sphere",
+      "material": "ball_silver",
+      "operation": "add",
+      "center": [23, 41, 28],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "ball_se",
+      "shape": "sphere",
+      "material": "ball_silver",
+      "operation": "add",
+      "center": [41, 23, 28],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "ball_sw",
+      "shape": "sphere",
+      "material": "ball_silver",
+      "operation": "add",
+      "center": [23, 23, 28],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "grease_mark",
+      "shape": "sphere",
+      "material": "grease_blue",
+      "operation": "paint",
+      "center": [32, 32, 28],
+      "size": [6, 6, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

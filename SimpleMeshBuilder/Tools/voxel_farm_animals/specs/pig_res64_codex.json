@@ -1,0 +1,159 @@
+{
+  "name": "pig_res64_codex",
+  "resolution": 64,
+  "description": "Cute farm pig with oversized head, round body, short legs, floppy ears, and a small curled tail.",
+  "palette": {
+    "pig_pink": "F3A2B2",
+    "pig_belly": "F7C3CE",
+    "pig_ear_inner": "E78198",
+    "pig_snout": "E98EA2",
+    "pig_hoof": "6F4B3E",
+    "pig_eye": "2A1B1D"
+  },
+  "primitives": [
+    {
+      "name": "body",
+      "shape": "ellipsoid",
+      "material": "pig_pink",
+      "center": [28, 32, 24],
+      "size": [24, 18, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "belly",
+      "shape": "ellipsoid",
+      "material": "pig_belly",
+      "center": [25, 32, 22],
+      "size": [15, 11, 9],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "head",
+      "shape": "ellipsoid",
+      "material": "pig_pink",
+      "center": [45, 32, 29],
+      "size": [18, 16, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "snout",
+      "shape": "ellipsoid",
+      "material": "pig_snout",
+      "center": [56, 32, 27],
+      "size": [8, 7, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "left_ear",
+      "shape": "ellipsoid",
+      "material": "pig_pink",
+      "center": [42, 26, 40],
+      "size": [6, 4, 8],
+      "rotation_deg": [0, 18, -18]
+    },
+    {
+      "name": "right_ear",
+      "shape": "ellipsoid",
+      "material": "pig_pink",
+      "center": [42, 38, 40],
+      "size": [6, 4, 8],
+      "rotation_deg": [0, -18, 18]
+    },
+    {
+      "name": "left_ear_inner",
+      "shape": "ellipsoid",
+      "material": "pig_ear_inner",
+      "center": [41, 26, 39],
+      "size": [3, 2, 4],
+      "rotation_deg": [0, 18, -18]
+    },
+    {
+      "name": "right_ear_inner",
+      "shape": "ellipsoid",
+      "material": "pig_ear_inner",
+      "center": [41, 38, 39],
+      "size": [3, 2, 4],
+      "rotation_deg": [0, -18, 18]
+    },
+    {
+      "name": "left_front_leg",
+      "shape": "box",
+      "material": "pig_hoof",
+      "center": [38, 25, 8],
+      "size": [4, 4, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_front_leg",
+      "shape": "box",
+      "material": "pig_hoof",
+      "center": [38, 39, 8],
+      "size": [4, 4, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "left_back_leg",
+      "shape": "box",
+      "material": "pig_hoof",
+      "center": [16, 26, 7],
+      "size": [4, 4, 11],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_back_leg",
+      "shape": "box",
+      "material": "pig_hoof",
+      "center": [16, 38, 7],
+      "size": [4, 4, 11],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tail",
+      "shape": "cylinder_z",
+      "material": "pig_pink",
+      "center": [13, 32, 25],
+      "size": [3, 3, 7],
+      "rotation_deg": [0, 0, 28]
+    },
+    {
+      "name": "tail_tip",
+      "shape": "sphere",
+      "material": "pig_pink",
+      "center": [11, 34, 28],
+      "size": [3, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "eye_patch",
+      "shape": "box",
+      "material": "pig_eye",
+      "center": [49, 36, 32],
+      "size": [2, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "eye_patch_2",
+      "shape": "box",
+      "material": "pig_eye",
+      "center": [49, 28, 32],
+      "size": [2, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "snout_nostril_left",
+      "shape": "box",
+      "material": "pig_eye",
+      "center": [59, 30, 27],
+      "size": [1, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "snout_nostril_right",
+      "shape": "box",
+      "material": "pig_eye",
+      "center": [59, 34, 27],
+      "size": [1, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

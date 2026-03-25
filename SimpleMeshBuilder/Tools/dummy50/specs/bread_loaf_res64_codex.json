@@ -1,0 +1,39 @@
+{
+  "name": "bread_loaf_res64_codex",
+  "resolution": 64,
+  "description": "Cute stylized bread loaf with a rounded crust and soft, pillowy body.",
+  "palette": {
+    "crust": "B97733",
+    "crumb": "F1D7A2",
+    "shadow": "8D5A2C"
+  },
+  "primitives": [
+    {
+      "name": "loaf_body",
+      "shape": "ellipsoid",
+      "material": "crumb",
+      "operation": "add",
+      "center": [32, 32, 24],
+      "size": [26, 16, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "loaf_crust",
+      "shape": "ellipsoid",
+      "material": "crust",
+      "operation": "add",
+      "center": [32, 32, 25],
+      "size": [28, 18, 13],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "top_ridge",
+      "shape": "box",
+      "material": "shadow",
+      "operation": "add",
+      "center": [32, 32, 29],
+      "size": [16, 8, 3],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

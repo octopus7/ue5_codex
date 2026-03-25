@@ -1,0 +1,232 @@
+{
+  "name": "goat_res64_codex",
+  "resolution": 64,
+  "description": "Cute standing farm goat with a chunky body, short muzzle, tiny horns, floppy ears, and sturdy legs.",
+  "palette": {
+    "wool": "EDE6DA",
+    "shadow": "CFC3B1",
+    "muzzle": "D8C8B1",
+    "horn": "A58A62",
+    "hoof": "4A3C32",
+    "ear_inner": "E8B8B4",
+    "eye": "2F2723"
+  },
+  "primitives": [
+    {
+      "name": "body",
+      "shape": "ellipsoid",
+      "material": "wool",
+      "operation": "add",
+      "center": [31, 32, 28],
+      "size": [24, 18, 18],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "chest",
+      "shape": "ellipsoid",
+      "material": "shadow",
+      "operation": "add",
+      "center": [24, 32, 29],
+      "size": [14, 16, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "rump",
+      "shape": "ellipsoid",
+      "material": "wool",
+      "operation": "add",
+      "center": [39, 32, 28],
+      "size": [18, 16, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "neck",
+      "shape": "ellipsoid",
+      "material": "shadow",
+      "operation": "add",
+      "center": [24, 32, 36],
+      "size": [9, 10, 12],
+      "rotation_deg": [0, 0, -8]
+    },
+    {
+      "name": "head",
+      "shape": "ellipsoid",
+      "material": "wool",
+      "operation": "add",
+      "center": [17, 32, 40],
+      "size": [15, 13, 13],
+      "rotation_deg": [0, 0, -10]
+    },
+    {
+      "name": "muzzle",
+      "shape": "ellipsoid",
+      "material": "muzzle",
+      "operation": "add",
+      "center": [11, 32, 37],
+      "size": [7, 7, 6],
+      "rotation_deg": [0, 0, -12]
+    },
+    {
+      "name": "left_ear",
+      "shape": "ellipsoid",
+      "material": "wool",
+      "operation": "add",
+      "center": [17, 25, 43],
+      "size": [4, 7, 2],
+      "rotation_deg": [10, 0, -22]
+    },
+    {
+      "name": "right_ear",
+      "shape": "ellipsoid",
+      "material": "wool",
+      "operation": "add",
+      "center": [17, 39, 43],
+      "size": [4, 7, 2],
+      "rotation_deg": [-10, 0, 22]
+    },
+    {
+      "name": "left_ear_inner",
+      "shape": "ellipsoid",
+      "material": "ear_inner",
+      "operation": "add",
+      "center": [17, 25, 43],
+      "size": [2, 4, 1],
+      "rotation_deg": [10, 0, -22]
+    },
+    {
+      "name": "right_ear_inner",
+      "shape": "ellipsoid",
+      "material": "ear_inner",
+      "operation": "add",
+      "center": [17, 39, 43],
+      "size": [2, 4, 1],
+      "rotation_deg": [-10, 0, 22]
+    },
+    {
+      "name": "left_horn",
+      "shape": "cylinder_z",
+      "material": "horn",
+      "operation": "add",
+      "center": [20, 28, 48],
+      "size": [2, 2, 7],
+      "rotation_deg": [0, 0, -18]
+    },
+    {
+      "name": "right_horn",
+      "shape": "cylinder_z",
+      "material": "horn",
+      "operation": "add",
+      "center": [20, 36, 48],
+      "size": [2, 2, 7],
+      "rotation_deg": [0, 0, 18]
+    },
+    {
+      "name": "left_front_leg",
+      "shape": "cylinder_z",
+      "material": "shadow",
+      "operation": "add",
+      "center": [24, 27, 15],
+      "size": [4, 4, 18],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_front_leg",
+      "shape": "cylinder_z",
+      "material": "shadow",
+      "operation": "add",
+      "center": [24, 37, 15],
+      "size": [4, 4, 18],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "left_back_leg",
+      "shape": "cylinder_z",
+      "material": "shadow",
+      "operation": "add",
+      "center": [38, 27, 14],
+      "size": [4, 4, 17],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_back_leg",
+      "shape": "cylinder_z",
+      "material": "shadow",
+      "operation": "add",
+      "center": [38, 37, 14],
+      "size": [4, 4, 17],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "left_front_hoof",
+      "shape": "box",
+      "material": "hoof",
+      "operation": "add",
+      "center": [24, 27, 6],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_front_hoof",
+      "shape": "box",
+      "material": "hoof",
+      "operation": "add",
+      "center": [24, 37, 6],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "left_back_hoof",
+      "shape": "box",
+      "material": "hoof",
+      "operation": "add",
+      "center": [38, 27, 6],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_back_hoof",
+      "shape": "box",
+      "material": "hoof",
+      "operation": "add",
+      "center": [38, 37, 6],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tail",
+      "shape": "ellipsoid",
+      "material": "wool",
+      "operation": "add",
+      "center": [46, 32, 30],
+      "size": [3, 3, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "beard",
+      "shape": "ellipsoid",
+      "material": "shadow",
+      "operation": "add",
+      "center": [13, 32, 33],
+      "size": [3, 3, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "left_eye",
+      "shape": "box",
+      "material": "eye",
+      "operation": "add",
+      "center": [14, 29, 40],
+      "size": [1, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_eye",
+      "shape": "box",
+      "material": "eye",
+      "operation": "add",
+      "center": [14, 35, 40],
+      "size": [1, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

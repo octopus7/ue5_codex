@@ -1,0 +1,232 @@
+{
+  "name": "donkey_res64_codex",
+  "resolution": 64,
+  "description": "Cute farm donkey with oversized ears, a rounded standing body, short sturdy legs, and a soft gray coat.",
+  "palette": {
+    "donkey_gray": "B6B8BC",
+    "donkey_light": "D7D9DD",
+    "donkey_muzzle": "E3C2B1",
+    "donkey_inner_ear": "D59AA0",
+    "donkey_hoof": "4F433E",
+    "donkey_eye": "211A1C",
+    "donkey_mane": "8A6B55"
+  },
+  "primitives": [
+    {
+      "name": "body",
+      "shape": "ellipsoid",
+      "material": "donkey_gray",
+      "operation": "add",
+      "center": [28, 32, 24],
+      "size": [26, 18, 18],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "belly",
+      "shape": "ellipsoid",
+      "material": "donkey_light",
+      "operation": "paint",
+      "center": [26, 32, 21],
+      "size": [16, 12, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "chest",
+      "shape": "ellipsoid",
+      "material": "donkey_gray",
+      "operation": "add",
+      "center": [21, 32, 22],
+      "size": [16, 14, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "head",
+      "shape": "ellipsoid",
+      "material": "donkey_gray",
+      "operation": "add",
+      "center": [46, 32, 30],
+      "size": [18, 14, 14],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "muzzle",
+      "shape": "ellipsoid",
+      "material": "donkey_muzzle",
+      "operation": "add",
+      "center": [55, 32, 27],
+      "size": [8, 7, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "nose_bridge_shadow",
+      "shape": "ellipsoid",
+      "material": "donkey_light",
+      "operation": "paint",
+      "center": [50, 32, 29],
+      "size": [8, 5, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "left_eye",
+      "shape": "box",
+      "material": "donkey_eye",
+      "operation": "paint",
+      "center": [49, 36, 33],
+      "size": [2, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_eye",
+      "shape": "box",
+      "material": "donkey_eye",
+      "operation": "paint",
+      "center": [49, 28, 33],
+      "size": [2, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "left_ear",
+      "shape": "box",
+      "material": "donkey_gray",
+      "operation": "add",
+      "center": [43, 25, 41],
+      "size": [3, 6, 3],
+      "rotation_deg": [0, 0, 18]
+    },
+    {
+      "name": "right_ear",
+      "shape": "box",
+      "material": "donkey_gray",
+      "operation": "add",
+      "center": [43, 39, 41],
+      "size": [3, 6, 3],
+      "rotation_deg": [0, 0, -18]
+    },
+    {
+      "name": "left_ear_inner",
+      "shape": "ellipsoid",
+      "material": "donkey_inner_ear",
+      "operation": "paint",
+      "center": [43, 25, 40],
+      "size": [2, 4, 2],
+      "rotation_deg": [0, 0, 18]
+    },
+    {
+      "name": "right_ear_inner",
+      "shape": "ellipsoid",
+      "material": "donkey_inner_ear",
+      "operation": "paint",
+      "center": [43, 39, 40],
+      "size": [2, 4, 2],
+      "rotation_deg": [0, 0, -18]
+    },
+    {
+      "name": "mane",
+      "shape": "cylinder_x",
+      "material": "donkey_mane",
+      "operation": "add",
+      "center": [39, 32, 37],
+      "size": [10, 4, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "mane_tip",
+      "shape": "box",
+      "material": "donkey_mane",
+      "operation": "add",
+      "center": [43, 32, 39],
+      "size": [4, 3, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "front_left_leg",
+      "shape": "box",
+      "material": "donkey_hoof",
+      "operation": "add",
+      "center": [22, 25, 8],
+      "size": [4, 4, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "front_right_leg",
+      "shape": "box",
+      "material": "donkey_hoof",
+      "operation": "add",
+      "center": [22, 39, 8],
+      "size": [4, 4, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "rear_left_leg",
+      "shape": "box",
+      "material": "donkey_hoof",
+      "operation": "add",
+      "center": [34, 26, 8],
+      "size": [4, 4, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "rear_right_leg",
+      "shape": "box",
+      "material": "donkey_hoof",
+      "operation": "add",
+      "center": [34, 38, 8],
+      "size": [4, 4, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "front_left_hoof_tint",
+      "shape": "box",
+      "material": "donkey_light",
+      "operation": "paint",
+      "center": [22, 25, 3],
+      "size": [4, 4, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "front_right_hoof_tint",
+      "shape": "box",
+      "material": "donkey_light",
+      "operation": "paint",
+      "center": [22, 39, 3],
+      "size": [4, 4, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "rear_left_hoof_tint",
+      "shape": "box",
+      "material": "donkey_light",
+      "operation": "paint",
+      "center": [34, 26, 3],
+      "size": [4, 4, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "rear_right_hoof_tint",
+      "shape": "box",
+      "material": "donkey_light",
+      "operation": "paint",
+      "center": [34, 38, 3],
+      "size": [4, 4, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tail_base",
+      "shape": "cylinder_z",
+      "material": "donkey_mane",
+      "operation": "add",
+      "center": [15, 32, 25],
+      "size": [2, 2, 8],
+      "rotation_deg": [0, 0, -18]
+    },
+    {
+      "name": "tail_tip",
+      "shape": "sphere",
+      "material": "donkey_mane",
+      "operation": "add",
+      "center": [12, 34, 22],
+      "size": [3, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

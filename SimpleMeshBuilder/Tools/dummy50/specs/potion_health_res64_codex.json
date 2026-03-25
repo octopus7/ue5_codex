@@ -1,0 +1,68 @@
+{
+  "name": "potion_health_res64_codex",
+  "resolution": 64,
+  "description": "Cute glass health potion with a round flask, cork stopper, and a bright heart label.",
+  "palette": {
+    "glass": "DDEFFF",
+    "liquid": "E84B5F",
+    "cork": "A67C52",
+    "label": "FFF7EC",
+    "heart": "D92E4F"
+  },
+  "primitives": [
+    {
+      "name": "flask_body",
+      "shape": "ellipsoid",
+      "material": "liquid",
+      "operation": "add",
+      "center": [32, 32, 19],
+      "size": [13, 13, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "glass_shell",
+      "shape": "ellipsoid",
+      "material": "glass",
+      "operation": "paint",
+      "center": [32, 32, 20],
+      "size": [14, 14, 17],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "neck",
+      "shape": "cylinder_z",
+      "material": "glass",
+      "operation": "add",
+      "center": [32, 32, 34],
+      "size": [7, 7, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cork",
+      "shape": "box",
+      "material": "cork",
+      "operation": "add",
+      "center": [32, 32, 41],
+      "size": [8, 8, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "label",
+      "shape": "box",
+      "material": "label",
+      "operation": "paint",
+      "center": [32, 32, 15],
+      "size": [10, 8, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "heart",
+      "shape": "ellipsoid",
+      "material": "heart",
+      "operation": "paint",
+      "center": [32, 32, 15],
+      "size": [4, 4, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

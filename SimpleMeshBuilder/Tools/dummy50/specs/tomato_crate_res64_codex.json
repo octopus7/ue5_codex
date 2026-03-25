@@ -1,0 +1,133 @@
+{
+  "name": "tomato_crate_res64_codex",
+  "resolution": 64,
+  "description": "Cute farm tomato crate with open slats and a pile of glossy tomatoes.",
+  "palette": {
+    "wood": "B57C4A",
+    "wood_dark": "7C5331",
+    "wood_light": "D4A06D",
+    "tomato": "E85A4F",
+    "tomato_dark": "B93B31",
+    "leaf": "5FA35E",
+    "leaf_dark": "3E7241"
+  },
+  "primitives": [
+    {
+      "name": "crate_outer",
+      "shape": "box",
+      "material": "wood",
+      "operation": "add",
+      "center": [32, 32, 22],
+      "size": [22, 16, 14],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "crate_hollow",
+      "shape": "box",
+      "material": "wood_dark",
+      "operation": "remove",
+      "center": [32, 32, 22],
+      "size": [18, 12, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "crate_bottom",
+      "shape": "box",
+      "material": "wood_dark",
+      "operation": "add",
+      "center": [32, 32, 15],
+      "size": [20, 14, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "left_slat",
+      "shape": "box",
+      "material": "wood_light",
+      "operation": "add",
+      "center": [23, 24, 24],
+      "size": [2, 2, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_slat",
+      "shape": "box",
+      "material": "wood_light",
+      "operation": "add",
+      "center": [41, 24, 24],
+      "size": [2, 2, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "front_slat",
+      "shape": "box",
+      "material": "wood_light",
+      "operation": "add",
+      "center": [32, 24, 24],
+      "size": [18, 2, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "back_slat",
+      "shape": "box",
+      "material": "wood_light",
+      "operation": "add",
+      "center": [32, 40, 24],
+      "size": [18, 2, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tomato_1",
+      "shape": "sphere",
+      "material": "tomato",
+      "operation": "add",
+      "center": [26, 29, 31],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tomato_2",
+      "shape": "sphere",
+      "material": "tomato",
+      "operation": "add",
+      "center": [32, 33, 32],
+      "size": [5, 5, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tomato_3",
+      "shape": "sphere",
+      "material": "tomato",
+      "operation": "add",
+      "center": [39, 29, 31],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tomato_4",
+      "shape": "sphere",
+      "material": "tomato",
+      "operation": "add",
+      "center": [36, 37, 31],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "leaf_top",
+      "shape": "ellipsoid",
+      "material": "leaf",
+      "operation": "add",
+      "center": [32, 33, 36],
+      "size": [5, 5, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "leaf_shadow",
+      "shape": "ellipsoid",
+      "material": "leaf_dark",
+      "operation": "paint",
+      "center": [32, 33, 35],
+      "size": [3, 3, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

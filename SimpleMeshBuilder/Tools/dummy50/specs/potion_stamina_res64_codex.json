@@ -1,0 +1,79 @@
+{
+  "name": "potion_stamina_res64_codex",
+  "resolution": 64,
+  "description": "Cute stamina potion bottle with a soft green glow, leaf accents, and a chunky cork.",
+  "palette": {
+    "glass": "E2F6DD",
+    "liquid": "7FE36C",
+    "cork": "C09A6A",
+    "leaf": "4FAF57",
+    "glow": "DAFF88",
+    "highlight": "FFFFFF"
+  },
+  "primitives": [
+    {
+      "name": "body_glass",
+      "shape": "ellipsoid",
+      "material": "glass",
+      "center": [32, 28, 18],
+      "size": [16, 16, 22],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "inner_liquid",
+      "shape": "ellipsoid",
+      "material": "liquid",
+      "center": [32, 28, 14],
+      "size": [12, 12, 14],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "neck",
+      "shape": "cylinder_z",
+      "material": "glass",
+      "center": [32, 28, 31],
+      "size": [8, 8, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cork",
+      "shape": "box",
+      "material": "cork",
+      "center": [32, 28, 39],
+      "size": [8, 8, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "left_leaf",
+      "shape": "ellipsoid",
+      "material": "leaf",
+      "center": [26, 35, 38],
+      "size": [6, 3, 4],
+      "rotation_deg": [0, 0, -28]
+    },
+    {
+      "name": "right_leaf",
+      "shape": "ellipsoid",
+      "material": "leaf",
+      "center": [38, 35, 38],
+      "size": [6, 3, 4],
+      "rotation_deg": [0, 0, 28]
+    },
+    {
+      "name": "glow_spark",
+      "shape": "box",
+      "material": "glow",
+      "center": [32, 36, 28],
+      "size": [4, 2, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "highlight_strip",
+      "shape": "box",
+      "material": "highlight",
+      "center": [28, 24, 19],
+      "size": [2, 2, 14],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

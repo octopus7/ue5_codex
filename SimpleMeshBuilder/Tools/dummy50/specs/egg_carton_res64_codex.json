@@ -1,0 +1,122 @@
+{
+  "name": "egg_carton_res64_codex",
+  "resolution": 64,
+  "description": "Cute open egg carton with six oversized eggs in a tidy tray.",
+  "palette": {
+    "carton": "B8B39F",
+    "carton_dark": "8C866F",
+    "egg": "F3E8CB",
+    "egg_shadow": "D8C9A4",
+    "label": "C97A4A"
+  },
+  "primitives": [
+    {
+      "name": "tray_base",
+      "shape": "box",
+      "material": "carton",
+      "operation": "add",
+      "center": [31, 32, 14],
+      "size": [28, 18, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tray_lip",
+      "shape": "box",
+      "material": "carton_dark",
+      "operation": "paint",
+      "center": [31, 32, 18],
+      "size": [30, 20, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "center_divider",
+      "shape": "box",
+      "material": "carton_dark",
+      "operation": "paint",
+      "center": [31, 32, 14],
+      "size": [4, 16, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "back_divider",
+      "shape": "box",
+      "material": "carton_dark",
+      "operation": "paint",
+      "center": [31, 32, 14],
+      "size": [28, 4, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "egg_1",
+      "shape": "ellipsoid",
+      "material": "egg",
+      "operation": "add",
+      "center": [22, 26, 24],
+      "size": [5, 4, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "egg_2",
+      "shape": "ellipsoid",
+      "material": "egg",
+      "operation": "add",
+      "center": [31, 26, 24],
+      "size": [5, 4, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "egg_3",
+      "shape": "ellipsoid",
+      "material": "egg",
+      "operation": "add",
+      "center": [40, 26, 24],
+      "size": [5, 4, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "egg_4",
+      "shape": "ellipsoid",
+      "material": "egg",
+      "operation": "add",
+      "center": [22, 38, 24],
+      "size": [5, 4, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "egg_5",
+      "shape": "ellipsoid",
+      "material": "egg",
+      "operation": "add",
+      "center": [31, 38, 24],
+      "size": [5, 4, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "egg_6",
+      "shape": "ellipsoid",
+      "material": "egg",
+      "operation": "add",
+      "center": [40, 38, 24],
+      "size": [5, 4, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "egg_shadows",
+      "shape": "ellipsoid",
+      "material": "egg_shadow",
+      "operation": "paint",
+      "center": [31, 32, 22],
+      "size": [22, 14, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "front_label",
+      "shape": "box",
+      "material": "label",
+      "operation": "paint",
+      "center": [31, 23, 15],
+      "size": [12, 2, 3],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

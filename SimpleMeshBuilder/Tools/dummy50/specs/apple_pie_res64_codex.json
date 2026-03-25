@@ -1,0 +1,67 @@
+{
+  "name": "apple_pie_res64_codex",
+  "resolution": 64,
+  "description": "Cute farm-style apple pie with a domed crust and bright fruit filling.",
+  "palette": {
+    "crust": "C98A45",
+    "filling": "D86B4A",
+    "apple": "B83D35",
+    "tin": "7E7E86"
+  },
+  "primitives": [
+    {
+      "name": "pie_tin",
+      "shape": "box",
+      "material": "tin",
+      "operation": "add",
+      "center": [32, 32, 18],
+      "size": [26, 26, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "pie_filling",
+      "shape": "ellipsoid",
+      "material": "filling",
+      "operation": "add",
+      "center": [32, 32, 21],
+      "size": [20, 20, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "pie_top",
+      "shape": "ellipsoid",
+      "material": "crust",
+      "operation": "add",
+      "center": [32, 32, 23],
+      "size": [24, 24, 7],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "apple_chunk_1",
+      "shape": "sphere",
+      "material": "apple",
+      "operation": "add",
+      "center": [27, 29, 25],
+      "size": [3, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "apple_chunk_2",
+      "shape": "sphere",
+      "material": "apple",
+      "operation": "add",
+      "center": [36, 35, 25],
+      "size": [3, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "apple_chunk_3",
+      "shape": "sphere",
+      "material": "apple",
+      "operation": "add",
+      "center": [36, 28, 24],
+      "size": [2, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

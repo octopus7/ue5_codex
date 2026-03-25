@@ -1,0 +1,105 @@
+{
+  "name": "fuel_canister_res64_codex",
+  "resolution": 64,
+  "description": "Cute jerrycan-style fuel canister with a chunky handle, bold stripe, and toy utility look.",
+  "palette": {
+    "fuel_green": "6C945C",
+    "fuel_dark": "3D5C3F",
+    "cap_gray": "AEB6BE",
+    "hazard_yellow": "D8B54D",
+    "nozzle_gray": "707B84",
+    "black": "212326"
+  },
+  "primitives": [
+    {
+      "name": "main_body",
+      "shape": "box",
+      "material": "fuel_green",
+      "operation": "add",
+      "center": [32, 32, 28],
+      "size": [20, 16, 28],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "shoulder",
+      "shape": "box",
+      "material": "fuel_dark",
+      "operation": "add",
+      "center": [32, 32, 40],
+      "size": [18, 14, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "handle_outer",
+      "shape": "box",
+      "material": "fuel_dark",
+      "operation": "add",
+      "center": [32, 32, 46],
+      "size": [10, 8, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "handle_hole",
+      "shape": "box",
+      "material": "fuel_dark",
+      "operation": "remove",
+      "center": [32, 32, 46],
+      "size": [6, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cap",
+      "shape": "cylinder_z",
+      "material": "cap_gray",
+      "operation": "add",
+      "center": [40, 40, 41],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "nozzle",
+      "shape": "cylinder_x",
+      "material": "nozzle_gray",
+      "operation": "add",
+      "center": [43, 32, 36],
+      "size": [8, 6, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "stripe",
+      "shape": "box",
+      "material": "hazard_yellow",
+      "operation": "add",
+      "center": [32, 32, 28],
+      "size": [16, 2, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "front_rib",
+      "shape": "box",
+      "material": "fuel_dark",
+      "operation": "add",
+      "center": [39, 32, 28],
+      "size": [2, 16, 28],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "side_rib",
+      "shape": "box",
+      "material": "fuel_dark",
+      "operation": "add",
+      "center": [25, 32, 28],
+      "size": [2, 16, 28],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "base_shadow",
+      "shape": "box",
+      "material": "black",
+      "operation": "add",
+      "center": [32, 32, 14],
+      "size": [18, 14, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "name": "flour_bag_res64_codex",
+  "resolution": 64,
+  "description": "Cute paper flour sack with a folded top and a big stamped patch.",
+  "palette": {
+    "paper": "DCC7A0",
+    "paper_dark": "B79A6A",
+    "paper_shadow": "9E845B",
+    "stencil": "8B5E3C",
+    "flour_white": "F3F0E7"
+  },
+  "primitives": [
+    {
+      "name": "bag_body",
+      "shape": "box",
+      "material": "paper",
+      "operation": "add",
+      "center": [31, 32, 18],
+      "size": [18, 16, 22],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "bag_rounding",
+      "shape": "ellipsoid",
+      "material": "paper_shadow",
+      "operation": "paint",
+      "center": [31, 32, 16],
+      "size": [16, 14, 18],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "folded_top",
+      "shape": "box",
+      "material": "paper_dark",
+      "operation": "add",
+      "center": [31, 32, 34],
+      "size": [16, 14, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "twist_tie",
+      "shape": "box",
+      "material": "paper_shadow",
+      "operation": "paint",
+      "center": [31, 32, 36],
+      "size": [10, 10, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "front_stamp",
+      "shape": "box",
+      "material": "stencil",
+      "operation": "paint",
+      "center": [31, 23, 18],
+      "size": [10, 2, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "flour_puff",
+      "shape": "sphere",
+      "material": "flour_white",
+      "operation": "add",
+      "center": [24, 24, 24],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "flour_puff_2",
+      "shape": "sphere",
+      "material": "flour_white",
+      "operation": "add",
+      "center": [39, 22, 25],
+      "size": [3, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "name": "onion_sack_res64_codex",
+  "resolution": 64,
+  "description": "Cute burlap sack stuffed with three plump onions and tiny green tops.",
+  "palette": {
+    "burlap": "A88652",
+    "burlap_dark": "7B5D38",
+    "onion_white": "E6D7B7",
+    "onion_pink": "E1B7A7",
+    "stem": "6A8A3C",
+    "shadow": "5B4528"
+  },
+  "primitives": [
+    {
+      "name": "sack_body",
+      "shape": "ellipsoid",
+      "material": "burlap",
+      "operation": "add",
+      "center": [31, 32, 22],
+      "size": [18, 18, 22],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "sack_base",
+      "shape": "box",
+      "material": "burlap_dark",
+      "operation": "paint",
+      "center": [31, 32, 10],
+      "size": [12, 12, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "sack_neck",
+      "shape": "cylinder_z",
+      "material": "burlap_dark",
+      "operation": "add",
+      "center": [31, 32, 37],
+      "size": [7, 7, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "knot_band",
+      "shape": "box",
+      "material": "shadow",
+      "operation": "paint",
+      "center": [31, 32, 39],
+      "size": [8, 8, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "left_onion",
+      "shape": "ellipsoid",
+      "material": "onion_white",
+      "operation": "add",
+      "center": [24, 27, 40],
+      "size": [6, 6, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "center_onion",
+      "shape": "ellipsoid",
+      "material": "onion_pink",
+      "operation": "add",
+      "center": [31, 32, 42],
+      "size": [7, 7, 7],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_onion",
+      "shape": "ellipsoid",
+      "material": "onion_white",
+      "operation": "add",
+      "center": [38, 36, 39],
+      "size": [6, 6, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "green_top_left",
+      "shape": "box",
+      "material": "stem",
+      "operation": "add",
+      "center": [24, 27, 46],
+      "size": [2, 2, 6],
+      "rotation_deg": [0, 0, -20]
+    },
+    {
+      "name": "green_top_center",
+      "shape": "box",
+      "material": "stem",
+      "operation": "add",
+      "center": [31, 32, 49],
+      "size": [2, 2, 7],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "green_top_right",
+      "shape": "box",
+      "material": "stem",
+      "operation": "add",
+      "center": [38, 36, 46],
+      "size": [2, 2, 6],
+      "rotation_deg": [0, 0, 18]
+    }
+  ]
+}

@@ -1,0 +1,231 @@
+{
+  "name": "cow_res64_codex",
+  "resolution": 64,
+  "description": "Cute farm cow with a rounded standing pose, small horns, floppy ears, and soft patch coloring.",
+  "palette": {
+    "white": "F3F0E8",
+    "black": "2C2A28",
+    "pink": "E4B0A6",
+    "cream": "D9C89C",
+    "brown": "8C5A3C",
+    "nose": "C98B78"
+  },
+  "primitives": [
+    {
+      "name": "body",
+      "shape": "ellipsoid",
+      "material": "white",
+      "operation": "add",
+      "center": [29, 32, 25],
+      "size": [24, 18, 20],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "chest",
+      "shape": "ellipsoid",
+      "material": "white",
+      "operation": "add",
+      "center": [22, 32, 23],
+      "size": [16, 14, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "head",
+      "shape": "ellipsoid",
+      "material": "white",
+      "operation": "add",
+      "center": [46, 31, 31],
+      "size": [14, 13, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "muzzle",
+      "shape": "ellipsoid",
+      "material": "nose",
+      "operation": "add",
+      "center": [52, 31, 28],
+      "size": [7, 6, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "snout_patch",
+      "shape": "ellipsoid",
+      "material": "pink",
+      "operation": "paint",
+      "center": [51, 31, 29],
+      "size": [4, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "left_eye_patch",
+      "shape": "ellipsoid",
+      "material": "black",
+      "operation": "paint",
+      "center": [43, 35, 34],
+      "size": [5, 4, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_eye_patch",
+      "shape": "ellipsoid",
+      "material": "black",
+      "operation": "paint",
+      "center": [43, 27, 34],
+      "size": [5, 4, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "back_patch",
+      "shape": "ellipsoid",
+      "material": "black",
+      "operation": "paint",
+      "center": [25, 24, 28],
+      "size": [8, 6, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "rear_patch",
+      "shape": "ellipsoid",
+      "material": "black",
+      "operation": "paint",
+      "center": [20, 39, 25],
+      "size": [7, 5, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "left_ear",
+      "shape": "box",
+      "material": "white",
+      "operation": "add",
+      "center": [41, 25, 36],
+      "size": [3, 5, 2],
+      "rotation_deg": [0, 0, 18]
+    },
+    {
+      "name": "right_ear",
+      "shape": "box",
+      "material": "white",
+      "operation": "add",
+      "center": [41, 37, 36],
+      "size": [3, 5, 2],
+      "rotation_deg": [0, 0, -18]
+    },
+    {
+      "name": "left_horn",
+      "shape": "cylinder_z",
+      "material": "cream",
+      "operation": "add",
+      "center": [42, 26, 39],
+      "size": [2, 2, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "right_horn",
+      "shape": "cylinder_z",
+      "material": "cream",
+      "operation": "add",
+      "center": [42, 36, 39],
+      "size": [2, 2, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "front_left_leg",
+      "shape": "box",
+      "material": "white",
+      "operation": "add",
+      "center": [21, 26, 10],
+      "size": [3, 3, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "front_right_leg",
+      "shape": "box",
+      "material": "white",
+      "operation": "add",
+      "center": [21, 38, 10],
+      "size": [3, 3, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "rear_left_leg",
+      "shape": "box",
+      "material": "white",
+      "operation": "add",
+      "center": [34, 26, 10],
+      "size": [3, 3, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "rear_right_leg",
+      "shape": "box",
+      "material": "white",
+      "operation": "add",
+      "center": [34, 38, 10],
+      "size": [3, 3, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "hoof_tint_front_left",
+      "shape": "box",
+      "material": "brown",
+      "operation": "paint",
+      "center": [21, 26, 3],
+      "size": [3, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "hoof_tint_front_right",
+      "shape": "box",
+      "material": "brown",
+      "operation": "paint",
+      "center": [21, 38, 3],
+      "size": [3, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "hoof_tint_rear_left",
+      "shape": "box",
+      "material": "brown",
+      "operation": "paint",
+      "center": [34, 26, 3],
+      "size": [3, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "hoof_tint_rear_right",
+      "shape": "box",
+      "material": "brown",
+      "operation": "paint",
+      "center": [34, 38, 3],
+      "size": [3, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tail_base",
+      "shape": "cylinder_z",
+      "material": "white",
+      "operation": "add",
+      "center": [16, 32, 28],
+      "size": [1, 1, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tail_bush",
+      "shape": "sphere",
+      "material": "black",
+      "operation": "add",
+      "center": [15, 32, 24],
+      "size": [3, 3, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "belly_shadow",
+      "shape": "ellipsoid",
+      "material": "cream",
+      "operation": "paint",
+      "center": [28, 32, 18],
+      "size": [14, 12, 7],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

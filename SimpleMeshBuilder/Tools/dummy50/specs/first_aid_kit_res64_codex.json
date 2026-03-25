@@ -1,0 +1,102 @@
+{
+  "name": "first_aid_kit_res64_codex",
+  "resolution": 64,
+  "description": "Cute first aid kit with rounded corners, a carry handle, and a bold white cross.",
+  "palette": {
+    "red": "E04A4A",
+    "white": "FFF7F2",
+    "shadow": "B43A3A",
+    "handle": "C7BDB7",
+    "latch": "7D6D67"
+  },
+  "primitives": [
+    {
+      "name": "main_body",
+      "shape": "box",
+      "material": "red",
+      "center": [32, 32, 20],
+      "size": [26, 18, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "corner_nw",
+      "shape": "ellipsoid",
+      "material": "shadow",
+      "center": [21, 23, 14],
+      "size": [6, 6, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "corner_ne",
+      "shape": "ellipsoid",
+      "material": "shadow",
+      "center": [43, 23, 14],
+      "size": [6, 6, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "corner_sw",
+      "shape": "ellipsoid",
+      "material": "shadow",
+      "center": [21, 41, 14],
+      "size": [6, 6, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "corner_se",
+      "shape": "ellipsoid",
+      "material": "shadow",
+      "center": [43, 41, 14],
+      "size": [6, 6, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "front_strip",
+      "shape": "box",
+      "material": "white",
+      "center": [32, 32, 25],
+      "size": [26, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cross_vertical",
+      "shape": "box",
+      "material": "white",
+      "center": [32, 32, 20],
+      "size": [4, 12, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cross_horizontal",
+      "shape": "box",
+      "material": "white",
+      "center": [32, 32, 20],
+      "size": [12, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "handle",
+      "shape": "box",
+      "material": "handle",
+      "center": [32, 32, 31],
+      "size": [10, 4, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "latch_left",
+      "shape": "box",
+      "material": "latch",
+      "center": [26, 24, 18],
+      "size": [2, 2, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "latch_right",
+      "shape": "box",
+      "material": "latch",
+      "center": [38, 24, 18],
+      "size": [2, 2, 4],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

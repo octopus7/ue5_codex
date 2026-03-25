@@ -1,0 +1,68 @@
+{
+  "name": "sandwich_club_res64_codex",
+  "resolution": 64,
+  "description": "Cute triple-decker club sandwich with soft bread, fillings, and a neat stacked look.",
+  "palette": {
+    "bread": "E0B46B",
+    "lettuce": "69B54A",
+    "ham": "D97A86",
+    "cheese": "F4D36B",
+    "tomato": "E05A4F"
+  },
+  "primitives": [
+    {
+      "name": "bottom_bread",
+      "shape": "box",
+      "material": "bread",
+      "operation": "add",
+      "center": [32, 32, 18],
+      "size": [24, 18, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "bottom_fillings",
+      "shape": "box",
+      "material": "lettuce",
+      "operation": "add",
+      "center": [32, 32, 22],
+      "size": [22, 16, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "middle_bread",
+      "shape": "box",
+      "material": "bread",
+      "operation": "add",
+      "center": [32, 32, 26],
+      "size": [24, 18, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "middle_fillings",
+      "shape": "box",
+      "material": "ham",
+      "operation": "add",
+      "center": [32, 32, 30],
+      "size": [22, 16, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "top_bread",
+      "shape": "box",
+      "material": "bread",
+      "operation": "add",
+      "center": [32, 32, 34],
+      "size": [24, 18, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "top_garnish",
+      "shape": "sphere",
+      "material": "tomato",
+      "operation": "add",
+      "center": [39, 37, 38],
+      "size": [2, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

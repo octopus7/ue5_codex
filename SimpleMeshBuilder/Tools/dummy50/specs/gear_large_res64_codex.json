@@ -1,0 +1,131 @@
+{
+  "name": "gear_large_res64_codex",
+  "resolution": 64,
+  "description": "Cute oversized metal gear with chunky teeth, a bold hub, and a toy-like industrial silhouette.",
+  "palette": {
+    "steel_light": "B9C4CF",
+    "steel_mid": "7D8996",
+    "steel_dark": "4D5561",
+    "bolt_gold": "D7B45B",
+    "accent_blue": "6FA7D8"
+  },
+  "primitives": [
+    {
+      "name": "outer_disc",
+      "shape": "cylinder_z",
+      "material": "steel_light",
+      "operation": "add",
+      "center": [32, 32, 28],
+      "size": [24, 24, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "inner_ring",
+      "shape": "cylinder_z",
+      "material": "steel_mid",
+      "operation": "add",
+      "center": [32, 32, 28],
+      "size": [14, 14, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "hub_core",
+      "shape": "cylinder_z",
+      "material": "steel_dark",
+      "operation": "add",
+      "center": [32, 32, 28],
+      "size": [8, 8, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "center_hole",
+      "shape": "cylinder_z",
+      "material": "steel_dark",
+      "operation": "remove",
+      "center": [32, 32, 28],
+      "size": [4, 4, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tooth_east",
+      "shape": "box",
+      "material": "steel_dark",
+      "operation": "add",
+      "center": [45, 32, 28],
+      "size": [4, 8, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tooth_west",
+      "shape": "box",
+      "material": "steel_dark",
+      "operation": "add",
+      "center": [19, 32, 28],
+      "size": [4, 8, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tooth_north",
+      "shape": "box",
+      "material": "steel_dark",
+      "operation": "add",
+      "center": [32, 45, 28],
+      "size": [8, 4, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tooth_south",
+      "shape": "box",
+      "material": "steel_dark",
+      "operation": "add",
+      "center": [32, 19, 28],
+      "size": [8, 4, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tooth_ne",
+      "shape": "box",
+      "material": "steel_mid",
+      "operation": "add",
+      "center": [41, 41, 28],
+      "size": [4, 4, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tooth_nw",
+      "shape": "box",
+      "material": "steel_mid",
+      "operation": "add",
+      "center": [23, 41, 28],
+      "size": [4, 4, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tooth_se",
+      "shape": "box",
+      "material": "steel_mid",
+      "operation": "add",
+      "center": [41, 23, 28],
+      "size": [4, 4, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tooth_sw",
+      "shape": "box",
+      "material": "steel_mid",
+      "operation": "add",
+      "center": [23, 23, 28],
+      "size": [4, 4, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "hub_bolt",
+      "shape": "sphere",
+      "material": "bolt_gold",
+      "operation": "add",
+      "center": [32, 32, 34],
+      "size": [2, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "name": "battery_cell_res64_codex",
+  "resolution": 64,
+  "description": "Cute cylindrical battery cell with a bold label band and shiny top cap.",
+  "palette": {
+    "shell_black": "1F2328",
+    "label_blue": "4D7FB8",
+    "label_white": "F0F1EA",
+    "cap_silver": "C7D0D8",
+    "warning_red": "D95A52"
+  },
+  "primitives": [
+    {
+      "name": "body",
+      "shape": "cylinder_z",
+      "material": "shell_black",
+      "operation": "add",
+      "center": [32, 32, 28],
+      "size": [18, 18, 28],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "label_band",
+      "shape": "cylinder_z",
+      "material": "label_blue",
+      "operation": "add",
+      "center": [32, 32, 28],
+      "size": [16, 16, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "top_cap",
+      "shape": "cylinder_z",
+      "material": "cap_silver",
+      "operation": "add",
+      "center": [32, 32, 42],
+      "size": [12, 12, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "bottom_cap",
+      "shape": "cylinder_z",
+      "material": "cap_silver",
+      "operation": "add",
+      "center": [32, 32, 14],
+      "size": [14, 14, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "positive_cross_h",
+      "shape": "box",
+      "material": "label_white",
+      "operation": "add",
+      "center": [32, 32, 41],
+      "size": [6, 2, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "positive_cross_v",
+      "shape": "box",
+      "material": "label_white",
+      "operation": "add",
+      "center": [32, 32, 41],
+      "size": [2, 6, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "warning_dot",
+      "shape": "sphere",
+      "material": "warning_red",
+      "operation": "add",
+      "center": [32, 24, 28],
+      "size": [2, 2, 2],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

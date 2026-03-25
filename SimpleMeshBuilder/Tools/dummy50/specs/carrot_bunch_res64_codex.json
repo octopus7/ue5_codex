@@ -1,0 +1,114 @@
+{
+  "name": "carrot_bunch_res64_codex",
+  "resolution": 64,
+  "description": "Cute bunch of carrots tied together with leafy tops and a soft harvest bundle silhouette.",
+  "palette": {
+    "carrot": "F08C3C",
+    "carrot_dark": "C96A24",
+    "leaf": "6FBF64",
+    "leaf_dark": "4A8B47",
+    "tie": "D9C08A",
+    "tie_dark": "A98750"
+  },
+  "primitives": [
+    {
+      "name": "carrot_1",
+      "shape": "cylinder_z",
+      "material": "carrot",
+      "operation": "add",
+      "center": [26, 28, 20],
+      "size": [4, 4, 18],
+      "rotation_deg": [0, 0, -16]
+    },
+    {
+      "name": "carrot_2",
+      "shape": "cylinder_z",
+      "material": "carrot",
+      "operation": "add",
+      "center": [31, 31, 19],
+      "size": [4, 4, 19],
+      "rotation_deg": [0, 0, 8]
+    },
+    {
+      "name": "carrot_3",
+      "shape": "cylinder_z",
+      "material": "carrot",
+      "operation": "add",
+      "center": [36, 28, 20],
+      "size": [4, 4, 18],
+      "rotation_deg": [0, 0, 18]
+    },
+    {
+      "name": "carrot_4",
+      "shape": "cylinder_z",
+      "material": "carrot",
+      "operation": "add",
+      "center": [30, 36, 18],
+      "size": [4, 4, 17],
+      "rotation_deg": [0, 0, -8]
+    },
+    {
+      "name": "carrot_shadow",
+      "shape": "ellipsoid",
+      "material": "carrot_dark",
+      "operation": "paint",
+      "center": [31, 31, 13],
+      "size": [8, 8, 5],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "leaf_cluster_1",
+      "shape": "ellipsoid",
+      "material": "leaf",
+      "operation": "add",
+      "center": [25, 27, 33],
+      "size": [5, 5, 7],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "leaf_cluster_2",
+      "shape": "ellipsoid",
+      "material": "leaf",
+      "operation": "add",
+      "center": [31, 32, 35],
+      "size": [6, 6, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "leaf_cluster_3",
+      "shape": "ellipsoid",
+      "material": "leaf",
+      "operation": "add",
+      "center": [36, 28, 33],
+      "size": [5, 5, 7],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "leaf_shadow",
+      "shape": "ellipsoid",
+      "material": "leaf_dark",
+      "operation": "paint",
+      "center": [31, 31, 34],
+      "size": [8, 8, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tie",
+      "shape": "box",
+      "material": "tie",
+      "operation": "add",
+      "center": [31, 31, 16],
+      "size": [12, 8, 3],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "tie_shadow",
+      "shape": "box",
+      "material": "tie_dark",
+      "operation": "paint",
+      "center": [31, 31, 15],
+      "size": [10, 2, 1],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

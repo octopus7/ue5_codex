@@ -1,0 +1,105 @@
+{
+  "name": "bolt_box_res64_codex",
+  "resolution": 64,
+  "description": "Cute hardware crate packed with chunky bolts and a toy workshop label.",
+  "palette": {
+    "crate_brown": "A06A3D",
+    "crate_dark": "6A4426",
+    "bolt_metal": "CDD5DB",
+    "bolt_shadow": "707A84",
+    "sticker_yellow": "E0C14E",
+    "ink_black": "22262A"
+  },
+  "primitives": [
+    {
+      "name": "crate",
+      "shape": "box",
+      "material": "crate_brown",
+      "operation": "add",
+      "center": [32, 32, 24],
+      "size": [22, 22, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "lid",
+      "shape": "box",
+      "material": "crate_dark",
+      "operation": "add",
+      "center": [32, 32, 33],
+      "size": [22, 22, 6],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "slat_x",
+      "shape": "box",
+      "material": "crate_dark",
+      "operation": "add",
+      "center": [32, 32, 24],
+      "size": [2, 22, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "slat_y",
+      "shape": "box",
+      "material": "crate_dark",
+      "operation": "add",
+      "center": [32, 32, 24],
+      "size": [22, 2, 16],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "bolt_a",
+      "shape": "cylinder_z",
+      "material": "bolt_metal",
+      "operation": "add",
+      "center": [26, 26, 33],
+      "size": [3, 3, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "bolt_b",
+      "shape": "cylinder_z",
+      "material": "bolt_metal",
+      "operation": "add",
+      "center": [38, 26, 33],
+      "size": [3, 3, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "bolt_c",
+      "shape": "cylinder_z",
+      "material": "bolt_metal",
+      "operation": "add",
+      "center": [26, 38, 33],
+      "size": [3, 3, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "bolt_d",
+      "shape": "cylinder_z",
+      "material": "bolt_metal",
+      "operation": "add",
+      "center": [38, 38, 33],
+      "size": [3, 3, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "sticker",
+      "shape": "box",
+      "material": "sticker_yellow",
+      "operation": "add",
+      "center": [32, 32, 31],
+      "size": [8, 4, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "sticker_mark",
+      "shape": "box",
+      "material": "ink_black",
+      "operation": "add",
+      "center": [32, 32, 31],
+      "size": [2, 2, 1],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "name": "cupcake_frosted_res64_codex",
+  "resolution": 64,
+  "description": "Cute frosted cupcake with a rounded frosting cap and a bright cherry on top.",
+  "palette": {
+    "cake": "D8A064",
+    "wrapper": "7D93D4",
+    "frosting": "F3D7E7",
+    "cherry": "C93E4B",
+    "sprinkle": "F4C75C"
+  },
+  "primitives": [
+    {
+      "name": "wrapper",
+      "shape": "box",
+      "material": "wrapper",
+      "operation": "add",
+      "center": [32, 32, 17],
+      "size": [18, 18, 10],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cake_body",
+      "shape": "ellipsoid",
+      "material": "cake",
+      "operation": "add",
+      "center": [32, 32, 21],
+      "size": [16, 16, 8],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "frosting",
+      "shape": "ellipsoid",
+      "material": "frosting",
+      "operation": "add",
+      "center": [32, 32, 29],
+      "size": [20, 20, 12],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "cherry",
+      "shape": "sphere",
+      "material": "cherry",
+      "operation": "add",
+      "center": [32, 32, 37],
+      "size": [4, 4, 4],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "sprinkle_1",
+      "shape": "sphere",
+      "material": "sprinkle",
+      "operation": "add",
+      "center": [28, 29, 35],
+      "size": [1, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "sprinkle_2",
+      "shape": "sphere",
+      "material": "sprinkle",
+      "operation": "add",
+      "center": [35, 31, 36],
+      "size": [1, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    },
+    {
+      "name": "sprinkle_3",
+      "shape": "sphere",
+      "material": "sprinkle",
+      "operation": "add",
+      "center": [31, 36, 34],
+      "size": [1, 1, 1],
+      "rotation_deg": [0, 0, 0]
+    }
+  ]
+}
