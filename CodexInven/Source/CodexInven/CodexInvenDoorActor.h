@@ -10,6 +10,8 @@
 class UBoxComponent;
 class USceneComponent;
 class UStaticMeshComponent;
+class UWidgetComponent;
+class UCodexInvenDoorCountdownWidget;
 
 UCLASS()
 class CODEXINVEN_API ACodexInvenDoorActor : public AActor
@@ -53,6 +55,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Door")
 	TObjectPtr<UStaticMeshComponent> DoorMeshComponent = nullptr;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Door")
+	TObjectPtr<UWidgetComponent> DoorCountdownWidgetComponent = nullptr;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Door", meta = (ClampMin = "0.0"))
 	float OpenYawOffset = 90.0f;
 
@@ -61,12 +66,19 @@ protected:
 
 private:
 	void ApplyDoorVisualState();
+	UCodexInvenDoorCountdownWidget* GetDoorCountdownWidget() const;
+	void RefreshDelayedCloseCountdown();
+	void SetDelayedCloseCountdownVisible(bool bInVisible) const;
+	void HandleDelayedCloseCountdownTick();
 	void UpdateDoorBlockerCollision() const;
 	void ClearPendingDelayedClose();
 	void HandleDelayedCloseExpired();
 
 	FRotator ClosedDoorRelativeRotation = FRotator::ZeroRotator;
 	FTimerHandle DelayedCloseTimerHandle;
+	FTimerHandle DelayedCloseCountdownTimerHandle;
+	double DelayedCloseEndTimeSeconds = -1.0;
+	int32 LastCountdownDisplaySeconds = INDEX_NONE;
 	float DoorOpenAlpha = 0.0f;
 	bool bShouldBeOpen = false;
 };

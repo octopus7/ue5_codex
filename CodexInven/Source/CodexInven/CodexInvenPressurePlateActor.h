@@ -71,7 +71,9 @@ protected:
 
 private:
 	void ApplyPlateVisualState();
+	void DrawConnectedDoorDebugLines() const;
 	void RefreshPressedState();
+	void UpdateTickEnabledState();
 	void UpdateConnectedDoors() const;
 
 	UFUNCTION()

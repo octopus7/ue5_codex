@@ -6,6 +6,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "DrawDebugHelpers.h"
 #include "GameFramework/Pawn.h"
 
 namespace
@@ -17,6 +18,7 @@ namespace
 ACodexInvenPressurePlateActor::ACodexInvenPressurePlateActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	SetActorTickEnabled(false);
 	SetCanBeDamaged(false);
 
 	SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("SceneRoot"));
@@ -66,6 +68,7 @@ void ACodexInvenPressurePlateActor::BeginPlay()
 
 	RefreshPressedState();
 	ApplyPlateVisualState();
+	UpdateTickEnabledState();
 }
 
 void ACodexInvenPressurePlateActor::Tick(const float DeltaTime)
@@ -73,22 +76,27 @@ void ACodexInvenPressurePlateActor::Tick(const float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	const float TargetAlpha = bShouldBePressed ? 1.0f : 0.0f;
-	if (FMath::IsNearlyEqual(PlatePressAlpha, TargetAlpha))
+	if (!FMath::IsNearlyEqual(PlatePressAlpha, TargetAlpha))
 	{
-		return;
+		if (PlateMoveDuration <= KINDA_SMALL_NUMBER)
+		{
+			PlatePressAlpha = TargetAlpha;
+		}
+		else
+		{
+			const float InterpSpeed = 1.0f / PlateMoveDuration;
+			PlatePressAlpha = FMath::FInterpConstantTo(PlatePressAlpha, TargetAlpha, DeltaTime, InterpSpeed);
+		}
+
+		ApplyPlateVisualState();
 	}
 
-	if (PlateMoveDuration <= KINDA_SMALL_NUMBER)
+	if (bShouldBePressed)
 	{
-		PlatePressAlpha = TargetAlpha;
-	}
-	else
-	{
-		const float InterpSpeed = 1.0f / PlateMoveDuration;
-		PlatePressAlpha = FMath::FInterpConstantTo(PlatePressAlpha, TargetAlpha, DeltaTime, InterpSpeed);
+		DrawConnectedDoorDebugLines();
 	}
 
-	ApplyPlateVisualState();
+	UpdateTickEnabledState();
 }
 
 void ACodexInvenPressurePlateActor::ApplyPlateVisualState()
@@ -99,6 +107,27 @@ void ACodexInvenPressurePlateActor::ApplyPlateVisualState()
 	}
 
 	PlateMeshComponent->SetRelativeLocation(RaisedPlateRelativeLocation + FVector(0.0f, 0.0f, -PlateLowerDistance * PlatePressAlpha));
+}
+
+void ACodexInvenPressurePlateActor::DrawConnectedDoorDebugLines() const
+{
+	UWorld* const World = GetWorld();
+	if (World == nullptr)
+	{
+		return;
+	}
+
+	const FVector StartLocation = (PlateMeshComponent != nullptr ? PlateMeshComponent->GetComponentLocation() : GetActorLocation()) + FVector(0.0f, 0.0f, 8.0f);
+	for (const ACodexInvenDoorActor* ConnectedDoor : ConnectedDoors)
+	{
+		if (ConnectedDoor == nullptr)
+		{
+			continue;
+		}
+
+		const FVector EndLocation = ConnectedDoor->GetActorLocation() + FVector(0.0f, 0.0f, 100.0f);
+		DrawDebugLine(World, StartLocation, EndLocation, FColor::Green, false, 0.0f, 0, 3.0f);
+	}
 }
 
 void ACodexInvenPressurePlateActor::RefreshPressedState()
@@ -125,6 +154,15 @@ void ACodexInvenPressurePlateActor::RefreshPressedState()
 		PlatePressAlpha = bShouldBePressed ? 1.0f : 0.0f;
 		ApplyPlateVisualState();
 	}
+
+	UpdateTickEnabledState();
+}
+
+void ACodexInvenPressurePlateActor::UpdateTickEnabledState()
+{
+	const float TargetAlpha = bShouldBePressed ? 1.0f : 0.0f;
+	const bool bIsAnimating = !FMath::IsNearlyEqual(PlatePressAlpha, TargetAlpha);
+	SetActorTickEnabled(bShouldBePressed || bIsAnimating);
 }
 
 void ACodexInvenPressurePlateActor::UpdateConnectedDoors() const
