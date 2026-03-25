@@ -22,6 +22,7 @@ public class VoxImporterEditor : ModuleRules
 				"AssetTools",
 				"AssetRegistry",
 				"ContentBrowser",
+				"MaterialBaking",
 				"MeshDescription",
 				"MeshReductionInterface",
 				"MeshUtilitiesCommon",

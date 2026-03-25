@@ -10,6 +10,7 @@
 #include "ToolMenus.h"
 #include "VoxReconstructionService.h"
 #include "VoxStaticMeshUtilities.h"
+#include "VoxTextureBakeService.h"
 
 #define LOCTEXT_NAMESPACE "VoxImporterEditorModule"
 
@@ -42,16 +43,22 @@ void FVoxImporterEditorModule::RegisterMenus()
 			return;
 		}
 
-		TArray<TWeakObjectPtr<UStaticMesh>> EligibleMeshes;
+		TArray<TWeakObjectPtr<UStaticMesh>> EligibleVoxMeshes;
+		TArray<TWeakObjectPtr<UStaticMesh>> EligiblePrimaryMeshes;
 		for (UStaticMesh* StaticMesh : Context->LoadSelectedObjects<UStaticMesh>())
 		{
+			if (VoxStaticMeshUtilities::IsVoxImportedStaticMesh(StaticMesh))
+			{
+				EligibleVoxMeshes.Add(StaticMesh);
+			}
+
 			if (VoxStaticMeshUtilities::IsPrimaryVoxSourceStaticMesh(StaticMesh))
 			{
-				EligibleMeshes.Add(StaticMesh);
+				EligiblePrimaryMeshes.Add(StaticMesh);
 			}
 		}
 
-		if (EligibleMeshes.IsEmpty())
+		if (EligibleVoxMeshes.IsEmpty())
 		{
 			return;
 		}
@@ -60,17 +67,31 @@ void FVoxImporterEditorModule::RegisterMenus()
 			"VoxImporterSubMenu",
 			LOCTEXT("VoxSubMenuLabel", "Vox"),
 			LOCTEXT("VoxSubMenuToolTip", "Actions for Static Mesh assets imported from MagicaVoxel .vox files."),
-			FNewToolMenuDelegate::CreateLambda([this, EligibleMeshes](UToolMenu* SubMenu)
+			FNewToolMenuDelegate::CreateLambda([this, EligibleVoxMeshes, EligiblePrimaryMeshes](UToolMenu* SubMenu)
 			{
 				FToolMenuSection& SubSection = SubMenu->AddSection("VoxImporterActions", LOCTEXT("VoxActionsHeading", "Vox"));
+
+				if (!EligiblePrimaryMeshes.IsEmpty())
+				{
+					SubSection.AddMenuEntry(
+						"GenerateSmoothReconstruction",
+						LOCTEXT("GenerateSmoothReconstructionLabel", "Generate Smooth Reconstruction"),
+						LOCTEXT("GenerateSmoothReconstructionToolTip", "Rebuild this .vox asset as a smoother reconstructed Static Mesh and save it as a new asset."),
+						FSlateIcon(),
+						FToolUIActionChoice(FUIAction(FExecuteAction::CreateLambda([this, EligiblePrimaryMeshes]()
+						{
+							GenerateSmoothReconstructions(EligiblePrimaryMeshes);
+						}))));
+				}
+
 				SubSection.AddMenuEntry(
-					"GenerateSmoothReconstruction",
-					LOCTEXT("GenerateSmoothReconstructionLabel", "Generate Smooth Reconstruction"),
-					LOCTEXT("GenerateSmoothReconstructionToolTip", "Rebuild this .vox asset as a smoother reconstructed Static Mesh and save it as a new asset."),
+					"BakeVertexColorToTexture",
+					LOCTEXT("BakeVertexColorToTextureLabel", "Bake Vertex Color To Texture"),
+					LOCTEXT("BakeVertexColorToTextureToolTip", "Generate automatic UVs, bake vertex colors into a texture, and assign a per-mesh baked material instance."),
 					FSlateIcon(),
-					FToolUIActionChoice(FUIAction(FExecuteAction::CreateLambda([this, EligibleMeshes]()
+					FToolUIActionChoice(FUIAction(FExecuteAction::CreateLambda([this, EligibleVoxMeshes]()
 					{
-						GenerateSmoothReconstructions(EligibleMeshes);
+						BakeVertexColorsToTextures(EligibleVoxMeshes);
 					}))));
 			}));
 	}));
@@ -101,6 +122,54 @@ void FVoxImporterEditorModule::GenerateSmoothReconstructions(const TArray<TWeakO
 			if (CreatedAsset)
 			{
 				CreatedAssets.Add(CreatedAsset);
+			}
+		}
+		else
+		{
+			Errors.Add(FString::Printf(TEXT("%s: %s"), *StaticMesh->GetName(), *ErrorMessage));
+		}
+	}
+
+	if (!CreatedAssets.IsEmpty())
+	{
+		FContentBrowserModule& ContentBrowserModule = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser");
+		ContentBrowserModule.Get().SyncBrowserToAssets(CreatedAssets);
+	}
+
+	if (!Errors.IsEmpty())
+	{
+		FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(FString::Join(Errors, TEXT("\n"))));
+	}
+}
+
+void FVoxImporterEditorModule::BakeVertexColorsToTextures(const TArray<TWeakObjectPtr<UStaticMesh>>& StaticMeshes) const
+{
+	TArray<UObject*> CreatedAssets;
+	TArray<FString> Errors;
+
+	FScopedSlowTask SlowTask(static_cast<float>(StaticMeshes.Num()), LOCTEXT("BakeVertexColorsProgress", "Baking VOX vertex colors to textures..."));
+	SlowTask.MakeDialogDelayed(0.2f);
+
+	for (const TWeakObjectPtr<UStaticMesh>& StaticMeshWeak : StaticMeshes)
+	{
+		SlowTask.EnterProgressFrame(1.0f);
+
+		UStaticMesh* StaticMesh = StaticMeshWeak.Get();
+		if (!StaticMesh)
+		{
+			continue;
+		}
+
+		TArray<UObject*> ResultAssets;
+		FString ErrorMessage;
+		if (VoxTextureBakeService::BakeVertexColorToTexture(StaticMesh, ResultAssets, ErrorMessage))
+		{
+			for (UObject* Asset : ResultAssets)
+			{
+				if (Asset)
+				{
+					CreatedAssets.AddUnique(Asset);
+				}
 			}
 		}
 		else

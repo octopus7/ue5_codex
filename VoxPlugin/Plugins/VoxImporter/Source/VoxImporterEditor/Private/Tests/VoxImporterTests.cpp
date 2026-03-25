@@ -261,4 +261,56 @@ bool FVoxSmoothMeshBuilderSimplifyTest::RunTest(const FString& Parameters)
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVoxBakeMeshDescriptionPreparationTest, "VoxImporter.Bake.PrepareMeshDescription", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FVoxBakeMeshDescriptionPreparationTest::RunTest(const FString& Parameters)
+{
+	FVoxModelData Model;
+	Model.Size = FIntVector(2, 2, 2);
+	Model.Palette.Init(FColor(0, 0, 0, 0), 256);
+	Model.Palette[1] = FColor(255, 0, 0, 255);
+
+	for (int32 Z = 0; Z < 2; ++Z)
+	{
+		for (int32 Y = 0; Y < 2; ++Y)
+		{
+			for (int32 X = 0; X < 2; ++X)
+			{
+				FVoxVoxel& Voxel = Model.Voxels.AddDefaulted_GetRef();
+				Voxel.X = X;
+				Voxel.Y = Y;
+				Voxel.Z = Z;
+				Voxel.ColorIndex = 1;
+			}
+		}
+	}
+
+	FMeshDescription SourceMeshDescription;
+	FString ErrorMessage;
+	TestTrue(TEXT("Mesh build succeeds"), FVoxMeshBuilder::BuildMeshDescription(Model, SourceMeshDescription, ErrorMessage));
+
+	FMeshDescription PreparedMeshDescription;
+	TArray<FVector2D> GeneratedUVs;
+	ErrorMessage.Reset();
+	TestTrue(TEXT("Bake preparation succeeds"), VoxStaticMeshUtilities::PrepareVertexColorTextureBakeMeshDescription(SourceMeshDescription, PreparedMeshDescription, GeneratedUVs, ErrorMessage));
+	TestEqual(TEXT("Generated UV count matches vertex instances"), GeneratedUVs.Num(), PreparedMeshDescription.VertexInstances().Num());
+
+	const TVertexInstanceAttributesConstRef<FVector2f> VertexUVs =
+		PreparedMeshDescription.VertexInstanceAttributes().GetAttributesRef<FVector2f>(MeshAttribute::VertexInstance::TextureCoordinate);
+	const TVertexInstanceAttributesConstRef<FVector4f> VertexColors =
+		PreparedMeshDescription.VertexInstanceAttributes().GetAttributesRef<FVector4f>(MeshAttribute::VertexInstance::Color);
+
+	bool bFoundNonZeroUV = false;
+	for (const FVertexInstanceID VertexInstanceId : PreparedMeshDescription.VertexInstances().GetElementIDs())
+	{
+		const FVector2f UV = VertexUVs.Get(VertexInstanceId, 0);
+		bFoundNonZeroUV |= !UV.IsNearlyZero();
+
+		const FVector4f Color = VertexColors[VertexInstanceId];
+		TestTrue(TEXT("Prepared vertex colors are cleared to white"), Color.Equals(FVector4f(1.0f, 1.0f, 1.0f, 1.0f)));
+	}
+
+	TestTrue(TEXT("At least one generated UV is non-zero"), bFoundNonZeroUV);
+	return true;
+}
+
 #endif

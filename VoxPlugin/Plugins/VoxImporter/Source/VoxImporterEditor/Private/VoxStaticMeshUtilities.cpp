@@ -7,8 +7,11 @@
 #include "Factories/MaterialFactoryNew.h"
 #include "IMeshReductionInterfaces.h"
 #include "IMeshReductionManagerModule.h"
+#include "Engine/Texture.h"
 #include "Materials/Material.h"
 #include "Materials/MaterialExpressionConstant.h"
+#include "Materials/MaterialExpressionTextureCoordinate.h"
+#include "Materials/MaterialExpressionTextureSampleParameter2D.h"
 #include "Materials/MaterialExpressionVertexColor.h"
 #include "Materials/MaterialInterface.h"
 #include "MeshDescription.h"
@@ -65,6 +68,21 @@ namespace
 	const TCHAR* GVoxelMaterialPackagePath = TEXT("/Game/VoxImporter/Materials/M_VoxVertexColor");
 	const TCHAR* GVoxelMaterialObjectPath = TEXT("/Game/VoxImporter/Materials/M_VoxVertexColor.M_VoxVertexColor");
 	const TCHAR* GVoxelMaterialAssetName = TEXT("M_VoxVertexColor");
+	const TCHAR* GVoxelBakedMaterialPackagePath = TEXT("/Game/VoxImporter/Materials/M_VoxBakedColor");
+	const TCHAR* GVoxelBakedMaterialObjectPath = TEXT("/Game/VoxImporter/Materials/M_VoxBakedColor.M_VoxBakedColor");
+	const TCHAR* GVoxelBakedMaterialAssetName = TEXT("M_VoxBakedColor");
+	const TCHAR* GVoxelBakedTextureParameterName = TEXT("BaseColorTexture");
+	constexpr int32 GVoxBakeTextureResolution = 1024;
+
+	UMaterialExpressionConstant* AddConstantExpression(UMaterial* Material, float Value, int32 X, int32 Y)
+	{
+		UMaterialExpressionConstant* Constant = NewObject<UMaterialExpressionConstant>(Material);
+		Constant->R = Value;
+		Constant->MaterialExpressionEditorX = X;
+		Constant->MaterialExpressionEditorY = Y;
+		Material->GetExpressionCollection().AddExpression(Constant);
+		return Constant;
+	}
 
 	UMaterialInterface* CreateVoxelProjectMaterial()
 	{
@@ -99,19 +117,64 @@ namespace
 		Material->GetExpressionCollection().AddExpression(VertexColor);
 		MaterialEditorOnly->BaseColor.Connect(0, VertexColor);
 
-		auto AddConstantExpression = [Material](float Value, int32 X, int32 Y)
-		{
-			UMaterialExpressionConstant* Constant = NewObject<UMaterialExpressionConstant>(Material);
-			Constant->R = Value;
-			Constant->MaterialExpressionEditorX = X;
-			Constant->MaterialExpressionEditorY = Y;
-			Material->GetExpressionCollection().AddExpression(Constant);
-			return Constant;
-		};
+		MaterialEditorOnly->Roughness.Connect(0, AddConstantExpression(Material, 1.0f, -400, 0));
+		MaterialEditorOnly->Specular.Connect(0, AddConstantExpression(Material, 0.0f, -400, 120));
+		MaterialEditorOnly->Metallic.Connect(0, AddConstantExpression(Material, 0.0f, -400, 240));
 
-		MaterialEditorOnly->Roughness.Connect(0, AddConstantExpression(1.0f, -400, 0));
-		MaterialEditorOnly->Specular.Connect(0, AddConstantExpression(0.0f, -400, 120));
-		MaterialEditorOnly->Metallic.Connect(0, AddConstantExpression(0.0f, -400, 240));
+		Material->PostEditChange();
+		Material->MarkPackageDirty();
+		Package->SetDirtyFlag(true);
+		FAssetRegistryModule::AssetCreated(Material);
+		Material->ForceRecompileForRendering();
+
+		return Material;
+	}
+
+	UMaterialInterface* CreateVoxelBakedProjectMaterial()
+	{
+		UPackage* Package = CreatePackage(GVoxelBakedMaterialPackagePath);
+		if (!Package)
+		{
+			return nullptr;
+		}
+
+		UMaterialFactoryNew* MaterialFactory = NewObject<UMaterialFactoryNew>();
+		UMaterial* Material = Cast<UMaterial>(
+			MaterialFactory->FactoryCreateNew(
+				UMaterial::StaticClass(),
+				Package,
+				*FString(GVoxelBakedMaterialAssetName),
+				RF_Standalone | RF_Public | RF_Transactional,
+				nullptr,
+				GWarn));
+
+		if (!Material)
+		{
+			return nullptr;
+		}
+
+		Material->PreEditChange(nullptr);
+
+		UMaterialEditorOnlyData* MaterialEditorOnly = Material->GetEditorOnlyData();
+
+		UMaterialExpressionTextureCoordinate* TextureCoordinate = NewObject<UMaterialExpressionTextureCoordinate>(Material);
+		TextureCoordinate->MaterialExpressionEditorX = -720;
+		TextureCoordinate->MaterialExpressionEditorY = -240;
+		Material->GetExpressionCollection().AddExpression(TextureCoordinate);
+
+		UMaterialExpressionTextureSampleParameter2D* TextureSample = NewObject<UMaterialExpressionTextureSampleParameter2D>(Material);
+		TextureSample->ParameterName = GVoxelBakedTextureParameterName;
+		TextureSample->SamplerType = SAMPLERTYPE_Color;
+		TextureSample->MaterialExpressionEditorX = -420;
+		TextureSample->MaterialExpressionEditorY = -220;
+		TextureSample->Texture = LoadObject<UTexture>(nullptr, TEXT("/Engine/EngineResources/DefaultTexture.DefaultTexture"));
+		TextureSample->Coordinates.Connect(0, TextureCoordinate);
+		Material->GetExpressionCollection().AddExpression(TextureSample);
+		MaterialEditorOnly->BaseColor.Connect(0, TextureSample);
+
+		MaterialEditorOnly->Roughness.Connect(0, AddConstantExpression(Material, 1.0f, -420, 0));
+		MaterialEditorOnly->Specular.Connect(0, AddConstantExpression(Material, 0.0f, -420, 120));
+		MaterialEditorOnly->Metallic.Connect(0, AddConstantExpression(Material, 0.0f, -420, 240));
 
 		Material->PostEditChange();
 		Material->MarkPackageDirty();
@@ -294,6 +357,62 @@ namespace
 			MeshDescription,
 			EComputeNTBsFlags::Normals | EComputeNTBsFlags::Tangents | EComputeNTBsFlags::BlendOverlappingNormals);
 	}
+
+	bool GenerateBakeTextureCoordinates(const FMeshDescription& SourceMeshDescription, TArray<FVector2D>& OutGeneratedUVs, FString& OutError)
+	{
+		if (SourceMeshDescription.VertexInstances().Num() == 0 || SourceMeshDescription.Triangles().Num() == 0)
+		{
+			OutError = TEXT("Mesh description must contain triangles before UV generation.");
+			return false;
+		}
+
+		FStaticMeshOperations::FGenerateUVOptions GenerateUVOptions;
+		GenerateUVOptions.TextureResolution = GVoxBakeTextureResolution;
+		GenerateUVOptions.bMergeTrianglesWithIdenticalAttributes = false;
+		GenerateUVOptions.UVMethod = FStaticMeshOperations::EGenerateUVMethod::Default;
+
+		if (!FStaticMeshOperations::GenerateUV(SourceMeshDescription, GenerateUVOptions, OutGeneratedUVs))
+		{
+			OutError = TEXT("Failed to generate automatic UVs for texture baking.");
+			return false;
+		}
+
+		if (OutGeneratedUVs.Num() != SourceMeshDescription.VertexInstances().Num())
+		{
+			OutError = TEXT("Generated UV count did not match the mesh vertex-instance count.");
+			return false;
+		}
+
+		return true;
+	}
+
+	void ApplyGeneratedUVsToChannelZero(FMeshDescription& MeshDescription, TConstArrayView<FVector2D> GeneratedUVs)
+	{
+		FStaticMeshAttributes Attributes(MeshDescription);
+		Attributes.Register();
+
+		TVertexInstanceAttributesRef<FVector2f> VertexUVs = Attributes.GetVertexInstanceUVs();
+		VertexUVs.SetNumChannels(FMath::Max(1, VertexUVs.GetNumChannels()));
+
+		int32 VertexInstanceIndex = 0;
+		for (const FVertexInstanceID VertexInstanceID : MeshDescription.VertexInstances().GetElementIDs())
+		{
+			VertexUVs.Set(VertexInstanceID, 0, FVector2f(GeneratedUVs[VertexInstanceIndex]));
+			++VertexInstanceIndex;
+		}
+	}
+
+	void SetVertexColorsToWhite(FMeshDescription& MeshDescription)
+	{
+		FStaticMeshAttributes Attributes(MeshDescription);
+		Attributes.Register();
+
+		TVertexInstanceAttributesRef<FVector4f> VertexColors = Attributes.GetVertexInstanceColors();
+		for (const FVertexInstanceID VertexInstanceID : MeshDescription.VertexInstances().GetElementIDs())
+		{
+			VertexColors[VertexInstanceID] = FVector4f(1.0f, 1.0f, 1.0f, 1.0f);
+		}
+	}
 }
 
 UMaterialInterface* VoxStaticMeshUtilities::ResolveVoxelMaterial()
@@ -314,6 +433,16 @@ UMaterialInterface* VoxStaticMeshUtilities::ResolveVoxelMaterial()
 	}
 
 	return LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/EngineDebugMaterials/VertexColorViewMode_ColorOnly.VertexColorViewMode_ColorOnly"));
+}
+
+UMaterialInterface* VoxStaticMeshUtilities::ResolveVoxelBakedMaterial()
+{
+	if (UMaterialInterface* ExistingMaterial = LoadObject<UMaterialInterface>(nullptr, GVoxelBakedMaterialObjectPath))
+	{
+		return ExistingMaterial;
+	}
+
+	return CreateVoxelBakedProjectMaterial();
 }
 
 const UVoxImportedAssetUserData* VoxStaticMeshUtilities::GetVoxImportedAssetUserData(const UStaticMesh* StaticMesh)
@@ -365,6 +494,39 @@ FString VoxStaticMeshUtilities::GetVoxSourceFilename(const UStaticMesh* StaticMe
 	FString SourceFilename;
 	HasVoxSourceImportPath(StaticMesh, &SourceFilename);
 	return SourceFilename;
+}
+
+FVoxMeshAssetBuildParams VoxStaticMeshUtilities::MakeBuildParamsFromStaticMesh(const UStaticMesh* StaticMesh)
+{
+	FVoxMeshAssetBuildParams BuildParams;
+	BuildParams.SourceFilename = GetVoxSourceFilename(StaticMesh);
+
+	if (const UVoxImportedAssetUserData* UserData = GetVoxImportedAssetUserData(StaticMesh))
+	{
+		BuildParams.SourceFilename = UserData->SourceFilename;
+		BuildParams.bIsSmoothReconstruction = UserData->bIsSmoothReconstruction;
+		BuildParams.ReconstructionResolutionScale = UserData->ReconstructionResolutionScale;
+		BuildParams.GeneratedFromAssetPath = UserData->GeneratedFromAssetPath;
+	}
+
+	return BuildParams;
+}
+
+bool VoxStaticMeshUtilities::PrepareVertexColorTextureBakeMeshDescription(
+	const FMeshDescription& SourceMeshDescription,
+	FMeshDescription& OutMeshDescription,
+	TArray<FVector2D>& OutGeneratedUVs,
+	FString& OutError)
+{
+	if (!GenerateBakeTextureCoordinates(SourceMeshDescription, OutGeneratedUVs, OutError))
+	{
+		return false;
+	}
+
+	OutMeshDescription = SourceMeshDescription;
+	ApplyGeneratedUVsToChannelZero(OutMeshDescription, OutGeneratedUVs);
+	SetVertexColorsToWhite(OutMeshDescription);
+	return true;
 }
 
 bool VoxStaticMeshUtilities::SimplifyMeshDescription(

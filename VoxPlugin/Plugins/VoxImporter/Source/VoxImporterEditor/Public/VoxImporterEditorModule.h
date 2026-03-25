@@ -11,4 +11,5 @@ public:
 private:
 	void RegisterMenus();
 	void GenerateSmoothReconstructions(const TArray<TWeakObjectPtr<class UStaticMesh>>& StaticMeshes) const;
+	void BakeVertexColorsToTextures(const TArray<TWeakObjectPtr<class UStaticMesh>>& StaticMeshes) const;
 };
