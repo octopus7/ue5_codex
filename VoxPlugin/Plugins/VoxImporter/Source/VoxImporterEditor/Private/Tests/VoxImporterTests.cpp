@@ -3,6 +3,7 @@
 #include "Misc/AutomationTest.h"
 
 #include "MeshDescription.h"
+#include "Math/Color.h"
 #include "StaticMeshAttributes.h"
 #include "VoxMeshBuilder.h"
 #include "VoxParser.h"
@@ -137,6 +138,46 @@ bool FVoxMeshBuilderCentersBoundsTest::RunTest(const FString& Parameters)
 
 	const FBox Bounds = ComputeVertexBounds(MeshDescription);
 	TestTrue(TEXT("Bounds center is near origin"), Bounds.GetCenter().Equals(FVector::ZeroVector, KINDA_SMALL_NUMBER));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FVoxMeshBuilderUsesLinearVertexColorsTest, "VoxImporter.MeshBuilder.LinearVertexColors", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FVoxMeshBuilderUsesLinearVertexColorsTest::RunTest(const FString& Parameters)
+{
+	FVoxModelData Model;
+	Model.Size = FIntVector(1, 1, 1);
+	Model.Palette.Init(FColor(0, 0, 0, 0), 256);
+	Model.Palette[1] = FColor(68, 68, 68, 255);
+
+	FVoxVoxel Voxel;
+	Voxel.X = 0;
+	Voxel.Y = 0;
+	Voxel.Z = 0;
+	Voxel.ColorIndex = 1;
+	Model.Voxels.Add(Voxel);
+
+	FMeshDescription MeshDescription;
+	FString ErrorMessage;
+	TestTrue(TEXT("Mesh build succeeds"), FVoxMeshBuilder::BuildMeshDescription(Model, MeshDescription, ErrorMessage));
+
+	const TVertexInstanceAttributesConstRef<FVector4f> VertexInstanceColors =
+		MeshDescription.VertexInstanceAttributes().GetAttributesRef<FVector4f>(MeshAttribute::VertexInstance::Color);
+	TestTrue(TEXT("Vertex instance colors exist"), VertexInstanceColors.IsValid());
+
+	const FLinearColor ExpectedLinear = FLinearColor::FromSRGBColor(Model.Palette[1]);
+	FVertexInstanceID FirstInstance;
+	for (const FVertexInstanceID VertexInstanceId : MeshDescription.VertexInstances().GetElementIDs())
+	{
+		FirstInstance = VertexInstanceId;
+		break;
+	}
+	const FVector4f StoredColor = VertexInstanceColors[FirstInstance];
+
+	TestTrue(TEXT("Red channel is stored as linear"), FMath::IsNearlyEqual(StoredColor.X, ExpectedLinear.R, KINDA_SMALL_NUMBER));
+	TestTrue(TEXT("Green channel is stored as linear"), FMath::IsNearlyEqual(StoredColor.Y, ExpectedLinear.G, KINDA_SMALL_NUMBER));
+	TestTrue(TEXT("Blue channel is stored as linear"), FMath::IsNearlyEqual(StoredColor.Z, ExpectedLinear.B, KINDA_SMALL_NUMBER));
+	TestTrue(TEXT("Alpha channel is preserved"), FMath::IsNearlyEqual(StoredColor.W, ExpectedLinear.A, KINDA_SMALL_NUMBER));
+
 	return true;
 }
 

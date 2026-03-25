@@ -290,11 +290,7 @@ bool FVoxMeshBuilder::BuildMeshDescription(const FVoxModelData& Model, FMeshDesc
 						P3 -= PivotOffset;
 
 						const FColor FaceColor = Model.GetColor(ColorIndex);
-						const FVector4f PackedColor(
-							static_cast<float>(FaceColor.R) / 255.0f,
-							static_cast<float>(FaceColor.G) / 255.0f,
-							static_cast<float>(FaceColor.B) / 255.0f,
-							static_cast<float>(FaceColor.A) / 255.0f);
+						const FVector4f PackedColor(FLinearColor::FromSRGBColor(FaceColor));
 
 						AddQuad(Builder, PolygonGroup, P0, P1, P2, P3, Normal, Tangent, PackedColor);
 						U += Width;

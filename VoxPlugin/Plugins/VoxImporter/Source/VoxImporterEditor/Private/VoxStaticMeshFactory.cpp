@@ -1,10 +1,15 @@
 #include "VoxStaticMeshFactory.h"
 
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "Editor.h"
 #include "EditorFramework/AssetImportData.h"
 #include "Engine/Engine.h"
 #include "Engine/StaticMesh.h"
+#include "Factories/MaterialFactoryNew.h"
 #include "Materials/MaterialInterface.h"
+#include "Materials/Material.h"
+#include "Materials/MaterialExpressionConstant.h"
+#include "Materials/MaterialExpressionVertexColor.h"
 #include "MeshDescription.h"
 #include "Misc/FeedbackContext.h"
 #include "Misc/Paths.h"
@@ -17,8 +22,78 @@
 
 namespace
 {
-	UMaterialInterface* ResolveVertexColorMaterial()
+	const TCHAR* GVoxelMaterialPackagePath = TEXT("/Game/VoxImporter/Materials/M_VoxVertexColor");
+	const TCHAR* GVoxelMaterialObjectPath = TEXT("/Game/VoxImporter/Materials/M_VoxVertexColor.M_VoxVertexColor");
+	const TCHAR* GVoxelMaterialAssetName = TEXT("M_VoxVertexColor");
+
+	UMaterialInterface* CreateVoxelProjectMaterial()
 	{
+		UPackage* Package = CreatePackage(GVoxelMaterialPackagePath);
+		if (!Package)
+		{
+			return nullptr;
+		}
+
+		UMaterialFactoryNew* MaterialFactory = NewObject<UMaterialFactoryNew>();
+		UMaterial* Material = Cast<UMaterial>(
+			MaterialFactory->FactoryCreateNew(
+				UMaterial::StaticClass(),
+				Package,
+				*FString(GVoxelMaterialAssetName),
+				RF_Standalone | RF_Public | RF_Transactional,
+				nullptr,
+				GWarn));
+
+		if (!Material)
+		{
+			return nullptr;
+		}
+
+		Material->PreEditChange(nullptr);
+
+		UMaterialEditorOnlyData* MaterialEditorOnly = Material->GetEditorOnlyData();
+
+		UMaterialExpressionVertexColor* VertexColor = NewObject<UMaterialExpressionVertexColor>(Material);
+		VertexColor->MaterialExpressionEditorX = -400;
+		VertexColor->MaterialExpressionEditorY = -220;
+		Material->GetExpressionCollection().AddExpression(VertexColor);
+		MaterialEditorOnly->BaseColor.Connect(0, VertexColor);
+
+		auto AddConstantExpression = [Material](float Value, int32 X, int32 Y)
+		{
+			UMaterialExpressionConstant* Constant = NewObject<UMaterialExpressionConstant>(Material);
+			Constant->R = Value;
+			Constant->MaterialExpressionEditorX = X;
+			Constant->MaterialExpressionEditorY = Y;
+			Material->GetExpressionCollection().AddExpression(Constant);
+			return Constant;
+		};
+
+		MaterialEditorOnly->Roughness.Connect(0, AddConstantExpression(1.0f, -400, 0));
+		MaterialEditorOnly->Specular.Connect(0, AddConstantExpression(0.0f, -400, 120));
+		MaterialEditorOnly->Metallic.Connect(0, AddConstantExpression(0.0f, -400, 240));
+
+		Material->PostEditChange();
+		Material->MarkPackageDirty();
+		Package->SetDirtyFlag(true);
+		FAssetRegistryModule::AssetCreated(Material);
+		Material->ForceRecompileForRendering();
+
+		return Material;
+	}
+
+	UMaterialInterface* ResolveVoxelMaterial()
+	{
+		if (UMaterialInterface* ExistingMaterial = LoadObject<UMaterialInterface>(nullptr, GVoxelMaterialObjectPath))
+		{
+			return ExistingMaterial;
+		}
+
+		if (UMaterialInterface* CreatedMaterial = CreateVoxelProjectMaterial())
+		{
+			return CreatedMaterial;
+		}
+
 		if (GEngine && GEngine->VertexColorViewModeMaterial_ColorOnly)
 		{
 			return GEngine->VertexColorViewModeMaterial_ColorOnly;
@@ -178,7 +253,7 @@ UObject* UVoxStaticMeshFactory::ImportFromFile(
 
 	const FName MaterialSlotName(TEXT("VoxelMaterial"));
 	StaticMesh->GetStaticMaterials().Reset();
-	StaticMesh->GetStaticMaterials().Add(FStaticMaterial(ResolveVertexColorMaterial(), MaterialSlotName, MaterialSlotName));
+	StaticMesh->GetStaticMaterials().Add(FStaticMaterial(ResolveVoxelMaterial(), MaterialSlotName, MaterialSlotName));
 
 	TArray<const FMeshDescription*> MeshDescriptions;
 	MeshDescriptions.Add(&MeshDescription);
