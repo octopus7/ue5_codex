@@ -11,6 +11,8 @@
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SSeparator.h"
 #include "Widgets/Layout/SUniformGridPanel.h"
+#include "Widgets/Views/SListView.h"
+#include "Widgets/Views/STableRow.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
 
@@ -138,6 +140,44 @@ void SPrototypeMeshBuilderPanel::Construct(const FArguments& InArgs)
 				]
 				+ SVerticalBox::Slot()
 				.AutoHeight()
+				.Padding(FMargin(0.0f, 0.0f, 0.0f, 4.0f))
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString(TEXT("Selected Actor")))
+				]
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(FMargin(0.0f, 0.0f, 0.0f, 12.0f))
+				[
+					SNew(STextBlock)
+					.AutoWrapText(true)
+					.Text_Lambda([this]()
+					{
+						return Controller.IsValid() ? Controller->GetSelectedActorText() : FText::FromString(TEXT("Controller unavailable."));
+					})
+				]
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(FMargin(0.0f, 0.0f, 0.0f, 4.0f))
+				[
+					SNew(STextBlock)
+					.Text(FText::FromString(TEXT("Queued / Running Jobs")))
+				]
+				+ SVerticalBox::Slot()
+				.AutoHeight()
+				.Padding(FMargin(0.0f, 0.0f, 0.0f, 12.0f))
+				[
+					SNew(SBox)
+					.HeightOverride(120.0f)
+					[
+						SAssignNew(JobListView, SListView<TSharedPtr<FString>>)
+						.ListItemsSource(Controller.IsValid() ? &Controller->GetJobDisplayItems() : nullptr)
+						.OnGenerateRow(this, &SPrototypeMeshBuilderPanel::HandleGenerateJobRow)
+						.SelectionMode(ESelectionMode::None)
+					]
+				]
+				+ SVerticalBox::Slot()
+				.AutoHeight()
 				[
 					SNew(STextBlock)
 					.AutoWrapText(true)
@@ -150,6 +190,7 @@ void SPrototypeMeshBuilderPanel::Construct(const FArguments& InArgs)
 		]
 	];
 
+	RegisterActiveTimer(0.25f, FWidgetActiveTimerDelegate::CreateSP(this, &SPrototypeMeshBuilderPanel::HandleActiveTimer));
 	RefreshWidgetFields();
 }
 
@@ -194,6 +235,26 @@ void SPrototypeMeshBuilderPanel::HandleReasoningEffortChanged(TSharedPtr<FString
 	{
 		Controller->SetReasoningEffort(*NewSelection);
 	}
+}
+
+TSharedRef<ITableRow> SPrototypeMeshBuilderPanel::HandleGenerateJobRow(TSharedPtr<FString> Item, const TSharedRef<STableViewBase>& OwnerTable)
+{
+	return SNew(STableRow<TSharedPtr<FString>>, OwnerTable)
+	[
+		SNew(STextBlock)
+		.AutoWrapText(true)
+		.Text(FText::FromString(Item.IsValid() ? *Item : TEXT("")))
+	];
+}
+
+EActiveTimerReturnType SPrototypeMeshBuilderPanel::HandleActiveTimer(double CurrentTime, float DeltaTime)
+{
+	if (JobListView.IsValid())
+	{
+		JobListView->RequestListRefresh();
+	}
+
+	return EActiveTimerReturnType::Continue;
 }
 
 void SPrototypeMeshBuilderPanel::SyncControllerFromWidgets() const

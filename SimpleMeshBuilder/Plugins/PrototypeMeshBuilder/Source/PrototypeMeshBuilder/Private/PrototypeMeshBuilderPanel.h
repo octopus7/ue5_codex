@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Widgets/SCompoundWidget.h"
+#include "Widgets/Views/SListView.h"
 
 class FPrototypeMeshBuilderController;
 class SEditableTextBox;
@@ -22,6 +23,8 @@ private:
 	FReply HandleSaveClicked();
 	FReply HandleClearClicked();
 	void HandleReasoningEffortChanged(TSharedPtr<FString> NewSelection, ESelectInfo::Type SelectInfo);
+	TSharedRef<ITableRow> HandleGenerateJobRow(TSharedPtr<FString> Item, const TSharedRef<STableViewBase>& OwnerTable);
+	EActiveTimerReturnType HandleActiveTimer(double CurrentTime, float DeltaTime);
 	void SyncControllerFromWidgets() const;
 	void RefreshWidgetFields() const;
 
@@ -32,4 +35,5 @@ private:
 	TSharedPtr<SEditableTextBox> AssetNameTextBox;
 	TSharedPtr<SEditableTextBox> ContentPathTextBox;
 	TSharedPtr<STextComboBox> ReasoningEffortComboBox;
+	TSharedPtr<SListView<TSharedPtr<FString>>> JobListView;
 };

@@ -5,13 +5,16 @@
 #include "DynamicMesh/DynamicMeshAttributeSet.h"
 #include "DynamicMesh/DynamicMeshOverlay.h"
 #include "DynamicMeshToMeshDescription.h"
+#include "Engine/Engine.h"
 #include "Engine/StaticMesh.h"
 #include "Materials/Material.h"
+#include "Materials/MaterialInstanceConstant.h"
 #include "MeshDescription.h"
 #include "ObjectTools.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 #include "StaticMeshAttributes.h"
+#include "UObject/MetaData.h"
 
 using namespace UE::Geometry;
 
@@ -109,7 +112,26 @@ namespace
 		return FMath::IsFinite(Vector.X) && FMath::IsFinite(Vector.Y) && FMath::IsFinite(Vector.Z);
 	}
 
-	void AppendTriangle(FGeneratedMeshBuffers& Buffers, const FTransform& Transform, const FVector& A, const FVector& B, const FVector& C, const FVector2D& UvA, const FVector2D& UvB, const FVector2D& UvC)
+	FVector4f GetPrimitiveColor(const FPrototypePrimitiveSpec& Spec, int32 PrimitiveIndex)
+	{
+		static const FVector4f Palette[] = {
+			FVector4f(0.95f, 0.76f, 0.28f, 1.0f),
+			FVector4f(0.29f, 0.66f, 0.94f, 1.0f),
+			FVector4f(0.33f, 0.84f, 0.56f, 1.0f),
+			FVector4f(0.96f, 0.43f, 0.33f, 1.0f),
+			FVector4f(0.64f, 0.51f, 0.93f, 1.0f),
+			FVector4f(0.96f, 0.63f, 0.23f, 1.0f),
+			FVector4f(0.22f, 0.78f, 0.78f, 1.0f),
+			FVector4f(0.90f, 0.42f, 0.70f, 1.0f)
+		};
+
+		uint32 Hash = GetTypeHash(Spec.Type);
+		Hash = HashCombine(Hash, GetTypeHash(PrimitiveIndex));
+		Hash = HashCombine(Hash, GetTypeHash(Spec.Name));
+		return Palette[Hash % UE_ARRAY_COUNT(Palette)];
+	}
+
+	void AppendTriangle(FGeneratedMeshBuffers& Buffers, const FTransform& Transform, const FVector& A, const FVector& B, const FVector& C, const FVector2D& UvA, const FVector2D& UvB, const FVector2D& UvC, const FVector4f& Color)
 	{
 		const FVector PA = Transform.TransformPosition(A);
 		const FVector PB = Transform.TransformPosition(B);
@@ -126,36 +148,41 @@ namespace
 		Buffers.UV0.Add(FVector2f(UvA));
 		Buffers.UV0.Add(FVector2f(UvC));
 		Buffers.UV0.Add(FVector2f(UvB));
+		Buffers.Colors.Add(Color);
+		Buffers.Colors.Add(Color);
+		Buffers.Colors.Add(Color);
 		Buffers.Indices.Add(BaseIndex);
 		Buffers.Indices.Add(BaseIndex + 1);
 		Buffers.Indices.Add(BaseIndex + 2);
 	}
 
-	void AppendQuad(FGeneratedMeshBuffers& Buffers, const FTransform& Transform, const FVector& A, const FVector& B, const FVector& C, const FVector& D)
+	void AppendQuad(FGeneratedMeshBuffers& Buffers, const FTransform& Transform, const FVector& A, const FVector& B, const FVector& C, const FVector& D, const FVector4f& Color)
 	{
-		AppendTriangle(Buffers, Transform, A, B, C, FVector2D(0.0, 0.0), FVector2D(1.0, 0.0), FVector2D(1.0, 1.0));
-		AppendTriangle(Buffers, Transform, A, C, D, FVector2D(0.0, 0.0), FVector2D(1.0, 1.0), FVector2D(0.0, 1.0));
+		AppendTriangle(Buffers, Transform, A, B, C, FVector2D(0.0, 0.0), FVector2D(1.0, 0.0), FVector2D(1.0, 1.0), Color);
+		AppendTriangle(Buffers, Transform, A, C, D, FVector2D(0.0, 0.0), FVector2D(1.0, 1.0), FVector2D(0.0, 1.0), Color);
 	}
 
-	void BuildPlane(const FPrototypePrimitiveSpec& Spec, FGeneratedMeshBuffers& Buffers)
+	void BuildPlane(const FPrototypePrimitiveSpec& Spec, int32 PrimitiveIndex, FGeneratedMeshBuffers& Buffers)
 	{
 		const double HalfDepth = Spec.Depth * 0.5;
 		const double HalfWidth = Spec.Width * 0.5;
 		const FTransform Transform(FRotator::MakeFromEuler(Spec.Transform.RotationDeg), Spec.Transform.LocationCm, Spec.Transform.Scale);
+		const FVector4f Color = GetPrimitiveColor(Spec, PrimitiveIndex);
 
 		const FVector A(-HalfDepth, -HalfWidth, 0.0);
 		const FVector B(HalfDepth, -HalfWidth, 0.0);
 		const FVector C(HalfDepth, HalfWidth, 0.0);
 		const FVector D(-HalfDepth, HalfWidth, 0.0);
-		AppendQuad(Buffers, Transform, A, B, C, D);
+		AppendQuad(Buffers, Transform, A, B, C, D, Color);
 	}
 
-	void BuildBox(const FPrototypePrimitiveSpec& Spec, FGeneratedMeshBuffers& Buffers)
+	void BuildBox(const FPrototypePrimitiveSpec& Spec, int32 PrimitiveIndex, FGeneratedMeshBuffers& Buffers)
 	{
 		const double HalfDepth = Spec.Depth * 0.5;
 		const double HalfWidth = Spec.Width * 0.5;
 		const double Height = Spec.Height;
 		const FTransform Transform(FRotator::MakeFromEuler(Spec.Transform.RotationDeg), Spec.Transform.LocationCm, Spec.Transform.Scale);
+		const FVector4f Color = GetPrimitiveColor(Spec, PrimitiveIndex);
 
 		const FVector P000(-HalfDepth, -HalfWidth, 0.0);
 		const FVector P100(HalfDepth, -HalfWidth, 0.0);
@@ -166,19 +193,20 @@ namespace
 		const FVector P111(HalfDepth, HalfWidth, Height);
 		const FVector P011(-HalfDepth, HalfWidth, Height);
 
-		AppendQuad(Buffers, Transform, P000, P010, P110, P100);
-		AppendQuad(Buffers, Transform, P001, P101, P111, P011);
-		AppendQuad(Buffers, Transform, P100, P110, P111, P101);
-		AppendQuad(Buffers, Transform, P000, P001, P011, P010);
-		AppendQuad(Buffers, Transform, P010, P011, P111, P110);
-		AppendQuad(Buffers, Transform, P000, P100, P101, P001);
+		AppendQuad(Buffers, Transform, P000, P010, P110, P100, Color);
+		AppendQuad(Buffers, Transform, P001, P101, P111, P011, Color);
+		AppendQuad(Buffers, Transform, P100, P110, P111, P101, Color);
+		AppendQuad(Buffers, Transform, P000, P001, P011, P010, Color);
+		AppendQuad(Buffers, Transform, P010, P011, P111, P110, Color);
+		AppendQuad(Buffers, Transform, P000, P100, P101, P001, Color);
 	}
 
-	void BuildCylinder(const FPrototypePrimitiveSpec& Spec, FGeneratedMeshBuffers& Buffers)
+	void BuildCylinder(const FPrototypePrimitiveSpec& Spec, int32 PrimitiveIndex, FGeneratedMeshBuffers& Buffers)
 	{
 		const FTransform Transform(FRotator::MakeFromEuler(Spec.Transform.RotationDeg), Spec.Transform.LocationCm, Spec.Transform.Scale);
 		const double Height = Spec.Height;
 		const int32 Segments = Spec.Segments;
+		const FVector4f Color = GetPrimitiveColor(Spec, PrimitiveIndex);
 
 		for (int32 SegmentIndex = 0; SegmentIndex < Segments; ++SegmentIndex)
 		{
@@ -190,17 +218,18 @@ namespace
 			const FVector Top0(Bottom0.X, Bottom0.Y, Height);
 			const FVector Top1(Bottom1.X, Bottom1.Y, Height);
 
-			AppendQuad(Buffers, Transform, Bottom0, Bottom1, Top1, Top0);
-			AppendTriangle(Buffers, Transform, Top0, Top1, FVector(0.0, 0.0, Height), FVector2D(0.0, 0.0), FVector2D(1.0, 0.0), FVector2D(0.5, 0.5));
-			AppendTriangle(Buffers, Transform, Bottom0, FVector(0.0, 0.0, 0.0), Bottom1, FVector2D(0.0, 0.0), FVector2D(0.5, 0.5), FVector2D(1.0, 0.0));
+			AppendQuad(Buffers, Transform, Bottom0, Bottom1, Top1, Top0, Color);
+			AppendTriangle(Buffers, Transform, Top0, Top1, FVector(0.0, 0.0, Height), FVector2D(0.0, 0.0), FVector2D(1.0, 0.0), FVector2D(0.5, 0.5), Color);
+			AppendTriangle(Buffers, Transform, Bottom0, FVector(0.0, 0.0, 0.0), Bottom1, FVector2D(0.0, 0.0), FVector2D(0.5, 0.5), FVector2D(1.0, 0.0), Color);
 		}
 	}
 
-	void BuildCone(const FPrototypePrimitiveSpec& Spec, FGeneratedMeshBuffers& Buffers)
+	void BuildCone(const FPrototypePrimitiveSpec& Spec, int32 PrimitiveIndex, FGeneratedMeshBuffers& Buffers)
 	{
 		const FTransform Transform(FRotator::MakeFromEuler(Spec.Transform.RotationDeg), Spec.Transform.LocationCm, Spec.Transform.Scale);
 		const FVector Apex(0.0, 0.0, Spec.Height);
 		const int32 Segments = Spec.Segments;
+		const FVector4f Color = GetPrimitiveColor(Spec, PrimitiveIndex);
 
 		for (int32 SegmentIndex = 0; SegmentIndex < Segments; ++SegmentIndex)
 		{
@@ -210,17 +239,18 @@ namespace
 			const FVector Bottom0(Spec.Radius * FMath::Cos(Angle0), Spec.Radius * FMath::Sin(Angle0), 0.0);
 			const FVector Bottom1(Spec.Radius * FMath::Cos(Angle1), Spec.Radius * FMath::Sin(Angle1), 0.0);
 
-			AppendTriangle(Buffers, Transform, Bottom0, Bottom1, Apex, FVector2D(0.0, 0.0), FVector2D(1.0, 0.0), FVector2D(0.5, 1.0));
-			AppendTriangle(Buffers, Transform, Bottom0, FVector(0.0, 0.0, 0.0), Bottom1, FVector2D(0.0, 0.0), FVector2D(0.5, 0.5), FVector2D(1.0, 0.0));
+			AppendTriangle(Buffers, Transform, Bottom0, Bottom1, Apex, FVector2D(0.0, 0.0), FVector2D(1.0, 0.0), FVector2D(0.5, 1.0), Color);
+			AppendTriangle(Buffers, Transform, Bottom0, FVector(0.0, 0.0, 0.0), Bottom1, FVector2D(0.0, 0.0), FVector2D(0.5, 0.5), FVector2D(1.0, 0.0), Color);
 		}
 	}
 
-	void BuildRamp(const FPrototypePrimitiveSpec& Spec, FGeneratedMeshBuffers& Buffers)
+	void BuildRamp(const FPrototypePrimitiveSpec& Spec, int32 PrimitiveIndex, FGeneratedMeshBuffers& Buffers)
 	{
 		const double HalfDepth = Spec.Depth * 0.5;
 		const double HalfWidth = Spec.Width * 0.5;
 		const double Height = Spec.Height;
 		const FTransform Transform(FRotator::MakeFromEuler(Spec.Transform.RotationDeg), Spec.Transform.LocationCm, Spec.Transform.Scale);
+		const FVector4f Color = GetPrimitiveColor(Spec, PrimitiveIndex);
 
 		const FVector A(-HalfDepth, -HalfWidth, 0.0);
 		const FVector B(HalfDepth, -HalfWidth, 0.0);
@@ -229,14 +259,14 @@ namespace
 		const FVector E(HalfDepth, -HalfWidth, Height);
 		const FVector F(HalfDepth, HalfWidth, Height);
 
-		AppendQuad(Buffers, Transform, A, D, C, B);
-		AppendQuad(Buffers, Transform, B, C, F, E);
-		AppendQuad(Buffers, Transform, A, E, F, D);
-		AppendTriangle(Buffers, Transform, A, B, E, FVector2D(0.0, 0.0), FVector2D(1.0, 0.0), FVector2D(1.0, 1.0));
-		AppendTriangle(Buffers, Transform, D, F, C, FVector2D(0.0, 0.0), FVector2D(1.0, 1.0), FVector2D(1.0, 0.0));
+		AppendQuad(Buffers, Transform, A, D, C, B, Color);
+		AppendQuad(Buffers, Transform, B, C, F, E, Color);
+		AppendQuad(Buffers, Transform, A, E, F, D, Color);
+		AppendTriangle(Buffers, Transform, A, B, E, FVector2D(0.0, 0.0), FVector2D(1.0, 0.0), FVector2D(1.0, 1.0), Color);
+		AppendTriangle(Buffers, Transform, D, F, C, FVector2D(0.0, 0.0), FVector2D(1.0, 1.0), FVector2D(1.0, 0.0), Color);
 	}
 
-	void BuildStair(const FPrototypePrimitiveSpec& Spec, FGeneratedMeshBuffers& Buffers)
+	void BuildStair(const FPrototypePrimitiveSpec& Spec, int32 PrimitiveIndex, FGeneratedMeshBuffers& Buffers)
 	{
 		const double StepDepth = Spec.Depth / Spec.Steps;
 		const double StepHeight = Spec.Height / Spec.Steps;
@@ -249,7 +279,7 @@ namespace
 			StepSpec.Height = StepHeight * (StepIndex + 1);
 			StepSpec.Transform.LocationCm = Spec.Transform.LocationCm;
 			StepSpec.Transform.LocationCm.X += (-Spec.Depth * 0.5) + (StepDepth * StepIndex) + (StepDepth * 0.5);
-			BuildBox(StepSpec, Buffers);
+			BuildBox(StepSpec, PrimitiveIndex, Buffers);
 		}
 	}
 
@@ -484,31 +514,32 @@ namespace PrototypeMeshBuilder
 			return false;
 		}
 
-		for (const FPrototypePrimitiveSpec& Primitive : Dsl.Primitives)
+		for (int32 PrimitiveIndex = 0; PrimitiveIndex < Dsl.Primitives.Num(); ++PrimitiveIndex)
 		{
+			const FPrototypePrimitiveSpec& Primitive = Dsl.Primitives[PrimitiveIndex];
 			if (Primitive.Type.Equals(TEXT("plane")))
 			{
-				BuildPlane(Primitive, OutBuffers);
+				BuildPlane(Primitive, PrimitiveIndex, OutBuffers);
 			}
 			else if (Primitive.Type.Equals(TEXT("box")))
 			{
-				BuildBox(Primitive, OutBuffers);
+				BuildBox(Primitive, PrimitiveIndex, OutBuffers);
 			}
 			else if (Primitive.Type.Equals(TEXT("cylinder")))
 			{
-				BuildCylinder(Primitive, OutBuffers);
+				BuildCylinder(Primitive, PrimitiveIndex, OutBuffers);
 			}
 			else if (Primitive.Type.Equals(TEXT("cone")))
 			{
-				BuildCone(Primitive, OutBuffers);
+				BuildCone(Primitive, PrimitiveIndex, OutBuffers);
 			}
 			else if (Primitive.Type.Equals(TEXT("ramp")))
 			{
-				BuildRamp(Primitive, OutBuffers);
+				BuildRamp(Primitive, PrimitiveIndex, OutBuffers);
 			}
 			else if (Primitive.Type.Equals(TEXT("stair")))
 			{
-				BuildStair(Primitive, OutBuffers);
+				BuildStair(Primitive, PrimitiveIndex, OutBuffers);
 			}
 		}
 
@@ -558,10 +589,12 @@ namespace PrototypeMeshBuilder
 
 		OutMesh.Clear();
 		OutMesh.EnableAttributes();
+		OutMesh.Attributes()->EnablePrimaryColors();
 
 		FDynamicMeshUVOverlay* UvOverlay = OutMesh.Attributes()->PrimaryUV();
 		FDynamicMeshNormalOverlay* NormalOverlay = OutMesh.Attributes()->PrimaryNormals();
-		if (!UvOverlay || !NormalOverlay)
+		FDynamicMeshColorOverlay* ColorOverlay = OutMesh.Attributes()->PrimaryColors();
+		if (!UvOverlay || !NormalOverlay || !ColorOverlay)
 		{
 			OutError = TEXT("Failed to initialize dynamic mesh attributes.");
 			return false;
@@ -598,8 +631,14 @@ namespace PrototypeMeshBuilder
 				NormalOverlay->AppendElement(Buffers.Normals[VertexIndex1]),
 				NormalOverlay->AppendElement(Buffers.Normals[VertexIndex2]));
 
+			const FIndex3i ColorElements(
+				ColorOverlay->AppendElement(Buffers.Colors[VertexIndex0]),
+				ColorOverlay->AppendElement(Buffers.Colors[VertexIndex1]),
+				ColorOverlay->AppendElement(Buffers.Colors[VertexIndex2]));
+
 			UvOverlay->SetTriangle(TriangleId, UvElements);
 			NormalOverlay->SetTriangle(TriangleId, NormalElements);
+			ColorOverlay->SetTriangle(TriangleId, ColorElements);
 		}
 
 		return true;
@@ -646,6 +685,82 @@ namespace PrototypeMeshBuilder
 		FAssetRegistryModule::AssetCreated(StaticMesh);
 
 		OutStaticMesh = StaticMesh;
+		return true;
+	}
+
+	bool CreateVertexColorMaterialAsset(const FString& PackagePath, const FString& AssetName, UMaterialInstanceConstant*& OutMaterial, FString& OutError)
+	{
+		OutMaterial = nullptr;
+
+		if (!GEngine || !GEngine->VertexColorViewModeMaterial_ColorOnly)
+		{
+			OutError = TEXT("Engine vertex color material is not available.");
+			return false;
+		}
+
+		UPackage* Package = CreatePackage(*PackagePath);
+		if (!Package)
+		{
+			OutError = FString::Printf(TEXT("Failed to create material package '%s'."), *PackagePath);
+			return false;
+		}
+
+		UMaterialInstanceConstant* MaterialInstance = NewObject<UMaterialInstanceConstant>(Package, *AssetName, RF_Public | RF_Standalone | RF_Transactional);
+		if (!MaterialInstance)
+		{
+			OutError = TEXT("Failed to allocate a vertex-color material instance.");
+			return false;
+		}
+
+		MaterialInstance->SetParentEditorOnly(GEngine->VertexColorViewModeMaterial_ColorOnly);
+		MaterialInstance->PostEditChange();
+		Package->MarkPackageDirty();
+		FAssetRegistryModule::AssetCreated(MaterialInstance);
+		OutMaterial = MaterialInstance;
+		return true;
+	}
+
+	bool ApplyStaticMeshMaterial(UStaticMesh* StaticMesh, UMaterialInterface* Material, FString& OutError)
+	{
+		if (!StaticMesh)
+		{
+			OutError = TEXT("Static mesh is required when assigning a material.");
+			return false;
+		}
+
+		if (!Material)
+		{
+			OutError = TEXT("Material is required when assigning a material.");
+			return false;
+		}
+
+		StaticMesh->Modify();
+		StaticMesh->SetStaticMaterials({FStaticMaterial(Material)});
+		StaticMesh->Build();
+		StaticMesh->PostEditChange();
+		StaticMesh->MarkPackageDirty();
+		return true;
+	}
+
+	bool WriteAssetMetadata(UObject* Asset, const FString& MetadataJson, FString& OutError)
+	{
+		if (!Asset)
+		{
+			OutError = TEXT("Asset is required for metadata writing.");
+			return false;
+		}
+
+		UPackage* Package = Asset->GetOutermost();
+		if (!Package)
+		{
+			OutError = TEXT("Asset package is not available.");
+			return false;
+		}
+
+		FMetaData& MetaData = Package->GetMetaData();
+		MetaData.SetValue(Asset, TEXT("PrototypeMeshBuilder"), TEXT("1"));
+		MetaData.SetValue(Asset, TEXT("PrototypeMeshBuilder.Metadata"), *MetadataJson);
+		Package->MarkPackageDirty();
 		return true;
 	}
 

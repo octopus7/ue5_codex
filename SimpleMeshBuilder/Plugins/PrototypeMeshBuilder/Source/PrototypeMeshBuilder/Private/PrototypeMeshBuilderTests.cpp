@@ -61,6 +61,7 @@ bool FPrototypeMeshBoxBuilderTest::RunTest(const FString& Parameters)
 	TestTrue(TEXT("BuildMeshBuffers should succeed for a simple box."), PrototypeMeshBuilder::BuildMeshBuffers(Dsl, Buffers, Error));
 	TestEqual(TEXT("A box should generate 12 triangles."), Buffers.GetTriangleCount(), 12);
 	TestEqual(TEXT("A box triangle soup should generate 36 positions."), Buffers.Positions.Num(), 36);
+	TestEqual(TEXT("Generated buffers should include one vertex color per position."), Buffers.Colors.Num(), Buffers.Positions.Num());
 
 	UE::Geometry::FDynamicMesh3 DynamicMesh(UE::Geometry::EMeshComponents::None);
 	TestTrue(TEXT("BuildDynamicMesh should succeed for generated box buffers."), PrototypeMeshBuilder::BuildDynamicMesh(Buffers, DynamicMesh, Error));
