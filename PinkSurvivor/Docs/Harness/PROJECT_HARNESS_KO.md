@@ -4,7 +4,7 @@
 
 ## 문서 목적
 
-이 문서는 `PinkSurvivor`의 현재 구현을 다른 작업자가 최대한 동일하게 재현할 수 있도록 프로젝트 목표, 고정 조건, 핵심 자산, 재현 기준을 정리한 기준 문서다.
+이 문서는 `PinkSurvivor`의 현재 구현을 다른 작업자가 최대한 동일하게 재현할 수 있도록 프로젝트 목표, 고정 조건, 핵심 자산, 복원 기준을 정리한 기준 문서다.
 
 프로젝트 방향은 다음 한 줄로 요약된다.
 
@@ -20,9 +20,11 @@
 - 게임 인스턴스: `/Script/PinkSurvivor.PSVGameInstance`
 - 현재 구현 상태: `전투 루프, 경험치/레벨, 영구 골드, HUD, 게임 오버, 상자 룰렛 플레이스홀더까지 구현`
 
-## 동일 구현의 기준
+## 복원 기준 등급
 
-다음 항목이 유지되면 현재 구현과 사실상 같은 플레이 감각으로 본다.
+### 1. Gameplay-equivalent
+
+다음이 유지되면 현재 구현과 같은 플레이 구조로 본다.
 
 - 플레이어는 고정된 상공 시점 카메라 아래에서 자유 이동한다.
 - 플레이어는 별도 조준 입력 없이 전방 자동 발사한다.
@@ -32,6 +34,38 @@
 - HUD는 체력, 경험치, 레벨, 골드를 표시하고, 사망 시 게임 오버 UI를 띄운다.
 - 상자는 게임을 일시정지하고 룰렛 텍스트를 돌린 뒤 확인 입력을 기다린다.
 - 상자 결과는 아직 실제 보상을 적용하지 않는 플레이스홀더 상태다.
+
+### 2. Asset-path-equivalent
+
+다음이 유지되면 현재와 같은 자산 경로 계약으로 본다.
+
+- 핵심 블루프린트와 위젯이 현재와 같은 경로에 있다.
+- 블루프린트 부모 클래스와 클래스 참조가 현재와 같다.
+- 입력 자산 이름과 경로가 현재와 같다.
+- 맵 이름과 GameMode 연결 방식이 현재와 같다.
+
+### 3. Binary-identical
+
+이 등급은 문서만으로는 보장하지 않는다.
+
+- `Hoshino`, `Chest` 계열 아트 자산
+- `WBP_PlayerHUD`의 정확한 레이아웃
+- `BattleMap`의 exact transform
+- 블루프린트 그래프 내부 상태
+
+## 동일 구현의 실무 기준
+
+실무적으로는 아래 두 조건을 동시에 만족시키는 것을 목표로 한다.
+
+- `Gameplay-equivalent`: 플레이 감각과 런타임 흐름이 같다.
+- `Asset-path-equivalent`: 자산 이름, 경로, 부모 연결이 같다.
+
+## Content 삭제 복원 계약
+
+- `Source/`, `Config/`, `Saved/`는 남긴다.
+- `Saved/Autosaves/`가 있으면 수작업보다 먼저 복구한다.
+- 정확한 외형 복원이 필요하면 `Content/Character/Hoshino`, `Content/Props/Chest`, `Content/Meshes/Materials`를 삭제 전에 백업한다.
+- `BP_EnemySpawner`는 현재 핵심 복원 대상에서 제외한다.
 
 ## 핵심 클래스와 자산 매핑
 
@@ -49,16 +83,16 @@
 | `UPSVExperienceComponent` | C++ 컴포넌트 | 경험치, 레벨, 임계치 계산 |
 | `APSVExperienceGem` | C++ | 경험치 픽업 |
 | `/Game/Blueprints/BP_Gem` | BP | 실제 경험치 젬 외형 |
-| `UPSVGameInstance` | C++ | 영구 골드 로드/세이브 |
+| `UPSVGameInstance` | C++ | 영구 골드 로드, 세이브 |
 | `UPSVSaveGame` | C++ | `PersistentGold` 저장 |
 | `APSVGoldCoin` | C++ | 영구 골드 픽업 |
 | `/Game/Blueprints/BP_Coin` | BP | 실제 코인 외형 |
-| `UPSVChestRouletteSubsystem` | C++ | 상자 룰렛 진행과 일시정지/재개 |
+| `UPSVChestRouletteSubsystem` | C++ | 상자 룰렛 진행과 일시정지, 재개 |
 | `APSVRewardChest` | C++ | 상자 트리거 |
 | `/Game/Blueprints/BP_Chest` | BP | 실제 상자 외형 |
 | `APSVHUD` | C++ | HUD 위젯 생성, 룰렛 텍스트, 게임 오버 처리 |
 | `/Game/UI/WBP_HUD` | BP | 실제 HUD 클래스. 이름은 WBP지만 `AHUD` 기반 |
-| `/Game/UI/WBP_PlayerHUD` | Widget BP | 플레이 중 체력/경험치/골드 표시 |
+| `/Game/UI/WBP_PlayerHUD` | Widget BP | 플레이 중 체력, 경험치, 골드 표시 |
 | `/Game/UI/WBP_Gameover` | Widget BP | 게임 오버 확인 버튼 |
 
 ## 핵심 루프
@@ -80,6 +114,8 @@
 - 상자 룰렛은 `일시정지 상태에서도 확인 입력이 먹어야 한다`는 조건이 중요하다.
 - 경험치는 `런 단위`, 골드는 `세션 단위`라는 이중 구조를 유지한다.
 - 현재 적 AI는 Behavior Tree가 아니라 `Tick + Timer` 조합의 단순 구현이다.
+- `WBP_PlayerHUD`와 `BattleMap`은 exact layout보다 `표시 항목`과 `플레이 흐름`을 우선 복원한다.
+- 외형 원본이 없으면 placeholder 자산으로 먼저 게임플레이를 살리고, 나중에 외형을 다시 맞춘다.
 
 ## 현재 의도적 단순화
 
@@ -87,14 +123,23 @@
 - 상자 룰렛 후보 텍스트는 `A/B/C/D/E`만 사용한다.
 - 무한 웨이브 디렉터 대신 시간 기반 스폰 스크립트 4개만 내장되어 있다.
 - 적 AI는 단순 추적과 근접 타격만 지원한다.
-- HUD는 체력/경험치/골드/게임오버 중심이며, 화려한 피드백은 제한적이다.
+- HUD는 체력, 경험치, 골드, 게임오버 중심이며, 화려한 피드백은 제한적이다.
 
 ## 재현 성공 조건
 
 - `BattleMap` 진입 후 플레이어가 보이고 움직일 수 있다.
 - 플레이어가 입력 없이 자동 발사하고 적에게 피해를 준다.
 - 적이 플레이어를 추적하고 근접 피해를 준다.
-- 적 처치 시 젬/코인이 정상 드롭된다.
+- 적 처치 시 젬, 코인이 정상 드롭된다.
 - 경험치 바와 골드 표시가 HUD에 반영된다.
 - 플레이어 사망 시 게임 오버 UI가 뜨고, 확인 버튼으로 게임이 재개된다.
 - 상자 충돌 시 게임이 멈추고 룰렛 텍스트가 돈 뒤 확인을 요구한다.
+
+## exact 복원에 필요한 별도 조건
+
+- `Hoshino` 계열 원본 또는 생존 백업
+- `Chest` 계열 원본 또는 생존 백업
+- `WBP_PlayerHUD` 생존 자산 또는 자동 저장본
+- `BattleMap` 생존 자산 또는 자동 저장본
+
+이 조건이 없으면 문서는 `같은 구조의 복원`은 가능하게 하지만, `같은 바이너리 자산` 복원까지는 못 한다.

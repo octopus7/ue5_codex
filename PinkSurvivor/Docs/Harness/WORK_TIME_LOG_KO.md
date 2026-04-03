@@ -10,6 +10,14 @@
 
 ## 기록
 
+### 2026-04-04 | DOCS-REBUILD-RUNBOOK | Content 삭제 후 재구축 문서 보강
+
+- 시작: `2026-04-04 03:31:00 +09:00`
+- 종료: `2026-04-04 04:00:36 +09:00`
+- 소요 시간: `00:29:36`
+- 병렬 처리: `예`
+- 메모: `Source`, `Config`, `Content`, `Saved/Autosaves`를 다시 분석했다. 입력 자산의 타입과 유력 키 구성을 정리했고, `BattleMap` 액터 목록, `WBP_HUD/WBP_PlayerHUD/WBP_Gameover` 연결, exact 복원 불가 영역, 자동 저장본 복원 경로를 문서에 반영했다. 새로 `CONTENT_REBUILD_PLAYBOOK_KO.md`, `CONTENT_ASSET_MANIFEST_KO.md`를 추가했다.
+
 ### 2026-04-04 | DOCS-PARITY-LOCK | PinkSurvivor 재현 문서 기준 재구성
 
 - 시작: `2026-04-04 03:23:00 +09:00`
