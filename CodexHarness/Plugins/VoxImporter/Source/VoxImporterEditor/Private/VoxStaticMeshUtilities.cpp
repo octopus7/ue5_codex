@@ -23,6 +23,7 @@
 #include "PhysicsEngine/BodySetup.h"
 #include "StaticMeshAttributes.h"
 #include "StaticMeshOperations.h"
+#include "VoxImporterEditorConstants.h"
 #include "VoxModel.h"
 #include "VoxImportedAssetUserData.h"
 
@@ -72,7 +73,6 @@ namespace
 	const TCHAR* GVoxelBakedMaterialObjectPath = TEXT("/Game/VoxImporter/Materials/M_VoxBakedColor.M_VoxBakedColor");
 	const TCHAR* GVoxelBakedMaterialAssetName = TEXT("M_VoxBakedColor");
 	const TCHAR* GVoxelBakedTextureParameterName = TEXT("BaseColorTexture");
-	constexpr int32 GVoxBakeTextureResolution = 1024;
 
 	UMaterialExpressionConstant* AddConstantExpression(UMaterial* Material, float Value, int32 X, int32 Y)
 	{
@@ -367,7 +367,7 @@ namespace
 		}
 
 		FStaticMeshOperations::FGenerateUVOptions GenerateUVOptions;
-		GenerateUVOptions.TextureResolution = GVoxBakeTextureResolution;
+		GenerateUVOptions.TextureResolution = VoxImporterEditorConstants::BakeTextureResolution;
 		GenerateUVOptions.bMergeTrianglesWithIdenticalAttributes = false;
 		GenerateUVOptions.UVMethod = FStaticMeshOperations::EGenerateUVMethod::Default;
 

@@ -12,11 +12,11 @@
 #include "Misc/PackageName.h"
 #include "Modules/ModuleManager.h"
 #include "UObject/Package.h"
+#include "VoxImporterEditorConstants.h"
 #include "VoxStaticMeshUtilities.h"
 
 namespace
 {
-	constexpr int32 GVoxBakeTextureResolution = 1024;
 	const TCHAR* GVoxBakedTextureParameterName = TEXT("BaseColorTexture");
 
 	FString MakeSiblingAssetPackagePath(const UStaticMesh* StaticMesh, const FString& AssetName)
@@ -194,7 +194,9 @@ namespace
 
 		FMaterialDataEx MaterialSettings;
 		MaterialSettings.Material = VertexColorMaterial;
-		MaterialSettings.PropertySizes.Add(FMaterialPropertyEx(MP_BaseColor), FIntPoint(GVoxBakeTextureResolution, GVoxBakeTextureResolution));
+		MaterialSettings.PropertySizes.Add(
+			FMaterialPropertyEx(MP_BaseColor),
+			FIntPoint(VoxImporterEditorConstants::BakeTextureResolution, VoxImporterEditorConstants::BakeTextureResolution));
 		MaterialSettings.bPerformBorderSmear = true;
 		MaterialSettings.bPerformShrinking = false;
 		MaterialSettings.BackgroundColor = FColor::Black;
