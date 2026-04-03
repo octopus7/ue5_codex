@@ -38,6 +38,7 @@
 병렬 수행이 작업 시간을 줄이면 허용하고, 단계별 소요 시간은 WORK_TIME_LOG_KO.md에 append 해.
 필요하면 generator 에이전트와 evaluator 에이전트를 분리된 컨텍스트로 운영하되, 직접 통신 대신 메인 에이전트가 중계해.
 직접 C++ 클래스를 기본 연결 지점에 꽂지 말고, 필요한 Blueprint 애셋과 VOX 기반 가시 메시 애셋은 커맨드렛으로 실제 생성하고 연결해.
+`IA_`, `IMC_`, `DA_*InputConfig`도 실제 애셋으로 만들고, 플레이어는 IA_/IMC_를 직접 참조하지 말고 DA만 연결해.
 ```
 
 ## 추천 지시 패턴
@@ -123,3 +124,4 @@ CURRENT_PHASE_KO.md의 멈출 기준에서 멈춰.
 - 역할 분리를 강하게 통제하고 싶으면 `generator/evaluator 분리 운영 여부`와 `메인 에이전트 중계 요구`를 함께 적는 편이 좋다.
 - 분리 운영의 실제 사용 내역까지 남기고 싶으면 `CURRENT_PHASE_KO.md`에 역할 요약을, `WORK_TIME_LOG_KO.md` 메모에 중계 방식을 적도록 요구하는 편이 가장 명확하다.
 - 직접 C++ 클래스 연결을 금지하고 싶으면 `구체적인 BP GameMode/Pawn/Controller 연결`, `커맨드렛으로 실제 BP 생성`, `VOX StaticMesh가 화면에 보여야 함`을 함께 적는 편이 가장 명확하다.
+- 입력 구조를 강하게 통제하고 싶으면 `IA_/IMC_ 실애셋 생성`, `DA_*InputConfig 집계`, `플레이어는 DA만 참조`를 함께 적는 편이 가장 명확하다.

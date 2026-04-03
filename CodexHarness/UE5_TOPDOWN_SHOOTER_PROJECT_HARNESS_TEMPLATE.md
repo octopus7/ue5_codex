@@ -60,6 +60,9 @@ Implementation rules:
 - Compatibility constraints: <SYSTEMS OR APIS THAT MUST STAY STABLE>
 - Default hookup rules: do not wire `GameMode`, `DefaultPawnClass`, `PlayerControllerClass`, or similar defaults directly to C++ classes; use concrete Blueprint assets
 - Visible runtime rules: any player, enemy, or weapon that should appear on screen must have a real renderable asset assigned; invisible placeholders do not count as complete
+- Character visual rules: the character Blueprint's mesh component, or equivalent render component, must directly reference a mesh asset created inside the project
+- Input asset rules: create real `IA_*`, `IMC_*`, and `DA_*InputConfig` assets inside the project
+- Input hookup rules: the player must not directly reference `IA_*` or `IMC_*`; it should reference a single `DA_*InputConfig` asset that aggregates them
 
 Project scope:
 - In scope: <LIST>
@@ -90,6 +93,9 @@ Project execution rules:
 - If this mode is used, record the role split in the phase document and the relay details in the work-time log notes.
 - Generate or update any required Blueprint hookup assets and VOX-derived `StaticMesh` assets through commandlets, not manual editor work.
 - Ensure the final runtime hookup uses concrete Blueprint GameMode/Pawn/Controller assets rather than direct C++ class references.
+- Assign the imported project mesh asset to the `BP_*Character` mesh component instead of leaving the character Blueprint visually empty.
+- Generate or update `IA_*`, `IMC_*`, and `DA_*InputConfig` through commandlets as real assets.
+- Hook the player up to the `DA_*InputConfig` asset rather than directly to `IA_*` or `IMC_*`.
 - If blocked by missing assets or an ambiguous product decision, stop and ask one concise question.
 
 Current execution boundary:
@@ -120,6 +126,8 @@ Reporting requirements:
   - next recommended milestone or phase
   - if `generator/evaluator` split execution was used, where the role split and relay flow were documented
   - paths of the generated Blueprint assets and imported `StaticMesh` assets
+  - the mesh asset path actually assigned to the character Blueprint render component
+  - paths of the generated `IA_*`, `IMC_*`, and `DA_*InputConfig` assets, plus the DA path actually assigned to the player
 ```
 
 ## Optional Phase Slice Template

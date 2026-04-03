@@ -58,6 +58,8 @@
 - `GameMode`를 포함한 Blueprint 연결용 클래스 애셋도 아직 없다.
 - `.vox`에서 import 된 `StaticMesh` 애셋도 아직 없다.
 - 화면에 보이는 플레이어용 메시 애셋 연결도 아직 없다.
+- 캐릭터 Blueprint 내부 메시 컴포넌트에 할당된 프로젝트 메시 애셋도 아직 없다.
+- `IA_*`, `IMC_*`, `DA_*InputConfig` 입력 애셋도 아직 없다.
 
 ## 소스 아트 및 자동화 상태
 
@@ -73,11 +75,14 @@
 - `generator/evaluator` 분리 컨텍스트 협업과 메인 에이전트 중계 원칙이 문서에 반영되어 있다.
 - 실제 분리 운영 사용 내역은 `CURRENT_PHASE_KO.md`와 `WORK_TIME_LOG_KO.md`에 남기도록 한다.
 - 직접 C++ 연결 금지, 커맨드렛 기반 BP 생성, VOX `StaticMesh` 가시 연결 요구가 문서에 반영되어 있다.
+- `IA_*`, `IMC_*`, `DA_*InputConfig` 실애셋 생성과 DA 집계 입력 구조가 문서에 반영되어 있다.
 - 현재 `CURRENT_PHASE_KO.md`는 다음 단계 `M1-P1`를 가리킨다.
 
 ## 현재 공백
 
 - 플레이어 입력 구조 없음
+- `IA_*`, `IMC_*`, `DA_*InputConfig` 입력 애셋 없음
+- 입력을 집계하는 Data Asset 레이어 없음
 - 플레이어 이동 없음
 - 카메라 없음
 - 조준 없음
@@ -89,11 +94,13 @@
 - `.vox`를 실제 메시 애셋으로 변환하는 본격 import 단계 없음
 - 프로젝트 또는 맵에 연결된 구체적인 Blueprint GameMode/Pawn/PlayerController 없음
 - 화면에 보이는 플레이어 메시 없음
+- 메시 컴포넌트에 프로젝트 메시 애셋이 할당된 캐릭터 Blueprint 없음
 - 현재 상태로는 이동을 구현해도 보이지 않는 플레이어가 될 위험이 큼
 
 ## 현재 리스크
 
 - `EnhancedInput` 기반 실제 입력 에셋 생성 경로가 아직 없다.
+- 플레이어가 직접 참조할 `DA_*InputConfig` 구조와 그에 연결된 `IA_*`/`IMC_*` 실애셋이 아직 없다.
 - 에디터 GUI를 열지 않는 제약 때문에, 향후 입력 에셋과 UI 애셋 생성은 커맨드렛 기반 자동화가 계속 필요하다.
 - VOX 파이프라인은 현재 베이스 머터리얼과 샘플 입력까지만 구축돼 있고, 실제 메시 import 자동화는 다음 확장이 필요하다.
 - 에디터에서 교체 가능한 Blueprint 파생 클래스 레이어가 아직 없어 다음 단계에서 기본 연결 정리가 필요하다.
@@ -104,6 +111,7 @@
 
 - `CURRENT_PHASE_KO.md` 기준으로 `GameMode`, `PlayerController`, `Character` 골격과 구체적인 Blueprint 연결 애셋을 추가한다.
 - VOX 기반 `StaticMesh` import와 플레이어 가시 메시 연결을 커맨드렛 경로로 올린다.
+- `IA_*`, `IMC_*`, `DA_*InputConfig` 실애셋과 DA 기반 입력 연결 레이어를 추가한다.
 - 그 다음 `EnhancedInput` 기반 이동과 카메라, 조준을 올린다.
 
 ## 갱신 규칙

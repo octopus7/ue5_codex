@@ -57,6 +57,8 @@
 - Unreal Editor GUI는 열지 않는다.
 - 에디터 API가 필요한 작업은 `UnrealEditor-Cmd`와 커맨드렛으로 처리한다.
 - 레거시 입력 대신 `EnhancedInput`을 사용한다.
+- `IA_*`, `IMC_*`, `DA_*InputConfig`는 실제 프로젝트 애셋으로 존재해야 한다.
+- 플레이어 런타임 클래스는 `IA_*`나 `IMC_*`를 직접 참조하지 않고, 이를 모아둔 `DA_*InputConfig` 애셋만 참조한다.
 - 실제 연결 대상은 반드시 구체적인 Blueprint 파생 클래스 애셋으로 유지한다.
 - `GameMode`, `DefaultPawnClass`, `PlayerControllerClass`, `HUDClass` 등 기본 연결 지점에 C++ 클래스를 직접 연결하지 않는다.
 - `GameMode`도 C++ 베이스를 직접 꽂는 대신 Blueprint로 파생한 클래스를 기본 연결 대상으로 둔다.
@@ -83,8 +85,11 @@
 - 애셋 생성 규칙, 입력 파라미터, 결과 경로는 코드와 문서에 모두 남긴다.
 - 자동화 결과 요약은 `Saved/HeadlessSetup/TopDownTestOneHeadlessSetupReport.txt`에 기록한다.
 - 런타임 연결에 필요한 `BP_*` 계열 GameMode, Pawn, PlayerController, HUD 애셋도 커맨드렛으로 생성 또는 갱신 가능해야 한다.
+- 런타임 입력 연결에 필요한 `IA_*`, `IMC_*`, `DA_*InputConfig` 애셋도 커맨드렛으로 생성 또는 갱신 가능해야 한다.
 - 기본 클래스 연결과 기본값 주입도 헤드리스 경로에서 완료되어야 한다.
 - 가시 오브젝트가 필요하면 `.vox -> StaticMesh` import와 해당 메시의 Blueprint 연결까지 헤드리스 경로에서 완료되어야 한다.
+- 플레이어 외형은 `BP_<Name>Character` 또는 동등한 캐릭터 Blueprint 내부의 렌더링 컴포넌트가 프로젝트 내에 생성된 메시 애셋을 실제로 참조하는 상태여야 한다.
+- 입력 설정은 헤드리스 경로에서 `DA_*InputConfig`에 `IA_*`와 `IMC_*` 참조를 실제로 채우고, 플레이어 런타임 클래스가 그 DA를 참조하도록 완료되어야 한다.
 
 ### 메시 생성 규칙
 
@@ -108,6 +113,8 @@
 - `GameMode`, `DefaultPawnClass`, `PlayerControllerClass`, `HUDClass` 등에 C++ 클래스를 직접 꽂은 상태는 완료 상태로 인정하지 않는다.
 - 나중에 에디터에서 교체할 가능성이 있는 클래스는 C++ 타입을 직접 하드코딩하지 않고 Blueprint 레이어를 통해 교체 가능하게 둔다.
 - 화면에 보여야 하는 핵심 런타임 오브젝트는 실제 렌더링 컴포넌트와 메시 애셋이 연결된 상태여야 하며, 플레이어가 보이지 않는 상태는 완료 기준에 포함되지 않는다.
+- 특히 캐릭터 Blueprint는 자신의 메시 컴포넌트 또는 동등한 렌더링 컴포넌트에 프로젝트 내 메시 애셋을 직접 할당한 상태여야 한다.
+- 입력 연결도 같은 원칙을 따르며, 플레이어 런타임 클래스는 `IA_*`/`IMC_*`를 직접 들지 않고 `DA_*InputConfig` 애셋 하나를 통해 입력 구성을 받는다.
 
 ### C++ 담당 범위
 
@@ -122,6 +129,7 @@
 ### Blueprint 및 에셋 담당 범위
 
 - GameMode, Pawn, PlayerController, HUD용 Blueprint 파생 애셋 생성 및 기본값 연결
+- `IA_*`, `IMC_*`, `DA_*InputConfig` 입력 애셋 생성 및 참조 구성
 - 메쉬, 머터리얼, 이펙트, 사운드 연결
 - 입력 액션과 매핑 컨텍스트 에셋
 - 위젯 레이아웃과 표현
@@ -155,7 +163,9 @@
 - 기본 스폰 흐름
 - 기본 카메라 구조
 - 플레이어 가시 표현용 VOX `StaticMesh` import 및 메시 연결
-- `EnhancedInput` 연결 구조
+- 캐릭터 Blueprint 내부 메시 컴포넌트에 import 된 메시 애셋 할당
+- `IA_*`, `IMC_*`, `DA_*InputConfig` 실애셋 생성
+- 플레이어가 `IA_*`/`IMC_*`를 직접 참조하지 않고 `DA_*InputConfig`만 참조하는 `EnhancedInput` 연결 구조
 - Blueprint 파생 연결 레이어 실제 적용
 
 ### M2. 이동과 조준
