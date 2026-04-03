@@ -30,6 +30,7 @@
 
 최초 완성 기준은 아래와 같다.
 - 플레이어가 `BasicMap`에서 자동 스폰된다.
+- 플레이어는 화면에서 실제 메시로 보이며 투명 placeholder 상태가 아니다.
 - 플레이어는 `WASD`로 이동한다.
 - 플레이어는 마우스 커서를 향해 회전한다.
 - 좌클릭으로 기본 무기를 발사한다.
@@ -56,8 +57,11 @@
 - Unreal Editor GUI는 열지 않는다.
 - 에디터 API가 필요한 작업은 `UnrealEditor-Cmd`와 커맨드렛으로 처리한다.
 - 레거시 입력 대신 `EnhancedInput`을 사용한다.
-- 실제 연결 대상은 가능한 한 Blueprint 파생 클래스를 기준으로 유지한다.
+- 실제 연결 대상은 반드시 구체적인 Blueprint 파생 클래스 애셋으로 유지한다.
+- `GameMode`, `DefaultPawnClass`, `PlayerControllerClass`, `HUDClass` 등 기본 연결 지점에 C++ 클래스를 직접 연결하지 않는다.
 - `GameMode`도 C++ 베이스를 직접 꽂는 대신 Blueprint로 파생한 클래스를 기본 연결 대상으로 둔다.
+- 기본 연결에 필요한 Blueprint 애셋 생성과 갱신은 `UnrealEditor-Cmd` 기반 커맨드렛으로 완료한다.
+- 화면에 보여야 하는 런타임 액터는 렌더링 가능한 실제 애셋이 연결되어야 하며, 빈 컴포넌트나 투명 placeholder 상태를 완료로 간주하지 않는다.
 - 기존 프로젝트 루트, 모듈명 `TopDownTestOne`, 에디터 모듈명 `TopDownTestOneEditor`, 기본 맵 `/Game/Maps/BasicMap`은 유지한다.
 - 멀티플레이, 인벤토리, 저장, 설정 메뉴, 영구 성장 시스템은 현재 범위 밖이다.
 - 에셋 부족을 이유로 진행을 멈추지 않고 임시 구조로 먼저 완성한다.
@@ -78,6 +82,9 @@
 
 - 애셋 생성 규칙, 입력 파라미터, 결과 경로는 코드와 문서에 모두 남긴다.
 - 자동화 결과 요약은 `Saved/HeadlessSetup/TopDownTestOneHeadlessSetupReport.txt`에 기록한다.
+- 런타임 연결에 필요한 `BP_*` 계열 GameMode, Pawn, PlayerController, HUD 애셋도 커맨드렛으로 생성 또는 갱신 가능해야 한다.
+- 기본 클래스 연결과 기본값 주입도 헤드리스 경로에서 완료되어야 한다.
+- 가시 오브젝트가 필요하면 `.vox -> StaticMesh` import와 해당 메시의 Blueprint 연결까지 헤드리스 경로에서 완료되어야 한다.
 
 ### 메시 생성 규칙
 
@@ -96,9 +103,11 @@
 ### 에디터 친화적 클래스 연결 원칙
 
 - 핵심 로직과 타입 정의는 C++ 베이스 클래스에 둔다.
-- 맵, 프로젝트 설정, 데이터 레퍼런스, 위젯 연결, 스폰 연결은 가능한 한 Blueprint 파생 클래스를 기준으로 연결한다.
-- 기본 게임 모드도 `BP_<Name>GameMode` 형태의 Blueprint 파생 클래스를 기준으로 연결하고, Pawn, Controller, HUD, Widget도 같은 원칙을 따른다.
+- 맵, 프로젝트 설정, 데이터 레퍼런스, 위젯 연결, 스폰 연결은 반드시 구체적인 Blueprint 파생 클래스 애셋을 기준으로 연결한다.
+- 기본 게임 모드는 `BP_<Name>GameMode`, 플레이어는 `BP_<Name>Character` 또는 동등한 구체 Pawn Blueprint, 컨트롤러는 `BP_<Name>PlayerController` 형태의 실제 애셋을 기준으로 연결한다.
+- `GameMode`, `DefaultPawnClass`, `PlayerControllerClass`, `HUDClass` 등에 C++ 클래스를 직접 꽂은 상태는 완료 상태로 인정하지 않는다.
 - 나중에 에디터에서 교체할 가능성이 있는 클래스는 C++ 타입을 직접 하드코딩하지 않고 Blueprint 레이어를 통해 교체 가능하게 둔다.
+- 화면에 보여야 하는 핵심 런타임 오브젝트는 실제 렌더링 컴포넌트와 메시 애셋이 연결된 상태여야 하며, 플레이어가 보이지 않는 상태는 완료 기준에 포함되지 않는다.
 
 ### C++ 담당 범위
 
@@ -112,6 +121,7 @@
 
 ### Blueprint 및 에셋 담당 범위
 
+- GameMode, Pawn, PlayerController, HUD용 Blueprint 파생 애셋 생성 및 기본값 연결
 - 메쉬, 머터리얼, 이펙트, 사운드 연결
 - 입력 액션과 매핑 컨텍스트 에셋
 - 위젯 레이아웃과 표현
@@ -141,10 +151,12 @@
 ### M1. 게임플레이 기반
 
 - `GameMode`, `PlayerController`, `Character` 골격 추가
+- 커맨드렛 기반 `BP_*` GameMode, PlayerController, Character 생성 및 기본 연결
 - 기본 스폰 흐름
 - 기본 카메라 구조
+- 플레이어 가시 표현용 VOX `StaticMesh` import 및 메시 연결
 - `EnhancedInput` 연결 구조
-- Blueprint 파생 연결 레이어 준비
+- Blueprint 파생 연결 레이어 실제 적용
 
 ### M2. 이동과 조준
 

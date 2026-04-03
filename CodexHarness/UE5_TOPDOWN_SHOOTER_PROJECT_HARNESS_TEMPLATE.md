@@ -58,6 +58,8 @@ Implementation rules:
 - Folder and naming rules: <RULES>
 - Plugin rules: <ALLOWED OR FORBIDDEN PLUGINS>
 - Compatibility constraints: <SYSTEMS OR APIS THAT MUST STAY STABLE>
+- Default hookup rules: do not wire `GameMode`, `DefaultPawnClass`, `PlayerControllerClass`, or similar defaults directly to C++ classes; use concrete Blueprint assets
+- Visible runtime rules: any player, enemy, or weapon that should appear on screen must have a real renderable asset assigned; invisible placeholders do not count as complete
 
 Project scope:
 - In scope: <LIST>
@@ -86,6 +88,8 @@ Project execution rules:
 - Use `generator` for implementation and draft patches, and `evaluator` for review and verification-oriented evaluation.
 - Do not have those agents talk to each other directly; have the main agent relay outputs and feedback between them.
 - If this mode is used, record the role split in the phase document and the relay details in the work-time log notes.
+- Generate or update any required Blueprint hookup assets and VOX-derived `StaticMesh` assets through commandlets, not manual editor work.
+- Ensure the final runtime hookup uses concrete Blueprint GameMode/Pawn/Controller assets rather than direct C++ class references.
 - If blocked by missing assets or an ambiguous product decision, stop and ask one concise question.
 
 Current execution boundary:
@@ -99,6 +103,7 @@ Non-negotiable constraints:
 - <CONSTRAINT_2>
 - <CONSTRAINT_3>
 - If agent roles are split, separate file ownership to avoid write conflicts.
+- If a visible player is required, complete `.vox -> StaticMesh -> Blueprint assignment` rather than leaving an invisible pawn placeholder.
 
 Verification requirements:
 - <BUILD REQUIREMENT>
@@ -114,6 +119,7 @@ Reporting requirements:
   - open risks or missing decisions
   - next recommended milestone or phase
   - if `generator/evaluator` split execution was used, where the role split and relay flow were documented
+  - paths of the generated Blueprint assets and imported `StaticMesh` assets
 ```
 
 ## Optional Phase Slice Template
