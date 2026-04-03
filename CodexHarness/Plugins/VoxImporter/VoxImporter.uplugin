@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Vox Importer",
+	"Description": "Imports MagicaVoxel .vox files as Static Mesh assets.",
+	"Category": "Importers",
+	"CreatedBy": "OpenAI Codex",
+	"CanContainContent": false,
+	"IsBetaVersion": true,
+	"EnabledByDefault": true,
+	"Modules": [
+		{
+			"Name": "VoxImporterRuntime",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "VoxImporterEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	]
+}

@@ -1,10 +1,10 @@
-# TopDownTestOne 프로젝트 하네스
+# CodexHarness 프로젝트 하네스
 
 최종 수정일: 2026-04-04
 
 ## 문서 목적
 
-이 문서는 `TopDownTestOne`을 장기 작업으로 운영하기 위한 최상위 프로젝트 하네스다.
+이 문서는 `CodexHarness`를 장기 작업으로 운영하기 위한 최상위 프로젝트 하네스다.
 목표, 범위, 전역 제약, 구현 원칙, 마일스톤, 문서 운영 규칙을 고정한다.
 
 이 프로젝트의 장기 작업은 아래 5개 문서를 함께 사용한다.
@@ -16,13 +16,13 @@
 
 ## 프로젝트 요약
 
-- 프로젝트명: `TopDownTestOne`
+- 프로젝트명: `CodexHarness`
 - 엔진 버전: `UE 5.7`
 - 대상 플랫폼: `PC`
 - 네트워크 모델: `Single Player`
 - 장르 목표: 탑다운 슈터 프로토타입
 - 기본 맵: `/Game/Maps/BasicMap`
-- 현재 상태: 기본 맵, 런타임 모듈, 에디터 자동화 모듈, VOX 베이스 머터리얼, 샘플 `.vox` 입력까지 갖춘 초기 제작 기반 상태
+- 현재 상태: 기본 맵, 런타임 모듈, 에디터 자동화 모듈, `VoxImporter` 플러그인, `M_VoxBase`, 샘플 `.vox`, 샘플 `StaticMesh`, 게임플레이 베이스 클래스, `BP_*` 래퍼, `IA_*`/`IMC_*`/`DA_*InputConfig`, 가시 플레이어 연결, `IA_Move` 실제 바인딩, 마우스 커서 기준 바라보기 회전, `IA_Fire` 기반 초기 히트스캔 발사 루프, `UCodexHarnessHealthComponent` 기반 체력/사망 처리와 게임오버 플래그, 적 1종용 `ACodexHarnessEnemyCharacter`, 초기 런타임 스폰, 추적/공격 루프, `BP_CodexHarnessEnemyCharacter` 헤드리스 생성, 웨이브 번호와 남은 적 수를 추적하는 `GameMode` 상태, `Canvas HUD` 기반 체력/웨이브/남은 적 수 표시, 게임오버 오버레이, `IA_Restart` 기반 맵 재시작 흐름까지 포함한 최초 완성 기준 충족 상태이며 `M6-P1` 검증까지 완료됐다.
 
 ## 장기 목표
 
@@ -64,7 +64,8 @@
 - `GameMode`도 C++ 베이스를 직접 꽂는 대신 Blueprint로 파생한 클래스를 기본 연결 대상으로 둔다.
 - 기본 연결에 필요한 Blueprint 애셋 생성과 갱신은 `UnrealEditor-Cmd` 기반 커맨드렛으로 완료한다.
 - 화면에 보여야 하는 런타임 액터는 렌더링 가능한 실제 애셋이 연결되어야 하며, 빈 컴포넌트나 투명 placeholder 상태를 완료로 간주하지 않는다.
-- 기존 프로젝트 루트, 모듈명 `TopDownTestOne`, 에디터 모듈명 `TopDownTestOneEditor`, 기본 맵 `/Game/Maps/BasicMap`은 유지한다.
+- 기존 프로젝트 루트, 모듈명 `CodexHarness`, 기본 맵 `/Game/Maps/BasicMap`은 유지한다.
+- 기본 콘텐츠 루트는 `/Game/CodexHarness/` 아래로 정리한다.
 - 멀티플레이, 인벤토리, 저장, 설정 메뉴, 영구 성장 시스템은 현재 범위 밖이다.
 - 에셋 부족을 이유로 진행을 멈추지 않고 임시 구조로 먼저 완성한다.
 
@@ -72,18 +73,18 @@
 
 ### 공통 규칙
 
-- 에디터 API가 필요한 애셋 생성은 `TopDownTestOneEditor` 모듈과 커맨드렛으로 처리한다.
-- 현재 기본 진입점은 `TopDownTestOneHeadlessSetup` 커맨드렛이다.
+- 에디터 API가 필요한 애셋 생성은 `CodexHarnessEditor` 모듈과 커맨드렛으로 처리한다.
+- 현재 기본 진입점은 `CodexHarnessHeadlessSetup` 커맨드렛이다.
 - 실행 형식은 기본적으로 아래 패턴을 따른다.
 
 ```powershell
 <UE_INSTALL_ROOT>\Engine\Binaries\Win64\UnrealEditor-Cmd.exe `
-  <PROJECT_ROOT>\<PROJECT_NAME>.uproject `
-  -run=TopDownTestOneHeadlessSetup -unattended -nop4 -nosplash
+  <PROJECT_ROOT>\CodexHarness.uproject `
+  -run=CodexHarnessHeadlessSetup -unattended -nop4 -nosplash -nullrhi
 ```
 
 - 애셋 생성 규칙, 입력 파라미터, 결과 경로는 코드와 문서에 모두 남긴다.
-- 자동화 결과 요약은 `Saved/HeadlessSetup/TopDownTestOneHeadlessSetupReport.txt`에 기록한다.
+- 자동화 결과 요약은 `Saved/HeadlessSetup/CodexHarnessHeadlessSetupReport.txt`에 기록한다.
 - 런타임 연결에 필요한 `BP_*` 계열 GameMode, Pawn, PlayerController, HUD 애셋도 커맨드렛으로 생성 또는 갱신 가능해야 한다.
 - 런타임 입력 연결에 필요한 `IA_*`, `IMC_*`, `DA_*InputConfig` 애셋도 커맨드렛으로 생성 또는 갱신 가능해야 한다.
 - 기본 클래스 연결과 기본값 주입도 헤드리스 경로에서 완료되어야 한다.
@@ -96,7 +97,7 @@
 - 프로젝트에 새 메시가 필요하면 우선 `.vox` 소스 파일을 생성한다.
 - `.vox` 해상도는 기본적으로 `64 x 64 x 64` 이내를 기준으로 한다.
 - `.vox` 파일은 프로젝트 루트의 `SourceArt/Vox/` 아래에 저장하는 것을 기본 규칙으로 한다.
-- `.vox`에서 생성된 Unreal 애셋은 `/Game/TopDownShooter/Vox/` 아래에 저장하는 것을 기본 규칙으로 한다.
+- `.vox`에서 생성된 Unreal 애셋은 `/Game/CodexHarness/Vox/` 아래에 저장하는 것을 기본 규칙으로 한다.
 - `.vox`에서 생성된 메시의 기본 색 표현은 버텍스 컬러를 사용한다.
 - 메시별 개별 머터리얼을 늘리지 않고, 공용 베이스 머터리얼 하나를 재사용한다.
 - 공용 베이스 머터리얼 이름은 기본적으로 `M_VoxBase`를 사용한다.
@@ -109,7 +110,7 @@
 
 - 핵심 로직과 타입 정의는 C++ 베이스 클래스에 둔다.
 - 맵, 프로젝트 설정, 데이터 레퍼런스, 위젯 연결, 스폰 연결은 반드시 구체적인 Blueprint 파생 클래스 애셋을 기준으로 연결한다.
-- 기본 게임 모드는 `BP_<Name>GameMode`, 플레이어는 `BP_<Name>Character` 또는 동등한 구체 Pawn Blueprint, 컨트롤러는 `BP_<Name>PlayerController` 형태의 실제 애셋을 기준으로 연결한다.
+- 기본 게임 모드는 `BP_<Name>GameMode`, 플레이어는 `BP_<Name>Character`, 컨트롤러는 `BP_<Name>PlayerController`, HUD는 `BP_<Name>HUD` 형태의 실제 애셋을 기준으로 연결한다.
 - `GameMode`, `DefaultPawnClass`, `PlayerControllerClass`, `HUDClass` 등에 C++ 클래스를 직접 꽂은 상태는 완료 상태로 인정하지 않는다.
 - 나중에 에디터에서 교체할 가능성이 있는 클래스는 C++ 타입을 직접 하드코딩하지 않고 Blueprint 레이어를 통해 교체 가능하게 둔다.
 - 화면에 보여야 하는 핵심 런타임 오브젝트는 실제 렌더링 컴포넌트와 메시 애셋이 연결된 상태여야 하며, 플레이어가 보이지 않는 상태는 완료 기준에 포함되지 않는다.
@@ -152,21 +153,20 @@
 - 에디터 전용 모듈 구조 추가
 - 커맨드렛 실행 경로 추가
 - `M_VoxBase` 생성 또는 보장
-- `.vox -> 프로젝트 애셋` 변환 루트 설계
-- 최소 1개 테스트 입력 또는 테스트 메시 애셋 생성 흐름 정리
+- `.vox -> 프로젝트 애셋` 변환 루트 구축
+- 최소 1개 테스트 입력과 테스트 메시 애셋 생성 흐름 정리
 - 현재 상태: 완료
 
 ### M1. 게임플레이 기반
 
 - `GameMode`, `PlayerController`, `Character` 골격 추가
-- 커맨드렛 기반 `BP_*` GameMode, PlayerController, Character 생성 및 기본 연결
+- 커맨드렛 기반 `BP_*` GameMode, PlayerController, Character, HUD 생성 및 기본 연결
 - 기본 스폰 흐름
 - 기본 카메라 구조
 - 플레이어 가시 표현용 VOX `StaticMesh` import 및 메시 연결
 - 캐릭터 Blueprint 내부 메시 컴포넌트에 import 된 메시 애셋 할당
 - `IA_*`, `IMC_*`, `DA_*InputConfig` 실애셋 생성
 - 플레이어가 `IA_*`/`IMC_*`를 직접 참조하지 않고 `DA_*InputConfig`만 참조하는 `EnhancedInput` 연결 구조
-- Blueprint 파생 연결 레이어 실제 적용
 
 ### M2. 이동과 조준
 
@@ -230,7 +230,7 @@
 
 - 실제 작업은 반드시 `CURRENT_PHASE_KO.md`에 정의된 현재 경계 안에서만 수행한다.
 - 새 규칙, 예외, 설계 변경은 반드시 `DECISION_LOG_KO.md`에 기록한다.
-- 현재 프로젝트의 코드, 설정, 에셋 상태가 달라지면 `STATE_SNAPSHOT_KO.md`를 갱신한다.
+- 현재 프로젝트의 코드, 설정, 애셋 상태가 달라지면 `STATE_SNAPSHOT_KO.md`를 갱신한다.
 - 각 수행 단계의 시작 시각, 종료 시각, 소요 시간, 병렬 수행 여부는 `WORK_TIME_LOG_KO.md`에 append 한다.
 - `generator/evaluator` 분리 운영을 썼다면 역할 분리 요약은 `CURRENT_PHASE_KO.md`에, 실제 수행 및 중계 방식은 `WORK_TIME_LOG_KO.md` 메모에 남겨야 한다.
 - 단계 완료 후에는 `CURRENT_PHASE_KO.md`의 검증 결과와 다음 단계 제안을 갱신한다.

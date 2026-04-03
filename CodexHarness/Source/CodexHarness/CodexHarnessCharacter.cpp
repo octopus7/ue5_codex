@@ -1,0 +1,215 @@
+#include "CodexHarnessCharacter.h"
+
+#include "Camera/CameraComponent.h"
+#include "CodexHarnessGameMode.h"
+#include "CodexHarnessHealthComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/World.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/DamageType.h"
+#include "Kismet/GameplayStatics.h"
+
+ACodexHarnessCharacter::ACodexHarnessCharacter()
+{
+	PrimaryActorTick.bCanEverTick = false;
+
+	bUseControllerRotationYaw = false;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	GetCharacterMovement()->bUseControllerDesiredRotation = false;
+	GetCharacterMovement()->MaxWalkSpeed = 600.0f;
+	GetCharacterMovement()->BrakingDecelerationWalking = 2000.0f;
+
+	GetMesh()->SetHiddenInGame(true);
+	GetMesh()->SetVisibility(false);
+
+	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	CameraBoom->SetupAttachment(RootComponent);
+	CameraBoom->TargetArmLength = 1800.0f;
+	CameraBoom->SetRelativeRotation(FRotator(-60.0f, 0.0f, 0.0f));
+	CameraBoom->bDoCollisionTest = false;
+	CameraBoom->bUsePawnControlRotation = false;
+	CameraBoom->bInheritPitch = false;
+	CameraBoom->bInheritYaw = false;
+	CameraBoom->bInheritRoll = false;
+
+	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
+	FollowCamera->bUsePawnControlRotation = false;
+
+	VisualMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("VisualMeshComponent"));
+	VisualMeshComponent->SetupAttachment(RootComponent);
+	VisualMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	VisualMeshComponent->SetGenerateOverlapEvents(false);
+	VisualMeshComponent->SetCanEverAffectNavigation(false);
+
+	HealthComponent = CreateDefaultSubobject<UCodexHarnessHealthComponent>(TEXT("HealthComponent"));
+
+	RefreshVisualMeshDefaults();
+}
+
+void ACodexHarnessCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (HealthComponent != nullptr)
+	{
+		HealthComponent->OnDeath().AddUObject(this, &ThisClass::HandleDeath);
+	}
+}
+
+void ACodexHarnessCharacter::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+
+	RefreshVisualMeshDefaults();
+}
+
+void ACodexHarnessCharacter::PostLoad()
+{
+	Super::PostLoad();
+
+	RefreshVisualMeshDefaults();
+}
+
+#if WITH_EDITOR
+void ACodexHarnessCharacter::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+
+	RefreshVisualMeshDefaults();
+}
+#endif
+
+void ACodexHarnessCharacter::RefreshVisualMeshDefaults()
+{
+	if (VisualMeshComponent == nullptr)
+	{
+		return;
+	}
+
+	VisualMeshComponent->SetRelativeLocation(DefaultVisualMeshOffset);
+	VisualMeshComponent->SetRelativeScale3D(DefaultVisualMeshScale);
+	VisualMeshComponent->SetStaticMesh(DefaultVisualMesh);
+}
+
+void ACodexHarnessCharacter::MoveInTopDownPlane(const FVector2D& MovementInput)
+{
+	if (!IsAlive() || Controller == nullptr || MovementInput.IsNearlyZero())
+	{
+		return;
+	}
+
+	const FVector CameraForward = FollowCamera != nullptr ? FollowCamera->GetForwardVector() : GetActorForwardVector();
+	const FVector CameraRight = FollowCamera != nullptr ? FollowCamera->GetRightVector() : GetActorRightVector();
+
+	const FVector ForwardDirection = FVector(CameraForward.X, CameraForward.Y, 0.0f).GetSafeNormal();
+	const FVector RightDirection = FVector(CameraRight.X, CameraRight.Y, 0.0f).GetSafeNormal();
+	if (ForwardDirection.IsNearlyZero() || RightDirection.IsNearlyZero())
+	{
+		return;
+	}
+
+	AddMovementInput(ForwardDirection, MovementInput.Y);
+	AddMovementInput(RightDirection, MovementInput.X);
+}
+
+void ACodexHarnessCharacter::AimAtWorldLocation(const FVector& WorldLocation)
+{
+	if (!IsAlive())
+	{
+		return;
+	}
+
+	RotateTowardWorldDirection(WorldLocation - GetActorLocation());
+}
+
+void ACodexHarnessCharacter::FireAtWorldLocation(const FVector& WorldLocation)
+{
+	if (!IsAlive())
+	{
+		return;
+	}
+
+	UWorld* const World = GetWorld();
+	if (World == nullptr)
+	{
+		return;
+	}
+
+	const FVector TraceStart = GetActorLocation() + FVector(0.0f, 0.0f, 40.0f);
+	FVector FireDirection = WorldLocation - TraceStart;
+	if (FireDirection.IsNearlyZero())
+	{
+		FireDirection = GetActorForwardVector();
+	}
+	FireDirection.Normalize();
+
+	const FVector TraceEnd = TraceStart + (FireDirection * WeaponRange);
+	FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(CodexHarnessWeaponTrace), false);
+	QueryParams.AddIgnoredActor(this);
+
+	FHitResult HitResult;
+	if (World->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECC_Visibility, QueryParams))
+	{
+		if (AActor* const HitActor = HitResult.GetActor())
+		{
+			if (HitActor->FindComponentByClass<UCodexHarnessHealthComponent>() != nullptr)
+			{
+				UGameplayStatics::ApplyDamage(HitActor, WeaponDamage, GetController(), this, UDamageType::StaticClass());
+			}
+		}
+	}
+}
+
+void ACodexHarnessCharacter::HandleDeath()
+{
+	if (GetCharacterMovement() != nullptr)
+	{
+		GetCharacterMovement()->DisableMovement();
+	}
+
+	if (ACodexHarnessGameMode* const CodexHarnessGameMode = GetWorld() != nullptr
+		? GetWorld()->GetAuthGameMode<ACodexHarnessGameMode>()
+		: nullptr)
+	{
+		CodexHarnessGameMode->HandlePlayerDeath(this);
+	}
+}
+
+void ACodexHarnessCharacter::RotateTowardWorldDirection(const FVector& WorldDirection)
+{
+	FVector FlatDirection = WorldDirection;
+	FlatDirection.Z = 0.0f;
+	if (FlatDirection.IsNearlyZero())
+	{
+		return;
+	}
+
+	SetActorRotation(FlatDirection.Rotation());
+}
+
+USpringArmComponent* ACodexHarnessCharacter::GetCameraBoom() const
+{
+	return CameraBoom;
+}
+
+UCameraComponent* ACodexHarnessCharacter::GetFollowCamera() const
+{
+	return FollowCamera;
+}
+
+UStaticMeshComponent* ACodexHarnessCharacter::GetVisualMeshComponent() const
+{
+	return VisualMeshComponent;
+}
+
+UCodexHarnessHealthComponent* ACodexHarnessCharacter::GetHealthComponent() const
+{
+	return HealthComponent;
+}
+
+bool ACodexHarnessCharacter::IsAlive() const
+{
+	return HealthComponent != nullptr ? HealthComponent->IsAlive() : true;
+}

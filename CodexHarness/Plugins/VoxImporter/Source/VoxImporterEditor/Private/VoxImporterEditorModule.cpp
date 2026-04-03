@@ -1,0 +1,195 @@
+#include "VoxImporterEditorModule.h"
+
+#include "ContentBrowserMenuContexts.h"
+#include "ContentBrowserModule.h"
+#include "Dialogs/Dialogs.h"
+#include "Engine/StaticMesh.h"
+#include "IContentBrowserSingleton.h"
+#include "Misc/ScopedSlowTask.h"
+#include "Modules/ModuleManager.h"
+#include "ToolMenus.h"
+#include "VoxReconstructionService.h"
+#include "VoxStaticMeshUtilities.h"
+#include "VoxTextureBakeService.h"
+
+#define LOCTEXT_NAMESPACE "VoxImporterEditorModule"
+
+void FVoxImporterEditorModule::StartupModule()
+{
+	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FVoxImporterEditorModule::RegisterMenus));
+}
+
+void FVoxImporterEditorModule::ShutdownModule()
+{
+	UToolMenus::UnregisterOwner(this);
+}
+
+void FVoxImporterEditorModule::RegisterMenus()
+{
+	FToolMenuOwnerScoped OwnerScoped(this);
+
+	UToolMenu* Menu = UToolMenus::Get()->ExtendMenu("ContentBrowser.AssetContextMenu.StaticMesh");
+	if (!Menu)
+	{
+		return;
+	}
+
+	FToolMenuSection& Section = Menu->FindOrAddSection("GetAssetActions");
+	Section.AddDynamicEntry("VoxImporterActions", FNewToolMenuSectionDelegate::CreateLambda([this](FToolMenuSection& InSection)
+	{
+		const UContentBrowserAssetContextMenuContext* Context = InSection.FindContext<UContentBrowserAssetContextMenuContext>();
+		if (!Context)
+		{
+			return;
+		}
+
+		TArray<TWeakObjectPtr<UStaticMesh>> EligibleVoxMeshes;
+		TArray<TWeakObjectPtr<UStaticMesh>> EligiblePrimaryMeshes;
+		for (UStaticMesh* StaticMesh : Context->LoadSelectedObjects<UStaticMesh>())
+		{
+			if (VoxStaticMeshUtilities::IsVoxImportedStaticMesh(StaticMesh))
+			{
+				EligibleVoxMeshes.Add(StaticMesh);
+			}
+
+			if (VoxStaticMeshUtilities::IsPrimaryVoxSourceStaticMesh(StaticMesh))
+			{
+				EligiblePrimaryMeshes.Add(StaticMesh);
+			}
+		}
+
+		if (EligibleVoxMeshes.IsEmpty())
+		{
+			return;
+		}
+
+		InSection.AddSubMenu(
+			"VoxImporterSubMenu",
+			LOCTEXT("VoxSubMenuLabel", "Vox"),
+			LOCTEXT("VoxSubMenuToolTip", "Actions for Static Mesh assets imported from MagicaVoxel .vox files."),
+			FNewToolMenuDelegate::CreateLambda([this, EligibleVoxMeshes, EligiblePrimaryMeshes](UToolMenu* SubMenu)
+			{
+				FToolMenuSection& SubSection = SubMenu->AddSection("VoxImporterActions", LOCTEXT("VoxActionsHeading", "Vox"));
+
+				if (!EligiblePrimaryMeshes.IsEmpty())
+				{
+					SubSection.AddMenuEntry(
+						"GenerateSmoothReconstruction",
+						LOCTEXT("GenerateSmoothReconstructionLabel", "Generate Smooth Reconstruction"),
+						LOCTEXT("GenerateSmoothReconstructionToolTip", "Rebuild this .vox asset as a smoother reconstructed Static Mesh and save it as a new asset."),
+						FSlateIcon(),
+						FToolUIActionChoice(FUIAction(FExecuteAction::CreateLambda([this, EligiblePrimaryMeshes]()
+						{
+							GenerateSmoothReconstructions(EligiblePrimaryMeshes);
+						}))));
+				}
+
+				SubSection.AddMenuEntry(
+					"BakeVertexColorToTexture",
+					LOCTEXT("BakeVertexColorToTextureLabel", "Bake Vertex Color To Texture"),
+					LOCTEXT("BakeVertexColorToTextureToolTip", "Generate automatic UVs, bake vertex colors into a texture, and assign a per-mesh baked material instance."),
+					FSlateIcon(),
+					FToolUIActionChoice(FUIAction(FExecuteAction::CreateLambda([this, EligibleVoxMeshes]()
+					{
+						BakeVertexColorsToTextures(EligibleVoxMeshes);
+					}))));
+			}));
+	}));
+}
+
+void FVoxImporterEditorModule::GenerateSmoothReconstructions(const TArray<TWeakObjectPtr<UStaticMesh>>& StaticMeshes) const
+{
+	TArray<UObject*> CreatedAssets;
+	TArray<FString> Errors;
+
+	FScopedSlowTask SlowTask(static_cast<float>(StaticMeshes.Num()), LOCTEXT("GenerateSmoothReconstructionsProgress", "Generating smooth VOX reconstructions..."));
+	SlowTask.MakeDialogDelayed(0.2f);
+
+	for (const TWeakObjectPtr<UStaticMesh>& StaticMeshWeak : StaticMeshes)
+	{
+		SlowTask.EnterProgressFrame(1.0f);
+
+		UStaticMesh* StaticMesh = StaticMeshWeak.Get();
+		if (!StaticMesh)
+		{
+			continue;
+		}
+
+		UObject* CreatedAsset = nullptr;
+		FString ErrorMessage;
+		if (VoxReconstructionService::GenerateSmoothReconstruction(StaticMesh, CreatedAsset, ErrorMessage))
+		{
+			if (CreatedAsset)
+			{
+				CreatedAssets.Add(CreatedAsset);
+			}
+		}
+		else
+		{
+			Errors.Add(FString::Printf(TEXT("%s: %s"), *StaticMesh->GetName(), *ErrorMessage));
+		}
+	}
+
+	if (!CreatedAssets.IsEmpty())
+	{
+		FContentBrowserModule& ContentBrowserModule = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser");
+		ContentBrowserModule.Get().SyncBrowserToAssets(CreatedAssets);
+	}
+
+	if (!Errors.IsEmpty())
+	{
+		FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(FString::Join(Errors, TEXT("\n"))));
+	}
+}
+
+void FVoxImporterEditorModule::BakeVertexColorsToTextures(const TArray<TWeakObjectPtr<UStaticMesh>>& StaticMeshes) const
+{
+	TArray<UObject*> CreatedAssets;
+	TArray<FString> Errors;
+
+	FScopedSlowTask SlowTask(static_cast<float>(StaticMeshes.Num()), LOCTEXT("BakeVertexColorsProgress", "Baking VOX vertex colors to textures..."));
+	SlowTask.MakeDialogDelayed(0.2f);
+
+	for (const TWeakObjectPtr<UStaticMesh>& StaticMeshWeak : StaticMeshes)
+	{
+		SlowTask.EnterProgressFrame(1.0f);
+
+		UStaticMesh* StaticMesh = StaticMeshWeak.Get();
+		if (!StaticMesh)
+		{
+			continue;
+		}
+
+		TArray<UObject*> ResultAssets;
+		FString ErrorMessage;
+		if (VoxTextureBakeService::BakeVertexColorToTexture(StaticMesh, ResultAssets, ErrorMessage))
+		{
+			for (UObject* Asset : ResultAssets)
+			{
+				if (Asset)
+				{
+					CreatedAssets.AddUnique(Asset);
+				}
+			}
+		}
+		else
+		{
+			Errors.Add(FString::Printf(TEXT("%s: %s"), *StaticMesh->GetName(), *ErrorMessage));
+		}
+	}
+
+	if (!CreatedAssets.IsEmpty())
+	{
+		FContentBrowserModule& ContentBrowserModule = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser");
+		ContentBrowserModule.Get().SyncBrowserToAssets(CreatedAssets);
+	}
+
+	if (!Errors.IsEmpty())
+	{
+		FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(FString::Join(Errors, TEXT("\n"))));
+	}
+}
+
+IMPLEMENT_MODULE(FVoxImporterEditorModule, VoxImporterEditor)
+
+#undef LOCTEXT_NAMESPACE
