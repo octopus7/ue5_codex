@@ -6,9 +6,11 @@
 
 class UCameraComponent;
 class UCodexHarnessHealthComponent;
+class UDamageType;
 class UStaticMesh;
 class UStaticMeshComponent;
 class USpringArmComponent;
+class AController;
 struct FPropertyChangedEvent;
 
 UCLASS()
@@ -58,6 +60,12 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
 	float WeaponDamage = 10.0f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Reaction", meta = (ClampMin = "0.0"))
+	float DamageKnockbackStrength = 900.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Reaction", meta = (ClampMin = "0.0"))
+	float DamageKnockbackUpwardVelocity = 0.0f;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visual")
 	FVector DefaultVisualMeshScale = FVector(8.0f, 8.0f, 8.0f);
 
@@ -67,6 +75,9 @@ protected:
 private:
 	void HandleDeath();
 	void RotateTowardWorldDirection(const FVector& WorldDirection);
+
+	UFUNCTION()
+	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USpringArmComponent> CameraBoom = nullptr;

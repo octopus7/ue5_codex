@@ -52,6 +52,8 @@ void ACodexHarnessCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	OnTakeAnyDamage.AddDynamic(this, &ThisClass::HandleTakeAnyDamage);
+
 	if (HealthComponent != nullptr)
 	{
 		HealthComponent->OnDeath().AddUObject(this, &ThisClass::HandleDeath);
@@ -175,6 +177,46 @@ void ACodexHarnessCharacter::HandleDeath()
 	{
 		CodexHarnessGameMode->HandlePlayerDeath(this);
 	}
+}
+
+void ACodexHarnessCharacter::HandleTakeAnyDamage(
+	AActor* DamagedActor,
+	const float Damage,
+	const UDamageType* DamageType,
+	AController* InstigatedBy,
+	AActor* DamageCauser)
+{
+	static_cast<void>(DamagedActor);
+	static_cast<void>(DamageType);
+
+	if (Damage <= 0.0f || DamageKnockbackStrength <= 0.0f || !IsAlive())
+	{
+		return;
+	}
+
+	FVector KnockbackDirection = -GetActorForwardVector();
+	KnockbackDirection.Z = 0.0f;
+
+	if (DamageCauser != nullptr)
+	{
+		KnockbackDirection = GetActorLocation() - DamageCauser->GetActorLocation();
+		KnockbackDirection.Z = 0.0f;
+	}
+	else if (InstigatedBy != nullptr && InstigatedBy->GetPawn() != nullptr)
+	{
+		KnockbackDirection = GetActorLocation() - InstigatedBy->GetPawn()->GetActorLocation();
+		KnockbackDirection.Z = 0.0f;
+	}
+
+	KnockbackDirection.Normalize();
+	if (KnockbackDirection.IsNearlyZero())
+	{
+		return;
+	}
+
+	const FVector KnockbackVelocity =
+		(KnockbackDirection * DamageKnockbackStrength) + (FVector::UpVector * DamageKnockbackUpwardVelocity);
+	LaunchCharacter(KnockbackVelocity, true, DamageKnockbackUpwardVelocity > 0.0f);
 }
 
 void ACodexHarnessCharacter::RotateTowardWorldDirection(const FVector& WorldDirection)
