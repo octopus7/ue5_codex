@@ -53,6 +53,8 @@
 
 ## 실제 생성/검증 경로
 
+- 플레이어 VOX 소스: `SourceArt/Vox/SM_Vox_PlayerChicken_White.vox`
+- 적 VOX 소스: `SourceArt/Vox/SM_Vox_EnemyChicken_Red.vox`
 - 플레이어 VOX 메시: `/Game/CodexHarness/Vox/SM_Vox_PlayerChicken_White`
 - 적 VOX 메시: `/Game/CodexHarness/Vox/SM_Vox_EnemyChicken_Red`
 - 머터리얼: `/Game/CodexHarness/Materials/M_VoxBase`
@@ -79,5 +81,5 @@
 
 ## 역할 분리 메모
 
-- 읽기 전용 `evaluator` 컨텍스트를 사용해 `Harness_T1` 구현 범위, 검증 공백, 병합 충돌 범위를 사전 점검했다.
-- 실제 통합, 누락 기능 보강, 빌드/커맨드렛 재검증, 문서 갱신은 메인 에이전트가 수행했다.
+- 이번 `M6-P2` 단계는 메인 에이전트가 단독 수행했다.
+- 이전 `M6-P1` 단계에서 사용한 읽기 전용 `evaluator` 컨텍스트는 이번 외형 식별 강화 단계에는 사용하지 않았다.

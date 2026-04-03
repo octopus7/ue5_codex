@@ -55,3 +55,11 @@
 - 소요 시간: `00:11:50`
 - 병렬 수행: `예`
 - 메모: 읽기 전용 `evaluator` 컨텍스트가 `Harness_T1` 구현 범위, 검증 공백, 문서 충돌 범위를 병렬로 점검했고 메인 컨텍스트가 결과를 중계받아 `Harness_T2`에 `CodexHarness` 경로만 선택 통합했다. 이후 현재 하네스 기준과 어긋나 있던 `PlayerWeaponTrace`(`ECC_GameTraceChannel1`) 공격 판정 채널과 `BP_CodexHarnessPlayerHitCameraShake`/`DA_DefaultEffectsConfig` 기반 피격 카메라 흔들림 연결을 로컬에서 추가했다. `Build.bat CodexHarnessEditor ... -NoHotReloadFromIDE`와 `UnrealEditor-Cmd.exe ... -run=CodexHarnessHeadlessSetup ... -NoHotReloadFromIDE`를 현재 작업 트리에서 재실행해 모두 성공했고, 자동화 보고서에 `EnemyCharacter`, `RestartAction`, `PlayerHitCameraShake`, `EffectsConfig` 반영을 확인했다. 마지막으로 하네스 문서 5종을 현재 브랜치 기준 완료 상태로 정렬했다.
+
+### 2026-04-04 | M6-P2-VOX-CHICKENS | 플레이어 흰 닭 / 적 붉은 닭 VOX 생성 및 연결
+
+- 시작: `2026-04-04 06:04:08 +09:00`
+- 종료: `2026-04-04 06:26:43 +09:00`
+- 소요 시간: `00:22:35`
+- 병렬 수행: `아니오`
+- 메모: `CodexHarnessHeadlessSetup` 커맨드렛을 확장해 `SourceArt/Vox/SM_Vox_PlayerChicken_White.vox`와 `SourceArt/Vox/SM_Vox_EnemyChicken_Red.vox`를 헤드리스로 생성하고, `/Game/CodexHarness/Vox/SM_Vox_PlayerChicken_White`와 `/Game/CodexHarness/Vox/SM_Vox_EnemyChicken_Red`로 import하도록 변경했다. `BP_CodexHarnessCharacter`는 흰 닭 메시, `BP_CodexHarnessEnemyCharacter`는 붉은 닭 메시를 `DefaultVisualMesh -> VisualMeshComponent` 경로로 사용하도록 갱신했다. 빌드 재검증 중 프로젝트 `UnrealEditor.exe` 점유로 링크가 한 차례 실패했지만 에디터 종료 후 `Build.bat CodexHarnessEditor ... -NoHotReloadFromIDE`와 `UnrealEditor-Cmd.exe ... -run=CodexHarnessHeadlessSetup ... -NoHotReloadFromIDE`를 재실행해 모두 성공했고, 자동화 보고서에 두 VOX 소스와 두 `StaticMesh` 경로 반영을 확인했다. 마지막으로 하네스 문서 5종을 새 외형 상태 기준으로 갱신했다.
