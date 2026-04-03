@@ -23,6 +23,8 @@ public class CodexHarnessEditor : ModuleRules
 			"InputCore",
 			"InputEditor",
 			"Kismet",
+			"Niagara",
+			"NiagaraEditor",
 			"Projects",
 			"UnrealEd",
 			"VoxImporterEditor"

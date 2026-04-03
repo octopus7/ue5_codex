@@ -13,6 +13,7 @@
 #include "Engine/Blueprint.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
+#include "Effects/CodexHarnessEffectsConfigDataAsset.h"
 #include "Factories/DataAssetFactory.h"
 #include "Factories/MaterialFactoryNew.h"
 #include "FileHelpers.h"
@@ -32,6 +33,7 @@
 #include "Misc/FileHelper.h"
 #include "Misc/PackageName.h"
 #include "Misc/Paths.h"
+#include "NiagaraSystem.h"
 #include "UObject/Package.h"
 #include "UObject/SavePackage.h"
 #include "UObject/UnrealType.h"
@@ -46,10 +48,12 @@ namespace
 	const FString InputActionsFolder = TEXT("/Game/CodexHarness/Input/Actions");
 	const FString InputContextsFolder = TEXT("/Game/CodexHarness/Input/Contexts");
 	const FString InputConfigsFolder = TEXT("/Game/CodexHarness/Input/Configs");
+	const FString EffectsFolder = TEXT("/Game/CodexHarness/Effects");
 	const FString BlueprintCoreFolder = TEXT("/Game/CodexHarness/Blueprints/Core");
 	const FString BlueprintEnemiesFolder = TEXT("/Game/CodexHarness/Blueprints/Enemies");
 	const FString BasicMapPackagePath = TEXT("/Game/Maps/BasicMap");
 	const FString BasicMapObjectPath = TEXT("/Game/Maps/BasicMap.BasicMap");
+	const FString PlayerHitReactionTemplatePath = TEXT("/Niagara/DefaultAssets/Templates/Systems/RadialBurst.RadialBurst");
 
 	const TCHAR* MoveActionAssetName = TEXT("IA_Move");
 	const TCHAR* LookActionAssetName = TEXT("IA_Look");
@@ -57,6 +61,8 @@ namespace
 	const TCHAR* RestartActionAssetName = TEXT("IA_Restart");
 	const TCHAR* MappingContextAssetName = TEXT("IMC_Default");
 	const TCHAR* InputConfigAssetName = TEXT("DA_DefaultInputConfig");
+	const TCHAR* EffectsConfigAssetName = TEXT("DA_DefaultEffectsConfig");
+	const TCHAR* PlayerHitReactionSystemAssetName = TEXT("NS_PlayerHitReaction");
 	const TCHAR* GameInstanceBlueprintAssetName = TEXT("BP_CodexHarnessGameInstance");
 	const TCHAR* GameModeBlueprintAssetName = TEXT("BP_CodexHarnessGameMode");
 	const TCHAR* PlayerControllerBlueprintAssetName = TEXT("BP_CodexHarnessPlayerController");
@@ -93,6 +99,8 @@ namespace
 		TObjectPtr<UInputAction> RestartAction = nullptr;
 		TObjectPtr<UInputMappingContext> MappingContext = nullptr;
 		TObjectPtr<UCodexHarnessInputConfigDataAsset> InputConfig = nullptr;
+		TObjectPtr<UCodexHarnessEffectsConfigDataAsset> EffectsConfig = nullptr;
+		TObjectPtr<UNiagaraSystem> PlayerHitReactionSystem = nullptr;
 		TObjectPtr<UBlueprint> GameInstanceBlueprint = nullptr;
 		TObjectPtr<UBlueprint> GameModeBlueprint = nullptr;
 		TObjectPtr<UBlueprint> PlayerControllerBlueprint = nullptr;
@@ -180,6 +188,28 @@ namespace
 		}
 
 		return CreateAsset();
+	}
+
+	template <typename TObjectType>
+	TObjectType* LoadOrDuplicateAsset(const FString& Folder, const FString& AssetName, const FString& SourceObjectPath)
+	{
+		const FString PackagePath = FString::Printf(TEXT("%s/%s"), *Folder, *AssetName);
+		if (FPackageName::DoesPackageExist(PackagePath))
+		{
+			if (TObjectType* Existing = LoadObject<TObjectType>(nullptr, *MakeObjectPath(Folder, AssetName)))
+			{
+				return Existing;
+			}
+		}
+
+		TObjectType* const SourceAsset = LoadObject<TObjectType>(nullptr, *SourceObjectPath);
+		if (SourceAsset == nullptr)
+		{
+			return nullptr;
+		}
+
+		IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools")).Get();
+		return Cast<TObjectType>(AssetTools.DuplicateAsset(AssetName, Folder, SourceAsset));
 	}
 
 	FObjectProperty* FindObjectPropertyChecked(UObject& TargetObject, const TCHAR* PropertyName, UClass* ExpectedBaseClass)
@@ -678,6 +708,44 @@ namespace
 		return true;
 	}
 
+	bool ConfigureEffectsAssets(FHeadlessSetupArtifacts& Artifacts, FString& OutError)
+	{
+		Artifacts.PlayerHitReactionSystem = LoadOrDuplicateAsset<UNiagaraSystem>(
+			EffectsFolder,
+			PlayerHitReactionSystemAssetName,
+			PlayerHitReactionTemplatePath);
+		if (Artifacts.PlayerHitReactionSystem == nullptr)
+		{
+			OutError = TEXT("Failed to create player hit reaction Niagara system.");
+			return false;
+		}
+
+		Artifacts.EffectsConfig = LoadOrCreateAsset<UCodexHarnessEffectsConfigDataAsset>(EffectsFolder, EffectsConfigAssetName, []()
+		{
+			return CreateAssetWithFactory<UCodexHarnessEffectsConfigDataAsset, UDataAssetFactory>(
+				EffectsFolder,
+				EffectsConfigAssetName,
+				UCodexHarnessEffectsConfigDataAsset::StaticClass(),
+				[](UDataAssetFactory& Factory)
+				{
+					Factory.DataAssetClass = UCodexHarnessEffectsConfigDataAsset::StaticClass();
+				});
+		});
+		if (Artifacts.EffectsConfig == nullptr)
+		{
+			OutError = TEXT("Failed to create effects config data asset.");
+			return false;
+		}
+
+		Artifacts.EffectsConfig->Modify();
+		Artifacts.EffectsConfig->PlayerHitReactionSystem = Artifacts.PlayerHitReactionSystem;
+		Artifacts.EffectsConfig->PlayerHitReactionLocationOffset = FVector(0.0f, 0.0f, 40.0f);
+		Artifacts.EffectsConfig->PlayerHitReactionScale = FVector(0.35f, 0.35f, 0.35f);
+		Artifacts.EffectsConfig->MarkPackageDirty();
+
+		return true;
+	}
+
 	bool ConfigureBlueprintAssets(FHeadlessSetupArtifacts& Artifacts, FString& OutError)
 	{
 		Artifacts.GameInstanceBlueprint = LoadOrCreateBlueprint(
@@ -735,6 +803,7 @@ namespace
 		}
 
 		SetObjectProperty(*GameInstanceDefaultObject, TEXT("DefaultInputConfig"), Artifacts.InputConfig, UCodexHarnessInputConfigDataAsset::StaticClass());
+		SetObjectProperty(*GameInstanceDefaultObject, TEXT("DefaultEffectsConfig"), Artifacts.EffectsConfig, UCodexHarnessEffectsConfigDataAsset::StaticClass());
 		FBlueprintEditorUtils::MarkBlueprintAsModified(Artifacts.GameInstanceBlueprint);
 		if (!CompileBlueprint(*Artifacts.GameInstanceBlueprint, OutError))
 		{
@@ -858,12 +927,24 @@ namespace
 			return false;
 		}
 
+		if (Artifacts.EffectsConfig == nullptr || !Artifacts.EffectsConfig->HasRequiredAssets())
+		{
+			OutError = TEXT("EffectsConfig does not contain the required Niagara system.");
+			return false;
+		}
+
 		const UCodexHarnessGameInstance* const GameInstanceDefaultObject = Artifacts.GameInstanceBlueprint->GeneratedClass != nullptr
 			? Artifacts.GameInstanceBlueprint->GeneratedClass->GetDefaultObject<UCodexHarnessGameInstance>()
 			: nullptr;
 		if (GameInstanceDefaultObject == nullptr || GameInstanceDefaultObject->DefaultInputConfig != Artifacts.InputConfig)
 		{
 			OutError = TEXT("GameInstance blueprint is not linked to the generated input config asset.");
+			return false;
+		}
+
+		if (GameInstanceDefaultObject->DefaultEffectsConfig != Artifacts.EffectsConfig)
+		{
+			OutError = TEXT("GameInstance blueprint is not linked to the generated effects config asset.");
 			return false;
 		}
 
@@ -980,6 +1061,9 @@ namespace
 			TEXT("  RestartAction: %s\n")
 			TEXT("  MappingContext: %s\n")
 			TEXT("  InputConfig: %s\n")
+			TEXT("Effects:\n")
+			TEXT("  PlayerHitReactionSystem: %s\n")
+			TEXT("  EffectsConfig: %s\n")
 			TEXT("ProjectSettings:\n")
 			TEXT("  GameInstanceClass: %s\n")
 			TEXT("  GlobalDefaultGameMode: %s\n")
@@ -1002,6 +1086,8 @@ namespace
 			*Artifacts.RestartAction->GetPathName(),
 			*Artifacts.MappingContext->GetPathName(),
 			*Artifacts.InputConfig->GetPathName(),
+			*Artifacts.PlayerHitReactionSystem->GetPathName(),
+			*Artifacts.EffectsConfig->GetPathName(),
 			*Artifacts.GameInstanceBlueprint->GeneratedClass->GetPathName(),
 			*Artifacts.GameModeBlueprint->GeneratedClass->GetPathName(),
 			*BasicMapPackagePath,
@@ -1063,6 +1149,12 @@ int32 UCodexHarnessHeadlessSetupCommandlet::Main(const FString& Params)
 		return 1;
 	}
 
+	if (!ConfigureEffectsAssets(Artifacts, ErrorMessage))
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s"), *ErrorMessage);
+		return 1;
+	}
+
 	if (!ConfigureBlueprintAssets(Artifacts, ErrorMessage))
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s"), *ErrorMessage);
@@ -1076,6 +1168,8 @@ int32 UCodexHarnessHeadlessSetupCommandlet::Main(const FString& Params)
 	AddPackageIfValid(PackagesToSave, Artifacts.RestartAction);
 	AddPackageIfValid(PackagesToSave, Artifacts.MappingContext);
 	AddPackageIfValid(PackagesToSave, Artifacts.InputConfig);
+	AddPackageIfValid(PackagesToSave, Artifacts.PlayerHitReactionSystem);
+	AddPackageIfValid(PackagesToSave, Artifacts.EffectsConfig);
 	AddPackageIfValid(PackagesToSave, Artifacts.GameInstanceBlueprint);
 	AddPackageIfValid(PackagesToSave, Artifacts.GameModeBlueprint);
 	AddPackageIfValid(PackagesToSave, Artifacts.PlayerControllerBlueprint);
@@ -1117,5 +1211,7 @@ int32 UCodexHarnessHeadlessSetupCommandlet::Main(const FString& Params)
 	UE_LOG(LogTemp, Display, TEXT("EnemyCharacter Blueprint: %s"), *Artifacts.EnemyCharacterBlueprint->GetPathName());
 	UE_LOG(LogTemp, Display, TEXT("HUD Blueprint: %s"), *Artifacts.HudBlueprint->GetPathName());
 	UE_LOG(LogTemp, Display, TEXT("InputConfig: %s"), *Artifacts.InputConfig->GetPathName());
+	UE_LOG(LogTemp, Display, TEXT("PlayerHitReactionSystem: %s"), *Artifacts.PlayerHitReactionSystem->GetPathName());
+	UE_LOG(LogTemp, Display, TEXT("EffectsConfig: %s"), *Artifacts.EffectsConfig->GetPathName());
 	return 0;
 }

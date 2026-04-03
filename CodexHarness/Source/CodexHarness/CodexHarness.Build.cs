@@ -21,7 +21,8 @@ public class CodexHarness : ModuleRules
 			"CoreUObject",
 			"Engine",
 			"EnhancedInput",
-			"InputCore"
+			"InputCore",
+			"Niagara"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

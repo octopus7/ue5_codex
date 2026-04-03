@@ -75,6 +75,7 @@ protected:
 private:
 	void HandleDeath();
 	void RotateTowardWorldDirection(const FVector& WorldDirection);
+	void PlayDamageReactionEffect() const;
 
 	UFUNCTION()
 	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);

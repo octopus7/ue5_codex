@@ -3,12 +3,15 @@
 #include "Camera/CameraComponent.h"
 #include "CodexHarnessGameMode.h"
 #include "CodexHarnessHealthComponent.h"
+#include "CodexHarnessGameInstance.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/DamageType.h"
 #include "Kismet/GameplayStatics.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraSystem.h"
 
 ACodexHarnessCharacter::ACodexHarnessCharacter()
 {
@@ -189,7 +192,14 @@ void ACodexHarnessCharacter::HandleTakeAnyDamage(
 	static_cast<void>(DamagedActor);
 	static_cast<void>(DamageType);
 
-	if (Damage <= 0.0f || DamageKnockbackStrength <= 0.0f || !IsAlive())
+	if (Damage <= 0.0f)
+	{
+		return;
+	}
+
+	PlayDamageReactionEffect();
+
+	if (DamageKnockbackStrength <= 0.0f || !IsAlive())
 	{
 		return;
 	}
@@ -217,6 +227,30 @@ void ACodexHarnessCharacter::HandleTakeAnyDamage(
 	const FVector KnockbackVelocity =
 		(KnockbackDirection * DamageKnockbackStrength) + (FVector::UpVector * DamageKnockbackUpwardVelocity);
 	LaunchCharacter(KnockbackVelocity, true, DamageKnockbackUpwardVelocity > 0.0f);
+}
+
+void ACodexHarnessCharacter::PlayDamageReactionEffect() const
+{
+	const UCodexHarnessGameInstance* const CodexHarnessGameInstance = Cast<UCodexHarnessGameInstance>(GetGameInstance());
+	const UCodexHarnessEffectsConfigDataAsset* const EffectsConfig = CodexHarnessGameInstance != nullptr
+		? CodexHarnessGameInstance->GetEffectsConfig()
+		: nullptr;
+	const UNiagaraSystem* const PlayerHitReactionSystem = EffectsConfig != nullptr
+		? EffectsConfig->PlayerHitReactionSystem
+		: nullptr;
+	if (PlayerHitReactionSystem == nullptr)
+	{
+		return;
+	}
+
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+		this,
+		const_cast<UNiagaraSystem*>(PlayerHitReactionSystem),
+		GetActorLocation() + EffectsConfig->PlayerHitReactionLocationOffset,
+		FRotator::ZeroRotator,
+		EffectsConfig->PlayerHitReactionScale,
+		true,
+		true);
 }
 
 void ACodexHarnessCharacter::RotateTowardWorldDirection(const FVector& WorldDirection)
