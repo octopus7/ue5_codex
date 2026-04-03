@@ -67,6 +67,8 @@
 
 - `Docs/Harness/WORK_TIME_LOG_KO.md`를 단계별 시간 기록용 append 로그로 사용한다.
 - 병렬 수행 허용 규칙과 Blueprint 파생 클래스 기준 연결 원칙이 문서에 반영되어 있다.
+- `generator/evaluator` 분리 컨텍스트 협업과 메인 에이전트 중계 원칙이 문서에 반영되어 있다.
+- 실제 분리 운영 사용 내역은 `CURRENT_PHASE_KO.md`와 `WORK_TIME_LOG_KO.md`에 남기도록 한다.
 - 현재 `CURRENT_PHASE_KO.md`는 다음 단계 `M1-P1`를 가리킨다.
 
 ## 현재 공백

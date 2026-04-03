@@ -65,6 +65,7 @@
 - 새로 생기는 클래스 연결 지점은 나중에 에디터에서 교체하기 쉽도록 Blueprint 파생 클래스 기준으로 마감한다.
 - `GameMode`도 직접 C++ 클래스를 기본값으로 꽂는 대신 Blueprint 파생 클래스를 기본 연결 대상으로 둘 준비를 한다.
 - 단계 시작과 종료 시각, 소요 시간, 병렬 수행 여부는 `WORK_TIME_LOG_KO.md`에 append 한다.
+- `generator/evaluator` 분리 운영을 사용했다면 단계 완료 시 역할 분리 요약을 이 문서에 남기고, 실제 중계 내역은 `WORK_TIME_LOG_KO.md` 메모에 남긴다.
 
 ## 검증 체크리스트
 
@@ -94,4 +95,5 @@
 - 명령 실행 결과
 - 새로 드러난 리스크
 - 다음 단계 추천
+- `generator/evaluator` 분리 운영 사용 시 역할 분리 요약
 - `WORK_TIME_LOG_KO.md` 추가 기록

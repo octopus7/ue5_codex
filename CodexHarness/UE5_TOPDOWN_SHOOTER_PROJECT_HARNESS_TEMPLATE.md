@@ -82,6 +82,10 @@ Project execution rules:
 - Break work into the smallest coherent phases that still produce a working result.
 - Before editing files for a phase, explain the exact scope and planned file changes.
 - After each phase, report what changed, what was verified, what remains, and the next recommended phase.
+- If useful, run separate `generator` and `evaluator` agents with independent contexts.
+- Use `generator` for implementation and draft patches, and `evaluator` for review and verification-oriented evaluation.
+- Do not have those agents talk to each other directly; have the main agent relay outputs and feedback between them.
+- If this mode is used, record the role split in the phase document and the relay details in the work-time log notes.
 - If blocked by missing assets or an ambiguous product decision, stop and ask one concise question.
 
 Current execution boundary:
@@ -94,6 +98,7 @@ Non-negotiable constraints:
 - <CONSTRAINT_1>
 - <CONSTRAINT_2>
 - <CONSTRAINT_3>
+- If agent roles are split, separate file ownership to avoid write conflicts.
 
 Verification requirements:
 - <BUILD REQUIREMENT>
@@ -108,6 +113,7 @@ Reporting requirements:
   - verification performed
   - open risks or missing decisions
   - next recommended milestone or phase
+  - if `generator/evaluator` split execution was used, where the role split and relay flow were documented
 ```
 
 ## Optional Phase Slice Template
