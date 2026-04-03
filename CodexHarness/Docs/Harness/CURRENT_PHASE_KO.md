@@ -84,6 +84,7 @@
 - 캐릭터 Blueprint는 메시 컴포넌트가 비어 있으면 안 되며, 프로젝트에 생성된 메시 애셋을 실제 참조해야 한다.
 - `IA_*`, `IMC_*`, `DA_*InputConfig`는 이름만 준비하는 것이 아니라 실제 프로젝트 애셋으로 생성되어야 한다.
 - 플레이어 런타임 클래스는 `IA_*`와 `IMC_*`를 직접 물지 않고 `DA_*InputConfig` 하나를 통해 입력 구성을 받는다.
+- 후속 전투 단계에서는 `DA_*GlobalFxConfig`와 `GameInstance` 전역 접근 구조, 플레이어 피격 반동, 피격 `Niagara System`, 카메라 흔들림, 적 명중용 라인트레이스 채널 공격 판정을 이어서 올린다.
 - 단계 시작과 종료 시각, 소요 시간, 병렬 수행 여부는 `WORK_TIME_LOG_KO.md`에 append 한다.
 - `generator/evaluator` 분리 운영을 사용했다면 단계 완료 시 역할 분리 요약을 이 문서에 남기고, 실제 중계 내역은 `WORK_TIME_LOG_KO.md` 메모에 남긴다.
 
@@ -115,6 +116,8 @@
 
 - `M1-P2` `EnhancedInput` 기반 이동 및 카메라 연결
 - `M2-P1` 마우스 조준과 바라보기 회전
+- `M3-P1` 적 명중용 라인트레이스 채널 기반 공격과 `DA_*GlobalFxConfig`/`GameInstance` 연결
+- `M4-P1` 플레이어 피격 반동, 피격 `Niagara System`, 카메라 흔들림
 
 ## 단계 완료 후 반드시 갱신할 항목
 
