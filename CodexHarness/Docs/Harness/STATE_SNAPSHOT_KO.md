@@ -1,134 +1,138 @@
-# 현재 프로젝트 상태 스냅샷
+# CodexHarness 상태 스냅샷
 
 기준 시각: 2026-04-04
 
 ## 프로젝트 메타데이터
 
 - 프로젝트 경로: `현재 작업 디렉터리 기준 프로젝트 루트`
-- 엔진 연동: `5.7`
-- 프로젝트 파일: `<PROJECT_NAME>.uproject`
-- 기본 런타임 모듈: `<PROJECT_RUNTIME_MODULE>`
-- 에디터 자동화 모듈: `<PROJECT_EDITOR_MODULE>`
-- 에디터 전용 플러그인: `ModelingToolsEditorMode` 활성화
+- 엔진 버전: `5.7`
+- 프로젝트 파일: `CodexHarness.uproject`
+- 런타임 모듈: `CodexHarness`
+- 에디터 자동화 모듈: `CodexHarnessEditor`
+- 활성 플러그인: `ModelingToolsEditorMode`, `VoxImporter`, `Niagara`
 
 ## 코드 상태
 
-- `Source/<PROJECT_RUNTIME_MODULE>/`에 기본 런타임 모듈이 존재한다.
-- `Source/<PROJECT_EDITOR_MODULE>/`에 에디터 자동화 모듈이 존재한다.
-- 현재 확인된 주요 소스 파일:
-  - `Source/<PROJECT_RUNTIME_MODULE>/<PROJECT_RUNTIME_MODULE>.Build.cs`
-  - `Source/<PROJECT_RUNTIME_MODULE>/<PROJECT_RUNTIME_MODULE>.cpp`
-  - `Source/<PROJECT_RUNTIME_MODULE>/<PROJECT_RUNTIME_MODULE>.h`
-  - `Source/<PROJECT_NAME>.Target.cs`
-  - `Source/<PROJECT_EDITOR_MODULE>.Target.cs`
-  - `Source/<PROJECT_EDITOR_MODULE>/<PROJECT_EDITOR_MODULE>.Build.cs`
-  - `Source/<PROJECT_EDITOR_MODULE>/Private/<PROJECT_EDITOR_MODULE>Module.cpp`
-  - `Source/<PROJECT_EDITOR_MODULE>/Public/Commandlets/<PROJECT_HEADLESS_SETUP_COMMANDLET>Commandlet.h`
-  - `Source/<PROJECT_EDITOR_MODULE>/Private/Commandlets/<PROJECT_HEADLESS_SETUP_COMMANDLET>Commandlet.cpp`
-- 게임플레이 클래스는 아직 없다.
-- `GameMode`, `PlayerController`, `Character`, `Enemy`, `HUD`, `Widget` 런타임 클래스는 아직 없다.
-- 에디터에서 교체 가능한 Blueprint 파생 런타임 클래스도 아직 없다.
+- `Source/CodexHarness/`에 아래 런타임 베이스 클래스가 존재한다.
+  - `UCodexHarnessGameInstance`
+  - `UCodexHarnessInputConfigDataAsset`
+  - `UCodexHarnessEffectsConfigDataAsset`
+  - `UCodexHarnessPlayerHitCameraShake`
+  - `UCodexHarnessPlayerHitCameraShakePattern`
+  - `ACodexHarnessGameMode`
+  - `UCodexHarnessHealthComponent`
+  - `ACodexHarnessPlayerController`
+  - `ACodexHarnessCharacter`
+  - `ACodexHarnessEnemyCharacter`
+  - `ACodexHarnessHUD`
+- `ACodexHarnessCharacter`는 `CameraBoom`, `FollowCamera`, `VisualMeshComponent`를 가진다.
+- `ACodexHarnessCharacter`는 `UCodexHarnessHealthComponent`를 소유하고, 사망 시 이동을 중지하며 `GameMode`에 통지한다.
+- `ACodexHarnessCharacter`는 `MoveInTopDownPlane`으로 카메라 기준 평면 이동 벡터를 계산한다.
+- `ACodexHarnessCharacter`는 `AimAtWorldLocation`으로 커서 기준 상면 회전을 수행한다.
+- `ACodexHarnessCharacter`는 `FireAtWorldLocation`으로 `PlayerWeaponTrace`(`ECC_GameTraceChannel1`) 기준 히트스캔 라인트레이스를 수행하고, 체력 컴포넌트가 있는 대상에만 `ApplyDamage`를 전달한다.
+- `ACodexHarnessCharacter`는 피격 시 반동, `NS_PlayerHitReaction`, `BP_CodexHarnessPlayerHitCameraShake`를 재생한다.
+- `ACodexHarnessEnemyCharacter`는 `UCodexHarnessHealthComponent`와 `VisualMeshComponent`를 소유하고, 플레이어를 직접 추적해 일정 주기마다 공격한다.
+- `ACodexHarnessEnemyCharacter`의 캡슐은 `PlayerWeaponTrace` 채널에 `Block` 응답을 갖는다.
+- `ACodexHarnessPlayerController`는 `DA_DefaultInputConfig`를 경유해 입력 매핑 컨텍스트를 적용하고 `IA_Move`, `IA_Fire`, `IA_Restart`를 실제 바인딩한다.
+- `ACodexHarnessPlayerController`는 매 틱 `UpdateAimFromCursor()`로 커서를 월드 평면에 투영하고 같은 결과를 발사 입력에 재사용한다.
+- `ACodexHarnessGameMode`는 `EnemyCharacterClass`, `CurrentWave`, `RemainingEnemyCount`, `PendingEnemySpawnCount`, `AliveEnemyCount`, `bIsGameOver`를 소유하고, 웨이브별 적 스폰을 타이머로 제어한다.
+- `ACodexHarnessGameMode`는 `RequestRestart()`로 현재 맵을 다시 열어 전체 상태를 초기화한다.
+- `ACodexHarnessHUD`는 `DrawHUD()`에서 플레이어 체력, 현재 웨이브, 남은 적 수를 `Canvas HUD`로 직접 그리고, 게임오버 상태에서는 재시작 안내를 오버레이로 표시한다.
+- `Source/CodexHarnessEditor/Private/Commandlets/CodexHarnessHeadlessSetupCommandlet.cpp`는 아래를 한 번에 처리한다.
+  - 샘플 `.vox` 보장
+  - `M_VoxBase` 보장
+  - `.vox -> StaticMesh` import
+  - `BP_*` 래퍼 생성/갱신
+  - `IA_*`, `IMC_*`, `DA_DefaultInputConfig` 생성/갱신
+  - `DA_DefaultEffectsConfig`, `NS_PlayerHitReaction`, `BP_CodexHarnessPlayerHitCameraShake` 생성/갱신
+  - `GameMapsSettings`와 `BasicMap` 기본 연결 적용
+  - 자동화 보고서 작성
 
 ## 빌드 의존성 상태
 
-- 런타임 모듈 의존성에는 `Core`, `CoreUObject`, `Engine`, `InputCore`, `EnhancedInput`이 들어 있다.
-- 에디터 자동화 모듈 의존성에는 `AssetRegistry`, `<PROJECT_RUNTIME_MODULE>`, `UnrealEd`가 들어 있다.
-- `UMG`, `Slate`, `SlateCore`, `AIModule`, `NavigationSystem` 등은 아직 런타임 모듈 의존성에 추가되지 않았다.
+- 런타임 모듈 의존성
+  - `Core`
+  - `CoreUObject`
+  - `Engine`
+  - `EnhancedInput`
+  - `InputCore`
+  - `Niagara`
+- 에디터 모듈 의존성
+  - `AssetRegistry`
+  - `AssetTools`
+  - `EngineSettings`
+  - `EnhancedInput`
+  - `InputEditor`
+  - `Kismet`
+  - `Niagara`
+  - `NiagaraEditor`
+  - `UnrealEd`
+  - `VoxImporterEditor`
 
 ## 설정 상태
 
 - `Config/DefaultEngine.ini`
+  - `GameInstanceClass=/Game/CodexHarness/Blueprints/Core/BP_CodexHarnessGameInstance.BP_CodexHarnessGameInstance_C`
   - `GameDefaultMap=/Game/Maps/BasicMap`
-  - `EditorStartupMap=/Game/Maps/BasicMap`
-  - `GlobalDefaultGameMode` 항목은 아직 없다.
+  - `EditorStartupMap=/Game/Maps/BasicMap.BasicMap`
+  - `GlobalDefaultGameMode=/Game/CodexHarness/Blueprints/Core/BP_CodexHarnessGameMode.BP_CodexHarnessGameMode_C`
+  - `PlayerWeaponTrace`가 `ECC_GameTraceChannel1`로 등록됨
 - `Config/DefaultInput.ini`
   - `DefaultPlayerInputClass=/Script/EnhancedInput.EnhancedPlayerInput`
   - `DefaultInputComponentClass=/Script/EnhancedInput.EnhancedInputComponent`
-- `Config/DefaultGame.ini`
-  - `CommonUI` 기본 설정만 존재한다.
-- `<PROJECT_NAME>.uproject`
-  - 런타임 모듈 `<PROJECT_RUNTIME_MODULE>`
-  - 에디터 모듈 `<PROJECT_EDITOR_MODULE>`
+- `Content/Maps/BasicMap.umap`
+  - `WorldSettings.DefaultGameMode = BP_CodexHarnessGameMode_C`
 
 ## 콘텐츠 상태
 
-- 현재 확인된 주요 맵은 `/Game/Maps/BasicMap`이다.
-- 헤드리스 제작 기반용 머터리얼 `/Game/<PROJECT_CONTENT_ROOT>/Materials/M_VoxBase`가 존재한다.
-- 플레이어, 적, 무기, UI, 입력 애셋은 아직 없다.
-- `GameMode`를 포함한 Blueprint 연결용 클래스 애셋도 아직 없다.
-- `.vox`에서 import 된 `StaticMesh` 애셋도 아직 없다.
-- 화면에 보이는 플레이어용 메시 애셋 연결도 아직 없다.
-- 캐릭터 Blueprint 내부 메시 컴포넌트에 할당된 프로젝트 메시 애셋도 아직 없다.
-- `IA_*`, `IMC_*`, `DA_*InputConfig` 입력 애셋도 아직 없다.
-- `DA_*GlobalFxConfig`, 피격 `Niagara System`, 카메라 흔들림 애셋도 아직 없다.
-- `GameInstance`에서 전역 접근 가능한 피드백/FX DA 연결도 아직 없다.
-- 플레이어 공격용 라인트레이스 채널과 적 명중 판정 구조도 아직 없다.
+- VOX/머터리얼
+  - `/Game/CodexHarness/Materials/M_VoxBase`
+  - `/Game/CodexHarness/Vox/SM_Vox_TestCube_01`
+  - `SourceArt/Vox/SM_Vox_TestCube_01.vox`
+- Blueprint 래퍼
+  - `/Game/CodexHarness/Blueprints/Core/BP_CodexHarnessGameInstance`
+  - `/Game/CodexHarness/Blueprints/Core/BP_CodexHarnessGameMode`
+  - `/Game/CodexHarness/Blueprints/Core/BP_CodexHarnessPlayerController`
+  - `/Game/CodexHarness/Blueprints/Core/BP_CodexHarnessCharacter`
+  - `/Game/CodexHarness/Blueprints/Enemies/BP_CodexHarnessEnemyCharacter`
+  - `/Game/CodexHarness/Blueprints/Core/BP_CodexHarnessHUD`
+- 입력 애셋
+  - `/Game/CodexHarness/Input/Actions/IA_Move`
+  - `/Game/CodexHarness/Input/Actions/IA_Look`
+  - `/Game/CodexHarness/Input/Actions/IA_Fire`
+  - `/Game/CodexHarness/Input/Actions/IA_Restart`
+  - `/Game/CodexHarness/Input/Contexts/IMC_Default`
+  - `/Game/CodexHarness/Input/Configs/DA_DefaultInputConfig`
+- 피드백 애셋
+  - `/Game/CodexHarness/Effects/NS_PlayerHitReaction`
+  - `/Game/CodexHarness/Effects/BP_CodexHarnessPlayerHitCameraShake`
+  - `/Game/CodexHarness/Effects/DA_DefaultEffectsConfig`
+- 자동화 보고서
+  - `Saved/HeadlessSetup/CodexHarnessHeadlessSetupReport.txt`
 
-## 소스 아트 및 자동화 상태
+## 검증 상태
 
-- `SourceArt/Vox/SM_Vox_TestCube_01.vox`가 존재한다.
-- `Saved/HeadlessSetup/<PROJECT_HEADLESS_SETUP_COMMANDLET>Report.txt`가 최근 실행 결과를 기록한다.
-- `<PROJECT_HEADLESS_SETUP_COMMANDLET>` 커맨드렛은 `SourceArt/Vox`, `Saved/HeadlessSetup`, `M_VoxBase`를 보장한다.
-- `UnrealEditor-Cmd` 재실행 기준으로 커맨드렛은 무경고 성공이 확인됐다.
+- `Build.bat CodexHarnessEditor Win64 Development -Project='D:\github\ue5_codex\CodexHarness\CodexHarness.uproject' -WaitMutex -FromMsBuild -NoHotReloadFromIDE` 성공
+- `UnrealEditor-Cmd.exe 'D:\github\ue5_codex\CodexHarness\CodexHarness.uproject' -run=CodexHarnessHeadlessSetup -unattended -nop4 -nosplash -nullrhi -NoHotReloadFromIDE` 성공
+- 자동화 보고서에 `EnemyCharacter`, `RestartAction`, `PlayerHitCameraShake`, `EffectsConfig` 반영 확인
 
 ## 문서 운영 상태
 
-- `Docs/Harness/WORK_TIME_LOG_KO.md`를 단계별 시간 기록용 append 로그로 사용한다.
-- 병렬 수행 허용 규칙과 Blueprint 파생 클래스 기준 연결 원칙이 문서에 반영되어 있다.
-- `generator/evaluator` 분리 컨텍스트 협업과 메인 에이전트 중계 원칙이 문서에 반영되어 있다.
-- 실제 분리 운영 사용 내역은 `CURRENT_PHASE_KO.md`와 `WORK_TIME_LOG_KO.md`에 남기도록 한다.
-- 직접 C++ 연결 금지, 커맨드렛 기반 BP 생성, VOX `StaticMesh` 가시 연결 요구가 문서에 반영되어 있다.
-- `IA_*`, `IMC_*`, `DA_*InputConfig` 실애셋 생성과 DA 집계 입력 구조가 문서에 반영되어 있다.
-- `DA_*GlobalFxConfig`, `GameInstance` 전역 접근, 플레이어 피격 반동/피격 `Niagara System`/카메라 흔들림, 라인트레이스 채널 공격 규칙이 문서에 반영되어 있다.
-- 현재 `CURRENT_PHASE_KO.md`는 다음 단계 `M1-P1`를 가리킨다.
+- 하네스 문서는 실제 `CodexHarness` 저장소 기준으로 정렬돼 있다.
+- `CURRENT_PHASE_KO.md`는 현재 `M6-P1` 완료 상태를 가리킨다.
+- `WORK_TIME_LOG_KO.md`는 단계별 append 로그로 누적 중이다.
 
 ## 현재 공백
 
-- 플레이어 입력 구조 없음
-- `IA_*`, `IMC_*`, `DA_*InputConfig` 입력 애셋 없음
-- 입력을 집계하는 Data Asset 레이어 없음
-- 전역 피드백/FX를 집계하는 `DA_*GlobalFxConfig` 레이어 없음
-- `GameInstance` 전역 접근 피드백 레이어 없음
-- 플레이어 이동 없음
-- 카메라 없음
-- 조준 없음
-- 전투 없음
-- 플레이어 피격 반동 없음
-- 플레이어 피격 `Niagara System` 없음
-- 플레이어 피격 카메라 흔들림 없음
-- 적 명중용 라인트레이스 채널 공격 판정 없음
-- 적 없음
-- HUD 없음
-- 게임 흐름 없음
-- Blueprint 파생 런타임 클래스 레이어 없음
-- `.vox`를 실제 메시 애셋으로 변환하는 본격 import 단계 없음
-- 프로젝트 또는 맵에 연결된 구체적인 Blueprint GameMode/Pawn/PlayerController 없음
-- 화면에 보이는 플레이어 메시 없음
-- 메시 컴포넌트에 프로젝트 메시 애셋이 할당된 캐릭터 Blueprint 없음
-- 현재 상태로는 이동을 구현해도 보이지 않는 플레이어가 될 위험이 큼
+- 최초 완성 기준 대비 기능 공백은 없다. 후속 작업은 개선 범위로만 남아 있다.
 
 ## 현재 리스크
 
-- `EnhancedInput` 기반 실제 입력 에셋 생성 경로가 아직 없다.
-- 플레이어가 직접 참조할 `DA_*InputConfig` 구조와 그에 연결된 `IA_*`/`IMC_*` 실애셋이 아직 없다.
-- 피격과 전투 연출 레퍼런스를 `DA_*GlobalFxConfig`와 `GameInstance`로 집계하는 전역 접근 구조가 아직 없다.
-- 에디터 GUI를 열지 않는 제약 때문에, 향후 입력 에셋과 UI 애셋 생성은 커맨드렛 기반 자동화가 계속 필요하다.
-- 피격 `Niagara System`과 카메라 흔들림 자산도 같은 제약 때문에 커맨드렛 기반 생성 또는 연결이 필요하다.
-- VOX 파이프라인은 현재 베이스 머터리얼과 샘플 입력까지만 구축돼 있고, 실제 메시 import 자동화는 다음 확장이 필요하다.
-- 에디터에서 교체 가능한 Blueprint 파생 클래스 레이어가 아직 없어 다음 단계에서 기본 연결 정리가 필요하다.
-- `GlobalDefaultGameMode`와 기본 Pawn/Controller 연결이 아직 비어 있어 직접 플레이 연결 구조가 없다.
-- 실제로 보이는 플레이어를 만들기 위한 VOX `StaticMesh` import와 메시 연결이 아직 없다.
-- 플레이어 공격의 적 명중 판정에 필요한 라인트레이스 채널과 적 충돌 응답 정책이 아직 코드, 설정, 문서 기준으로 고정되지 않았다.
+- 수동 플레이 테스트를 수행하지 않았으므로 실제 입력 감각, 파형 강도, HUD 배치 체감 검증이 남아 있다.
+- 적 추적은 내비게이션이 아닌 직접 추적 방식이어서 복잡한 장애물 지형에서는 행동 품질 리스크가 있다.
+- 플레이어와 적의 가시 메시 연결은 `DefaultVisualMesh -> VisualMeshComponent` 반영 패턴에 의존하므로 이후 BP 편집 시 이 경로를 깨지 않도록 유지해야 한다.
 
 ## 바로 다음 추천 작업
 
-- `CURRENT_PHASE_KO.md` 기준으로 `GameMode`, `PlayerController`, `Character` 골격과 구체적인 Blueprint 연결 애셋을 추가한다.
-- VOX 기반 `StaticMesh` import와 플레이어 가시 메시 연결을 커맨드렛 경로로 올린다.
-- `IA_*`, `IMC_*`, `DA_*InputConfig` 실애셋과 DA 기반 입력 연결 레이어를 추가한다.
-- 그 다음 `EnhancedInput` 기반 이동과 카메라, 조준을 올린다.
-- 이후 전투 단계에서 `DA_*GlobalFxConfig`, `GameInstance` 전역 접근, 플레이어 피격 반동/피격 `Niagara System`/카메라 흔들림, 적 명중용 라인트레이스 채널 공격을 올린다.
-
-## 갱신 규칙
-
-- 코드, 설정, 애셋 구조가 달라질 때마다 이 문서를 갱신한다.
-- 단계 완료 후에는 새 클래스, 새 모듈, 새 애셋 루트, 새 리스크를 반영한다.
+- 최초 완성 기준은 충족됐다.
+- 이후 개선 작업이 필요하면 별도 범위와 새 단계 문서를 연다.

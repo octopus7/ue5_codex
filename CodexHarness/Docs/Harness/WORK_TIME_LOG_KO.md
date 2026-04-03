@@ -1,4 +1,4 @@
-# 현재 프로젝트 작업 시간 로그
+# CodexHarness 작업 시간 로그
 
 최종 수정일: 2026-04-04
 
@@ -38,7 +38,7 @@
 - 종료: `2026-04-04 02:09:12 +09:00`
 - 소요 시간: `00:06:46`
 - 병렬 수행: `예`
-- 메모: `<PROJECT_EDITOR_MODULE>` 모듈, `<PROJECT_HEADLESS_SETUP_COMMANDLET>` 커맨드렛, `M_VoxBase`, 샘플 `.vox`, 자동화 보고서 경로를 추가하고 에디터 빌드 및 커맨드렛 재실행 무경고 검증까지 완료함.
+- 메모: `CodexHarnessEditor` 모듈, `CodexHarnessHeadlessSetup` 커맨드렛, `M_VoxBase`, 샘플 `.vox`, 자동화 보고서 경로를 추가하고 에디터 빌드 및 커맨드렛 재실행 무경고 검증까지 완료함.
 
 ### 2026-04-04 | DOCS-HARNESS-FEEDBACK-COMBAT | 전투 피드백과 판정 규칙 문서 반영
 
@@ -47,3 +47,11 @@
 - 소요 시간: `00:02:03`
 - 병렬 수행: `아니오`
 - 메모: 플레이어 피격 반동, 피격 `Niagara System`, 카메라 흔들림, `DA_*GlobalFxConfig`와 `GameInstance` 전역 접근 규칙, 적 명중용 라인트레이스 채널 요구사항을 하네스 문서에 반영함.
+
+### 2026-04-04 | T2-REBASE-M6 | `Harness_T1` 검증 스냅샷 통합, 누락 기능 보강, 최종 검증
+
+- 시작: `2026-04-04 05:10:29 +09:00`
+- 종료: `2026-04-04 05:22:19 +09:00`
+- 소요 시간: `00:11:50`
+- 병렬 수행: `예`
+- 메모: 읽기 전용 `evaluator` 컨텍스트가 `Harness_T1` 구현 범위, 검증 공백, 문서 충돌 범위를 병렬로 점검했고 메인 컨텍스트가 결과를 중계받아 `Harness_T2`에 `CodexHarness` 경로만 선택 통합했다. 이후 현재 하네스 기준과 어긋나 있던 `PlayerWeaponTrace`(`ECC_GameTraceChannel1`) 공격 판정 채널과 `BP_CodexHarnessPlayerHitCameraShake`/`DA_DefaultEffectsConfig` 기반 피격 카메라 흔들림 연결을 로컬에서 추가했다. `Build.bat CodexHarnessEditor ... -NoHotReloadFromIDE`와 `UnrealEditor-Cmd.exe ... -run=CodexHarnessHeadlessSetup ... -NoHotReloadFromIDE`를 현재 작업 트리에서 재실행해 모두 성공했고, 자동화 보고서에 `EnemyCharacter`, `RestartAction`, `PlayerHitCameraShake`, `EffectsConfig` 반영을 확인했다. 마지막으로 하네스 문서 5종을 현재 브랜치 기준 완료 상태로 정렬했다.

@@ -7,16 +7,36 @@
 		{
 			"Name": "CodexHarness",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine"
+			]
+		},
+		{
+			"Name": "CodexHarnessEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"CodexHarness",
+				"Engine"
+			]
 		}
 	],
 	"Plugins": [
+		{
+			"Name": "VoxImporter",
+			"Enabled": true
+		},
 		{
 			"Name": "ModelingToolsEditorMode",
 			"Enabled": true,
 			"TargetAllowList": [
 				"Editor"
 			]
+		},
+		{
+			"Name": "Niagara",
+			"Enabled": true
 		}
 	]
 }
