@@ -1,10 +1,10 @@
-# TopDownTestOne 프로젝트 하네스
+# 현재 프로젝트 하네스
 
 최종 수정일: 2026-04-04
 
 ## 문서 목적
 
-이 문서는 `TopDownTestOne`을 장기 작업으로 운영하기 위한 최상위 프로젝트 하네스다.
+이 문서는 `현재 프로젝트`를 장기 작업으로 운영하기 위한 최상위 프로젝트 하네스다.
 목표, 범위, 전역 제약, 구현 원칙, 마일스톤, 문서 운영 규칙을 고정한다.
 
 이 프로젝트의 장기 작업은 아래 5개 문서를 함께 사용한다.
@@ -16,13 +16,18 @@
 
 ## 프로젝트 요약
 
-- 프로젝트명: `TopDownTestOne`
+- 프로젝트 표기: `현재 프로젝트`
 - 엔진 버전: `UE 5.7`
 - 대상 플랫폼: `PC`
 - 네트워크 모델: `Single Player`
 - 장르 목표: 탑다운 슈터 프로토타입
 - 기본 맵: `/Game/Maps/BasicMap`
 - 현재 상태: 기본 맵, 런타임 모듈, 에디터 자동화 모듈, VOX 베이스 머터리얼, 샘플 `.vox` 입력까지 갖춘 초기 제작 기반 상태
+
+## 문서 표기 규칙
+
+- 문서 본문에서는 대상 Unreal 프로젝트를 `현재 프로젝트`로 적는다.
+- 프로젝트 식별자가 필요한 자리에는 `<PROJECT_NAME>`, `<PROJECT_RUNTIME_MODULE>`, `<PROJECT_EDITOR_MODULE>`, `<PROJECT_HEADLESS_SETUP_COMMANDLET>`, `<PROJECT_CONTENT_ROOT>` 플레이스홀더를 사용한다.
 
 ## 장기 목표
 
@@ -64,7 +69,7 @@
 - `GameMode`도 C++ 베이스를 직접 꽂는 대신 Blueprint로 파생한 클래스를 기본 연결 대상으로 둔다.
 - 기본 연결에 필요한 Blueprint 애셋 생성과 갱신은 `UnrealEditor-Cmd` 기반 커맨드렛으로 완료한다.
 - 화면에 보여야 하는 런타임 액터는 렌더링 가능한 실제 애셋이 연결되어야 하며, 빈 컴포넌트나 투명 placeholder 상태를 완료로 간주하지 않는다.
-- 기존 프로젝트 루트, 모듈명 `TopDownTestOne`, 에디터 모듈명 `TopDownTestOneEditor`, 기본 맵 `/Game/Maps/BasicMap`은 유지한다.
+- 기존 프로젝트 루트, 현재 프로젝트 런타임 모듈(`<PROJECT_RUNTIME_MODULE>`), 현재 프로젝트 에디터 자동화 모듈(`<PROJECT_EDITOR_MODULE>`), 기본 맵 `/Game/Maps/BasicMap`은 유지한다.
 - 멀티플레이, 인벤토리, 저장, 설정 메뉴, 영구 성장 시스템은 현재 범위 밖이다.
 - 에셋 부족을 이유로 진행을 멈추지 않고 임시 구조로 먼저 완성한다.
 
@@ -72,18 +77,18 @@
 
 ### 공통 규칙
 
-- 에디터 API가 필요한 애셋 생성은 `TopDownTestOneEditor` 모듈과 커맨드렛으로 처리한다.
-- 현재 기본 진입점은 `TopDownTestOneHeadlessSetup` 커맨드렛이다.
+- 에디터 API가 필요한 애셋 생성은 현재 프로젝트 에디터 자동화 모듈(`<PROJECT_EDITOR_MODULE>`)과 커맨드렛으로 처리한다.
+- 현재 기본 진입점은 현재 프로젝트 헤드리스 셋업 커맨드렛(`<PROJECT_HEADLESS_SETUP_COMMANDLET>`)이다.
 - 실행 형식은 기본적으로 아래 패턴을 따른다.
 
 ```powershell
 <UE_INSTALL_ROOT>\Engine\Binaries\Win64\UnrealEditor-Cmd.exe `
   <PROJECT_ROOT>\<PROJECT_NAME>.uproject `
-  -run=TopDownTestOneHeadlessSetup -unattended -nop4 -nosplash
+  -run=<PROJECT_HEADLESS_SETUP_COMMANDLET> -unattended -nop4 -nosplash
 ```
 
 - 애셋 생성 규칙, 입력 파라미터, 결과 경로는 코드와 문서에 모두 남긴다.
-- 자동화 결과 요약은 `Saved/HeadlessSetup/TopDownTestOneHeadlessSetupReport.txt`에 기록한다.
+- 자동화 결과 요약은 `Saved/HeadlessSetup/<PROJECT_HEADLESS_SETUP_COMMANDLET>Report.txt`에 기록한다.
 - 런타임 연결에 필요한 `BP_*` 계열 GameMode, Pawn, PlayerController, HUD 애셋도 커맨드렛으로 생성 또는 갱신 가능해야 한다.
 - 런타임 입력 연결에 필요한 `IA_*`, `IMC_*`, `DA_*InputConfig` 애셋도 커맨드렛으로 생성 또는 갱신 가능해야 한다.
 - 기본 클래스 연결과 기본값 주입도 헤드리스 경로에서 완료되어야 한다.
@@ -96,7 +101,7 @@
 - 프로젝트에 새 메시가 필요하면 우선 `.vox` 소스 파일을 생성한다.
 - `.vox` 해상도는 기본적으로 `64 x 64 x 64` 이내를 기준으로 한다.
 - `.vox` 파일은 프로젝트 루트의 `SourceArt/Vox/` 아래에 저장하는 것을 기본 규칙으로 한다.
-- `.vox`에서 생성된 Unreal 애셋은 `/Game/TopDownShooter/Vox/` 아래에 저장하는 것을 기본 규칙으로 한다.
+- `.vox`에서 생성된 Unreal 애셋은 `/Game/<PROJECT_CONTENT_ROOT>/Vox/` 아래에 저장하는 것을 기본 규칙으로 한다.
 - `.vox`에서 생성된 메시의 기본 색 표현은 버텍스 컬러를 사용한다.
 - 메시별 개별 머터리얼을 늘리지 않고, 공용 베이스 머터리얼 하나를 재사용한다.
 - 공용 베이스 머터리얼 이름은 기본적으로 `M_VoxBase`를 사용한다.

@@ -1,4 +1,4 @@
-# TopDownTestOne 결정 로그
+# 현재 프로젝트 결정 로그
 
 최종 수정일: 2026-04-04
 
@@ -13,6 +13,11 @@
 ### 2026-04-04 | 작업 방식 | 장기 작업은 문서 세트로 운영
 
 - 상위 목표, 현재 단계, 결정 이력, 상태 스냅샷, 작업 시간 로그를 분리한 운영 문서 세트를 기본 방식으로 사용한다.
+
+### 2026-04-04 | 문서 표기 | 하네스 문서는 현재 프로젝트 기준 범용 표기를 사용
+
+- 대상 Unreal 프로젝트는 문서 본문에서 `현재 프로젝트`로 적는다.
+- 실제 식별자가 필요한 자리에는 `<PROJECT_NAME>`, `<PROJECT_RUNTIME_MODULE>`, `<PROJECT_EDITOR_MODULE>`, `<PROJECT_HEADLESS_SETUP_COMMANDLET>`, `<PROJECT_CONTENT_ROOT>` 플레이스홀더를 사용한다.
 
 ### 2026-04-04 | 실행 환경 | Unreal Editor GUI는 열지 않음
 
@@ -43,7 +48,7 @@
 - 새 메시가 필요할 경우 임의의 수작업 메시 대신 `.vox` 소스를 먼저 생성한다.
 - 기본 해상도는 `64 x 64 x 64` 이내로 둔다.
 - `.vox` 소스는 `SourceArt/Vox/` 아래에 보관하는 것을 기본 규칙으로 한다.
-- 생성된 Unreal 애셋은 `/Game/TopDownShooter/Vox/` 아래에 저장하는 것을 기본 규칙으로 한다.
+- 생성된 Unreal 애셋은 `/Game/<PROJECT_CONTENT_ROOT>/Vox/` 아래에 저장하는 것을 기본 규칙으로 한다.
 
 ### 2026-04-04 | 메시 머터리얼 | VOX 메시용 베이스 머터리얼은 1개만 재사용
 
@@ -96,13 +101,13 @@
 ### 2026-04-04 | 프로젝트 정합성 | 하네스 문서는 현재 작업 경로와 모듈 기준으로 유지
 
 - 프로젝트 경로는 하드코딩된 절대경로 대신 현재 작업 디렉터리의 프로젝트 루트를 기준으로 적는다.
-- 런타임 모듈은 `TopDownTestOne`, 에디터 자동화 모듈은 `TopDownTestOneEditor`를 기준으로 적는다.
+- 런타임 모듈은 `<PROJECT_RUNTIME_MODULE>`, 에디터 자동화 모듈은 `<PROJECT_EDITOR_MODULE>`를 기준으로 적는다.
 - 문서에는 실제 구현 상태와 검증 결과만 반영한다.
 
-### 2026-04-04 | 헤드리스 자동화 | 초기 자동화 진입점은 TopDownTestOneHeadlessSetup 커맨드렛
+### 2026-04-04 | 헤드리스 자동화 | 초기 자동화 진입점은 현재 프로젝트 헤드리스 셋업 커맨드렛
 
-- 첫 자동화 진입점은 `TopDownTestOneHeadlessSetup` 커맨드렛으로 고정한다.
-- 이 커맨드렛은 `SourceArt/Vox/`, `Saved/HeadlessSetup/`, `/Game/TopDownShooter/Materials/M_VoxBase`를 보장한다.
+- 첫 자동화 진입점은 `<PROJECT_HEADLESS_SETUP_COMMANDLET>` 커맨드렛으로 고정한다.
+- 이 커맨드렛은 `SourceArt/Vox/`, `Saved/HeadlessSetup/`, `/Game/<PROJECT_CONTENT_ROOT>/Materials/M_VoxBase`를 보장한다.
 - 초기 검증 기준은 에디터 타겟 빌드 성공과 커맨드렛 재실행 무경고 성공으로 둔다.
 
 ### 2026-04-04 | 헤드리스 런타임 연결 | BP 생성과 VOX import, 기본 연결도 커맨드렛으로 수행

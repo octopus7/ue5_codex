@@ -1,4 +1,4 @@
-# TopDownTestOne 작업 시간 로그
+# 현재 프로젝트 작업 시간 로그
 
 최종 수정일: 2026-04-04
 
@@ -38,4 +38,4 @@
 - 종료: `2026-04-04 02:09:12 +09:00`
 - 소요 시간: `00:06:46`
 - 병렬 수행: `예`
-- 메모: `TopDownTestOneEditor` 모듈, `TopDownTestOneHeadlessSetup` 커맨드렛, `M_VoxBase`, 샘플 `.vox`, 자동화 보고서 경로를 추가하고 에디터 빌드 및 커맨드렛 재실행 무경고 검증까지 완료함.
+- 메모: `<PROJECT_EDITOR_MODULE>` 모듈, `<PROJECT_HEADLESS_SETUP_COMMANDLET>` 커맨드렛, `M_VoxBase`, 샘플 `.vox`, 자동화 보고서 경로를 추가하고 에디터 빌드 및 커맨드렛 재실행 무경고 검증까지 완료함.

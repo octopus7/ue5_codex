@@ -1,4 +1,4 @@
-# TopDownTestOne 현재 단계
+# 현재 프로젝트 단계
 
 최종 수정일: 2026-04-04
 
@@ -10,10 +10,10 @@
 ## 직전 단계 완료 상태
 
 - 직전 단계 `M0-P1` 헤드리스 애셋 제작 기반 정립은 완료됐다.
-- `TopDownTestOneEditor` 에디터 모듈과 `TopDownTestOneHeadlessSetup` 커맨드렛이 추가됐다.
-- `/Game/TopDownShooter/Materials/M_VoxBase`와 `SourceArt/Vox/SM_Vox_TestCube_01.vox`가 생성됐다.
-- `TopDownTestOneEditor` Development Editor 빌드가 통과했다.
-- `UnrealEditor-Cmd.exe ... -run=TopDownTestOneHeadlessSetup -unattended -nop4 -nosplash -nullrhi` 재실행이 무경고로 통과했다.
+- `<PROJECT_EDITOR_MODULE>` 에디터 모듈과 `<PROJECT_HEADLESS_SETUP_COMMANDLET>` 커맨드렛이 추가됐다.
+- `/Game/<PROJECT_CONTENT_ROOT>/Materials/M_VoxBase`와 `SourceArt/Vox/SM_Vox_TestCube_01.vox`가 생성됐다.
+- `<PROJECT_EDITOR_MODULE>` Development Editor 빌드가 통과했다.
+- `UnrealEditor-Cmd.exe ... -run=<PROJECT_HEADLESS_SETUP_COMMANDLET> -unattended -nop4 -nosplash -nullrhi` 재실행이 무경고로 통과했다.
 
 ## 이번 단계 목표
 

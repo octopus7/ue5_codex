@@ -1,4 +1,4 @@
-# TopDownTestOne 상태 스냅샷
+# 현재 프로젝트 상태 스냅샷
 
 기준 시각: 2026-04-04
 
@@ -6,25 +6,25 @@
 
 - 프로젝트 경로: `현재 작업 디렉터리 기준 프로젝트 루트`
 - 엔진 연동: `5.7`
-- 프로젝트 파일: `TopDownTestOne.uproject`
-- 기본 런타임 모듈: `TopDownTestOne`
-- 에디터 자동화 모듈: `TopDownTestOneEditor`
+- 프로젝트 파일: `<PROJECT_NAME>.uproject`
+- 기본 런타임 모듈: `<PROJECT_RUNTIME_MODULE>`
+- 에디터 자동화 모듈: `<PROJECT_EDITOR_MODULE>`
 - 에디터 전용 플러그인: `ModelingToolsEditorMode` 활성화
 
 ## 코드 상태
 
-- `Source/TopDownTestOne/`에 기본 런타임 모듈이 존재한다.
-- `Source/TopDownTestOneEditor/`에 에디터 자동화 모듈이 존재한다.
+- `Source/<PROJECT_RUNTIME_MODULE>/`에 기본 런타임 모듈이 존재한다.
+- `Source/<PROJECT_EDITOR_MODULE>/`에 에디터 자동화 모듈이 존재한다.
 - 현재 확인된 주요 소스 파일:
-  - `Source/TopDownTestOne/TopDownTestOne.Build.cs`
-  - `Source/TopDownTestOne/TopDownTestOne.cpp`
-  - `Source/TopDownTestOne/TopDownTestOne.h`
-  - `Source/TopDownTestOne.Target.cs`
-  - `Source/TopDownTestOneEditor.Target.cs`
-  - `Source/TopDownTestOneEditor/TopDownTestOneEditor.Build.cs`
-  - `Source/TopDownTestOneEditor/Private/TopDownTestOneEditorModule.cpp`
-  - `Source/TopDownTestOneEditor/Public/Commandlets/TopDownTestOneHeadlessSetupCommandlet.h`
-  - `Source/TopDownTestOneEditor/Private/Commandlets/TopDownTestOneHeadlessSetupCommandlet.cpp`
+  - `Source/<PROJECT_RUNTIME_MODULE>/<PROJECT_RUNTIME_MODULE>.Build.cs`
+  - `Source/<PROJECT_RUNTIME_MODULE>/<PROJECT_RUNTIME_MODULE>.cpp`
+  - `Source/<PROJECT_RUNTIME_MODULE>/<PROJECT_RUNTIME_MODULE>.h`
+  - `Source/<PROJECT_NAME>.Target.cs`
+  - `Source/<PROJECT_EDITOR_MODULE>.Target.cs`
+  - `Source/<PROJECT_EDITOR_MODULE>/<PROJECT_EDITOR_MODULE>.Build.cs`
+  - `Source/<PROJECT_EDITOR_MODULE>/Private/<PROJECT_EDITOR_MODULE>Module.cpp`
+  - `Source/<PROJECT_EDITOR_MODULE>/Public/Commandlets/<PROJECT_HEADLESS_SETUP_COMMANDLET>Commandlet.h`
+  - `Source/<PROJECT_EDITOR_MODULE>/Private/Commandlets/<PROJECT_HEADLESS_SETUP_COMMANDLET>Commandlet.cpp`
 - 게임플레이 클래스는 아직 없다.
 - `GameMode`, `PlayerController`, `Character`, `Enemy`, `HUD`, `Widget` 런타임 클래스는 아직 없다.
 - 에디터에서 교체 가능한 Blueprint 파생 런타임 클래스도 아직 없다.
@@ -32,7 +32,7 @@
 ## 빌드 의존성 상태
 
 - 런타임 모듈 의존성에는 `Core`, `CoreUObject`, `Engine`, `InputCore`, `EnhancedInput`이 들어 있다.
-- 에디터 자동화 모듈 의존성에는 `AssetRegistry`, `TopDownTestOne`, `UnrealEd`가 들어 있다.
+- 에디터 자동화 모듈 의존성에는 `AssetRegistry`, `<PROJECT_RUNTIME_MODULE>`, `UnrealEd`가 들어 있다.
 - `UMG`, `Slate`, `SlateCore`, `AIModule`, `NavigationSystem` 등은 아직 런타임 모듈 의존성에 추가되지 않았다.
 
 ## 설정 상태
@@ -46,14 +46,14 @@
   - `DefaultInputComponentClass=/Script/EnhancedInput.EnhancedInputComponent`
 - `Config/DefaultGame.ini`
   - `CommonUI` 기본 설정만 존재한다.
-- `TopDownTestOne.uproject`
-  - 런타임 모듈 `TopDownTestOne`
-  - 에디터 모듈 `TopDownTestOneEditor`
+- `<PROJECT_NAME>.uproject`
+  - 런타임 모듈 `<PROJECT_RUNTIME_MODULE>`
+  - 에디터 모듈 `<PROJECT_EDITOR_MODULE>`
 
 ## 콘텐츠 상태
 
 - 현재 확인된 주요 맵은 `/Game/Maps/BasicMap`이다.
-- 헤드리스 제작 기반용 머터리얼 `/Game/TopDownShooter/Materials/M_VoxBase`가 존재한다.
+- 헤드리스 제작 기반용 머터리얼 `/Game/<PROJECT_CONTENT_ROOT>/Materials/M_VoxBase`가 존재한다.
 - 플레이어, 적, 무기, UI, 입력 애셋은 아직 없다.
 - `GameMode`를 포함한 Blueprint 연결용 클래스 애셋도 아직 없다.
 - `.vox`에서 import 된 `StaticMesh` 애셋도 아직 없다.
@@ -64,8 +64,8 @@
 ## 소스 아트 및 자동화 상태
 
 - `SourceArt/Vox/SM_Vox_TestCube_01.vox`가 존재한다.
-- `Saved/HeadlessSetup/TopDownTestOneHeadlessSetupReport.txt`가 최근 실행 결과를 기록한다.
-- `TopDownTestOneHeadlessSetup` 커맨드렛은 `SourceArt/Vox`, `Saved/HeadlessSetup`, `M_VoxBase`를 보장한다.
+- `Saved/HeadlessSetup/<PROJECT_HEADLESS_SETUP_COMMANDLET>Report.txt`가 최근 실행 결과를 기록한다.
+- `<PROJECT_HEADLESS_SETUP_COMMANDLET>` 커맨드렛은 `SourceArt/Vox`, `Saved/HeadlessSetup`, `M_VoxBase`를 보장한다.
 - `UnrealEditor-Cmd` 재실행 기준으로 커맨드렛은 무경고 성공이 확인됐다.
 
 ## 문서 운영 상태

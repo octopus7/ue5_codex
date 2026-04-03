@@ -1,6 +1,11 @@
 # Harness README
 
-이 문서는 `TopDownTestOne`의 장기 작업을 하네스 문서 세트로 지시하는 방법을 설명한다.
+이 문서는 `현재 프로젝트`의 장기 작업을 하네스 문서 세트로 지시하는 방법을 설명한다.
+
+## 표기 규칙
+
+- 문서 본문에서는 현재 작업 중인 Unreal 프로젝트를 `현재 프로젝트`로 표기한다.
+- 실제 식별자가 필요한 자리에는 `<PROJECT_NAME>`, `<PROJECT_RUNTIME_MODULE>`, `<PROJECT_EDITOR_MODULE>`, `<PROJECT_HEADLESS_SETUP_COMMANDLET>`, `<PROJECT_CONTENT_ROOT>` 플레이스홀더를 사용한다.
 
 ## 사용 목적
 
