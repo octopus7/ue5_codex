@@ -4,80 +4,109 @@
 
 ## 현재 단계 식별자
 
-- 단계 ID: `M0-P1`
-- 단계명: 헤드리스 애셋 제작 기반 정립
+- 단계 ID: `M5-P2`
+- 단계명: 게임 오버와 재시작 흐름
 
 ## 이번 단계 목표
 
-에디터 GUI를 열지 않고도 향후 애셋 생성을 자동화할 수 있는 기반을 먼저 만든다.
+플레이어 사망 시 게임 오버 상태를 확정하고, 화면 표시와 재시작 입력을 연결해 다시 시작 가능한 흐름을 완성한다.
 
 이번 단계의 완료 기준은 아래와 같다.
-- 에디터 모듈 또는 동등한 에디터 전용 코드 경로가 추가된다.
-- 커맨드렛 실행 진입점이 추가된다.
-- `M_VoxBase` 공용 머터리얼 생성 경로가 정해진다.
-- `.vox` 소스 위치와 생성 애셋 위치가 고정된다.
-- 최소 1개의 테스트 입력 또는 테스트 메시 애셋 생성 흐름을 설계하거나 구현한다.
+- 플레이어 사망 시 게임 오버 상태가 확정된다.
+- HUD에 게임 오버 문구와 재시작 안내가 표시된다.
+- 재시작 입력 경로가 존재한다.
+- 헤드리스 스모크 테스트에서 재시작 후 플레이어가 다시 스폰되는 것이 검증된다.
 
 ## 이번 단계 포함 범위
 
-- 에디터 전용 모듈 구조 설계 또는 구현
-- 커맨드렛 클래스 설계 또는 구현
-- 헤드리스 애셋 생성 명령 형식 정의
-- `SourceArt/Vox/`와 `/Game/TopDownShooter/Vox/` 경로 규칙 확정
-- `M_VoxBase` 생성 방식 정의
-- `.vox` 기반 메시 생성 규칙 정의
-- 필요하면 스모크 테스트용 `.vox` 소스 1개 준비
+- 게임 오버 상태 플래그
+- 재시작 입력 경로
+- 레벨 재로드 기반 재시작
+- 재시작 스모크 검증 경로
 
 ## 이번 단계 제외 범위
 
-- 플레이어 이동 구현
-- 카메라 구현
-- 적 AI 구현
-- HUD 구현
-- 웨이브 구현
-- 게임 오버 구현
+- 추가 UI 폴리시
+- 사운드와 시각 연출 보강
 
 ## 이번 단계 산출물
 
-- 에디터 전용 자동화 코드
-- 커맨드렛 실행 경로
-- 공용 VOX 머터리얼 정책
-- 테스트 가능한 최소 애셋 생성 루트
+- 게임 오버 상태 로직
+- 재시작 입력 및 실행 경로
+- 재시작 스모크 테스트 경로
 - 단계 완료 후 갱신된 상태 문서
 
 ## 이번 단계 전제 조건
 
-- 프로젝트는 `UE 5.7` 기준으로 에디터 타겟 빌드가 가능해야 한다.
+- `M5-P1` HUD와 게임 상태 표시가 완료되어 있어야 한다.
+- 프로젝트는 `UE 5.7` 기준으로 게임/에디터 타겟 빌드가 가능해야 한다.
 - Unreal Editor GUI는 열지 않는다.
-- 에셋 생성이 필요할 경우 `UnrealEditor-Cmd` 실행이 가능해야 한다.
 
 ## 구현 메모
 
-- 입력 액션, 매핑 컨텍스트, 위젯, 메시처럼 에디터 API가 필요한 리소스는 이 단계의 자동화 기반 위에서 생성하는 것을 원칙으로 한다.
-- 플레이어 이동 같은 순수 C++ 기반 단계는 이 단계와 병행 가능하지만, 장기 운영 검증 목적상 먼저 제작 파이프라인을 세우는 것을 우선한다.
+- 게임 오버 상태는 게임 모드가 들고, HUD는 그 상태를 읽어 표시한다.
+- 재시작은 우선 레벨 재로드 기반으로 구현한다.
+- 헤드리스 검증은 자동 치명 피해와 재시작 요청을 묶은 스모크 경로로 수행한다.
 
 ## 검증 체크리스트
 
-- 에디터 타겟이 빌드되는가
-- 커맨드렛 클래스가 등록되고 실행 진입이 가능한가
-- 커맨드렛 실행 명령이 문서와 코드에 일치하는가
-- `M_VoxBase`를 새로 만들거나 재사용하는 경로가 명확한가
-- `.vox` 소스 경로와 생성 애셋 경로가 고정되었는가
-- 테스트 애셋 생성 결과를 파일 또는 애셋 경로로 보고할 수 있는가
+- 게임 타겟과 에디터 타겟이 빌드되는가
+- 플레이어 사망 시 게임 오버 상태가 확정되는가
+- 게임 오버 HUD 문구를 그릴 수 있는가
+- 재시작 입력 경로가 동작하는가
+- 헤드리스 스모크 테스트로 재스폰을 검증할 수 있는가
 
 ## 검증 결과
 
-- 아직 미실행
+- 상태: 완료
+- 실제 변경 파일:
+  - `Source/CodexHarness/Public/Game/CHTopDownGameMode.h`
+  - `Source/CodexHarness/Private/Game/CHTopDownGameMode.cpp`
+  - `Source/CodexHarness/Public/Player/CHPlayerController.h`
+  - `Source/CodexHarness/Private/Player/CHPlayerController.cpp`
+  - `Source/CodexHarness/Private/UI/CHGameHUD.cpp`
+- 빌드 검증:
+  - `Build.bat CodexHarnessEditor Win64 Development d:\github\ue5_codex\CodexHarness\CodexHarness.uproject -NoHotReloadFromIDE -WaitMutex` 성공
+  - `Build.bat CodexHarness Win64 Development d:\github\ue5_codex\CodexHarness\CodexHarness.uproject -NoHotReloadFromIDE -WaitMutex` 성공
+- 런타임 검증:
+  - `UnrealEditor-Cmd.exe d:\github\ue5_codex\CodexHarness\CodexHarness.uproject /Game/Maps/BasicMap -game -nullrhi -unattended -nop4 -nosplash -CHRestartSmoke -AbsLog=d:\github\ue5_codex\CodexHarness\Saved\Logs\M5_P2_RestartSmoke.log` 성공
+  - 로그 확인: `LogCHTopDownGameMode: Display: CHGameOverState=1`
+  - 로그 확인: `LogCHPlayerController: Display: CHRestartSmokeRequest`
+  - 로그 확인: `LogCHPlayerController: Display: CHRestartSmokeRespawned Health=100.00 Wave=1 Alive=1 GameOver=0`
+- 장기 목표 판정:
+  - `PROJECT_HARNESS_KO.md`의 최초 완성 기준인 자동 스폰, `WASD` 이동, 마우스 조준 회전, 기본 발사, 적 1종 추적/공격, 체력/사망, HUD, 게임 오버/재시작 흐름이 현재 코드와 스모크 기준으로 충족되었다.
+- 남은 선택 작업:
+  - 이동 충돌 스윕과 감각 보정
+  - HUD 시각 polish와 연출 보강
+  - VOX 메시 실제 변환 파이프라인 마무리
 
 ## 여기서 멈출 기준
 
-- 헤드리스 애셋 제작 기반이 갖춰진 시점까지
-- 실제 게임플레이 구현은 다음 단계로 넘긴다
+- 게임 오버와 재시작 흐름이 검증된 시점까지
+- 장기 목표 달성 후에는 `M6` 정리 작업만 남긴다
 
 ## 다음 단계 후보
 
-- `M1-P1` 게임 모드, 플레이어 컨트롤러, 캐릭터 골격 생성
-- `M1-P2` `EnhancedInput` 기반 이동 및 카메라 연결
+- `M6-P1` 폴리시와 검증 정리
+- `M6-P2` 선택적 구조 정리와 연출 보강
+
+## 직전 완료 단계 요약
+
+- 완료 단계: `M5-P1`
+- 실제 변경 파일:
+  - `Source/CodexHarness/Public/UI/CHGameHUD.h`
+  - `Source/CodexHarness/Private/UI/CHGameHUD.cpp`
+  - `Source/CodexHarness/Private/Game/CHTopDownGameMode.cpp`
+- 빌드 검증:
+  - `Build.bat CodexHarnessEditor Win64 Development d:\github\ue5_codex\CodexHarness\CodexHarness.uproject -NoHotReloadFromIDE -WaitMutex` 성공
+  - `Build.bat CodexHarness Win64 Development d:\github\ue5_codex\CodexHarness\CodexHarness.uproject -NoHotReloadFromIDE -WaitMutex` 성공
+- 런타임 검증:
+  - `UnrealEditor-Cmd.exe d:\github\ue5_codex\CodexHarness\CodexHarness.uproject /Game/Maps/BasicMap -game -nullrhi -unattended -nop4 -nosplash -CHHudSmoke -CHDamageSmoke -AbsLog=d:\github\ue5_codex\CodexHarness\Saved\Logs\M5_P1_HudSmoke.log` 성공
+  - 로그 확인: `LogCHPlayerController: Display: CHDamageSmokeStep=1 Applied=40.00 Health=60.00 Dead=0 DeathCount=0`
+  - 로그 확인: `LogCHGameHUD: Display: CHHudValues Health=60.00 MaxHealth=100.00 Wave=1 Alive=1`
+- 새로 드러난 리스크:
+  - 게임 오버와 재시작 입력 흐름은 아직 구현 전이었다.
+  - 이동은 여전히 직접 월드 오프셋 방식이라 충돌 스윕과 감각 보정은 남아 있다.
 
 ## 단계 완료 후 반드시 갱신할 항목
 
