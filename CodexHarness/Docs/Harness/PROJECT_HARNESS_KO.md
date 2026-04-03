@@ -22,7 +22,7 @@
 - 네트워크 모델: `Single Player`
 - 장르 목표: 탑다운 슈터 프로토타입
 - 기본 맵: `/Game/Maps/BasicMap`
-- 현재 상태: 최초 완성 기준 충족. `Harness_T2` 작업 트리에서 `CodexHarnessEditor` 빌드, `CodexHarnessHeadlessSetup` 재실행, 생성 애셋과 자동화 보고서 검증까지 완료했다.
+- 현재 상태: 최초 완성 기준 충족. `Harness_T2` 작업 트리에서 `CodexHarnessEditor` 빌드, `CodexHarnessHeadlessSetup` 재실행, 플레이어용 흰 닭 VOX와 적 캐릭터용 붉은 닭 VOX 생성 및 연결, 자동화 보고서 검증까지 완료했다.
 
 ## 장기 목표
 
@@ -31,6 +31,7 @@
 최초 완성 기준은 아래와 같다.
 - 플레이어가 `BasicMap`에서 자동 스폰된다.
 - 플레이어는 화면에서 실제 메시로 보이며 투명 placeholder 상태가 아니다.
+- 플레이어 가시 메시와 적 가시 메시는 서로 다른 VOX 외형으로 식별 가능해야 한다.
 - 플레이어는 `WASD`로 이동한다.
 - 플레이어는 마우스 커서를 향해 회전한다.
 - 좌클릭으로 기본 무기를 발사하고, 적 명중 판정은 `PlayerWeaponTrace`(`ECC_GameTraceChannel1`) 라인트레이스로 처리한다.
@@ -92,7 +93,8 @@
 - 런타임 피드백 연결에 필요한 `DA_DefaultEffectsConfig`, `NS_PlayerHitReaction`, `BP_CodexHarnessPlayerHitCameraShake` 애셋도 커맨드렛으로 생성 또는 갱신 가능해야 한다.
 - 기본 클래스 연결과 기본값 주입도 헤드리스 경로에서 완료되어야 한다.
 - 가시 오브젝트가 필요하면 `.vox -> StaticMesh` import와 해당 메시의 Blueprint 연결까지 헤드리스 경로에서 완료되어야 한다.
-- 플레이어 외형은 `BP_CodexHarnessCharacter` 내부의 렌더링 컴포넌트가 프로젝트 내 생성된 메시 애셋을 실제로 참조하는 상태여야 한다.
+- 플레이어 외형은 `BP_CodexHarnessCharacter` 내부의 렌더링 컴포넌트가 프로젝트 내 생성된 흰 닭 메시 애셋을 실제로 참조하는 상태여야 한다.
+- 적 외형은 `BP_CodexHarnessEnemyCharacter` 내부의 렌더링 컴포넌트가 프로젝트 내 생성된 붉은 닭 메시 애셋을 실제로 참조하는 상태여야 한다.
 - 입력 설정은 헤드리스 경로에서 `DA_DefaultInputConfig`에 `IA_*`와 `IMC_*` 참조를 실제로 채우고, 플레이어 런타임 클래스가 그 DA를 참조하도록 완료되어야 한다.
 - 전역 피드백/FX 접근도 헤드리스 경로에서 `BP_CodexHarnessGameInstance`가 `DA_DefaultEffectsConfig`를 참조하도록 완료되어야 한다.
 - `PlayerWeaponTrace` 채널 정의와 적 응답 규칙은 코드, 설정, 문서에 함께 남긴다.
@@ -168,7 +170,7 @@
 - 커맨드렛 기반 `BP_*` GameMode, PlayerController, Character, HUD 생성 및 기본 연결
 - 기본 스폰 흐름
 - 기본 카메라 구조
-- 플레이어 가시 표현용 VOX `StaticMesh` import 및 메시 연결
+- 플레이어/적 가시 표현용 VOX `StaticMesh` import 및 개별 메시 연결
 - `IA_*`, `IMC_*`, `DA_DefaultInputConfig` 실애셋 생성
 - 플레이어가 `DA_DefaultInputConfig`만 참조하는 `EnhancedInput` 연결 구조
 - 현재 상태: 완료

@@ -4,13 +4,14 @@
 
 ## 현재 단계 식별자
 
-- 단계 ID: `M6-P1`
-- 단계명: 최종 정리와 검증 완료
+- 단계 ID: `M6-P2`
+- 단계명: VOX 닭 외형 식별 강화 완료
 
 ## 완료 상태 요약
 
 - `Harness_T2` 작업 트리에 `Harness_T1`의 검증된 `CodexHarness` 구현 스냅샷을 선택 통합했다.
 - 통합 직후 현재 하네스 기준과 비교해 비어 있던 `PlayerWeaponTrace` 전용 라인트레이스 채널과 플레이어 피격 카메라 흔들림 애셋/연결을 로컬에서 추가했다.
+- 헤드리스 경로에서 플레이어용 흰 닭 VOX와 적 캐릭터용 붉은 닭 VOX를 각각 생성해 서로 다른 `StaticMesh`로 import하고 각 Blueprint 기본 메시로 연결했다.
 - 현재 작업 트리 기준으로 빌드와 헤드리스 자동화 검증을 다시 통과시켰다.
 - 활성 구현 단계는 없다.
 
@@ -18,7 +19,7 @@
 
 - `CodexHarnessEditor` 빌드 통과
 - `CodexHarnessHeadlessSetup` 재실행 `0 error(s), 0 warning(s)` 통과
-- 자동화 보고서에 `EnemyCharacter`, `RestartAction`, `PlayerHitCameraShake`, `EffectsConfig` 반영 확인
+- 자동화 보고서에 플레이어/적 분리 `StaticMesh`, `EnemyCharacter`, `RestartAction`, `PlayerHitCameraShake`, `EffectsConfig` 반영 확인
 - `PlayerWeaponTrace`(`ECC_GameTraceChannel1`) 채널 정의와 적 응답 경로 존재 확인
 - 상태 스냅샷과 시간 로그 최신화 확인
 
@@ -26,10 +27,12 @@
 
 - `Build.bat CodexHarnessEditor Win64 Development -Project='D:\github\ue5_codex\CodexHarness\CodexHarness.uproject' -WaitMutex -FromMsBuild -NoHotReloadFromIDE` 성공
 - `UnrealEditor-Cmd.exe 'D:\github\ue5_codex\CodexHarness\CodexHarness.uproject' -run=CodexHarnessHeadlessSetup -unattended -nop4 -nosplash -nullrhi -NoHotReloadFromIDE` 성공
-- `Saved/HeadlessSetup/CodexHarnessHeadlessSetupReport.txt`에 `EnemyCharacter`, `RestartAction`, `PlayerHitCameraShake`, `EffectsConfig` 반영 확인
+- `Saved/HeadlessSetup/CodexHarnessHeadlessSetupReport.txt`에 `SM_Vox_PlayerChicken_White`, `SM_Vox_EnemyChicken_Red`, `EnemyCharacter`, `RestartAction`, `PlayerHitCameraShake`, `EffectsConfig` 반영 확인
 - `Content/CodexHarness/Blueprints/Enemies/BP_CodexHarnessEnemyCharacter.uasset` 존재 확인
 - `Content/CodexHarness/Input/Actions/IA_Restart.uasset` 존재 확인
 - `Content/CodexHarness/Effects/BP_CodexHarnessPlayerHitCameraShake.uasset` 존재 확인
+- `Content/CodexHarness/Vox/SM_Vox_PlayerChicken_White.uasset` 존재 확인
+- `Content/CodexHarness/Vox/SM_Vox_EnemyChicken_Red.uasset` 존재 확인
 - `Config/DefaultEngine.ini`에 `PlayerWeaponTrace`(`ECC_GameTraceChannel1`) 정의 반영 확인
 
 ## 완료 판정 메모
@@ -50,7 +53,8 @@
 
 ## 실제 생성/검증 경로
 
-- VOX 메시: `/Game/CodexHarness/Vox/SM_Vox_TestCube_01`
+- 플레이어 VOX 메시: `/Game/CodexHarness/Vox/SM_Vox_PlayerChicken_White`
+- 적 VOX 메시: `/Game/CodexHarness/Vox/SM_Vox_EnemyChicken_Red`
 - 머터리얼: `/Game/CodexHarness/Materials/M_VoxBase`
 - GameInstance BP: `/Game/CodexHarness/Blueprints/Core/BP_CodexHarnessGameInstance`
 - GameMode BP: `/Game/CodexHarness/Blueprints/Core/BP_CodexHarnessGameMode`

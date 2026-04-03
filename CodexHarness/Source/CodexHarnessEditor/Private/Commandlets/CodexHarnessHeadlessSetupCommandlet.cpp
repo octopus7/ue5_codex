@@ -42,9 +42,11 @@
 
 namespace
 {
-	const FString VoxSourceRelativePath = TEXT("SourceArt/Vox/SM_Vox_TestCube_01.vox");
+	const FString PlayerVoxSourceRelativePath = TEXT("SourceArt/Vox/SM_Vox_PlayerChicken_White.vox");
+	const FString EnemyVoxSourceRelativePath = TEXT("SourceArt/Vox/SM_Vox_EnemyChicken_Red.vox");
 	const FString ReportRelativePath = TEXT("Saved/HeadlessSetup/CodexHarnessHeadlessSetupReport.txt");
-	const FString VoxMeshPackagePath = TEXT("/Game/CodexHarness/Vox/SM_Vox_TestCube_01");
+	const FString PlayerVoxMeshPackagePath = TEXT("/Game/CodexHarness/Vox/SM_Vox_PlayerChicken_White");
+	const FString EnemyVoxMeshPackagePath = TEXT("/Game/CodexHarness/Vox/SM_Vox_EnemyChicken_Red");
 	const FString VoxBaseMaterialPackagePath = TEXT("/Game/CodexHarness/Materials/M_VoxBase");
 	const FString InputActionsFolder = TEXT("/Game/CodexHarness/Input/Actions");
 	const FString InputContextsFolder = TEXT("/Game/CodexHarness/Input/Contexts");
@@ -92,9 +94,11 @@ namespace
 
 	struct FHeadlessSetupArtifacts
 	{
-		FString SampleVoxFilename;
+		FString PlayerVoxFilename;
+		FString EnemyVoxFilename;
 		TObjectPtr<UMaterial> VoxBaseMaterial = nullptr;
-		TObjectPtr<UStaticMesh> VoxMesh = nullptr;
+		TObjectPtr<UStaticMesh> PlayerVoxMesh = nullptr;
+		TObjectPtr<UStaticMesh> EnemyVoxMesh = nullptr;
 		TObjectPtr<UInputAction> MoveAction = nullptr;
 		TObjectPtr<UInputAction> LookAction = nullptr;
 		TObjectPtr<UInputAction> FireAction = nullptr;
@@ -111,6 +115,16 @@ namespace
 		TObjectPtr<UBlueprint> EnemyCharacterBlueprint = nullptr;
 		TObjectPtr<UBlueprint> HudBlueprint = nullptr;
 		TObjectPtr<UWorld> BasicMapWorld = nullptr;
+	};
+
+	struct FChickenVoxPalette
+	{
+		FColor BodyPrimary;
+		FColor BodyAccent;
+		FColor Beak;
+		FColor Comb;
+		FColor Eye;
+		FColor Feet;
 	};
 
 	FString MakeObjectPath(const FString& PackagePath)
@@ -386,27 +400,29 @@ namespace
 		return Material;
 	}
 
-	FGeneratedVoxModel BuildSampleVoxModel()
+	FGeneratedVoxModel BuildChickenVoxModel(const FChickenVoxPalette& Palette)
 	{
 		FGeneratedVoxModel Model;
-		Model.SizeX = 8;
-		Model.SizeY = 8;
+		Model.SizeX = 12;
+		Model.SizeY = 10;
 		Model.SizeZ = 12;
 		Model.Palette.SetNumZeroed(256 * 4);
 
-		auto SetPaletteColor = [&Model](const int32 PaletteIndex, const uint8 R, const uint8 G, const uint8 B)
+		auto SetPaletteColor = [&Model](const int32 PaletteIndex, const FColor& Color)
 		{
 			const int32 Offset = (PaletteIndex - 1) * 4;
-			Model.Palette[Offset + 0] = R;
-			Model.Palette[Offset + 1] = G;
-			Model.Palette[Offset + 2] = B;
-			Model.Palette[Offset + 3] = 255;
+			Model.Palette[Offset + 0] = Color.R;
+			Model.Palette[Offset + 1] = Color.G;
+			Model.Palette[Offset + 2] = Color.B;
+			Model.Palette[Offset + 3] = Color.A;
 		};
 
-		SetPaletteColor(1, 43, 96, 173);
-		SetPaletteColor(2, 247, 211, 95);
-		SetPaletteColor(3, 54, 179, 126);
-		SetPaletteColor(4, 32, 32, 40);
+		SetPaletteColor(1, Palette.BodyPrimary);
+		SetPaletteColor(2, Palette.BodyAccent);
+		SetPaletteColor(3, Palette.Beak);
+		SetPaletteColor(4, Palette.Comb);
+		SetPaletteColor(5, Palette.Eye);
+		SetPaletteColor(6, Palette.Feet);
 
 		auto AddVoxelBox = [&Model](const uint8 MinX, const uint8 MinY, const uint8 MinZ, const uint8 MaxX, const uint8 MaxY, const uint8 MaxZ, const uint8 ColorIndex)
 		{
@@ -426,12 +442,56 @@ namespace
 			}
 		};
 
-		AddVoxelBox(2, 2, 0, 5, 5, 4, 1);
-		AddVoxelBox(2, 2, 5, 5, 5, 8, 2);
-		AddVoxelBox(3, 3, 9, 4, 4, 11, 3);
-		AddVoxelBox(1, 1, 0, 6, 6, 0, 4);
+		auto AddVoxel = [&Model](const uint8 X, const uint8 Y, const uint8 Z, const uint8 ColorIndex)
+		{
+			FGeneratedVoxModel::FVoxelEntry& Voxel = Model.Voxels.AddDefaulted_GetRef();
+			Voxel.X = X;
+			Voxel.Y = Y;
+			Voxel.Z = Z;
+			Voxel.ColorIndex = ColorIndex;
+		};
+
+		AddVoxelBox(2, 2, 2, 7, 7, 6, 1);
+		AddVoxelBox(3, 3, 3, 6, 6, 5, 2);
+		AddVoxelBox(6, 3, 6, 9, 6, 9, 1);
+		AddVoxelBox(4, 2, 3, 5, 2, 5, 2);
+		AddVoxelBox(4, 7, 3, 5, 7, 5, 2);
+		AddVoxelBox(1, 4, 5, 2, 5, 8, 2);
+		AddVoxelBox(10, 4, 7, 11, 5, 8, 3);
+		AddVoxelBox(4, 4, 0, 4, 4, 1, 6);
+		AddVoxelBox(6, 5, 0, 6, 5, 1, 6);
+		AddVoxelBox(3, 4, 0, 5, 4, 0, 6);
+		AddVoxelBox(5, 5, 0, 7, 5, 0, 6);
+		AddVoxelBox(6, 4, 10, 8, 5, 10, 4);
+		AddVoxelBox(7, 4, 11, 7, 5, 11, 4);
+		AddVoxel(9, 3, 8, 5);
+		AddVoxel(9, 6, 8, 5);
 
 		return Model;
+	}
+
+	FGeneratedVoxModel BuildPlayerChickenVoxModel()
+	{
+		return BuildChickenVoxModel({
+			FColor(245, 245, 240, 255),
+			FColor(216, 216, 208, 255),
+			FColor(244, 184, 72, 255),
+			FColor(216, 52, 44, 255),
+			FColor(24, 24, 28, 255),
+			FColor(236, 156, 56, 255)
+		});
+	}
+
+	FGeneratedVoxModel BuildEnemyChickenVoxModel()
+	{
+		return BuildChickenVoxModel({
+			FColor(196, 48, 40, 255),
+			FColor(126, 18, 18, 255),
+			FColor(250, 188, 68, 255),
+			FColor(122, 8, 12, 255),
+			FColor(24, 24, 28, 255),
+			FColor(244, 160, 58, 255)
+		});
 	}
 
 	void AppendChunk(TArray<uint8>& Buffer, const ANSICHAR* ChunkId, const TArray<uint8>& Content, const TArray<uint8>& Children = {})
@@ -449,9 +509,9 @@ namespace
 		Buffer.Append(Children);
 	}
 
-	bool EnsureSampleVoxFile(FString& OutAbsoluteFilename, FString& OutError)
+	bool WriteGeneratedVoxFile(const FString& RelativeFilename, const FGeneratedVoxModel& Model, FString& OutAbsoluteFilename, FString& OutError)
 	{
-		OutAbsoluteFilename = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), VoxSourceRelativePath));
+		OutAbsoluteFilename = FPaths::ConvertRelativePathToFull(FPaths::Combine(FPaths::ProjectDir(), RelativeFilename));
 
 		IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
 		const FString Directory = FPaths::GetPath(OutAbsoluteFilename);
@@ -460,13 +520,6 @@ namespace
 			OutError = FString::Printf(TEXT("Failed to create VOX source directory: %s"), *Directory);
 			return false;
 		}
-
-		if (PlatformFile.FileExists(*OutAbsoluteFilename))
-		{
-			return true;
-		}
-
-		const FGeneratedVoxModel Model = BuildSampleVoxModel();
 
 		TArray<uint8> SizeContent;
 		SizeContent.Append(reinterpret_cast<const uint8*>(&Model.SizeX), sizeof(int32));
@@ -506,7 +559,7 @@ namespace
 		return true;
 	}
 
-	UStaticMesh* ImportOrUpdateVoxStaticMesh(const FString& SourceFilename, UMaterialInterface* Material, FString& OutError)
+	UStaticMesh* ImportOrUpdateVoxStaticMesh(const FString& SourceFilename, const FString& DestinationPackagePath, UMaterialInterface* Material, FString& OutError)
 	{
 		UAssetImportTask* const ImportTask = NewObject<UAssetImportTask>(GetTransientPackage());
 		UVoxStaticMeshFactory* const VoxFactory = NewObject<UVoxStaticMeshFactory>(ImportTask);
@@ -517,8 +570,8 @@ namespace
 		}
 
 		ImportTask->Filename = SourceFilename;
-		ImportTask->DestinationPath = FPackageName::GetLongPackagePath(VoxMeshPackagePath);
-		ImportTask->DestinationName = FPackageName::GetLongPackageAssetName(VoxMeshPackagePath);
+		ImportTask->DestinationPath = FPackageName::GetLongPackagePath(DestinationPackagePath);
+		ImportTask->DestinationName = FPackageName::GetLongPackageAssetName(DestinationPackagePath);
 		ImportTask->bReplaceExisting = true;
 		ImportTask->bReplaceExistingSettings = true;
 		ImportTask->bAutomated = true;
@@ -542,12 +595,12 @@ namespace
 
 		if (ImportedMesh == nullptr)
 		{
-			ImportedMesh = LoadObject<UStaticMesh>(nullptr, *MakeObjectPath(VoxMeshPackagePath));
+			ImportedMesh = LoadObject<UStaticMesh>(nullptr, *MakeObjectPath(DestinationPackagePath));
 		}
 
 		if (ImportedMesh == nullptr)
 		{
-			OutError = FString::Printf(TEXT("Failed to import VOX file into %s."), *VoxMeshPackagePath);
+			OutError = FString::Printf(TEXT("Failed to import VOX file into %s."), *DestinationPackagePath);
 			return nullptr;
 		}
 
@@ -842,7 +895,7 @@ namespace
 			return false;
 		}
 
-		SetObjectProperty(*CharacterDefaultObject, TEXT("DefaultVisualMesh"), Artifacts.VoxMesh, UStaticMesh::StaticClass());
+		SetObjectProperty(*CharacterDefaultObject, TEXT("DefaultVisualMesh"), Artifacts.PlayerVoxMesh, UStaticMesh::StaticClass());
 		CharacterDefaultObject->RefreshVisualMeshDefaults();
 		FBlueprintEditorUtils::MarkBlueprintAsModified(Artifacts.CharacterBlueprint);
 		if (!CompileBlueprint(*Artifacts.CharacterBlueprint, OutError))
@@ -859,7 +912,7 @@ namespace
 			return false;
 		}
 
-		SetObjectProperty(*EnemyCharacterDefaultObject, TEXT("DefaultVisualMesh"), Artifacts.VoxMesh, UStaticMesh::StaticClass());
+		SetObjectProperty(*EnemyCharacterDefaultObject, TEXT("DefaultVisualMesh"), Artifacts.EnemyVoxMesh, UStaticMesh::StaticClass());
 		EnemyCharacterDefaultObject->RefreshVisualMeshDefaults();
 		FBlueprintEditorUtils::MarkBlueprintAsModified(Artifacts.EnemyCharacterBlueprint);
 		if (!CompileBlueprint(*Artifacts.EnemyCharacterBlueprint, OutError))
@@ -986,9 +1039,9 @@ namespace
 			return false;
 		}
 
-		if (CharacterDefaultObject->GetVisualMeshComponent()->GetStaticMesh() != Artifacts.VoxMesh)
+		if (CharacterDefaultObject->GetVisualMeshComponent()->GetStaticMesh() != Artifacts.PlayerVoxMesh)
 		{
-			OutError = TEXT("Character blueprint visual mesh component is not linked to the generated VOX mesh.");
+			OutError = TEXT("Character blueprint visual mesh component is not linked to the generated player VOX mesh.");
 			return false;
 		}
 
@@ -1001,9 +1054,9 @@ namespace
 			return false;
 		}
 
-		if (EnemyCharacterDefaultObject->GetVisualMeshComponent()->GetStaticMesh() != Artifacts.VoxMesh)
+		if (EnemyCharacterDefaultObject->GetVisualMeshComponent()->GetStaticMesh() != Artifacts.EnemyVoxMesh)
 		{
-			OutError = TEXT("EnemyCharacter blueprint visual mesh component is not linked to the generated VOX mesh.");
+			OutError = TEXT("EnemyCharacter blueprint visual mesh component is not linked to the generated enemy VOX mesh.");
 			return false;
 		}
 
@@ -1073,9 +1126,13 @@ namespace
 
 		const FString ReportText = FString::Printf(
 			TEXT("CodexHarnessHeadlessSetup succeeded.\n")
-			TEXT("VOX Source: %s\n")
+			TEXT("VOX Sources:\n")
+			TEXT("  Player: %s\n")
+			TEXT("  Enemy: %s\n")
 			TEXT("Material: %s\n")
-			TEXT("StaticMesh: %s\n")
+			TEXT("StaticMeshes:\n")
+			TEXT("  Player: %s\n")
+			TEXT("  Enemy: %s\n")
 			TEXT("Blueprints:\n")
 			TEXT("  GameInstance: %s\n")
 			TEXT("  GameMode: %s\n")
@@ -1101,9 +1158,11 @@ namespace
 			TEXT("  EditorStartupMap: %s\n")
 			TEXT("Map:\n")
 			TEXT("  WorldSettings.DefaultGameMode: %s\n"),
-			*Artifacts.SampleVoxFilename,
+			*Artifacts.PlayerVoxFilename,
+			*Artifacts.EnemyVoxFilename,
 			*VoxBaseMaterialPackagePath,
-			*VoxMeshPackagePath,
+			*PlayerVoxMeshPackagePath,
+			*EnemyVoxMeshPackagePath,
 			*Artifacts.GameInstanceBlueprint->GetPathName(),
 			*Artifacts.GameModeBlueprint->GetPathName(),
 			*Artifacts.PlayerControllerBlueprint->GetPathName(),
@@ -1154,7 +1213,13 @@ int32 UCodexHarnessHeadlessSetupCommandlet::Main(const FString& Params)
 
 	FHeadlessSetupArtifacts Artifacts;
 	FString ErrorMessage;
-	if (!EnsureSampleVoxFile(Artifacts.SampleVoxFilename, ErrorMessage))
+	if (!WriteGeneratedVoxFile(PlayerVoxSourceRelativePath, BuildPlayerChickenVoxModel(), Artifacts.PlayerVoxFilename, ErrorMessage))
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s"), *ErrorMessage);
+		return 1;
+	}
+
+	if (!WriteGeneratedVoxFile(EnemyVoxSourceRelativePath, BuildEnemyChickenVoxModel(), Artifacts.EnemyVoxFilename, ErrorMessage))
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s"), *ErrorMessage);
 		return 1;
@@ -1167,8 +1232,15 @@ int32 UCodexHarnessHeadlessSetupCommandlet::Main(const FString& Params)
 		return 1;
 	}
 
-	Artifacts.VoxMesh = ImportOrUpdateVoxStaticMesh(Artifacts.SampleVoxFilename, Artifacts.VoxBaseMaterial, ErrorMessage);
-	if (Artifacts.VoxMesh == nullptr)
+	Artifacts.PlayerVoxMesh = ImportOrUpdateVoxStaticMesh(Artifacts.PlayerVoxFilename, PlayerVoxMeshPackagePath, Artifacts.VoxBaseMaterial, ErrorMessage);
+	if (Artifacts.PlayerVoxMesh == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s"), *ErrorMessage);
+		return 1;
+	}
+
+	Artifacts.EnemyVoxMesh = ImportOrUpdateVoxStaticMesh(Artifacts.EnemyVoxFilename, EnemyVoxMeshPackagePath, Artifacts.VoxBaseMaterial, ErrorMessage);
+	if (Artifacts.EnemyVoxMesh == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("%s"), *ErrorMessage);
 		return 1;
@@ -1233,9 +1305,11 @@ int32 UCodexHarnessHeadlessSetupCommandlet::Main(const FString& Params)
 	}
 
 	UE_LOG(LogTemp, Display, TEXT("CodexHarness headless setup completed successfully."));
-	UE_LOG(LogTemp, Display, TEXT("VOX Source: %s"), *Artifacts.SampleVoxFilename);
+	UE_LOG(LogTemp, Display, TEXT("Player VOX Source: %s"), *Artifacts.PlayerVoxFilename);
+	UE_LOG(LogTemp, Display, TEXT("Enemy VOX Source: %s"), *Artifacts.EnemyVoxFilename);
 	UE_LOG(LogTemp, Display, TEXT("Material: %s"), *VoxBaseMaterialPackagePath);
-	UE_LOG(LogTemp, Display, TEXT("StaticMesh: %s"), *VoxMeshPackagePath);
+	UE_LOG(LogTemp, Display, TEXT("Player StaticMesh: %s"), *PlayerVoxMeshPackagePath);
+	UE_LOG(LogTemp, Display, TEXT("Enemy StaticMesh: %s"), *EnemyVoxMeshPackagePath);
 	UE_LOG(LogTemp, Display, TEXT("GameInstance Blueprint: %s"), *Artifacts.GameInstanceBlueprint->GetPathName());
 	UE_LOG(LogTemp, Display, TEXT("GameMode Blueprint: %s"), *Artifacts.GameModeBlueprint->GetPathName());
 	UE_LOG(LogTemp, Display, TEXT("PlayerController Blueprint: %s"), *Artifacts.PlayerControllerBlueprint->GetPathName());

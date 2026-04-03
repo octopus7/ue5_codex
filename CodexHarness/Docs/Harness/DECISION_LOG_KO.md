@@ -187,3 +187,10 @@
 
 - 실제 프로젝트 애셋 요구를 만족하기 위해 카메라 흔들림은 `UCodexHarnessPlayerHitCameraShake` C++ 베이스 위에 `BP_CodexHarnessPlayerHitCameraShake` BP 래퍼를 생성해 사용한다.
 - `DA_DefaultEffectsConfig`는 이 BP의 생성 클래스를 참조하고, 플레이어 피격 시 `PlayerController::ClientStartCameraShake`로 재생한다.
+
+### 2026-04-04 | 캐릭터 외형 식별 | 플레이어와 적은 서로 다른 닭 VOX 메시를 사용
+
+- 플레이어와 적이 같은 테스트 메시를 공유하면 전투 중 식별성이 떨어지므로 외형을 분리한다.
+- 플레이어는 `SourceArt/Vox/SM_Vox_PlayerChicken_White.vox`에서 생성한 흰 닭 메시 `/Game/CodexHarness/Vox/SM_Vox_PlayerChicken_White`를 사용한다.
+- 적은 `SourceArt/Vox/SM_Vox_EnemyChicken_Red.vox`에서 생성한 붉은 닭 메시 `/Game/CodexHarness/Vox/SM_Vox_EnemyChicken_Red`를 사용한다.
+- 두 메시의 생성, import, `DefaultVisualMesh` 연결은 모두 `CodexHarnessHeadlessSetup` 커맨드렛이 담당한다.

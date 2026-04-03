@@ -26,12 +26,14 @@
   - `ACodexHarnessEnemyCharacter`
   - `ACodexHarnessHUD`
 - `ACodexHarnessCharacter`는 `CameraBoom`, `FollowCamera`, `VisualMeshComponent`를 가진다.
+- `BP_CodexHarnessCharacter`의 기본 가시 메시 경로는 흰 닭 VOX `SM_Vox_PlayerChicken_White -> DefaultVisualMesh -> VisualMeshComponent`다.
 - `ACodexHarnessCharacter`는 `UCodexHarnessHealthComponent`를 소유하고, 사망 시 이동을 중지하며 `GameMode`에 통지한다.
 - `ACodexHarnessCharacter`는 `MoveInTopDownPlane`으로 카메라 기준 평면 이동 벡터를 계산한다.
 - `ACodexHarnessCharacter`는 `AimAtWorldLocation`으로 커서 기준 상면 회전을 수행한다.
 - `ACodexHarnessCharacter`는 `FireAtWorldLocation`으로 `PlayerWeaponTrace`(`ECC_GameTraceChannel1`) 기준 히트스캔 라인트레이스를 수행하고, 체력 컴포넌트가 있는 대상에만 `ApplyDamage`를 전달한다.
 - `ACodexHarnessCharacter`는 피격 시 반동, `NS_PlayerHitReaction`, `BP_CodexHarnessPlayerHitCameraShake`를 재생한다.
 - `ACodexHarnessEnemyCharacter`는 `UCodexHarnessHealthComponent`와 `VisualMeshComponent`를 소유하고, 플레이어를 직접 추적해 일정 주기마다 공격한다.
+- `BP_CodexHarnessEnemyCharacter`의 기본 가시 메시 경로는 붉은 닭 VOX `SM_Vox_EnemyChicken_Red -> DefaultVisualMesh -> VisualMeshComponent`다.
 - `ACodexHarnessEnemyCharacter`의 캡슐은 `PlayerWeaponTrace` 채널에 `Block` 응답을 갖는다.
 - `ACodexHarnessPlayerController`는 `DA_DefaultInputConfig`를 경유해 입력 매핑 컨텍스트를 적용하고 `IA_Move`, `IA_Fire`, `IA_Restart`를 실제 바인딩한다.
 - `ACodexHarnessPlayerController`는 매 틱 `UpdateAimFromCursor()`로 커서를 월드 평면에 투영하고 같은 결과를 발사 입력에 재사용한다.
@@ -39,7 +41,7 @@
 - `ACodexHarnessGameMode`는 `RequestRestart()`로 현재 맵을 다시 열어 전체 상태를 초기화한다.
 - `ACodexHarnessHUD`는 `DrawHUD()`에서 플레이어 체력, 현재 웨이브, 남은 적 수를 `Canvas HUD`로 직접 그리고, 게임오버 상태에서는 재시작 안내를 오버레이로 표시한다.
 - `Source/CodexHarnessEditor/Private/Commandlets/CodexHarnessHeadlessSetupCommandlet.cpp`는 아래를 한 번에 처리한다.
-  - 샘플 `.vox` 보장
+  - 플레이어/적 닭 `.vox` 보장
   - `M_VoxBase` 보장
   - `.vox -> StaticMesh` import
   - `BP_*` 래퍼 생성/갱신
@@ -87,8 +89,10 @@
 
 - VOX/머터리얼
   - `/Game/CodexHarness/Materials/M_VoxBase`
-  - `/Game/CodexHarness/Vox/SM_Vox_TestCube_01`
-  - `SourceArt/Vox/SM_Vox_TestCube_01.vox`
+  - `/Game/CodexHarness/Vox/SM_Vox_PlayerChicken_White`
+  - `/Game/CodexHarness/Vox/SM_Vox_EnemyChicken_Red`
+  - `SourceArt/Vox/SM_Vox_PlayerChicken_White.vox`
+  - `SourceArt/Vox/SM_Vox_EnemyChicken_Red.vox`
 - Blueprint 래퍼
   - `/Game/CodexHarness/Blueprints/Core/BP_CodexHarnessGameInstance`
   - `/Game/CodexHarness/Blueprints/Core/BP_CodexHarnessGameMode`
@@ -114,12 +118,12 @@
 
 - `Build.bat CodexHarnessEditor Win64 Development -Project='D:\github\ue5_codex\CodexHarness\CodexHarness.uproject' -WaitMutex -FromMsBuild -NoHotReloadFromIDE` 성공
 - `UnrealEditor-Cmd.exe 'D:\github\ue5_codex\CodexHarness\CodexHarness.uproject' -run=CodexHarnessHeadlessSetup -unattended -nop4 -nosplash -nullrhi -NoHotReloadFromIDE` 성공
-- 자동화 보고서에 `EnemyCharacter`, `RestartAction`, `PlayerHitCameraShake`, `EffectsConfig` 반영 확인
+- 자동화 보고서에 `SM_Vox_PlayerChicken_White`, `SM_Vox_EnemyChicken_Red`, `EnemyCharacter`, `RestartAction`, `PlayerHitCameraShake`, `EffectsConfig` 반영 확인
 
 ## 문서 운영 상태
 
 - 하네스 문서는 실제 `CodexHarness` 저장소 기준으로 정렬돼 있다.
-- `CURRENT_PHASE_KO.md`는 현재 `M6-P1` 완료 상태를 가리킨다.
+- `CURRENT_PHASE_KO.md`는 현재 `M6-P2` 완료 상태를 가리킨다.
 - `WORK_TIME_LOG_KO.md`는 단계별 append 로그로 누적 중이다.
 
 ## 현재 공백
