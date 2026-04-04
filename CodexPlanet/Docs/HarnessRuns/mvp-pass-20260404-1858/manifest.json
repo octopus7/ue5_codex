@@ -1,0 +1,64 @@
+{
+  "run_id": "mvp-pass-20260404-1858",
+  "archived_at": "2026-04-04T18:59:31+09:00",
+  "project_root": "D:\\github\\ue5_codex\\CodexPlanet",
+  "source_dir": "D:\\github\\ue5_codex\\CodexPlanet\\Docs\\Harness",
+  "git_head": "55b2236a7cf591da71b46736a6eb87a5ec09d172",
+  "seed_dir": "D:\\github\\ue5_codex\\CodexPlanet\\Docs\\HarnessSeed",
+  "archived_files": [
+    {
+      "path": "CURRENT_PHASE_KO.md",
+      "sha256": "5ffd5e32bf6b17dd5c5d4f5248be698ce9263e293afbedc1aca7765eb8f88e46"
+    },
+    {
+      "path": "DECISION_LOG_KO.md",
+      "sha256": "607695ac16db792319faf286f907243a798211771aae7538edd70bef6bbab830"
+    },
+    {
+      "path": "FULL_EXECUTION_INSTRUCTION_KO.md",
+      "sha256": "f25a13300845a7b7bbf8a05b34aa6f4d87a38229877c9959e03a4caff6a9e623"
+    },
+    {
+      "path": "PROJECT_HARNESS_KO.md",
+      "sha256": "c80601e42dd40dc3bbd342f39a6cad71fc754214d868c2ed92e809fa693d9e5e"
+    },
+    {
+      "path": "README.md",
+      "sha256": "28801d8eb85fcb3607f05f60856100f0cf942400cf9af7859fffad6fb6ed9e71"
+    },
+    {
+      "path": "STATE_SNAPSHOT_KO.md",
+      "sha256": "2eb434b18ee76b69217bfc24ac85213825cf96ef851025c4d6fa09e3e337d052"
+    },
+    {
+      "path": "WORK_TIME_LOG_KO.md",
+      "sha256": "44b305a272e044577b0739b329048ec042ec111d84a15226d42166d9be4a019a"
+    }
+  ],
+  "seed_files": [
+    {
+      "path": "CURRENT_PHASE_KO.md",
+      "sha256": "022d707cbdd0099d3ab3695c0f3e52d844d95a46245855808f45cc4cc65e5ac1"
+    },
+    {
+      "path": "DECISION_LOG_KO.md",
+      "sha256": "c22bb3d143122cd95e2d0d9c41d70575a40f8b52c325e2c10bacea8d8e682765"
+    },
+    {
+      "path": "PROJECT_HARNESS_KO.md",
+      "sha256": "c80601e42dd40dc3bbd342f39a6cad71fc754214d868c2ed92e809fa693d9e5e"
+    },
+    {
+      "path": "README.md",
+      "sha256": "1fe7b70db372e5f8aade8db2fb5f8d782ba66453c3faddc072ad3d986608665d"
+    },
+    {
+      "path": "STATE_SNAPSHOT_KO.md",
+      "sha256": "2f74cf58b611385303a45729798de0790f2a9f62129d6b7726b3fc7861843843"
+    },
+    {
+      "path": "WORK_TIME_LOG_KO.md",
+      "sha256": "6b5a2f1da77ef324d23ebe093590121fe3f4b8d236406165148be5bdbbb80cda"
+    }
+  ]
+}

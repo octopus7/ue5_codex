@@ -129,7 +129,6 @@
 - `Docs/Harness/WORK_TIME_LOG_KO.md`
 - `Docs/HarnessRuns`는 run별 결과를 보관하는 아카이브 루트다.
 - `Docs/HarnessRuns/initial-baseline` 아카이브가 존재한다.
-- `Docs/HarnessRuns/mvp-pass-20260404-1858` 아카이브가 존재한다.
 - `Tools/harness/common.py`
 - `Tools/harness/reset_harness.py`
 - `Tools/harness/archive_harness.py`
@@ -172,7 +171,6 @@
 - 자동화 테스트 `CodexPlanet.M1P4.OrbitControlsWidgetAsset` 성공
 - 헤드리스 맵 로드에서 `Orbit controls widget created and added to viewport.` 로그 확인
 - 헤드리스 맵 로드에서 `Placement HUD state | Selected=Bridge | Slots=20` 로그 확인
-- `python Tools/harness/archive_harness.py --run-id mvp-pass-20260404-1858` 실행으로 live harness archive 생성
 
 ## 갱신 규칙
 

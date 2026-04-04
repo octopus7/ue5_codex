@@ -1,0 +1,32 @@
+[
+  {
+    "id": "bridge",
+    "asset_name": "SM_VOX_Bridge",
+    "vox_path": "D:\\github\\ue5_codex\\CodexPlanet\\SourceArt\\Vox\\Props\\bridge.vox",
+    "obj_path": "D:\\github\\ue5_codex\\CodexPlanet\\SourceArt\\Vox\\Props\\bridge.obj"
+  },
+  {
+    "id": "statue",
+    "asset_name": "SM_VOX_Statue",
+    "vox_path": "D:\\github\\ue5_codex\\CodexPlanet\\SourceArt\\Vox\\Props\\statue.vox",
+    "obj_path": "D:\\github\\ue5_codex\\CodexPlanet\\SourceArt\\Vox\\Props\\statue.obj"
+  },
+  {
+    "id": "palm_tree",
+    "asset_name": "SM_VOX_PalmTree",
+    "vox_path": "D:\\github\\ue5_codex\\CodexPlanet\\SourceArt\\Vox\\Props\\palm_tree.vox",
+    "obj_path": "D:\\github\\ue5_codex\\CodexPlanet\\SourceArt\\Vox\\Props\\palm_tree.obj"
+  },
+  {
+    "id": "rock",
+    "asset_name": "SM_VOX_Rock",
+    "vox_path": "D:\\github\\ue5_codex\\CodexPlanet\\SourceArt\\Vox\\Props\\rock.vox",
+    "obj_path": "D:\\github\\ue5_codex\\CodexPlanet\\SourceArt\\Vox\\Props\\rock.obj"
+  },
+  {
+    "id": "bush",
+    "asset_name": "SM_VOX_Bush",
+    "vox_path": "D:\\github\\ue5_codex\\CodexPlanet\\SourceArt\\Vox\\Props\\bush.vox",
+    "obj_path": "D:\\github\\ue5_codex\\CodexPlanet\\SourceArt\\Vox\\Props\\bush.obj"
+  }
+]

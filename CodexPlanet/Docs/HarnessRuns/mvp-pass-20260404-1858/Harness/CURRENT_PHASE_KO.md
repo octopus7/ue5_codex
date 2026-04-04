@@ -78,13 +78,7 @@
 
 ## 검증 결과
 
-- `CodexPlanetEditor Win64 Development` 빌드 성공
-- 자동화 테스트 `CodexPlanet.M1P1.TrackballRotationMath` 성공
-- 자동화 테스트 `CodexPlanet.M1P2.SurfaceAlignmentMath` 성공
-- 자동화 테스트 `CodexPlanet.M1P3.PropCatalogAssets` 성공
-- 자동화 테스트 `CodexPlanet.M1P4.OrbitControlsWidgetAsset` 성공
-- headless map load에서 `Game class is 'CodexPlanetGameMode'`, `Orbit controls widget created and added to viewport.`, `Placement HUD state | Selected=Bridge | Slots=20` 확인
-- `Docs/HarnessRuns/mvp-pass-20260404-1858` archive 생성 완료
+- 아직 미실행
 
 ## 여기서 멈출 기준
 
