@@ -95,3 +95,11 @@
 - 소요 시간: `00:00:51`
 - 병렬 수행: `아니오`
 - 메모: 상위 `CodexHarness`의 수행 방식 규칙을 가져와 `CodexPlanet` 하네스에 반영했다. 작업 시간을 줄일 수 있으면 병렬 수행을 허용하고, 토큰 비용보다 전체 리드타임 단축을 우선한다. 필요하면 `generator`와 `evaluator`를 분리 컨텍스트로 운용하되, 직접 통신 대신 메인 에이전트가 중계한다.
+
+### 2026-04-04 | DOC-FULL-EXECUTION-INSTRUCTION | 전체 수행 지시문 문서 추가
+
+- 시작: `2026-04-04 17:58:50 +09:00`
+- 종료: `2026-04-04 18:00:30 +09:00`
+- 소요 시간: `00:01:40`
+- 병렬 수행: `아니오`
+- 메모: 새 대화에서 그대로 사용할 수 있는 전체 수행 지시문을 `Docs/Harness/FULL_EXECUTION_INSTRUCTION_KO.md`로 추가했다. 수행 중 변경은 `Docs/Harness`의 live 문서에서만 반영하고 `Docs/HarnessSeed`는 보존용 원본으로 직접 수정하지 않는 규칙을 `README`, `DECISION_LOG`, `STATE_SNAPSHOT`에도 반영했다.

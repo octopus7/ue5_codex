@@ -122,3 +122,10 @@
 
 - 하네스 보존과 복원 스크립트는 `ps1` 대신 Python으로 작성한다.
 - 운영 스크립트는 `Tools/harness/reset_harness.py`, `Tools/harness/archive_harness.py`를 기준으로 사용한다.
+
+### 2026-04-04 | 실행 문서 운영 | 전체 수행 지시문은 live Harness에만 유지
+
+- 새 대화에서 그대로 사용할 수 있는 전체 수행 지시문을 `Docs/Harness/FULL_EXECUTION_INSTRUCTION_KO.md`로 둔다.
+- 수행 중 문서 변경은 `Docs/Harness`의 live 문서에서만 반영한다.
+- `Docs/HarnessSeed`는 보존용 원본이므로 수행 중 수정하지 않는다.
+- seed 갱신은 일반 수행 루프가 아니라 별도 기준선 갱신 작업으로만 다룬다.

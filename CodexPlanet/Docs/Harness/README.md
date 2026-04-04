@@ -47,7 +47,15 @@
 - 대신 `Docs/HarnessSeed`를 `Docs/Harness`로 복원하는 방식으로 초기화한다.
 - 실행이 끝난 결과는 `Docs/HarnessRuns/<run-id>`로 보관해 seed 대비 결과 비교가 가능해야 한다.
 - seed는 고정 입력, harness는 가변 출력으로 취급한다.
+- 수행 중 생성되는 문서 변경과 작업 기록은 `Docs/Harness`의 live 문서에서만 반영한다.
+- `Docs/HarnessSeed`는 보존용 원본이므로 수행 중 직접 수정하지 않는다.
+- seed 갱신이 필요하면 run 종료 후 별도 기준선 갱신 작업으로만 다룬다.
 - `generator/evaluator` 분리 운영을 사용했다면 역할 분리와 메인 에이전트 중계 방식은 `CURRENT_PHASE_KO.md`와 `WORK_TIME_LOG_KO.md`에 남긴다.
+
+## 추가 실행 문서
+
+- `Docs/Harness/FULL_EXECUTION_INSTRUCTION_KO.md`
+  - 새 대화에서 전체 계획을 이어서 수행할 때 붙여 넣는 실행 지시문
 
 ## 관련 스크립트
 

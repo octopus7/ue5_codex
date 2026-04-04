@@ -69,6 +69,7 @@
 
 - `Docs/HarnessSeed`가 존재하며 현재 하네스 초기 기준 상태를 보존한다.
 - `Docs/Harness/README.md`
+- `Docs/Harness/FULL_EXECUTION_INSTRUCTION_KO.md`
 - `Docs/Harness/PROJECT_HARNESS_KO.md`
 - `Docs/Harness/CURRENT_PHASE_KO.md`
 - `Docs/Harness/DECISION_LOG_KO.md`
@@ -82,6 +83,8 @@
 - `Tools/harness/README.md`
 - 프로젝트 초기 설정 요청서 `UE5_PROJECT_BOOTSTRAP_REQUEST_KO.md`가 루트에 존재한다.
 - 문서에는 병렬 수행 허용 규칙과 `generator/evaluator` 분리 운영 원칙이 반영되어 있다.
+- 새 대화에서 사용할 수 있는 전체 수행 지시문은 live 문서 `Docs/Harness/FULL_EXECUTION_INSTRUCTION_KO.md`에 저장한다.
+- 수행 중 `Docs/HarnessSeed`는 보존용 원본으로 취급하며 직접 수정하지 않는다.
 
 ## 현재 공백
 
