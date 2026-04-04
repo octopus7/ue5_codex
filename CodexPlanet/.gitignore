@@ -36,6 +36,10 @@ Plugins/*/Intermediate/
 *.dmp
 *.tmp
 
+# Python cache
+__pycache__/
+*.pyc
+
 # Per-user editor content
 Collections/
 Developers/

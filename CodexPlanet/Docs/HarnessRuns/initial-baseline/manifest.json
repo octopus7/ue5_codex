@@ -1,0 +1,60 @@
+{
+  "run_id": "initial-baseline",
+  "archived_at": "2026-04-04T17:37:48+09:00",
+  "project_root": "D:\\github\\ue5_codex\\CodexPlanet",
+  "source_dir": "D:\\github\\ue5_codex\\CodexPlanet\\Docs\\Harness",
+  "git_head": "49b17d91aa320d29012ed0dc1eb395e5c2759d2f",
+  "seed_dir": "D:\\github\\ue5_codex\\CodexPlanet\\Docs\\HarnessSeed",
+  "archived_files": [
+    {
+      "path": "CURRENT_PHASE_KO.md",
+      "sha256": "6e5580b5bf84b806adf3fd197dfb2b5c9de5b7dce22ec5895364e804107a4ad5"
+    },
+    {
+      "path": "DECISION_LOG_KO.md",
+      "sha256": "3fbabf85b2698b8313a8f3b49e758ecd6546f6ffa44f1e99dc1b844405be407f"
+    },
+    {
+      "path": "PROJECT_HARNESS_KO.md",
+      "sha256": "097abe9b0ebed8cea0ce701213e21502f7e20b8ac744294a57ff4e81f7f21cab"
+    },
+    {
+      "path": "README.md",
+      "sha256": "b0fd04f4f54a74138ad43e632deda7792ccd393b1ffc1635aaad8106d5c658ee"
+    },
+    {
+      "path": "STATE_SNAPSHOT_KO.md",
+      "sha256": "d175949cb21080c60b8adb50800e6749b543caa014865a41990138454f62b23b"
+    },
+    {
+      "path": "WORK_TIME_LOG_KO.md",
+      "sha256": "7758db7e2681cea14bd97d8674d5fb028034f40ffc3f6f1c9ffcd202636aeca4"
+    }
+  ],
+  "seed_files": [
+    {
+      "path": "CURRENT_PHASE_KO.md",
+      "sha256": "6e5580b5bf84b806adf3fd197dfb2b5c9de5b7dce22ec5895364e804107a4ad5"
+    },
+    {
+      "path": "DECISION_LOG_KO.md",
+      "sha256": "3fbabf85b2698b8313a8f3b49e758ecd6546f6ffa44f1e99dc1b844405be407f"
+    },
+    {
+      "path": "PROJECT_HARNESS_KO.md",
+      "sha256": "097abe9b0ebed8cea0ce701213e21502f7e20b8ac744294a57ff4e81f7f21cab"
+    },
+    {
+      "path": "README.md",
+      "sha256": "b0fd04f4f54a74138ad43e632deda7792ccd393b1ffc1635aaad8106d5c658ee"
+    },
+    {
+      "path": "STATE_SNAPSHOT_KO.md",
+      "sha256": "d175949cb21080c60b8adb50800e6749b543caa014865a41990138454f62b23b"
+    },
+    {
+      "path": "WORK_TIME_LOG_KO.md",
+      "sha256": "7758db7e2681cea14bd97d8674d5fb028034f40ffc3f6f1c9ffcd202636aeca4"
+    }
+  ]
+}
