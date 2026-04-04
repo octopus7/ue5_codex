@@ -6,6 +6,7 @@
 
 class UCameraComponent;
 class UCMWCombatComponent;
+class UStaticMeshComponent;
 class USpringArmComponent;
 struct FInputActionValue;
 
@@ -38,6 +39,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	TObjectPtr<UCMWCombatComponent> CombatComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Visual")
+	TObjectPtr<UStaticMeshComponent> PlayerVisualMesh;
 
 	UPROPERTY(Transient)
 	FVector AimWorldLocation = FVector::ZeroVector;

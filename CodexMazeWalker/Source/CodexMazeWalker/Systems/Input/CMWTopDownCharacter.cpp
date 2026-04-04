@@ -1,13 +1,16 @@
 #include "Systems/Input/CMWTopDownCharacter.h"
 
 #include "Camera/CameraComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "EnhancedInputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "InputActionValue.h"
+#include "Logging/LogMacros.h"
 #include "Systems/Combat/CMWCombatComponent.h"
 #include "Systems/Game/CMWGameDataAsset.h"
 #include "Systems/Game/CMWGameInstance.h"
+#include "UObject/ConstructorHelpers.h"
 
 ACMWTopDownCharacter::ACMWTopDownCharacter()
 {
@@ -28,6 +31,24 @@ ACMWTopDownCharacter::ACMWTopDownCharacter()
 	TopDownCamera->bUsePawnControlRotation = false;
 
 	CombatComponent = CreateDefaultSubobject<UCMWCombatComponent>(TEXT("CombatComponent"));
+
+	PlayerVisualMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlayerVisualMesh"));
+	PlayerVisualMesh->SetupAttachment(GetRootComponent());
+	PlayerVisualMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	PlayerVisualMesh->SetGenerateOverlapEvents(false);
+	PlayerVisualMesh->SetRelativeLocation(FVector(-87.5f, -62.5f, -96.0f));
+	PlayerVisualMesh->SetRelativeScale3D(FVector(0.45f));
+	PlayerVisualMesh->SetCastShadow(true);
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> PlayerSampleMesh(TEXT("/Game/Voxel/Generated/SM_PlayerSample.SM_PlayerSample"));
+	if (PlayerSampleMesh.Succeeded())
+	{
+		PlayerVisualMesh->SetStaticMesh(PlayerSampleMesh.Object);
+	}
+
+	GetMesh()->SetVisibility(false, true);
+	GetMesh()->SetHiddenInGame(true, true);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
@@ -79,6 +100,10 @@ void ACMWTopDownCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		{
 			EnhancedInputComponent->BindAction(GameData->ToggleAttackModeAction, ETriggerEvent::Started, this, &ThisClass::HandleToggleAttackMode);
 		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CMWTopDownCharacter expected an EnhancedInputComponent but received '%s'."), *GetNameSafe(PlayerInputComponent ? PlayerInputComponent->GetClass() : nullptr));
 	}
 }
 

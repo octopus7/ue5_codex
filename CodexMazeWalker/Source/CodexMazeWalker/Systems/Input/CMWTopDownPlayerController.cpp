@@ -23,7 +23,16 @@ void ACMWTopDownPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	SetInputMode(FInputModeGameAndUI());
+	ApplyGameplayInputMode();
+	InitializeInputMappingContext();
+	EnsureMinimapWidget();
+}
+
+void ACMWTopDownPlayerController::BeginPlayingState()
+{
+	Super::BeginPlayingState();
+
+	ApplyGameplayInputMode();
 	InitializeInputMappingContext();
 	EnsureMinimapWidget();
 }
@@ -55,6 +64,7 @@ void ACMWTopDownPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
+	ApplyGameplayInputMode();
 	InitializeInputMappingContext();
 	EnsureMinimapWidget();
 }
@@ -68,6 +78,15 @@ bool ACMWTopDownPlayerController::GetAimWorldLocation(FVector& OutAimWorldLocati
 
 	OutAimWorldLocation = CachedAimWorldLocation;
 	return true;
+}
+
+void ACMWTopDownPlayerController::ApplyGameplayInputMode() const
+{
+	FInputModeGameOnly InputMode;
+	const_cast<ThisClass*>(this)->SetInputMode(InputMode);
+	const_cast<ThisClass*>(this)->SetShowMouseCursor(true);
+	const_cast<ThisClass*>(this)->SetIgnoreMoveInput(false);
+	const_cast<ThisClass*>(this)->SetIgnoreLookInput(false);
 }
 
 void ACMWTopDownPlayerController::InitializeInputMappingContext() const

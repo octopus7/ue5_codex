@@ -15,12 +15,14 @@ public:
 	ACMWTopDownPlayerController();
 
 	virtual void BeginPlay() override;
+	virtual void BeginPlayingState() override;
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void OnPossess(APawn* InPawn) override;
 
 	bool GetAimWorldLocation(FVector& OutAimWorldLocation) const;
 
 protected:
+	void ApplyGameplayInputMode() const;
 	void InitializeInputMappingContext() const;
 	void EnsureMinimapWidget();
 	bool ResolveCursorAimLocation(FVector& OutAimWorldLocation) const;

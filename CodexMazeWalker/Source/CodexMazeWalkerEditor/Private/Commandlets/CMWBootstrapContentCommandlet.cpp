@@ -2,20 +2,31 @@
 
 #include "Assets/CMWEditorAssetUtils.h"
 #include "Components/CanvasPanel.h"
+#include "Engine/Blueprint.h"
+#include "EngineUtils.h"
 #include "Factories/MaterialFactoryNew.h"
+#include "FileHelpers.h"
+#include "GameFramework/WorldSettings.h"
+#include "GameFramework/PlayerStart.h"
 #include "InputAction.h"
 #include "InputActionValue.h"
 #include "InputMappingContext.h"
 #include "InputModifiers.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Materials/Material.h"
+#include "Materials/MaterialExpressionComponentMask.h"
 #include "Materials/MaterialExpressionVertexColor.h"
 #include "Systems/Combat/CMWProjectile.h"
 #include "Systems/Game/CMWGameDataAsset.h"
+#include "Systems/Game/CMWGameMode.h"
+#include "Systems/Input/CMWTopDownCharacter.h"
+#include "Systems/Input/CMWTopDownPlayerController.h"
 #include "Systems/UI/CMWMinimapWidget.h"
 #include "Blueprint/WidgetTree.h"
 #include "WidgetBlueprint.h"
 #include "WidgetBlueprintFactory.h"
+#include "GameMapsSettings.h"
+#include "Misc/PackageName.h"
 
 namespace
 {
@@ -111,16 +122,28 @@ namespace
 
 		Material->Modify();
 		Material->TwoSided = true;
+		Material->BlendMode = BLEND_Opaque;
+		Material->SetShadingModel(MSM_Unlit);
 
 		UMaterialExpressionVertexColor* VertexColorExpression = NewObject<UMaterialExpressionVertexColor>(Material);
 		VertexColorExpression->MaterialExpressionEditorX = -400;
 		VertexColorExpression->MaterialExpressionEditorY = 0;
 
+		UMaterialExpressionComponentMask* ColorMaskExpression = NewObject<UMaterialExpressionComponentMask>(Material);
+		ColorMaskExpression->MaterialExpressionEditorX = -220;
+		ColorMaskExpression->MaterialExpressionEditorY = 0;
+		ColorMaskExpression->Input.Connect(0, VertexColorExpression);
+		ColorMaskExpression->R = true;
+		ColorMaskExpression->G = true;
+		ColorMaskExpression->B = true;
+		ColorMaskExpression->A = false;
+
 		auto* EditorOnly = Material->GetEditorOnlyData();
 		EditorOnly->ExpressionCollection.Expressions.Reset();
 		EditorOnly->ExpressionCollection.Expressions.Add(VertexColorExpression);
-		EditorOnly->BaseColor.Connect(0, VertexColorExpression);
-		EditorOnly->EmissiveColor.Connect(0, VertexColorExpression);
+		EditorOnly->ExpressionCollection.Expressions.Add(ColorMaskExpression);
+		EditorOnly->BaseColor.Connect(0, ColorMaskExpression);
+		EditorOnly->EmissiveColor.Connect(0, ColorMaskExpression);
 
 		Material->PostEditChange();
 		Material->MarkPackageDirty();
@@ -185,6 +208,120 @@ namespace
 		GameDataAsset->MarkPackageDirty();
 		return GameDataAsset;
 	}
+
+	UBlueprint* EnsureBlueprintAsset(const FString& PackagePath, UClass* ParentClass)
+	{
+		UBlueprint* BlueprintAsset = CMWEditorAssetUtils::LoadAsset<UBlueprint>(PackagePath);
+		if (!BlueprintAsset)
+		{
+			UPackage* Package = CMWEditorAssetUtils::FindOrCreatePackage(PackagePath);
+			const FString AssetName = CMWEditorAssetUtils::GetAssetNameFromPackagePath(PackagePath);
+			BlueprintAsset = FKismetEditorUtilities::CreateBlueprint(
+				ParentClass,
+				Package,
+				*AssetName,
+				BPTYPE_Normal,
+				UBlueprint::StaticClass(),
+				UBlueprintGeneratedClass::StaticClass(),
+				FName(TEXT("CMWBootstrapContent")));
+		}
+
+		if (BlueprintAsset)
+		{
+			FKismetEditorUtilities::CompileBlueprint(BlueprintAsset);
+			BlueprintAsset->MarkPackageDirty();
+		}
+
+		return BlueprintAsset;
+	}
+
+	UBlueprint* EnsureGameModeBlueprint(const FString& PackagePath, UBlueprint* PawnBlueprint, UBlueprint* PlayerControllerBlueprint)
+	{
+		UBlueprint* GameModeBlueprint = EnsureBlueprintAsset(PackagePath, ACMWGameMode::StaticClass());
+		if (!GameModeBlueprint || !GameModeBlueprint->GeneratedClass)
+		{
+			return GameModeBlueprint;
+		}
+
+		if (AGameModeBase* GameModeDefaults = Cast<AGameModeBase>(GameModeBlueprint->GeneratedClass->GetDefaultObject()))
+		{
+			GameModeDefaults->Modify();
+			UClass* PawnClass = PawnBlueprint && PawnBlueprint->GeneratedClass
+				? static_cast<UClass*>(PawnBlueprint->GeneratedClass)
+				: static_cast<UClass*>(ACMWTopDownCharacter::StaticClass());
+			UClass* PlayerControllerClass = PlayerControllerBlueprint && PlayerControllerBlueprint->GeneratedClass
+				? static_cast<UClass*>(PlayerControllerBlueprint->GeneratedClass)
+				: static_cast<UClass*>(ACMWTopDownPlayerController::StaticClass());
+
+			GameModeDefaults->DefaultPawnClass = PawnClass;
+			GameModeDefaults->PlayerControllerClass = PlayerControllerClass;
+		}
+
+		FKismetEditorUtilities::CompileBlueprint(GameModeBlueprint);
+		GameModeBlueprint->MarkPackageDirty();
+		return GameModeBlueprint;
+	}
+
+	bool ConfigureProjectAndMapGameMode(UBlueprint* GameModeBlueprint, const FString& MapAssetPath, FString& OutError)
+	{
+		if (!GameModeBlueprint || !GameModeBlueprint->GeneratedClass)
+		{
+			OutError = TEXT("GameMode Blueprint or its generated class was null.");
+			return false;
+		}
+
+		const FString GameModeClassPath = GameModeBlueprint->GeneratedClass->GetPathName();
+		UGameMapsSettings::SetGlobalDefaultGameMode(GameModeClassPath);
+		UGameMapsSettings* GameMapsSettings = GetMutableDefault<UGameMapsSettings>();
+		GameMapsSettings->SaveConfig();
+		GameMapsSettings->TryUpdateDefaultConfigFile();
+
+		const FString MapFilename = FPackageName::LongPackageNameToFilename(MapAssetPath, FPackageName::GetMapPackageExtension());
+		UWorld* World = UEditorLoadingAndSavingUtils::LoadMap(MapFilename);
+		if (!World)
+		{
+			OutError = FString::Printf(TEXT("Failed to load map '%s'."), *MapAssetPath);
+			return false;
+		}
+
+		AWorldSettings* WorldSettings = World->GetWorldSettings();
+		if (!WorldSettings)
+		{
+			OutError = FString::Printf(TEXT("Map '%s' did not have valid WorldSettings."), *MapAssetPath);
+			return false;
+		}
+
+		WorldSettings->Modify();
+		WorldSettings->DefaultGameMode = GameModeBlueprint->GeneratedClass;
+
+		bool bHasPlayerStart = false;
+		for (TActorIterator<APlayerStart> It(World); It; ++It)
+		{
+			bHasPlayerStart = true;
+			break;
+		}
+
+		if (!bHasPlayerStart)
+		{
+			FActorSpawnParameters SpawnParameters;
+			SpawnParameters.OverrideLevel = World->PersistentLevel;
+			if (APlayerStart* PlayerStart = World->SpawnActor<APlayerStart>(APlayerStart::StaticClass(), FVector(0.0f, 0.0f, 120.0f), FRotator::ZeroRotator, SpawnParameters))
+			{
+				PlayerStart->SetActorLabel(TEXT("CMW_PlayerStart"));
+			}
+		}
+
+		World->MarkPackageDirty();
+
+		if (!UEditorLoadingAndSavingUtils::SaveMap(World, MapAssetPath))
+		{
+			OutError = FString::Printf(TEXT("Failed to save map '%s' after setting GameMode Override."), *MapAssetPath);
+			return false;
+		}
+
+		UE_LOG(LogTemp, Display, TEXT("Configured project default and map override GameMode to '%s'."), *GameModeClassPath);
+		return true;
+	}
 }
 
 UCMWBootstrapContentCommandlet::UCMWBootstrapContentCommandlet()
@@ -202,6 +339,9 @@ int32 UCMWBootstrapContentCommandlet::Main(const FString& Params)
 	UInputMappingContext* MappingContext = EnsureInputMappingContext(TEXT("/Game/Input/IMC_Player"), MoveAction, AttackAction, ToggleAction);
 	UMaterial* SharedVoxelMaterial = EnsureVoxelMaterial(TEXT("/Game/Voxel/Materials/M_VoxelVertexColor"));
 	UWidgetBlueprint* MinimapWidget = EnsureMinimapWidgetBlueprint(TEXT("/Game/UI/WBP_Minimap"));
+	UBlueprint* PawnBlueprint = EnsureBlueprintAsset(TEXT("/Game/Blueprints/BP_CMWTopDownCharacter"), ACMWTopDownCharacter::StaticClass());
+	UBlueprint* PlayerControllerBlueprint = EnsureBlueprintAsset(TEXT("/Game/Blueprints/BP_CMWTopDownPlayerController"), ACMWTopDownPlayerController::StaticClass());
+	UBlueprint* GameModeBlueprint = EnsureGameModeBlueprint(TEXT("/Game/Blueprints/BP_CMWGameMode"), PawnBlueprint, PlayerControllerBlueprint);
 	UCMWGameDataAsset* GameData = EnsureGameDataAsset(
 		TEXT("/Game/Data/DA_CMWGameData"),
 		MappingContext,
@@ -212,7 +352,7 @@ int32 UCMWBootstrapContentCommandlet::Main(const FString& Params)
 		SharedVoxelMaterial);
 
 	TArray<UObject*> AssetsToSave;
-	AssetsToSave.Append({ MoveAction, AttackAction, ToggleAction, MappingContext, SharedVoxelMaterial, MinimapWidget, GameData });
+	AssetsToSave.Append({ MoveAction, AttackAction, ToggleAction, MappingContext, SharedVoxelMaterial, MinimapWidget, PawnBlueprint, PlayerControllerBlueprint, GameModeBlueprint, GameData });
 
 	for (UObject* Asset : AssetsToSave)
 	{
@@ -230,6 +370,13 @@ int32 UCMWBootstrapContentCommandlet::Main(const FString& Params)
 		}
 	}
 
-	UE_LOG(LogTemp, Display, TEXT("Bootstrap content commandlet created/updated input, widget, material, and game data assets successfully."));
+	FString GameModeConfigurationError;
+	if (!ConfigureProjectAndMapGameMode(GameModeBlueprint, TEXT("/Game/Maps/BasicMap"), GameModeConfigurationError))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to configure GameMode Blueprint: %s"), *GameModeConfigurationError);
+		return 1;
+	}
+
+	UE_LOG(LogTemp, Display, TEXT("Bootstrap content commandlet created/updated input, widget, GameMode Blueprint, material, and game data assets successfully."));
 	return 0;
 }
