@@ -25,6 +25,11 @@
 - 새 규칙이나 예외는 `DECISION_LOG_KO.md`에 먼저 남긴다.
 - 코드, 설정, 애셋, 폴더 구조가 바뀌면 `STATE_SNAPSHOT_KO.md`를 갱신한다.
 - 단계가 끝나면 `CURRENT_PHASE_KO.md`와 `WORK_TIME_LOG_KO.md`를 함께 갱신한다.
+- 작업 시간을 줄일 수 있으면 탐색, 구현, 검증을 병렬 수행한다.
+- 병렬 수행 여부 판단에서는 토큰 비용보다 전체 리드타임 단축을 우선한다.
+- 필요하면 `generator`와 `evaluator`를 분리된 컨텍스트로 운영한다.
+- `generator`는 초안 구현과 코드 생산, `evaluator`는 리뷰, 리스크 점검, 검증 관점 평가를 맡는다.
+- 두 에이전트는 직접 통신하지 않고 메인 에이전트가 결과와 피드백을 중계한다.
 
 ## 저장 구조
 
@@ -42,6 +47,7 @@
 - 대신 `Docs/HarnessSeed`를 `Docs/Harness`로 복원하는 방식으로 초기화한다.
 - 실행이 끝난 결과는 `Docs/HarnessRuns/<run-id>`로 보관해 seed 대비 결과 비교가 가능해야 한다.
 - seed는 고정 입력, harness는 가변 출력으로 취급한다.
+- `generator/evaluator` 분리 운영을 사용했다면 역할 분리와 메인 에이전트 중계 방식은 `CURRENT_PHASE_KO.md`와 `WORK_TIME_LOG_KO.md`에 남긴다.
 
 ## 관련 스크립트
 

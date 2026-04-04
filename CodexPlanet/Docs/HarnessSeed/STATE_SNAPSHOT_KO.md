@@ -81,6 +81,7 @@
 - `Tools/harness/archive_harness.py`
 - `Tools/harness/README.md`
 - 프로젝트 초기 설정 요청서 `UE5_PROJECT_BOOTSTRAP_REQUEST_KO.md`가 루트에 존재한다.
+- 문서에는 병렬 수행 허용 규칙과 `generator/evaluator` 분리 운영 원칙이 반영되어 있다.
 
 ## 현재 공백
 
@@ -118,6 +119,7 @@
 - 이후 행성과 오브젝트를 함께 다루는 표면 판정과 적층 배치를 추가한다.
 - VOX 프랍 제작과 import는 배치 골격이 준비된 뒤 바로 이어서 붙인다.
 - 하네스를 다시 시작하고 싶을 때는 `Tools/harness/reset_harness.py --force`를 사용한다.
+- 리드타임 단축 이득이 있으면 탐색, 구현, 검증을 병렬로 나누는 방식을 허용한다.
 - UI 단계에서는 `고리 NS`/`위성` 추가용 `WBP`를 에디터 코드로 저장하는 경로를 마련한다.
 
 ## 갱신 규칙
