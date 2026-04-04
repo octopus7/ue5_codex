@@ -8,6 +8,8 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/TextBlock.h"
@@ -62,10 +64,20 @@ FString UCodexEditorAssetLibrary::CreateOrbitControlsWidgetBlueprint(const FStri
 	WidgetTree->Modify();
 	WidgetTree->RootWidget = nullptr;
 
+	UCanvasPanel* RootCanvas = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("RootCanvas"));
+	WidgetTree->RootWidget = RootCanvas;
+
 	UBorder* RootBorder = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("RootBorder"));
 	RootBorder->SetPadding(FMargin(18.0f, 16.0f));
-	RootBorder->SetBrushColor(FLinearColor(0.05f, 0.10f, 0.14f, 0.94f));
-	WidgetTree->RootWidget = RootBorder;
+	RootBorder->SetBrushColor(FLinearColor(0.05f, 0.10f, 0.14f, 0.92f));
+
+	if (UCanvasPanelSlot* BorderSlot = RootCanvas->AddChildToCanvas(RootBorder))
+	{
+		BorderSlot->SetAutoSize(true);
+		BorderSlot->SetPosition(FVector2D(14.0f, 14.0f));
+		BorderSlot->SetAnchors(FAnchors(0.0f, 0.0f));
+		BorderSlot->SetAlignment(FVector2D::ZeroVector);
+	}
 
 	UVerticalBox* ContentBox = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("ContentBox"));
 	RootBorder->SetContent(ContentBox);

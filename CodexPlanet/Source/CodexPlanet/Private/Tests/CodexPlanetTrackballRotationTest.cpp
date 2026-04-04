@@ -97,6 +97,7 @@ bool FCodexPlanetOrbitControlsWidgetAssetTest::RunTest(const FString& Parameters
 
 	if (WidgetBlueprint->WidgetTree)
 	{
+		TestNotNull(TEXT("RootCanvas should exist"), WidgetBlueprint->WidgetTree->FindWidget(TEXT("RootCanvas")));
 		TestNotNull(TEXT("RootBorder should exist"), WidgetBlueprint->WidgetTree->FindWidget(TEXT("RootBorder")));
 		TestNotNull(TEXT("AddRingButton should exist"), WidgetBlueprint->WidgetTree->FindWidget(TEXT("AddRingButton")));
 		TestNotNull(TEXT("AddSatelliteButton should exist"), WidgetBlueprint->WidgetTree->FindWidget(TEXT("AddSatelliteButton")));

@@ -25,6 +25,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Planet")
 	FTransform DefaultPlanetTransform = FTransform::Identity;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Planet", meta = (ClampMin = "0.0"))
+	float DefaultPlanetGroundClearance = 250.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Rendering")
+	bool bDisableTemplateHeightFog = true;
+
 private:
 	ACodexPlanetActor* EnsurePrimaryPlanet();
+	void NormalizePlanetPresentation(ACodexPlanetActor* PlanetActor) const;
+	void DisableTemplateHeightFog() const;
 };

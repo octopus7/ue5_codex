@@ -460,6 +460,10 @@ void ACodexPlanetPlayerController::EnsureOrbitControlsWidget()
 	if (OrbitControlsWidgetInstance)
 	{
 		OrbitControlsWidgetInstance->AddToViewport(5);
+		OrbitControlsWidgetInstance->SetAnchorsInViewport(FAnchors(0.0f, 0.0f));
+		OrbitControlsWidgetInstance->SetAlignmentInViewport(FVector2D::ZeroVector);
+		OrbitControlsWidgetInstance->SetPositionInViewport(FVector2D(14.0f, 14.0f));
+		OrbitControlsWidgetInstance->SetDesiredSizeInViewport(FVector2D(360.0f, 116.0f));
 		UE_LOG(LogTemp, Log, TEXT("Orbit controls widget created and added to viewport."));
 	}
 }
