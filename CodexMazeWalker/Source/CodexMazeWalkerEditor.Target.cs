@@ -10,6 +10,6 @@ public class CodexMazeWalkerEditorTarget : TargetRules
 		Type = TargetType.Editor;
 		DefaultBuildSettings = BuildSettingsVersion.V6;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_7;
-		ExtraModuleNames.Add("CodexMazeWalker");
+		ExtraModuleNames.AddRange(new string[] { "CodexMazeWalker", "CodexMazeWalkerEditor" });
 	}
 }
