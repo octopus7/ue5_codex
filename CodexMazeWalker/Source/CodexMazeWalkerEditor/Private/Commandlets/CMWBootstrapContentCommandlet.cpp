@@ -294,18 +294,25 @@ namespace
 		WorldSettings->Modify();
 		WorldSettings->DefaultGameMode = GameModeBlueprint->GeneratedClass;
 
+		constexpr float TargetPlayerStartZ = 240.0f;
 		bool bHasPlayerStart = false;
 		for (TActorIterator<APlayerStart> It(World); It; ++It)
 		{
 			bHasPlayerStart = true;
-			break;
+
+			const FVector CurrentLocation = It->GetActorLocation();
+			if (CurrentLocation.Z < TargetPlayerStartZ)
+			{
+				It->Modify();
+				It->SetActorLocation(FVector(CurrentLocation.X, CurrentLocation.Y, TargetPlayerStartZ), false, nullptr, ETeleportType::TeleportPhysics);
+			}
 		}
 
 		if (!bHasPlayerStart)
 		{
 			FActorSpawnParameters SpawnParameters;
 			SpawnParameters.OverrideLevel = World->PersistentLevel;
-			if (APlayerStart* PlayerStart = World->SpawnActor<APlayerStart>(APlayerStart::StaticClass(), FVector(0.0f, 0.0f, 120.0f), FRotator::ZeroRotator, SpawnParameters))
+			if (APlayerStart* PlayerStart = World->SpawnActor<APlayerStart>(APlayerStart::StaticClass(), FVector(0.0f, 0.0f, TargetPlayerStartZ), FRotator::ZeroRotator, SpawnParameters))
 			{
 				PlayerStart->SetActorLabel(TEXT("CMW_PlayerStart"));
 			}

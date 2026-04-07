@@ -26,6 +26,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	void EnsureSpawnedAboveWalkableSurface();
 	void HandleMove(const FInputActionValue& InputActionValue);
 	void HandleAttack();
 	void HandleToggleAttackMode();

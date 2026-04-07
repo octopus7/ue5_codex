@@ -1,7 +1,9 @@
 #include "Systems/Input/CMWTopDownCharacter.h"
 
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/World.h"
 #include "EnhancedInputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -37,6 +39,7 @@ ACMWTopDownCharacter::ACMWTopDownCharacter()
 	PlayerVisualMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	PlayerVisualMesh->SetGenerateOverlapEvents(false);
 	PlayerVisualMesh->SetRelativeLocation(FVector(-87.5f, -62.5f, -96.0f));
+	PlayerVisualMesh->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
 	PlayerVisualMesh->SetRelativeScale3D(FVector(0.45f));
 	PlayerVisualMesh->SetCastShadow(true);
 
@@ -65,6 +68,8 @@ ACMWTopDownCharacter::ACMWTopDownCharacter()
 void ACMWTopDownCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	EnsureSpawnedAboveWalkableSurface();
 }
 
 void ACMWTopDownCharacter::Tick(float DeltaSeconds)
@@ -111,6 +116,35 @@ void ACMWTopDownCharacter::SetAimWorldLocation(const FVector& NewAimWorldLocatio
 {
 	AimWorldLocation = NewAimWorldLocation;
 	bHasAimWorldLocation = true;
+}
+
+void ACMWTopDownCharacter::EnsureSpawnedAboveWalkableSurface()
+{
+	const UCapsuleComponent* CharacterCapsule = GetCapsuleComponent();
+	UWorld* World = GetWorld();
+	if (!CharacterCapsule || !World)
+	{
+		return;
+	}
+
+	const FVector CurrentLocation = GetActorLocation();
+	const FVector TraceStart = CurrentLocation + FVector(0.0f, 0.0f, 1000.0f);
+	const FVector TraceEnd = CurrentLocation - FVector(0.0f, 0.0f, 2000.0f);
+
+	FHitResult GroundHit;
+	FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(CMWSpawnGroundTrace), false, this);
+	if (!World->LineTraceSingleByChannel(GroundHit, TraceStart, TraceEnd, ECC_Visibility, QueryParams))
+	{
+		return;
+	}
+
+	const float DesiredActorZ = GroundHit.ImpactPoint.Z + CharacterCapsule->GetScaledCapsuleHalfHeight() + 2.0f;
+	if (CurrentLocation.Z + 0.5f >= DesiredActorZ)
+	{
+		return;
+	}
+
+	SetActorLocation(FVector(CurrentLocation.X, CurrentLocation.Y, DesiredActorZ), false, nullptr, ETeleportType::TeleportPhysics);
 }
 
 void ACMWTopDownCharacter::HandleMove(const FInputActionValue& InputActionValue)
