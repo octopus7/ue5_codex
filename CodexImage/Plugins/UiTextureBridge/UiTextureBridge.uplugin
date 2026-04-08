@@ -1,0 +1,18 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0.0",
+	"FriendlyName": "UI Texture Bridge",
+	"Description": "Runs a local editor HTTP bridge for importing UI textures into the current project.",
+	"Category": "Editor",
+	"CanContainContent": false,
+	"IsBetaVersion": true,
+	"EnabledByDefault": true,
+	"Modules": [
+		{
+			"Name": "UiTextureBridge",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
+	]
+}
