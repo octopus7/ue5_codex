@@ -26,7 +26,7 @@ public:
 private:
 	void RefreshInteractionStates();
 	void LogFocusTransition(UCodexInteractionComponent* PreviousFocus, UCodexInteractionComponent* NewFocus);
-	void AddDebugMessage(const FString& Message, const FColor& Color = FColor::White) const;
+	void AddDebugMessage(const FString& Message, const FColor& Color = FColor::White, bool bAddOnScreen = true) const;
 	FString DescribeInteractionComponent(const UCodexInteractionComponent* InteractionComponent) const;
 
 	UPROPERTY(Transient)

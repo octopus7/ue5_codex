@@ -178,18 +178,18 @@ void UCodexInteractionSubsystem::LogFocusTransition(UCodexInteractionComponent* 
 {
 	if (IsValid(PreviousFocus))
 	{
-		AddDebugMessage(FString::Printf(TEXT("Interaction Focus End: %s"), *DescribeInteractionComponent(PreviousFocus)), FColor::Cyan);
+		AddDebugMessage(FString::Printf(TEXT("Interaction Focus End: %s"), *DescribeInteractionComponent(PreviousFocus)), FColor::Cyan, false);
 	}
 
 	if (IsValid(NewFocus))
 	{
-		AddDebugMessage(FString::Printf(TEXT("Interaction Focus Start: %s"), *DescribeInteractionComponent(NewFocus)), FColor::Green);
+		AddDebugMessage(FString::Printf(TEXT("Interaction Focus Start: %s"), *DescribeInteractionComponent(NewFocus)), FColor::Green, false);
 	}
 }
 
-void UCodexInteractionSubsystem::AddDebugMessage(const FString& Message, const FColor& Color) const
+void UCodexInteractionSubsystem::AddDebugMessage(const FString& Message, const FColor& Color, const bool bAddOnScreen) const
 {
-	if (GEngine)
+	if (bAddOnScreen && GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 1.5f, Color, Message);
 	}

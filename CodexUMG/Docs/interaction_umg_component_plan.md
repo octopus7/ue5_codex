@@ -15,7 +15,7 @@
 5. `상호작용가능상태`가 되면 원 마커 오른쪽에 흰 배경 박스와 검은 텍스트로 상호작용 문구가 표시된다.
 6. 실제로 가장 가까운 대상 하나만 `상호작용가능상태`를 가질 수 있으므로, 흰 박스 + 검은 텍스트 프롬프트는 항상 하나만 보인다.
 7. 상호작용 입력이 발생하면 컴포넌트는 직접 처리하지 않고 전역 서브시스템에 요청만 전달한다.
-8. 전역 서브시스템은 포커스 시작, 포커스 종료, 상호작용 요청, 상호작용 종료 등의 이벤트를 스크린 디버그 스트링으로 출력한다.
+8. 전역 서브시스템은 상호작용 요청, 상호작용 종료, 후보 없음 같은 중요한 이벤트만 스크린 디버그 스트링으로 출력하고, 포커스 시작/종료는 로그로만 남긴다.
 9. 테스트용 `BP_Interactable_Apple`, `BP_Interactable_Strawberry`가 실제로 존재하고, 둘 다 `먹기` 상호작용으로 동작한다.
 10. 관련 텍스처, 위젯 애셋, 테스트 Blueprint 애셋은 모두 에디터 모듈 + 커맨드렛 경로로 생성 가능해야 한다.
 
@@ -131,7 +131,7 @@
 - 선택 이유
   - 월드 단위 틱이 필요하다.
   - 가장 가까운 대상 판정을 중앙에서 수행해야 한다.
-  - 스크린 디버그 출력과 포커스 상태는 월드 문맥과 강하게 연결된다.
+  - 디버그 출력과 포커스 상태는 월드 문맥과 강하게 연결된다.
 - 포커스 결정 규칙
   - `거리 > 가시 거리`면 `Hidden`
   - `상호작용 거리 < 거리 <= 가시 거리`면 `VisibleRange`
@@ -242,7 +242,7 @@
 9. [Source/CodexUMG/Private/CodexTopDownPlayerController.cpp](d:\github\ue5_codex\CodexUMG\Source\CodexUMG\Private\CodexTopDownPlayerController.cpp)에 기존 바인딩 패턴과 동일한 방식으로 상호작용 바인딩을 추가한다.
 10. 플레이어 컨트롤러는 직접 대상 액터를 찾지 않고 서브시스템에 "현재 상호작용 요청"만 보낸다.
 11. 서브시스템은 현재 `Interactable` 상태인 컴포넌트가 있으면 `FCodexInteractionRequest`를 만든다.
-12. 서브시스템은 스크린 디버그 스트링을 출력한다.
+12. 서브시스템은 상호작용 요청/종료와 후보 없음에 대해서만 스크린 디버그 스트링을 출력한다.
 13. 서브시스템은 대상 액터가 `UCodexInteractionTarget` 인터페이스를 구현한 경우에만 후속 콜을 전달한다.
 14. 테스트용 사과/딸기 BP는 이 콜을 받아 `먹기` 동작을 수행한다.
 
@@ -369,7 +369,7 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 - Agent E: 테스트 자산 검증 담당
   - PIE에서 상태 전환 확인
   - 프롬프트 단일 표시 확인
-  - 디버그 스트링 확인
+  - 요청/종료 디버그 스트링 확인
 - Agent F: 평가 전용 담당
   - 구현 에이전트와 분리
   - 구조 위반, 누락, 병렬화 미흡 지점 검토
@@ -384,10 +384,9 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 - `Build.cs`, 공용 애셋 경로 상수, 공용 헤더 이름 변경은 메인 작업자가 순차 반영한다.
 
 ## 스크린 디버그 출력 기준
-- 포커스 시작
-  - `Interaction Focus Start: Apple / Eat`
-- 포커스 종료
-  - `Interaction Focus End: Apple / Eat`
+- 포커스 시작/종료
+  - 스크린 디버그 스트링으로 출력하지 않는다.
+  - 필요 시 Output Log에만 `Interaction Focus Start: Apple / Eat`, `Interaction Focus End: Apple / Eat` 형식으로 남긴다.
 - 요청 시작
   - `Interaction Requested: Apple / Eat`
 - 요청 종료
@@ -416,7 +415,8 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 - 상호작용 거리 안에 여러 대상이 있어도 흰 박스 + 검은 텍스트 프롬프트는 하나만 보이는가
 - 가장 가까운 대상이 바뀌면 프롬프트 소유권도 안정적으로 이동하는가
 - 상호작용 입력이 들어왔을 때 컴포넌트가 직접 처리하지 않고 서브시스템만 호출하는가
-- 서브시스템이 스크린 디버그 스트링을 출력하는가
+- 서브시스템이 상호작용 요청/종료와 후보 없음에 대해서만 스크린 디버그 스트링을 출력하는가
+- 포커스 시작/종료는 스크린 디버그 스트링으로 출력하지 않는가
 - 사과/딸기 BP가 `먹기` 반응을 실제로 수행하는가
 - 액터가 사라지거나 파괴될 때 서브시스템 등록 해제가 안전하게 일어나는가
 
