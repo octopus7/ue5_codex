@@ -13,7 +13,10 @@
 3. [player_projectile_firing_plan.md](./player_projectile_firing_plan.md)
    플레이어가 투사체를 발사하는 기능의 상위 구현 계획이다. 투사체 Blueprint, 발사 입력, `DA_` 기반 참조 연결, `GameInstance` 연계, 평가 에이전트 분리 원칙 등을 정의한다.
 
-4. [vox_mesh_asset_pipeline_plan.md](./vox_mesh_asset_pipeline_plan.md)
+4. [interaction_umg_component_plan.md](./interaction_umg_component_plan.md)
+   플레이어가 가까워질 때 상호작용 가능 여부를 UMG 위젯으로 표시하는 컴포넌트 구현 계획이다. 실제 위젯 애셋 생성, 전역 서브시스템 라우팅, 단일 프롬프트 선택, 테스트용 사과/딸기 Blueprint, 에이전트 병렬화 지침을 포함한다.
+
+5. [vox_mesh_asset_pipeline_plan.md](./vox_mesh_asset_pipeline_plan.md)
    `.vox` 원본 파일을 UE5용 `StaticMesh` 에셋으로 변환하는 파이프라인 계획이다. 공용 VOX 머터리얼, 버텍스 컬러 사용, 매니페스트 구조, VOX 전용 커맨드렛과 산출물 경로를 정리한다.
 
 ## 파일별 요약
@@ -36,8 +39,16 @@
 - 투사체 Blueprint와 관련 설정을 `DA_` 계열 자산에 두고, 플레이어는 직접 투사체 클래스를 들지 않도록 제한한다.
 - 기존 입력 체계 재사용 우선, 필요 시 최소 범위 입력 확장, 구현 에이전트와 평가 에이전트 분리 원칙을 정의한다.
 
+### [interaction_umg_component_plan.md](./interaction_umg_component_plan.md)
+
+- 플레이어 접근에 따라 월드 공간 UMG로 상호작용 가능 여부를 보여주는 컴포넌트 계획 문서다.
+- 실제 `Widget Blueprint`를 에디터 모듈 코드와 `Commandlet`로 생성하고, 전역 서브시스템이 가장 가까운 대상 하나만 `상호작용가능상태`로 선택하는 구조를 정의한다.
+- 테스트용 사과/딸기 Blueprint, `먹기` 상호작용, 스크린 디버그 출력, 병렬 에이전트 운영 지침까지 포함한다.
+
 ### [vox_mesh_asset_pipeline_plan.md](./vox_mesh_asset_pipeline_plan.md)
 
 - 테스트용 저해상도 VOX 메시를 제작하고 UE5 `StaticMesh`로 자동 생성하는 파이프라인 문서다.
 - `32 x 32 x 32` 해상도, 버텍스 컬러 표현, 공용 머터리얼 1개 사용, 에디터 UI 없이 `Commandlet`로 생성하는 조건을 고정한다.
 - 소스 아트 위치, 생성 대상 메시 카테고리, UE 에셋 출력 경로, 매니페스트와 자동화 범위를 설명한다.
+- `SM_Vox_RainbowDiagnostic` 같은 고채도 검증 메시를 함께 생성해, 원본 팔레트 저채도와 컬러스페이스 버그를 구분하는 절차도 포함한다.
+- 최근 기준으로는 샘플 팔레트 전체 채도를 높이고, `GenerateVoxPreviewPngs.py`로 비스듬한 PNG 미리보기까지 같이 생성하는 운영 절차를 포함한다.
