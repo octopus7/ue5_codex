@@ -322,17 +322,25 @@ namespace
 			PromptBackground->SetContent(PromptText);
 		}
 
-		ConfigureCanvasSlot(*MarkerGroup, FVector2D(0.0f, 16.0f), true, FVector2D::ZeroVector);
-		ConfigureCanvasSlot(*PromptBackground, FVector2D(36.0f, 32.0f), true, FVector2D(0.0f, 0.5f));
+		ConfigureCanvasSlot(*MarkerGroup, FVector2D(0.0f, 8.0f), true, FVector2D::ZeroVector);
+		ConfigureCanvasSlot(*PromptBackground, FVector2D(56.0f, 32.0f), true, FVector2D(0.0f, 0.5f));
 		ConfigureOverlaySlot(*FilledCircle);
 		ConfigureOverlaySlot(*OuterRing);
 
-		FilledCircle->SetBrushFromTexture(&FilledCircleTexture, true);
-		FilledCircle->SetDesiredSizeOverride(FVector2D(32.0f, 32.0f));
+		FilledCircle->SetBrushFromTexture(&FilledCircleTexture, false);
+		{
+			FSlateBrush Brush = FilledCircle->GetBrush();
+			Brush.ImageSize = FVector2D(48.0f, 48.0f);
+			FilledCircle->SetBrush(Brush);
+		}
 		FilledCircle->SetRenderOpacity(0.0f);
 
-		OuterRing->SetBrushFromTexture(&OuterRingTexture, true);
-		OuterRing->SetDesiredSizeOverride(FVector2D(32.0f, 32.0f));
+		OuterRing->SetBrushFromTexture(&OuterRingTexture, false);
+		{
+			FSlateBrush Brush = OuterRing->GetBrush();
+			Brush.ImageSize = FVector2D(48.0f, 48.0f);
+			OuterRing->SetBrush(Brush);
+		}
 		OuterRing->SetRenderOpacity(0.0f);
 
 		PromptBackground->SetPadding(FMargin(10.0f, 4.0f));
@@ -586,10 +594,10 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 		return false;
 	}
 
-	const TArray64<uint8> FilledCirclePixels = BuildTexturePixels(32, 0.0f, 8.0f);
-	const TArray64<uint8> OuterRingPixels = BuildTexturePixels(32, 10.0f, 12.0f);
-	ConfigureTexture(*FilledCircleTexture, FilledCirclePixels, 32);
-	ConfigureTexture(*OuterRingTexture, OuterRingPixels, 32);
+	const TArray64<uint8> FilledCirclePixels = BuildTexturePixels(64, 0.0f, 16.0f);
+	const TArray64<uint8> OuterRingPixels = BuildTexturePixels(64, 20.0f, 24.0f);
+	ConfigureTexture(*FilledCircleTexture, FilledCirclePixels, 64);
+	ConfigureTexture(*OuterRingTexture, OuterRingPixels, 64);
 
 	UWidgetBlueprint* IndicatorWidget = CreateWidgetBlueprint(UIPath, IndicatorWidgetName, UCodexInteractionIndicatorWidget::StaticClass());
 	if (IndicatorWidget == nullptr)

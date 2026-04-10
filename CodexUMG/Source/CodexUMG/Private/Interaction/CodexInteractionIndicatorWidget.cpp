@@ -53,7 +53,7 @@ void UCodexInteractionIndicatorWidget::RefreshVisualState() const
 	if (IMG_OuterRing)
 	{
 		IMG_OuterRing->SetVisibility(bShouldTickMarker ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-		IMG_OuterRing->SetRenderOpacity(CurrentVisibleAlpha * 0.45f);
+		IMG_OuterRing->SetRenderOpacity(CurrentVisibleAlpha * 0.6f);
 		const float RingScale = FMath::Lerp(1.6f, 1.0f, CurrentVisibleAlpha);
 		IMG_OuterRing->SetRenderScale(FVector2D(RingScale, RingScale));
 	}

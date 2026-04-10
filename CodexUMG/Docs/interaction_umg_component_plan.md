@@ -187,32 +187,41 @@
 ### `T_InteractionFilledCircle`
 - 용도
   - `IMG_FilledCircle` 브러시 텍스처
+- 해상도
+  - `64x64`
 - 형상
-  - 중심 기준 반경 `8`
-  - 반경 `8` 내부는 흰색 + 알파 유효 영역
-  - 반경 `8` 바깥은 완전 투명
+  - 중심 기준 반경 `16`
+  - 반경 `16` 내부는 흰색 + 알파 유효 영역
+  - 반경 `16` 바깥은 완전 투명
 
 ### `T_InteractionOuterRing`
 - 용도
   - `IMG_OuterRing` 브러시 텍스처
+- 해상도
+  - `64x64`
 - 형상
-  - 중심 기준 바깥 반경 `12`
-  - 링 두께 `2`
-  - 따라서 안쪽 반경은 `10`
-  - 반경 `10 ~ 12` 구간만 흰색 + 알파 유효 영역
-  - 반경 `< 10` 및 `> 12` 영역은 완전 투명
+  - 중심 기준 바깥 반경 `24`
+  - 링 두께 `4`
+  - 따라서 안쪽 반경은 `20`
+  - 반경 `20 ~ 24` 구간만 흰색 + 알파 유효 영역
+  - 반경 `< 20` 및 `> 24` 영역은 완전 투명
 
 ## 권장 시각 파라미터
 - 채워진 원
   - 사용 텍스처: `T_InteractionFilledCircle`
+  - 브러시 크기: `48x48`
   - `Hidden -> VisibleRange`: `Opacity 0.0 -> 1.0`
 - 동심원
   - 사용 텍스처: `T_InteractionOuterRing`
-  - `Hidden -> VisibleRange`: `Opacity 0.0 -> 0.45`
+  - 브러시 크기: `48x48`
+  - `Hidden -> VisibleRange`: `Opacity 0.0 -> 0.6`
   - `Hidden -> VisibleRange`: `Scale 1.6 -> 1.0`
 - 프롬프트 박스
   - `VisibleRange -> Interactable`: `Opacity 0.0 -> 1.0`
   - `VisibleRange -> Interactable`: X 오프셋 `+12 -> 0`
+- 위젯 컴포넌트
+  - `DrawSize`: `280x72`
+  - 피벗: 마커 중심이 액터 위치에 오도록 X 기준 약 `24 / 280`
 - 전환 시간
   - 0.15초에서 0.25초 사이의 짧은 보간을 기본값으로 둔다.
 - 역방향 전환
@@ -278,6 +287,9 @@
   - `TXT_Prompt`
 - `IMG_FilledCircle`는 `T_InteractionFilledCircle`를 브러시로 사용한다.
 - `IMG_OuterRing`는 `T_InteractionOuterRing`를 브러시로 사용한다.
+- `IMG_FilledCircle`, `IMG_OuterRing`의 브러시 크기는 자산 생성 시 `Brush.ImageSize = 48x48`로 직접 저장한다.
+- `SetDesiredSizeOverride()`만 호출하는 방식에 의존하지 않는다.
+  - 이유: 에디터 코드로 `Widget Blueprint`를 생성할 때는 디자이너 자산에 크기가 저장되지 않아 `Image Size = 0,0`이 남을 수 있다.
 - 프롬프트 박스는 원 마커 오른쪽에 배치한다.
 - 기본 가시성은 숨김 상태여야 한다.
 - 위젯 트리 생성은 코드로 끝내고, 애니메이션은 런타임 C++ 보간으로 처리한다.
@@ -286,10 +298,12 @@
 - 에디터 모듈은 `UTexture2D` 애셋을 직접 생성하거나 갱신한다.
 - 각 텍스처의 픽셀은 중심 좌표와 픽셀 중심 간 거리를 계산해 채운다.
 - `T_InteractionFilledCircle`
-  - 거리 `<= 8`인 픽셀은 `RGBA = 255,255,255,255`
+  - 크기 `64x64`
+  - 거리 `<= 16`인 픽셀은 `RGBA = 255,255,255,255`
   - 그 외 픽셀은 `RGBA = 255,255,255,0`
 - `T_InteractionOuterRing`
-  - 거리 `>= 10 && <= 12`인 픽셀은 `RGBA = 255,255,255,255`
+  - 크기 `64x64`
+  - 거리 `>= 20 && <= 24`인 픽셀은 `RGBA = 255,255,255,255`
   - 그 외 픽셀은 `RGBA = 255,255,255,0`
 - 위젯은 머터리얼 없이 기본 이미지 브러시만으로도 원하는 형상을 표시할 수 있어야 한다.
 
@@ -386,12 +400,13 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 - 상호작용 구현이 기존 `Enhanced Input` 구조를 그대로 따라가도록 설계되었는가
 - 기존 `Enhanced Input`이 없을 경우 즉시 중단하고 사용자 요청으로 전환하는 규칙이 반영되었는가
 - `Commandlet` 실행만으로 `T_InteractionFilledCircle`, `T_InteractionOuterRing`가 실제 애셋으로 생성되는가
-- 채워진 원 텍스처가 반경 `8`의 흰색 알파 마스크로 생성되는가
-- 링 텍스처가 바깥 반경 `12`, 두께 `2`, 안쪽 반경 `10`의 흰색 알파 마스크로 생성되는가
+- 채워진 원 텍스처가 반경 `16`의 흰색 알파 마스크로 생성되는가
+- 링 텍스처가 바깥 반경 `24`, 두께 `4`, 안쪽 반경 `20`의 흰색 알파 마스크로 생성되는가
 - `IA_Interact`가 실제 애셋으로 생성되는가
 - `IA_Interact`가 기존 `IMC_TopDown`에 추가되는가
 - `IA_Interact`의 키 매핑이 `F` 키인가
 - `Commandlet` 실행만으로 `WBP_InteractionIndicator`가 실제 애셋으로 생성되는가
+- `WBP_InteractionIndicator`의 `IMG_FilledCircle`, `IMG_OuterRing` 브러시 `Image Size`가 `0,0`이 아닌 명시값으로 저장되는가
 - `Commandlet` 실행만으로 테스트용 사과/딸기 BP가 실제 애셋으로 생성되는가
 - `Commandlet` 실행만으로 `BasicMap`에 테스트용 사과/딸기가 실제로 배치되는가
 - 프로젝트 실행 직후 `BasicMap`에서 사과/딸기가 카메라에 보이는가
