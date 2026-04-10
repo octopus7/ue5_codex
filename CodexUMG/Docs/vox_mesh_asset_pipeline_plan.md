@@ -151,6 +151,21 @@
   - UE 기록은 `(0, 2, 1)` / `(0, 3, 2)`를 사용한다.
 - 이 규칙을 빼먹으면 메시 자세는 정상이어도 front face와 노멀 방향이 반대로 보일 수 있다.
 
+### 삼각형 인덱스 재발 방지 규칙
+- 이 프로젝트에서는 축 변환식, face corner 순서, 최종 triangle index 순서를 한 세트로 취급한다.
+- 현재 기준 구현에서 face corner 순서를 유지하는 한, 최종 triangle index 기준값은 `(0, 2, 1)` / `(0, 3, 2)`다.
+- `FaceDefinitions` 또는 `GetFaceCorners`의 corner 순서를 바꾸면, triangle index도 함께 다시 계산해야 한다.
+- corner 순서를 그대로 둔 채 triangle index 기본값만 `(0, 1, 2)` / `(0, 2, 3)`로 바꾸지 않는다.
+  - 이 경우 여섯 방향 face가 전부 안쪽을 향하는 회귀가 다시 발생할 수 있다.
+- triangle index를 조건부로 뒤집는 로직을 넣더라도, 기준은 "변환된 코너로 계산한 후보 노멀"과 "변환된 면 노멀"이 같은 바깥 방향을 유지하는지 여부여야 한다.
+- 구현 단순화를 이유로 "face corner 배열 재정의"와 "triangle 반전 로직 변경"을 동시에 적용하지 않는다.
+  - 둘 다 함께 바꾸면 겉보기에는 대칭처럼 보여도 실제 front face가 다시 반대로 뒤집힐 수 있다.
+- `CodexVoxMeshBuilder` 리팩터링 시 아래 네 항목은 항상 같이 검토한다.
+  - `TransformPosition`
+  - `TransformDirection`
+  - face별 corner 순서
+  - `AppendTriangle`에 넘기는 최종 인덱스 순서
+
 ### 절대 금지 사항
 - VOX 좌표를 `UE (X, Y, Z)`로 그대로 사용하지 않는다.
   - 이 경우 `Y-up` 원본이 UE에서 옆으로 눕는다.
@@ -184,6 +199,8 @@
 10. 딸기만 부드럽고 `SM_Vox_RainbowDiagnostic`는 선명하면 기존 샘플 팔레트가 원래 저채도인 것이다.
 11. 색이 전반적으로 한 칸씩 밀린 것처럼 보이면 `.vox` `RGBA` 청크 직렬화부터 재검토한다.
 12. 레인보우 메시까지 전체적으로 밝고 뿌옇게 보이면 `sRGB -> Linear` 변환 누락 여부를 확인한다.
+13. `SM_Vox_Pig`, `SM_Vox_WhiteChicken`, `SM_Vox_Fence`를 열었을 때 내부 면만 보이는 느낌이나 backface culling 이상이 없어야 한다.
+14. VOX 메시 빌더를 수정했다면, 최소 한 번은 `Face Normal` 표시와 `Unlit` 보기 둘 다로 앞면 방향을 확인한다.
 
 현재 구현 기준 기대 확인값 예시:
 - `SM_Vox_Pig`: `extent=(42.5, 22.5, 32.5)`
@@ -216,6 +233,8 @@
   - 버텍스 컬러를 기록한다.
   - VOX 팔레트 sRGB 색을 선형 버텍스 컬러로 변환해서 저장한다.
   - `VOX -> UE` 축 변환, winding 반전, 피벗 보정을 담당한다.
+  - face corner 순서와 triangle index 순서를 독립적으로 바꾸지 않도록 유지한다.
+  - 리팩터링 후에도 기준 인덱스 `(0, 2, 1)` / `(0, 3, 2)`가 바깥 면을 유지하는지 검증한다.
 - `CodexVoxMaterialBuilder`
   - 공용 머터리얼 `M_VoxVertexColor`를 생성 또는 갱신한다.
 - `CodexVoxAssetGenerator`
@@ -342,6 +361,8 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 - face당 4개 vertex instance와 2개 triangle을 생성한다.
 - 버텍스 컬러는 face 단위로 동일값을 넣는다.
 - UV는 공통 기본값만 유지하고, 셰이딩 문제는 winding과 노멀 기준으로 해결한다.
+- face corner 배열을 유지한다면 triangle 생성 순서는 `(0, 2, 1)` / `(0, 3, 2)`를 기준값으로 사용한다.
+- face corner 배열을 변경했다면 기존 인덱스를 그대로 재사용하지 말고, 여섯 방향 face 각각에서 바깥 노멀을 다시 검증한다.
 
 ### 빌드 세팅
 - `bRecomputeNormals = false`
@@ -405,6 +426,8 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 - VOX 샘플 생성 스크립트가 `RGBA` 청크를 MagicaVoxel 규칙대로 직렬화하는지 먼저 확인한다.
 - `VOX -> UE` 변환식이나 winding 규칙을 바꾸려면 캐릭터 썸네일, 바닥 타일, 울타리 결과를 다시 검증한다.
 - 메시가 다시 눕거나 노멀이 뒤집히면 `CodexVoxMeshBuilder`의 축 변환, 삼각형 순서, 피벗 규칙부터 확인한다.
+- triangle index 기본값을 바꾸거나 조건부 반전 로직을 단순화했다면, 기존 face corner 순서를 전제로 한 코드인지 먼저 확인한다.
+- "코너 순서 변경"과 "인덱스 반전 로직 변경"이 한 번에 같이 들어갔다면, 둘 중 하나를 되돌려 원인을 분리한 뒤 다시 검증한다.
 - 색이 이상하면 머터리얼보다 먼저 `GenerateSampleVoxSources.ps1`의 팔레트 엔트리 배치와 `CodexVoxParser`의 `RGBA` 해석부터 확인한다.
 - 색이 탁하게 보이는 이슈는 `SM_Vox_Strawberry`와 `SM_Vox_RainbowDiagnostic`를 같이 열어 authored palette 문제인지 컬러스페이스 문제인지 먼저 분리한다.
 - 팔레트나 복셀 실루엣을 바꾸면 UE를 보기 전에 `GenerateVoxPreviewPngs.py`로 비스듬한 PNG를 다시 뽑아 SourceArt 차이부터 확인한다.
