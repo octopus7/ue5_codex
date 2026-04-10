@@ -14,8 +14,13 @@
 #include "IImageWrapperModule.h"
 #include "MaterialEditingLibrary.h"
 #include "Materials/Material.h"
+#include "Materials/MaterialExpressionDDX.h"
+#include "Materials/MaterialExpressionDDY.h"
 #include "Materials/MaterialExpressionConstant.h"
+#include "Materials/MaterialExpressionMaterialFunctionCall.h"
 #include "Materials/MaterialExpressionTextureSample.h"
+#include "Materials/MaterialExpressionTextureCoordinate.h"
+#include "Materials/MaterialFunctionInterface.h"
 #include "Misc/FileHelper.h"
 #include "Misc/PackageName.h"
 #include "Misc/Paths.h"
@@ -32,6 +37,7 @@ namespace
 	static const TCHAR* const MaterialAssetName = TEXT("M_BasicMapFloor_StylizedGrassDirt01");
 	static const TCHAR* const SourceTextureRelativePath = TEXT("SourceArt/T_Stylized_Grass_Dirt_01.png");
 	static const TCHAR* const TextureAssetName = TEXT("T_Stylized_Grass_Dirt_01");
+	static const TCHAR* const TextureVariationFunctionPath = TEXT("/Engine/Functions/Engine_MaterialFunctions03/Texturing/TextureVariation.TextureVariation");
 
 	template <typename AssetType>
 	AssetType* LoadAsset(const FString& ObjectPath)
@@ -236,34 +242,111 @@ bool FCodexBasicMapFloorBuilder::CreateOrUpdateMaterial(UTexture2D& Texture, UMa
 	OutMaterial->SetShadingModel(MSM_DefaultLit);
 	UMaterialEditingLibrary::DeleteAllMaterialExpressions(OutMaterial);
 
+	UMaterialExpressionTextureCoordinate* TextureCoordinateExpression = Cast<UMaterialExpressionTextureCoordinate>(
+		UMaterialEditingLibrary::CreateMaterialExpression(
+			OutMaterial,
+			UMaterialExpressionTextureCoordinate::StaticClass(),
+			-980,
+			-80));
+	UMaterialExpressionMaterialFunctionCall* TextureVariationExpression = Cast<UMaterialExpressionMaterialFunctionCall>(
+		UMaterialEditingLibrary::CreateMaterialExpression(
+			OutMaterial,
+			UMaterialExpressionMaterialFunctionCall::StaticClass(),
+			-700,
+			0));
+	UMaterialExpressionDDX* DdxExpression = Cast<UMaterialExpressionDDX>(
+		UMaterialEditingLibrary::CreateMaterialExpression(
+			OutMaterial,
+			UMaterialExpressionDDX::StaticClass(),
+			-420,
+			-150));
+	UMaterialExpressionDDY* DdyExpression = Cast<UMaterialExpressionDDY>(
+		UMaterialEditingLibrary::CreateMaterialExpression(
+			OutMaterial,
+			UMaterialExpressionDDY::StaticClass(),
+			-420,
+			10));
 	UMaterialExpressionTextureSample* TextureSampleExpression = Cast<UMaterialExpressionTextureSample>(
 		UMaterialEditingLibrary::CreateMaterialExpression(
 			OutMaterial,
 			UMaterialExpressionTextureSample::StaticClass(),
-			-600,
+			-120,
 			0));
 	UMaterialExpressionConstant* RoughnessExpression = Cast<UMaterialExpressionConstant>(
 		UMaterialEditingLibrary::CreateMaterialExpression(
 			OutMaterial,
 			UMaterialExpressionConstant::StaticClass(),
-			-360,
+			-160,
 			220));
 	UMaterialExpressionConstant* SpecularExpression = Cast<UMaterialExpressionConstant>(
 		UMaterialEditingLibrary::CreateMaterialExpression(
 			OutMaterial,
 			UMaterialExpressionConstant::StaticClass(),
-			-360,
+			-160,
 			360));
 
-	if (TextureSampleExpression == nullptr || RoughnessExpression == nullptr || SpecularExpression == nullptr)
+	if (TextureCoordinateExpression == nullptr ||
+		TextureVariationExpression == nullptr ||
+		DdxExpression == nullptr ||
+		DdyExpression == nullptr ||
+		TextureSampleExpression == nullptr ||
+		RoughnessExpression == nullptr ||
+		SpecularExpression == nullptr)
 	{
 		OutError = FString::Printf(TEXT("Failed to author material graph for %s."), *ObjectPath);
 		return false;
 	}
 
+	UMaterialFunctionInterface* TextureVariationFunction = LoadAsset<UMaterialFunctionInterface>(TextureVariationFunctionPath);
+	if (TextureVariationFunction == nullptr || !TextureVariationExpression->SetMaterialFunction(TextureVariationFunction))
+	{
+		OutError = FString::Printf(TEXT("Failed to load material function %s."), TextureVariationFunctionPath);
+		return false;
+	}
+
+	TextureCoordinateExpression->CoordinateIndex = 0;
+	TextureCoordinateExpression->UTiling = 4.0f;
+	TextureCoordinateExpression->VTiling = 4.0f;
 	TextureSampleExpression->Texture = &Texture;
+	TextureSampleExpression->MipValueMode = TMVM_Derivative;
 	RoughnessExpression->R = 1.0f;
 	SpecularExpression->R = 0.0f;
+
+	if (!UMaterialEditingLibrary::ConnectMaterialExpressions(TextureCoordinateExpression, TEXT(""), TextureVariationExpression, TEXT("UVs")))
+	{
+		OutError = FString::Printf(TEXT("Failed to connect TextureCoordinate to TextureVariation.UVs for %s."), *ObjectPath);
+		return false;
+	}
+
+	if (!UMaterialEditingLibrary::ConnectMaterialExpressions(TextureVariationExpression, TEXT("Raw UVs"), DdxExpression, TEXT("Value")))
+	{
+		OutError = FString::Printf(TEXT("Failed to connect TextureVariation.Raw UVs to DDX for %s."), *ObjectPath);
+		return false;
+	}
+
+	if (!UMaterialEditingLibrary::ConnectMaterialExpressions(TextureVariationExpression, TEXT("Raw UVs"), DdyExpression, TEXT("Value")))
+	{
+		OutError = FString::Printf(TEXT("Failed to connect TextureVariation.Raw UVs to DDY for %s."), *ObjectPath);
+		return false;
+	}
+
+	if (!UMaterialEditingLibrary::ConnectMaterialExpressions(TextureVariationExpression, TEXT(""), TextureSampleExpression, TEXT("UVs")))
+	{
+		OutError = FString::Printf(TEXT("Failed to connect TextureVariation.Shifted UVs to TextureSample.UVs for %s."), *ObjectPath);
+		return false;
+	}
+
+	if (!UMaterialEditingLibrary::ConnectMaterialExpressions(DdxExpression, TEXT(""), TextureSampleExpression, TEXT("DDX(UVs)")))
+	{
+		OutError = FString::Printf(TEXT("Failed to connect DDX to TextureSample.DDX(UVs) for %s."), *ObjectPath);
+		return false;
+	}
+
+	if (!UMaterialEditingLibrary::ConnectMaterialExpressions(DdyExpression, TEXT(""), TextureSampleExpression, TEXT("DDY(UVs)")))
+	{
+		OutError = FString::Printf(TEXT("Failed to connect DDY to TextureSample.DDY(UVs) for %s."), *ObjectPath);
+		return false;
+	}
 
 	if (!UMaterialEditingLibrary::ConnectMaterialProperty(TextureSampleExpression, TEXT(""), MP_BaseColor) ||
 		!UMaterialEditingLibrary::ConnectMaterialProperty(RoughnessExpression, TEXT(""), MP_Roughness) ||

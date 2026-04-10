@@ -14,7 +14,7 @@
 1. `SourceArt/T_Stylized_Grass_Dirt_01.png`가 실제 UE 텍스처 애셋으로 임포트 또는 리임포트된다.
 2. 텍스처 애셋 `/Game/Materials/T_Stylized_Grass_Dirt_01`가 생성 또는 갱신된다.
 3. 머터리얼 애셋 `/Game/Materials/M_BasicMapFloor_StylizedGrassDirt01`가 생성 또는 갱신된다.
-4. 머터리얼은 임포트된 텍스처의 `RGB`를 `Base Color`에 연결하고, `Roughness = 1.0`, `Specular = 0.0`을 사용한다.
+4. 머터리얼은 `TexCoord`를 `U/V 4.0`으로 타일링한 뒤, 엔진 머터리얼 함수 `TextureVariation`으로 UV를 섞어 반복감을 줄인 결과를 `Base Color`에 연결하고, `Roughness = 1.0`, `Specular = 0.0`을 사용한다.
 5. `/Game/Maps/BasicMap`을 열면 `Floor` 액터의 머터리얼 오버라이드가 새 텍스처 기반 머터리얼로 지정되어 있다.
 6. 같은 빌드를 반복 실행해도 애셋이 중복 생성되지 않고, 항상 같은 결과로 수렴한다.
 7. `Floor` 외의 액터, VOX 메시 공용 머터리얼, 상호작용 테스트 액터 배치는 건드리지 않는다.
@@ -72,20 +72,28 @@
 ### 그래프 규칙
 - `Blend Mode = Opaque`
 - `Shading Model = Default Lit`
+- `TexCoord(UTiling = 4.0, VTiling = 4.0)`를 기본 UV로 사용한다.
+- `/Engine/Functions/Engine_MaterialFunctions03/Texturing/TextureVariation` 함수를 사용한다.
+- `TextureVariation.UVs <- TexCoord(4x)`로 연결한다.
+- `TextureVariation.Shifted UVs -> TextureSample(T_Stylized_Grass_Dirt_01).UVs`로 연결한다.
+- `TextureVariation.Raw UVs -> DDX/DDY -> TextureSample`의 derivative 입력으로 연결하고, `TextureSample.MipValueMode = Derivative`로 지정한다.
 - `TextureSample(T_Stylized_Grass_Dirt_01).RGB -> Base Color`
 - `Roughness <- Constant(1.0)`
 - `Specular <- Constant(0.0)`
 
 ### UV 규칙
-- 1차 구현은 `Floor` 메시의 기존 UV를 그대로 사용한다.
-- 기본 `TexCoord`에 별도 스케일 노드를 넣지 않는다.
-- 이후 타일링이 필요해지면 `ScalarParameter` 기반 UV 스케일을 추가하되, 이번 문서의 기본 요구사항은 아니다.
+- `Floor` 메시의 UV 채널 0을 기준으로 `TexCoord` 노드를 사용한다.
+- `TexCoord`의 `UTiling`, `VTiling`은 모두 `4.0`으로 지정한다.
+- 반복 무늬가 단조롭게 보이지 않도록, 엔진 제공 `TextureVariation` 함수가 계산한 `Shifted UVs`를 사용한다.
+- `TextureVariation`이 내부적으로 사용하는 변형 UV와 보정용 `Raw UVs`를 그대로 사용하고, 외부에서 임의 오프셋 블렌드를 다시 만들지 않는다.
 
 ### 금지 사항
 - `Base Color`를 `Constant3Vector(0.5, 0.5, 0.5)`로 고정하는 방식
 - 텍스처를 UI용 임시 자산처럼 생성하는 방식
 - 머터리얼 인스턴스를 만들기 위해 별도 부모 머터리얼 체인을 도입하는 방식
 - `/Game/Vox/Materials/M_VoxVertexColor`를 수정해 바닥에도 공용으로 재사용하는 방식
+- UV를 1배 샘플 한 번만 써서 반복 패턴을 그대로 노출하는 방식
+- `TextureVariation` 대신 수동 이중 샘플 + 임의 노이즈 블렌드를 다시 구현하는 방식
 
 ## 레벨 적용 방식
 
@@ -111,7 +119,7 @@
 ## 권장 구현 순서
 1. 새 빌더 유틸리티에서 `SourceArt/T_Stylized_Grass_Dirt_01.png` 존재 여부를 확인한다.
 2. 같은 빌더 유틸리티에서 PNG를 `/Game/Materials/T_Stylized_Grass_Dirt_01`로 임포트 또는 리임포트한다.
-3. 임포트된 텍스처를 참조하는 `/Game/Materials/M_BasicMapFloor_StylizedGrassDirt01` 머터리얼 생성/갱신 함수를 만든다.
+3. 임포트된 텍스처를 참조하는 `/Game/Materials/M_BasicMapFloor_StylizedGrassDirt01` 머터리얼 생성/갱신 함수를 만들고, `4x` 타일링 + `TextureVariation` 함수 노드를 구성한다.
 4. 같은 빌더 유틸리티에서 `BasicMap` 로드, `Floor` 탐색, 머터리얼 적용, 저장 함수를 만든다.
 5. 맵 수정 흐름은 기존 [Source/CodexUMGBootstrapEditor/Private/Interaction/CodexInteractionAssetBuilder.cpp](../Source/CodexUMGBootstrapEditor/Private/Interaction/CodexInteractionAssetBuilder.cpp)의 `BasicMap` 로드/저장 방식과 동일한 수준으로 맞춘다.
 6. `Commandlet`는 위 세 단계를 순서대로 호출하고, 중간에 실패하면 즉시 종료한다.
@@ -130,9 +138,14 @@
 - `/Game/Materials/M_BasicMapFloor_StylizedGrassDirt01` 패키지를 준비한다.
 - 기존 애셋이 있으면 로드해서 갱신하고, 없으면 새로 만든다.
 - `UMaterialEditingLibrary::DeleteAllMaterialExpressions()`로 기존 그래프를 지운다.
-- `UMaterialExpressionTextureSample` 1개와 `UMaterialExpressionConstant` 2개를 생성한다.
-- `TextureSample.Texture`에는 `/Game/Materials/T_Stylized_Grass_Dirt_01`를 지정한다.
-- `TextureSample.RGB`를 `Base Color`에 연결한다.
+- `UMaterialExpressionTextureCoordinate`, `UMaterialExpressionMaterialFunctionCall`, `UMaterialExpressionDDX`, `UMaterialExpressionDDY`, `UMaterialExpressionTextureSample`, `UMaterialExpressionConstant` 2개를 생성한다.
+- `TextureCoordinate.UTiling = 4.0`, `TextureCoordinate.VTiling = 4.0`을 지정한다.
+- `MaterialFunctionCall`에는 `/Engine/Functions/Engine_MaterialFunctions03/Texturing/TextureVariation`를 지정한다.
+- `TextureCoordinate -> TextureVariation.UVs`를 연결한다.
+- `TextureVariation.Shifted UVs`를 `TextureSample.UVs`에 연결한다.
+- `TextureVariation.Raw UVs`를 `DDX`, `DDY`에 연결하고, 그 결과를 `TextureSample`의 derivative 입력(`DDX(UVs)`, `DDY(UVs)`)에 연결한다.
+- `TextureSample.MipValueMode`는 `Derivative`로 지정한다.
+- `TextureSample` 결과를 `Base Color`에 연결한다.
 - `Roughness`, `Specular`는 상수로 연결한다.
 - `LayoutMaterialExpressions()`와 `RecompileMaterial()`을 호출한다.
 - 애셋과 패키지를 dirty 처리한다.
@@ -149,6 +162,8 @@
 - `SourceArt/T_Stylized_Grass_Dirt_01.png was not found.`
 - `Failed to import or load /Game/Materials/T_Stylized_Grass_Dirt_01.`
 - `Failed to create or load /Game/Materials/M_BasicMapFloor_StylizedGrassDirt01.`
+- `Failed to load material function /Engine/Functions/Engine_MaterialFunctions03/Texturing/TextureVariation.TextureVariation.`
+- `Failed to author material graph for /Game/Materials/M_BasicMapFloor_StylizedGrassDirt01.`
 - `Failed to load /Game/Maps/BasicMap.`
 - `Failed to find actor labeled Floor in BasicMap.`
 - `Actor labeled Floor is not a StaticMeshActor.`
@@ -164,7 +179,7 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 - `SourceArt/T_Stylized_Grass_Dirt_01.png`가 실제로 존재하는가
 - `/Game/Materials/T_Stylized_Grass_Dirt_01`가 실제 애셋으로 임포트되는가
 - `/Game/Materials/M_BasicMapFloor_StylizedGrassDirt01`가 실제 애셋으로 생성되는가
-- 머터리얼 그래프가 `TextureSample RGB -> Base Color` + `Roughness 1.0` + `Specular 0.0`으로 구성되는가
+- 머터리얼 그래프가 `TexCoord 4x` + `TextureVariation` + `DDX/DDY derivative sampling` + `Roughness 1.0` + `Specular 0.0`으로 구성되는가
 - `BasicMap` 로드 후 `Floor` 액터를 정확히 찾는가
 - `Floor` 액터의 머터리얼 슬롯이 하나 이상 존재하는가
 - 모든 슬롯이 새 머터리얼로 덮어써지는가
