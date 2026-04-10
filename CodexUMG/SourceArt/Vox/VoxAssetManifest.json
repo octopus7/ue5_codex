@@ -146,6 +146,18 @@
                        "notes":  "Repeatable fence segment."
                    },
                    {
+                       "id":  "wooden_signpost",
+                       "displayName":  "Wooden Signpost",
+                       "sourceVoxFile":  "Sources/SM_Vox_WoodenSignpost.vox",
+                       "targetPackagePath":  "/Game/Vox/Meshes/Props",
+                       "targetAssetName":  "SM_Vox_WoodenSignpost",
+                       "category":  "Props",
+                       "repeatable":  false,
+                       "pivotRule":  "GroundCentered",
+                       "collisionType":  "SimpleBox",
+                       "notes":  "Wooden signpost with a post and stacked sign boards."
+                   },
+                   {
                        "id":  "bush",
                        "displayName":  "Bush",
                        "sourceVoxFile":  "Sources/SM_Vox_Bush.vox",

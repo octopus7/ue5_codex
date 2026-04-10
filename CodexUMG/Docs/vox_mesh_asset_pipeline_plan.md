@@ -31,6 +31,9 @@
 - 생고기
 - 뼈가 있는 구운 고기
 
+### 소품 / 구조물
+- 나무 팻말
+
 ### 반복 배치 가능한 요소
 - 울타리
 - 덤불
@@ -61,6 +64,7 @@
   - `/Game/Vox/Meshes/Characters/`
   - `/Game/Vox/Meshes/Food/`
   - `/Game/Vox/Meshes/Props/`
+    - `/Game/Vox/Meshes/Props/SM_Vox_WoodenSignpost`
     - `/Game/Vox/Meshes/Props/SM_Vox_RainbowDiagnostic`
   - `/Game/Vox/Meshes/Foliage/`
   - `/Game/Vox/Meshes/Ground/`
@@ -250,9 +254,18 @@
   - 에디터 세션 실행 여부 확인
   - 메시 생성/저장
   - 공용 머터리얼 연결
+  - 기존 공용 머터리얼이나 기존 메시를 건드리지 않고 신규 메시만 추가해야 하는 예외 빌드 경로를 지원한다.
 - `CodexVoxAssetBuildCommandlet`
   - 헤드리스 실행 진입점
-  - `-Manifest=`, `-Verbose`, `-NoOverwrite` 처리
+  - `-Manifest=`, `-Verbose`, `-NoOverwrite`, `-SkipMaterialUpdate` 처리
+
+### 개별 추가 예외 구현 원칙
+- 기본 경로는 공용 파서, 공용 메시 빌더, 공용 머터리얼, 매니페스트 기반 생성 흐름을 유지한다.
+- 다만 특정 메시 하나만 추가하거나, 사용자가 수정 중인 공용 VOX 머터리얼을 덮으면 안 되는 경우 같은 예외는 개별 추가 가능한 형태로 구현해야 한다.
+- 예외는 전역 동작을 뒤집는 방식이 아니라, 영향 범위가 명확한 옵션이나 asset 단위 분기로 국소화한다.
+- 샘플 SourceArt 단계에서는 `Build-<AssetName>` 형태의 개별 builder 함수를 추가해 형태 예외를 분리한다.
+- UE 빌드 단계에서는 `-NoOverwrite`, `-SkipMaterialUpdate` 같은 옵션으로 기존 메시와 공용 머터리얼을 보존한 채 신규 애셋만 생성할 수 있어야 한다.
+- 한 메시를 위한 예외 구현이 다른 VOX 메시의 기본 생성 규칙, 색 경로, 공용 머터리얼 규칙을 바꾸지 않도록 유지한다.
 
 ## 매니페스트 규칙
 
@@ -326,15 +339,22 @@ python .\Scripts\GenerateVoxPreviewPngs.py --manifest .\SourceArt\Vox\VoxAssetMa
 UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=CodexUMGBootstrapEditor.CodexVoxAssetBuildCommandlet -Manifest="D:\github\ue5_codex\CodexUMG\SourceArt\Vox\VoxAssetManifest.json" -unattended -nop4 -nosplash
 ```
 
+### 개별 추가 예외 실행 예시
+기존 메시와 공용 머터리얼은 유지하고, 아직 없는 신규 메시만 추가할 때는 아래 조합을 사용한다.
+
+```powershell
+.\Scripts\RunVoxAssetBuild.ps1 -ManifestPath .\SourceArt\Vox\VoxAssetManifest.json -NoOverwrite -SkipMaterialUpdate -VerboseBuild
+```
+
 ### 동작 순서
 1. 입력 인자와 매니페스트 경로를 검증한다.
 2. 현재 프로젝트를 연 `UnrealEditor.exe` 프로세스가 있는지 확인한다.
 3. 에디터가 실행 중이면 사용자에게 알리고 즉시 중단한다.
-4. 공용 머터리얼 `M_VoxVertexColor`를 생성 또는 갱신한다.
+4. 공용 머터리얼 `M_VoxVertexColor`를 생성 또는 갱신한다. 단, 개별 추가 예외 빌드에서 `-SkipMaterialUpdate`를 주면 기존 공용 머터리얼을 그대로 사용한다.
 5. 매니페스트를 순회하며 각 `.vox` 파일을 로드한다.
 6. VOX 복셀 데이터를 외부 face 메시로 변환한다.
 7. 버텍스 컬러와 공용 머터리얼 슬롯을 적용한다.
-8. `StaticMesh` 애셋을 생성 또는 갱신한다.
+8. `StaticMesh` 애셋을 생성 또는 갱신한다. `-NoOverwrite`가 켜져 있으면 기존 애셋은 건너뛰고 없는 애셋만 새로 만든다.
 9. 하나라도 치명 오류가 나면 즉시 실패 코드로 종료한다.
 
 ## 에디터 실행 중 충돌 대응
@@ -345,6 +365,7 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 - 역할:
   - 샘플 `.vox` 생성 옵션 처리
   - 실행 중인 `UnrealEditor.exe` 확인
+  - 개별 추가 예외 빌드를 위한 `-NoOverwrite`, `-SkipMaterialUpdate` 옵션 전달
   - 커맨드렛 호출
 
 ### 중단 정책

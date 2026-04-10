@@ -326,6 +326,19 @@ function Build-Fence {
 	Add-Box -Grid $Grid -MinX 7 -MinY 12 -MinZ 15 -MaxX 24 -MaxY 14 -MaxZ 16 -ColorIndex $WoodColor
 }
 
+function Build-WoodenSignpost {
+	param(
+		[byte[,,]]$Grid,
+		[byte]$PostColor,
+		[byte]$BoardColor
+	)
+
+	Add-Box -Grid $Grid -MinX 14 -MinY 0 -MinZ 14 -MaxX 17 -MaxY 22 -MaxZ 17 -ColorIndex $PostColor
+	Add-Box -Grid $Grid -MinX 8 -MinY 17 -MinZ 13 -MaxX 23 -MaxY 22 -MaxZ 18 -ColorIndex $BoardColor
+	Add-Box -Grid $Grid -MinX 10 -MinY 11 -MinZ 13 -MaxX 21 -MaxY 15 -MaxZ 18 -ColorIndex $BoardColor
+	Add-Box -Grid $Grid -MinX 13 -MinY 9 -MinZ 14 -MaxX 18 -MaxY 10 -MaxZ 17 -ColorIndex $PostColor
+}
+
 function Build-Bush {
 	param(
 		[byte[,,]]$Grid,
@@ -603,6 +616,7 @@ $assets = @(
 	[ordered]@{ Id = 'raw_meat'; DisplayName = 'Raw Meat'; SourceVoxFile = 'Sources/SM_Vox_RawMeat.vox'; TargetPackagePath = '/Game/Vox/Meshes/Food'; TargetAssetName = 'SM_Vox_RawMeat'; Category = 'Food'; Repeatable = $false; PivotRule = 'GroundCentered'; CollisionType = 'UseComplexAsSimple'; Notes = 'Sample raw meat.'; Builder = 'RawMeat' },
 	[ordered]@{ Id = 'bone_in_roast'; DisplayName = 'Bone In Roast'; SourceVoxFile = 'Sources/SM_Vox_BoneInRoast.vox'; TargetPackagePath = '/Game/Vox/Meshes/Food'; TargetAssetName = 'SM_Vox_BoneInRoast'; Category = 'Food'; Repeatable = $false; PivotRule = 'GroundCentered'; CollisionType = 'UseComplexAsSimple'; Notes = 'Sample roasted meat with bone.'; Builder = 'BoneInRoast' },
 	[ordered]@{ Id = 'fence'; DisplayName = 'Fence'; SourceVoxFile = 'Sources/SM_Vox_Fence.vox'; TargetPackagePath = '/Game/Vox/Meshes/Props'; TargetAssetName = 'SM_Vox_Fence'; Category = 'Props'; Repeatable = $true; PivotRule = 'GroundCentered'; CollisionType = 'SimpleBox'; Notes = 'Repeatable fence segment.'; Builder = 'Fence' },
+	[ordered]@{ Id = 'wooden_signpost'; DisplayName = 'Wooden Signpost'; SourceVoxFile = 'Sources/SM_Vox_WoodenSignpost.vox'; TargetPackagePath = '/Game/Vox/Meshes/Props'; TargetAssetName = 'SM_Vox_WoodenSignpost'; Category = 'Props'; Repeatable = $false; PivotRule = 'GroundCentered'; CollisionType = 'SimpleBox'; Notes = 'Wooden signpost with a post and stacked sign boards.'; Builder = 'WoodenSignpost' },
 	[ordered]@{ Id = 'bush'; DisplayName = 'Bush'; SourceVoxFile = 'Sources/SM_Vox_Bush.vox'; TargetPackagePath = '/Game/Vox/Meshes/Foliage'; TargetAssetName = 'SM_Vox_Bush'; Category = 'Foliage'; Repeatable = $true; PivotRule = 'GroundCentered'; CollisionType = 'None'; Notes = 'Sample bush.'; Builder = 'Bush' },
 	[ordered]@{ Id = 'grass'; DisplayName = 'Grass'; SourceVoxFile = 'Sources/SM_Vox_Grass.vox'; TargetPackagePath = '/Game/Vox/Meshes/Foliage'; TargetAssetName = 'SM_Vox_Grass'; Category = 'Foliage'; Repeatable = $true; PivotRule = 'GroundCentered'; CollisionType = 'None'; Notes = 'Sample grass patch.'; Builder = 'Grass' },
 	[ordered]@{ Id = 'yellow_flower'; DisplayName = 'Yellow Flower'; SourceVoxFile = 'Sources/SM_Vox_YellowFlower.vox'; TargetPackagePath = '/Game/Vox/Meshes/Foliage'; TargetAssetName = 'SM_Vox_YellowFlower'; Category = 'Foliage'; Repeatable = $true; PivotRule = 'GroundCentered'; CollisionType = 'None'; Notes = 'Sample yellow flower.'; Builder = 'YellowFlower' },
@@ -632,6 +646,7 @@ foreach ($asset in $assets) {
 		'RawMeat' { Build-RawMeat -Grid $grid -MeatColor (Get-ColorIndex 'MeatRed') -FatColor (Get-ColorIndex 'WhitePetal') }
 		'BoneInRoast' { Build-BoneInRoast -Grid $grid -RoastColor (Get-ColorIndex 'RoastBrown') -BoneColor (Get-ColorIndex 'Bone') }
 		'Fence' { Build-Fence -Grid $grid -WoodColor (Get-ColorIndex 'FenceBrown') }
+		'WoodenSignpost' { Build-WoodenSignpost -Grid $grid -PostColor (Get-ColorIndex 'FenceBrown') -BoardColor (Get-ColorIndex 'RoastBrown') }
 		'Bush' { Build-Bush -Grid $grid -LeafColor (Get-ColorIndex 'BushGreen') -WoodColor (Get-ColorIndex 'FenceBrown') }
 		'Grass' { Build-Grass -Grid $grid -GrassColor (Get-ColorIndex 'GrassGreen') }
 		'YellowFlower' { Add-Flower -Grid $grid -StemHeight 16 -StemColor (Get-ColorIndex 'StemGreen') -PetalColor (Get-ColorIndex 'YellowFlower') -CenterColor (Get-ColorIndex 'SunflowerBrown') -PetalRadius 2 }

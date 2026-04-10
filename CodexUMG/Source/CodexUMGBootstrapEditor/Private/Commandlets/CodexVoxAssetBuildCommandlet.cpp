@@ -20,6 +20,7 @@ int32 UCodexVoxAssetBuildCommandlet::Main(const FString& Params)
 	BuildOptions.ManifestPath = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir() / TEXT("SourceArt/Vox/VoxAssetManifest.json"));
 	BuildOptions.bVerbose = FParse::Param(*Params, TEXT("Verbose"));
 	BuildOptions.bNoOverwrite = FParse::Param(*Params, TEXT("NoOverwrite"));
+	BuildOptions.bSkipMaterialUpdate = FParse::Param(*Params, TEXT("SkipMaterialUpdate"));
 
 	FParse::Value(*Params, TEXT("Manifest="), BuildOptions.ManifestPath);
 	BuildOptions.ManifestPath = FPaths::ConvertRelativePathToFull(BuildOptions.ManifestPath);

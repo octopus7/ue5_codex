@@ -71,6 +71,7 @@ namespace CodexVox
 		FString ManifestPath;
 		bool bVerbose = false;
 		bool bNoOverwrite = false;
+		bool bSkipMaterialUpdate = false;
 		float VoxelSize = DefaultVoxelSize;
 	};
 

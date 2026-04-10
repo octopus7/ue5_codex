@@ -370,14 +370,31 @@ bool FCodexVoxAssetGenerator::RunBuild(const CodexVox::FBuildOptions& Options, F
 	}
 
 	UMaterial* SharedMaterial = nullptr;
-	if (!FCodexVoxMaterialBuilder::CreateOrUpdateSharedMaterial(SharedMaterial, OutError))
+	if (Options.bSkipMaterialUpdate)
 	{
-		return false;
-	}
+		const FString SharedMaterialObjectPath = CodexVox::MakeObjectPath(CodexVox::MaterialPackagePath, CodexVox::MaterialAssetName);
+		SharedMaterial = LoadObject<UMaterial>(nullptr, *SharedMaterialObjectPath);
+		if (SharedMaterial == nullptr)
+		{
+			OutError = FString::Printf(
+				TEXT("Shared VOX material '%s' does not exist. Run the build without -SkipMaterialUpdate first."),
+				*SharedMaterialObjectPath);
+			return false;
+		}
 
-	if (!SaveAsset(*SharedMaterial, OutError))
+		SharedMaterial->GetOutermost()->FullyLoad();
+	}
+	else
 	{
-		return false;
+		if (!FCodexVoxMaterialBuilder::CreateOrUpdateSharedMaterial(SharedMaterial, OutError))
+		{
+			return false;
+		}
+
+		if (!SaveAsset(*SharedMaterial, OutError))
+		{
+			return false;
+		}
 	}
 
 	const FString ManifestDirectory = FPaths::GetPath(ManifestPath);

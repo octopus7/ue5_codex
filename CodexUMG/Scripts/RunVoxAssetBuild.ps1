@@ -5,6 +5,7 @@ param(
 	[string]$EngineRoot,
 	[string]$EditorCmdPath,
 	[switch]$GenerateSamples,
+	[switch]$SkipMaterialUpdate,
 	[switch]$NoOverwrite,
 	[switch]$VerboseBuild
 )
@@ -69,6 +70,10 @@ $arguments = @(
 
 if ($NoOverwrite) {
 	$arguments += '-NoOverwrite'
+}
+
+if ($SkipMaterialUpdate) {
+	$arguments += '-SkipMaterialUpdate'
 }
 
 if ($VerboseBuild) {
