@@ -17,6 +17,11 @@ const UInputAction* UCodexTopDownInputConfigDataAsset::GetFireAction() const
 	return FireAction;
 }
 
+const UInputAction* UCodexTopDownInputConfigDataAsset::GetInteractAction() const
+{
+	return InteractAction;
+}
+
 int32 UCodexTopDownInputConfigDataAsset::GetMappingPriority() const
 {
 	return MappingPriority;

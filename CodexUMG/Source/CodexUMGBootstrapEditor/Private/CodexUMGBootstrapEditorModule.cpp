@@ -23,6 +23,7 @@
 #include "InputModifiers.h"
 #include "InputCoreTypes.h"
 #include "Kismet2/KismetEditorUtilities.h"
+#include "Misc/CoreDelegates.h"
 #include "Modules/ModuleManager.h"
 #include "Subsystems/EditorAssetSubsystem.h"
 #include "ToolMenus.h"
@@ -314,20 +315,48 @@ void FCodexUMGBootstrapEditorModule::StartupModule()
 		return;
 	}
 
+	if (GEditor == nullptr)
+	{
+		PostEngineInitHandle = FCoreDelegates::OnPostEngineInit.AddRaw(this, &FCodexUMGBootstrapEditorModule::HandlePostEngineInit);
+		return;
+	}
+
+	HandlePostEngineInit();
+}
+
+void FCodexUMGBootstrapEditorModule::ShutdownModule()
+{
+	if (PostEngineInitHandle.IsValid())
+	{
+		FCoreDelegates::OnPostEngineInit.Remove(PostEngineInitHandle);
+		PostEngineInitHandle.Reset();
+	}
+
+	if (UToolMenus::TryGet() != nullptr)
+	{
+		UToolMenus::UnRegisterStartupCallback(this);
+		UToolMenus::UnregisterOwner(this);
+	}
+}
+
+void FCodexUMGBootstrapEditorModule::HandlePostEngineInit()
+{
+	if (PostEngineInitHandle.IsValid())
+	{
+		FCoreDelegates::OnPostEngineInit.Remove(PostEngineInitHandle);
+		PostEngineInitHandle.Reset();
+	}
+
+	if (GEditor == nullptr)
+	{
+		return;
+	}
+
 	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FCodexUMGBootstrapEditorModule::RegisterMenus));
 
 	if (CodexUMGBootstrap::NeedsBootstrap())
 	{
 		RunBootstrap();
-	}
-}
-
-void FCodexUMGBootstrapEditorModule::ShutdownModule()
-{
-	if (UToolMenus::TryGet() != nullptr)
-	{
-		UToolMenus::UnRegisterStartupCallback(this);
-		UToolMenus::UnregisterOwner(this);
 	}
 }
 

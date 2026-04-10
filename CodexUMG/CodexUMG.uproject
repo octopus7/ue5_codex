@@ -12,7 +12,7 @@
 		{
 			"Name": "CodexUMGBootstrapEditor",
 			"Type": "Editor",
-			"LoadingPhase": "PostEngineInit"
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [

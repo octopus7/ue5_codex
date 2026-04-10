@@ -13,7 +13,8 @@ public class CodexUMGBootstrapEditor : ModuleRules
 				"CoreUObject",
 				"Engine",
 				"EnhancedInput",
-				"InputCore"
+				"InputCore",
+				"UMG"
 			});
 
 		PrivateDependencyModuleNames.AddRange(
@@ -33,6 +34,7 @@ public class CodexUMGBootstrapEditor : ModuleRules
 				"SlateCore",
 				"StaticMeshDescription",
 				"ToolMenus",
+				"UMGEditor",
 				"UnrealEd",
 				"EngineSettings"
 			});

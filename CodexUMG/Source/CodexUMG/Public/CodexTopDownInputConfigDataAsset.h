@@ -24,11 +24,15 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Codex|Input")
 	TObjectPtr<UInputAction> FireAction;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Codex|Input")
+	TObjectPtr<UInputAction> InteractAction;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Codex|Input", meta = (ClampMin = "0"))
 	int32 MappingPriority = 0;
 
 	const UInputMappingContext* GetDefaultMappingContext() const;
 	const UInputAction* GetMoveAction() const;
 	const UInputAction* GetFireAction() const;
+	const UInputAction* GetInteractAction() const;
 	int32 GetMappingPriority() const;
 };

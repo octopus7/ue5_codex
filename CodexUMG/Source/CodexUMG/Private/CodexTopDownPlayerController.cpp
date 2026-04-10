@@ -6,6 +6,7 @@
 #include "CodexGameInstance.h"
 #include "CodexMoveInputConsumer.h"
 #include "CodexTopDownInputConfigDataAsset.h"
+#include "Interaction/CodexInteractionSubsystem.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputAction.h"
@@ -23,6 +24,7 @@ void ACodexTopDownPlayerController::SetupInputComponent()
 
 	BindTopDownMoveAction();
 	BindTopDownFireAction();
+	BindTopDownInteractAction();
 }
 
 void ACodexTopDownPlayerController::ApplyTopDownInputMappingContext()
@@ -100,6 +102,27 @@ void ACodexTopDownPlayerController::BindTopDownFireAction()
 	bHasBoundFireAction = true;
 }
 
+void ACodexTopDownPlayerController::BindTopDownInteractAction()
+{
+	if (bHasBoundInteractAction || !InputComponent)
+	{
+		return;
+	}
+
+	const UCodexGameInstance* CodexGameInstance = GetGameInstance<UCodexGameInstance>();
+	const UCodexTopDownInputConfigDataAsset* InputConfig = CodexGameInstance ? CodexGameInstance->GetTopDownInputConfig() : nullptr;
+	const UInputAction* InteractAction = InputConfig ? InputConfig->GetInteractAction() : nullptr;
+
+	UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
+	if (!EnhancedInputComponent || !InteractAction)
+	{
+		return;
+	}
+
+	EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &ACodexTopDownPlayerController::HandleInteractInput);
+	bHasBoundInteractAction = true;
+}
+
 void ACodexTopDownPlayerController::HandleMoveInput(const FInputActionValue& InputValue)
 {
 	const FVector2D MoveAxis = InputValue.Get<FVector2D>();
@@ -123,4 +146,20 @@ void ACodexTopDownPlayerController::HandleFireInput(const FInputActionValue& Inp
 	}
 
 	ICodexFireInputReceiver::Execute_ConsumeFireInput(ControlledPawn);
+}
+
+void ACodexTopDownPlayerController::HandleInteractInput(const FInputActionValue& InputValue)
+{
+	(void)InputValue;
+
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	if (UCodexInteractionSubsystem* InteractionSubsystem = World->GetSubsystem<UCodexInteractionSubsystem>())
+	{
+		InteractionSubsystem->RequestInteraction(this);
+	}
 }
