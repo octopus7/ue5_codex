@@ -43,7 +43,7 @@
 - 수련
 
 ### 진단 / 검증용
-- 고채도 무지개 진단 메시
+- 고채도 무지개 + 16단계 그레이 진단 메시
 
 ## 산출물
 
@@ -82,14 +82,20 @@
 - 따라서 구현 기준은 아래와 같다.
   - 입력: `.vox` 팔레트의 `FColor` sRGB 값
   - 저장: `FLinearColor::FromSRGBColor(...)`로 변환한 선형 버텍스 컬러
-  - 머터리얼: `Vertex Color`를 바로 `Base Color`에 연결
-- 이 경로를 지키면 UE의 정적 메시 빌드와 렌더링 경로에서 색이 과하게 연해지지 않는다.
+  - 머터리얼: `Vertex Color -> custom sRGB-to-linear decode -> Base Color`
+- VOX 파이프라인에서는 이 머터리얼 디코드까지 포함해야 UE의 정적 메시 버텍스 컬러가 authored sRGB와 같은 체감 밝기로 나온다.
+- UE 정적 메시 빌드 경로는 버텍스 컬러를 다시 sRGB 바이트로 양자화해 저장할 수 있으므로, 공유 머터리얼에서 이 디코드를 빼면 `FenceBrown`, 중간 그레이 같은 중간톤이 authored 값보다 밝게 뜰 수 있다.
 
 ### 절대 금지 사항
 - sRGB 팔레트 색을 `R/255`, `G/255`, `B/255`로만 나눠서 선형 버텍스 컬러처럼 저장하지 않는다.
   - 이 경우 화면에서 감마가 한 번 더 적용되어 색이 뿌옇고 파스텔처럼 뜬다.
+- "UE에서 밝게 뜨니 `FLinearColor::FromSRGBColor(...)`를 제거하자"는 식으로 해결하지 않는다.
+  - 이 변경은 원색에는 티가 덜 나도 갈색, 회색, 아이보리 같은 중간톤을 더 밝게 밀어 올릴 수 있다.
+- 공유 VOX 머터리얼에서 wide-gamut 변환용 노드를 감마 디코드 대용으로 오해해 사용하지 않는다.
+  - 기본 working color space가 sRGB일 때는 원하는 감마 디코드가 일어나지 않을 수 있다.
+- `Vertex Color`를 보정 없이 바로 `Base Color`에 꽂아 중간톤이 밝게 뜨는 상태를 정상으로 간주하지 않는다.
 - 감마 문제를 머터리얼 슬롯 추가나 색상별 머터리얼 분기로 해결하지 않는다.
-  - 원인은 색공간 변환 경로이므로, 해결은 버텍스 컬러 저장 경로에서 해야 한다.
+  - 원인은 색공간 변환 경로이므로, 해결은 공유 VOX 머터리얼과 버텍스 컬러 저장 규칙을 같은 기준으로 맞추는 방식이어야 한다.
 
 ### VOX 팔레트 직렬화 규칙
 - 샘플 `.vox`는 MagicaVoxel `RGBA` 청크 규칙을 그대로 따른다.
@@ -104,10 +110,11 @@
 - 딸기처럼 색이 분명한 샘플을 기준 검증용으로 사용한다.
   - `SM_Vox_Strawberry` 본체는 빨강
   - `SM_Vox_Strawberry` 꼭지는 초록
-- 원색 경로 자체를 검증하기 위해 별도 진단 메시를 항상 함께 생성한다.
-  - `SM_Vox_RainbowDiagnostic`는 순수 sRGB `255/0/0`, `255/127/0`, `255/255/0`, `0/255/0`, `0/255/255`, `0/0/255`, `255/0/255` 줄무늬를 사용한다.
-  - 이 메시가 `Unlit`에서도 선명하면 기존 샘플의 저채도는 SourceArt 의도일 가능성이 높다.
-  - 이 메시까지 파스텔처럼 뜨면 `sRGB -> Linear` 변환이나 버텍스 컬러 저장 경로를 먼저 점검한다.
+- 원색 경로와 무채색 계조 재현을 같이 검증하기 위해 별도 진단 메시를 항상 함께 생성한다.
+  - `SM_Vox_RainbowDiagnostic` 상단 절반은 순수 sRGB `255/0/0`, `255/127/0`, `255/255/0`, `0/255/0`, `0/255/255`, `0/0/255`, `255/0/255` 줄무늬를 사용한다.
+  - 같은 메시의 하단 절반은 `0, 17, 34, ..., 255` 값의 16단계 중성 그레이 램프를 좌에서 우로 배치한다.
+  - 상단 원색이 `Unlit`에서도 선명하면 기존 샘플의 저채도는 SourceArt 의도일 가능성이 높다.
+  - 하단 그레이 램프까지 전체적으로 들뜨거나 파스텔처럼 뜨면 `sRGB -> Linear` 변환이나 버텍스 컬러 저장 경로를 먼저 점검한다.
 - 현재 샘플 팔레트는 테스트 가독성을 위해 전체적으로 높은 채도로 유지한다.
   - 예: `Red = (248, 48, 48)`, `LeafGreen = (84, 224, 78)`, `BananaYellow = (250, 224, 52)`
   - 다만 `WhitePetal`, `Bone`, `PebbleGray` 같은 중성색은 재질 성격상 완전 원색으로 밀지 않는다.
@@ -195,12 +202,13 @@
 6. Static Mesh Editor에서 `Show > Advanced > Vertex Colors`를 켰을 때 색이 정상적으로 보인다.
 7. `SM_Vox_Strawberry`를 Unlit으로 봤을 때 본체가 노랑/아이보리가 아니라 빨강이어야 한다.
 8. `SM_Vox_Strawberry` 꼭지가 민트색이 아니라 초록이어야 한다.
-9. `SM_Vox_RainbowDiagnostic`를 Unlit으로 봤을 때 빨강, 주황, 노랑, 초록, 시안, 파랑, 마젠타 줄무늬가 탁하지 않고 강하게 보여야 한다.
-10. 딸기만 부드럽고 `SM_Vox_RainbowDiagnostic`는 선명하면 기존 샘플 팔레트가 원래 저채도인 것이다.
-11. 색이 전반적으로 한 칸씩 밀린 것처럼 보이면 `.vox` `RGBA` 청크 직렬화부터 재검토한다.
-12. 레인보우 메시까지 전체적으로 밝고 뿌옇게 보이면 `sRGB -> Linear` 변환 누락 여부를 확인한다.
-13. `SM_Vox_Pig`, `SM_Vox_WhiteChicken`, `SM_Vox_Fence`를 열었을 때 내부 면만 보이는 느낌이나 backface culling 이상이 없어야 한다.
-14. VOX 메시 빌더를 수정했다면, 최소 한 번은 `Face Normal` 표시와 `Unlit` 보기 둘 다로 앞면 방향을 확인한다.
+9. `SM_Vox_RainbowDiagnostic`를 Unlit으로 봤을 때 상단 절반의 빨강, 주황, 노랑, 초록, 시안, 파랑, 마젠타 줄무늬가 탁하지 않고 강하게 보여야 한다.
+10. 같은 메시 하단 절반의 16단계 그레이가 검정에서 흰색까지 뭉개지지 않고 단계적으로 분리되어 보여야 한다.
+11. 딸기만 부드럽고 `SM_Vox_RainbowDiagnostic`의 상단/하단 진단 패턴이 모두 정상이라면 기존 샘플 팔레트가 원래 저채도인 것이다.
+12. 색이 전반적으로 한 칸씩 밀린 것처럼 보이면 `.vox` `RGBA` 청크 직렬화부터 재검토한다.
+13. 레인보우 메시나 그레이 램프까지 전체적으로 밝고 뿌옇게 보이면 `sRGB -> Linear` 변환 누락 여부를 확인한다.
+14. `SM_Vox_Pig`, `SM_Vox_WhiteChicken`, `SM_Vox_Fence`를 열었을 때 내부 면만 보이는 느낌이나 backface culling 이상이 없어야 한다.
+15. VOX 메시 빌더를 수정했다면, 최소 한 번은 `Face Normal` 표시와 `Unlit` 보기 둘 다로 앞면 방향을 확인한다.
 
 현재 구현 기준 기대 확인값 예시:
 - `SM_Vox_Pig`: `extent=(42.5, 22.5, 32.5)`
@@ -279,7 +287,8 @@
 - 팔레트 검증 기준 예시:
   - 딸기 본체에 쓰는 `ColorIndex=5`는 빨강 계열이어야 한다.
   - 잎에 쓰는 `ColorIndex=12`는 초록 계열이어야 한다.
-  - `SM_Vox_RainbowDiagnostic` 줄무늬는 순서대로 빨강, 주황, 노랑, 초록, 시안, 파랑, 마젠타여야 한다.
+  - `SM_Vox_RainbowDiagnostic` 상단 줄무늬는 순서대로 빨강, 주황, 노랑, 초록, 시안, 파랑, 마젠타여야 한다.
+  - 같은 메시 하단 줄무늬는 좌에서 우로 검정에서 흰색까지 16단계 그레이여야 한다.
 
 ## 비스듬한 미리보기 PNG
 
@@ -291,6 +300,8 @@
 - `Scripts/GenerateVoxPreviewPngs.py`는 `VoxAssetManifest.json`을 읽고 각 `.vox` 파일을 파싱한다.
 - 렌더링은 투명 배경의 비스듬한 orthographic voxel preview 기준으로 수행한다.
 - 노출된 `Top`, `+X`, `+Z` face만 그려서 가벼운 검수용 이미지를 만든다.
+- 프리뷰 PNG는 per-face 암부 셰이딩이나 복셀 격자선을 넣지 않고 authored sRGB 색을 평면적으로 보여준다.
+- 즉 프리뷰 목표는 스타일화된 썸네일이 아니라 UE `Unlit` 색 검수와 최대한 비슷한 기준 이미지를 만드는 것이다.
 - 출력은 `SourceArt/Vox/Previews/<Category>/SM_Vox_*.png` 형식으로 정리한다.
 
 ### 사용 예시
@@ -402,8 +413,8 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 6. `Scripts/RunVoxAssetBuild.ps1`로 에디터 실행 여부를 먼저 검사한다.
 7. 에디터가 꺼져 있으면 커맨드렛을 실행해 애셋을 생성한다.
 8. 결과 메시를 Static Mesh Editor에서 열어 자세, 노멀 방향, 버텍스 컬러를 검증한다.
-9. `SM_Vox_Strawberry`만 부드럽고 `SM_Vox_RainbowDiagnostic`가 선명하면 SourceArt 팔레트 의도로 판단한다.
-10. `SM_Vox_RainbowDiagnostic`까지 연분홍/민트/파스텔처럼 보이면 버텍스 컬러 컬러스페이스 경로를 점검한다.
+9. `SM_Vox_Strawberry`만 부드럽고 `SM_Vox_RainbowDiagnostic`의 상단 원색과 하단 그레이 램프가 모두 정상이라면 SourceArt 팔레트 의도로 판단한다.
+10. `SM_Vox_RainbowDiagnostic` 상단 원색이나 하단 그레이 램프까지 연분홍/민트/파스텔처럼 보이면 버텍스 컬러 컬러스페이스 경로를 점검한다.
 11. 좌표계, winding, 피벗, 팔레트, 컬러스페이스 규칙이 어긋난 사례가 나오면 먼저 이 문서 기준을 갱신하고 코드에 반영한다.
 
 ## 최종 검증 체크리스트
@@ -417,7 +428,7 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 8. 매니페스트 경로와 실제 `.vox` 파일명이 일치한다.
 9. `SM_Vox_Strawberry` 본체는 빨강, 꼭지는 초록으로 보인다.
 10. `SourceArt/Vox/Previews/` 아래의 비스듬한 PNG가 최신 `.vox`와 함께 재생성되어 있다.
-11. `SM_Vox_RainbowDiagnostic`는 순수 원색 줄무늬가 강한 채도로 보인다.
+11. `SM_Vox_RainbowDiagnostic` 상단은 순수 원색 줄무늬가 강한 채도로 보이고, 하단은 검정에서 흰색까지 16단계 그레이가 분리되어 보인다.
 12. 색이 전반적으로 한 단계씩 밀린 듯 보이지 않는다.
 13. 색이 전반적으로 파스텔처럼 뜨지 않는다.
 
@@ -431,4 +442,5 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 - 색이 이상하면 머터리얼보다 먼저 `GenerateSampleVoxSources.ps1`의 팔레트 엔트리 배치와 `CodexVoxParser`의 `RGBA` 해석부터 확인한다.
 - 색이 탁하게 보이는 이슈는 `SM_Vox_Strawberry`와 `SM_Vox_RainbowDiagnostic`를 같이 열어 authored palette 문제인지 컬러스페이스 문제인지 먼저 분리한다.
 - 팔레트나 복셀 실루엣을 바꾸면 UE를 보기 전에 `GenerateVoxPreviewPngs.py`로 비스듬한 PNG를 다시 뽑아 SourceArt 차이부터 확인한다.
-- 색이 맞는 계열인데도 뿌옇고 밝게 뜨면 `CodexVoxMeshBuilder`가 sRGB 팔레트를 선형 버텍스 컬러로 변환하고 있는지 먼저 확인한다.
+- 색이 맞는 계열인데도 뿌옇고 밝게 뜨면 `CodexVoxMeshBuilder`의 `FromSRGBColor(...)`와 공유 VOX 머터리얼의 custom `sRGB -> linear` 디코드가 둘 다 유지되고 있는지 먼저 확인한다.
+- 울타리, 회색 램프, 아이보리 계열이 authored palette보다 유난히 밝게 보이면 `FromSRGBColor(...)`를 제거하지 말고 공유 VOX 머터리얼 연결이 `Vertex Color -> custom sRGB-to-linear decode -> Base Color`인지 먼저 확인한다.
