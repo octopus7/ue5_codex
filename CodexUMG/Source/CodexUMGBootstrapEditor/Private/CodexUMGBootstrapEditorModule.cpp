@@ -309,6 +309,11 @@ namespace CodexUMGBootstrap
 
 void FCodexUMGBootstrapEditorModule::StartupModule()
 {
+	if (IsRunningCommandlet())
+	{
+		return;
+	}
+
 	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this, &FCodexUMGBootstrapEditorModule::RegisterMenus));
 
 	if (CodexUMGBootstrap::NeedsBootstrap())
