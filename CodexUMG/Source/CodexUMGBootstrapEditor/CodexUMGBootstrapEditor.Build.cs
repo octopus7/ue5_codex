@@ -26,6 +26,7 @@ public class CodexUMGBootstrapEditor : ModuleRules
 				"JsonUtilities",
 				"InputEditor",
 				"KismetCompiler",
+				"MaterialEditor",
 				"MeshConversion",
 				"MeshDescription",
 				"Slate",
