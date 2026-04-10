@@ -2,6 +2,7 @@
 
 #include "CodexTopDownPlayerController.h"
 
+#include "CodexFireInputConsumer.h"
 #include "CodexGameInstance.h"
 #include "CodexMoveInputConsumer.h"
 #include "CodexTopDownInputConfigDataAsset.h"
@@ -21,6 +22,7 @@ void ACodexTopDownPlayerController::SetupInputComponent()
 	Super::SetupInputComponent();
 
 	BindTopDownMoveAction();
+	BindTopDownFireAction();
 }
 
 void ACodexTopDownPlayerController::ApplyTopDownInputMappingContext()
@@ -77,6 +79,27 @@ void ACodexTopDownPlayerController::BindTopDownMoveAction()
 	bHasBoundMoveAction = true;
 }
 
+void ACodexTopDownPlayerController::BindTopDownFireAction()
+{
+	if (bHasBoundFireAction || !InputComponent)
+	{
+		return;
+	}
+
+	const UCodexGameInstance* CodexGameInstance = GetGameInstance<UCodexGameInstance>();
+	const UCodexTopDownInputConfigDataAsset* InputConfig = CodexGameInstance ? CodexGameInstance->GetTopDownInputConfig() : nullptr;
+	const UInputAction* FireAction = InputConfig ? InputConfig->GetFireAction() : nullptr;
+
+	UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
+	if (!EnhancedInputComponent || !FireAction)
+	{
+		return;
+	}
+
+	EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Started, this, &ACodexTopDownPlayerController::HandleFireInput);
+	bHasBoundFireAction = true;
+}
+
 void ACodexTopDownPlayerController::HandleMoveInput(const FInputActionValue& InputValue)
 {
 	const FVector2D MoveAxis = InputValue.Get<FVector2D>();
@@ -87,4 +110,17 @@ void ACodexTopDownPlayerController::HandleMoveInput(const FInputActionValue& Inp
 	}
 
 	ICodexMoveInputReceiver::Execute_ConsumeMoveInput(ControlledPawn, MoveAxis);
+}
+
+void ACodexTopDownPlayerController::HandleFireInput(const FInputActionValue& InputValue)
+{
+	(void)InputValue;
+
+	APawn* ControlledPawn = GetPawn();
+	if (!ControlledPawn || !ControlledPawn->GetClass()->ImplementsInterface(UCodexFireInputReceiver::StaticClass()))
+	{
+		return;
+	}
+
+	ICodexFireInputReceiver::Execute_ConsumeFireInput(ControlledPawn);
 }

@@ -1,6 +1,8 @@
 #include "CodexUMGBootstrapEditorModule.h"
 
 #include "CodexGameInstance.h"
+#include "CodexProjectileActor.h"
+#include "CodexProjectileConfigDataAsset.h"
 #include "CodexTopDownCharacter.h"
 #include "CodexTopDownGameMode.h"
 #include "CodexTopDownInputConfigDataAsset.h"
@@ -31,17 +33,22 @@ namespace CodexUMGBootstrap
 	const FString BlueprintsCorePath = TEXT("/Game/Blueprints/Core");
 	const FString BlueprintsGameModePath = TEXT("/Game/Blueprints/GameMode");
 	const FString BlueprintsPlayerPath = TEXT("/Game/Blueprints/Player");
+	const FString BlueprintsProjectilePath = TEXT("/Game/Blueprints/Projectile");
 	const FString DataInputPath = TEXT("/Game/Data/Input");
+	const FString DataProjectilePath = TEXT("/Game/Data/Projectile");
 	const FString InputActionsPath = TEXT("/Game/Input/Actions");
 	const FString InputContextsPath = TEXT("/Game/Input/Contexts");
 
 	const TCHAR* MoveActionName = TEXT("IA_Move");
+	const TCHAR* FireActionName = TEXT("IA_Fire");
 	const TCHAR* MappingContextName = TEXT("IMC_TopDown");
 	const TCHAR* InputConfigName = TEXT("DA_TopDownInputConfig");
+	const TCHAR* ProjectileConfigName = TEXT("DA_PlayerProjectileConfig");
 	const TCHAR* GameInstanceBlueprintName = TEXT("BP_GI_CodexUMG");
 	const TCHAR* GameModeBlueprintName = TEXT("BP_GM_TopDown");
 	const TCHAR* PlayerControllerBlueprintName = TEXT("BP_PC_TopDown");
 	const TCHAR* CharacterBlueprintName = TEXT("BP_Character_TopDown");
+	const TCHAR* ProjectileBlueprintName = TEXT("BP_Projectile_PlayerBasic");
 
 	template <typename AssetType>
 	AssetType* LoadAsset(const FString& AssetPath)
@@ -133,6 +140,18 @@ namespace CodexUMGBootstrap
 		return false;
 	}
 
+	bool SetClassPropertyByName(UObject& TargetObject, const FName PropertyName, UClass* Value)
+	{
+		if (FClassProperty* Property = FindFProperty<FClassProperty>(TargetObject.GetClass(), PropertyName))
+		{
+			Property->SetPropertyValue_InContainer(&TargetObject, Value);
+			TargetObject.MarkPackageDirty();
+			return true;
+		}
+
+		return false;
+	}
+
 	bool SetIntPropertyByName(UObject& TargetObject, const FName PropertyName, int32 Value)
 	{
 		if (FIntProperty* Property = FindFProperty<FIntProperty>(TargetObject.GetClass(), PropertyName))
@@ -154,9 +173,17 @@ namespace CodexUMGBootstrap
 		MoveAction.MarkPackageDirty();
 	}
 
-	void ConfigureMoveContext(UInputMappingContext& MappingContext, UInputAction& MoveAction)
+	void ConfigureFireAction(UInputAction& FireAction)
 	{
-		MappingContext.UnmapAll();
+		FireAction.ValueType = EInputActionValueType::Boolean;
+		FireAction.Modifiers.Reset();
+		FireAction.Triggers.Reset();
+		FireAction.MarkPackageDirty();
+	}
+
+	void ConfigureMoveMappings(UInputMappingContext& MappingContext, UInputAction& MoveAction)
+	{
+		MappingContext.UnmapAllKeysFromAction(&MoveAction);
 
 		FEnhancedActionKeyMapping& DMapping = MappingContext.MapKey(&MoveAction, EKeys::D);
 		DMapping.Modifiers.Reset();
@@ -177,10 +204,21 @@ namespace CodexUMGBootstrap
 		MappingContext.MarkPackageDirty();
 	}
 
-	void ConfigureInputConfig(UCodexTopDownInputConfigDataAsset& InputConfig, UInputMappingContext& MappingContext, UInputAction& MoveAction)
+	void ConfigureFireMappings(UInputMappingContext& MappingContext, UInputAction& FireAction)
+	{
+		MappingContext.UnmapAllKeysFromAction(&FireAction);
+
+		FEnhancedActionKeyMapping& SpaceBarMapping = MappingContext.MapKey(&FireAction, EKeys::SpaceBar);
+		SpaceBarMapping.Modifiers.Reset();
+
+		MappingContext.MarkPackageDirty();
+	}
+
+	void ConfigureInputConfig(UCodexTopDownInputConfigDataAsset& InputConfig, UInputMappingContext& MappingContext, UInputAction& MoveAction, UInputAction& FireAction)
 	{
 		SetObjectPropertyByName(InputConfig, TEXT("DefaultMappingContext"), &MappingContext);
 		SetObjectPropertyByName(InputConfig, TEXT("MoveAction"), &MoveAction);
+		SetObjectPropertyByName(InputConfig, TEXT("FireAction"), &FireAction);
 		SetIntPropertyByName(InputConfig, TEXT("MappingPriority"), 0);
 	}
 
@@ -192,13 +230,24 @@ namespace CodexUMGBootstrap
 		}
 	}
 
-	void ConfigureGameInstanceBlueprint(UBlueprint& GameInstanceBlueprint, UCodexTopDownInputConfigDataAsset& InputConfig)
+	void ConfigureProjectileConfig(UCodexProjectileConfigDataAsset& ProjectileConfig, UBlueprint& ProjectileBlueprint)
+	{
+		CompileBlueprint(&ProjectileBlueprint);
+
+		if (ProjectileBlueprint.GeneratedClass != nullptr)
+		{
+			SetClassPropertyByName(ProjectileConfig, TEXT("ProjectileClass"), ProjectileBlueprint.GeneratedClass);
+		}
+	}
+
+	void ConfigureGameInstanceBlueprint(UBlueprint& GameInstanceBlueprint, UCodexTopDownInputConfigDataAsset& InputConfig, UCodexProjectileConfigDataAsset& ProjectileConfig)
 	{
 		CompileBlueprint(&GameInstanceBlueprint);
 
 		if (UCodexGameInstance* DefaultObject = Cast<UCodexGameInstance>(GameInstanceBlueprint.GeneratedClass->GetDefaultObject()))
 		{
 			SetObjectPropertyByName(*DefaultObject, TEXT("TopDownInputConfig"), &InputConfig);
+			SetObjectPropertyByName(*DefaultObject, TEXT("PlayerProjectileConfig"), &ProjectileConfig);
 			FKismetEditorUtilities::CompileBlueprint(&GameInstanceBlueprint);
 			GameInstanceBlueprint.MarkPackageDirty();
 		}
@@ -246,12 +295,15 @@ namespace CodexUMGBootstrap
 	bool NeedsBootstrap()
 	{
 		return !DoesAssetExist(InputActionsPath, MoveActionName)
+			|| !DoesAssetExist(InputActionsPath, FireActionName)
 			|| !DoesAssetExist(InputContextsPath, MappingContextName)
 			|| !DoesAssetExist(DataInputPath, InputConfigName)
+			|| !DoesAssetExist(DataProjectilePath, ProjectileConfigName)
 			|| !DoesAssetExist(BlueprintsCorePath, GameInstanceBlueprintName)
 			|| !DoesAssetExist(BlueprintsGameModePath, GameModeBlueprintName)
 			|| !DoesAssetExist(BlueprintsPlayerPath, PlayerControllerBlueprintName)
-			|| !DoesAssetExist(BlueprintsPlayerPath, CharacterBlueprintName);
+			|| !DoesAssetExist(BlueprintsPlayerPath, CharacterBlueprintName)
+			|| !DoesAssetExist(BlueprintsProjectilePath, ProjectileBlueprintName);
 	}
 }
 
@@ -283,8 +335,8 @@ void FCodexUMGBootstrapEditorModule::RegisterMenus()
 
 	Section.AddMenuEntry(
 		"CodexUMG.RunTopDownBootstrap",
-		FText::FromString(TEXT("Bootstrap TopDown Input Assets")),
-		FText::FromString(TEXT("Create the fixed top-down input data asset, input assets, and BP shells used by CodexUMG.")),
+		FText::FromString(TEXT("Bootstrap TopDown Gameplay Assets")),
+		FText::FromString(TEXT("Create the top-down input, projectile data assets, and BP shells used by CodexUMG.")),
 		FSlateIcon(),
 		FUIAction(FExecuteAction::CreateRaw(this, &FCodexUMGBootstrapEditorModule::RunBootstrap)));
 }
@@ -296,7 +348,9 @@ void FCodexUMGBootstrapEditorModule::RunBootstrap()
 	EnsureDirectory(BlueprintsCorePath);
 	EnsureDirectory(BlueprintsGameModePath);
 	EnsureDirectory(BlueprintsPlayerPath);
+	EnsureDirectory(BlueprintsProjectilePath);
 	EnsureDirectory(DataInputPath);
+	EnsureDirectory(DataProjectilePath);
 	EnsureDirectory(InputActionsPath);
 	EnsureDirectory(InputContextsPath);
 
@@ -304,6 +358,7 @@ void FCodexUMGBootstrapEditorModule::RunBootstrap()
 	InputActionFactory->InputActionClass = UInputAction::StaticClass();
 	InputActionFactory->bEditAfterNew = false;
 	UInputAction* MoveAction = CreateAsset<UInputAction>(InputActionsPath, MoveActionName, InputActionFactory);
+	UInputAction* FireAction = CreateAsset<UInputAction>(InputActionsPath, FireActionName, InputActionFactory);
 
 	UInputMappingContext_Factory* InputMappingFactory = NewObject<UInputMappingContext_Factory>();
 	InputMappingFactory->InputMappingContextClass = UInputMappingContext::StaticClass();
@@ -314,35 +369,44 @@ void FCodexUMGBootstrapEditorModule::RunBootstrap()
 	DataAssetFactory->DataAssetClass = UCodexTopDownInputConfigDataAsset::StaticClass();
 	DataAssetFactory->bEditAfterNew = false;
 	UCodexTopDownInputConfigDataAsset* InputConfig = CreateAsset<UCodexTopDownInputConfigDataAsset>(DataInputPath, InputConfigName, DataAssetFactory);
+	DataAssetFactory->DataAssetClass = UCodexProjectileConfigDataAsset::StaticClass();
+	UCodexProjectileConfigDataAsset* ProjectileConfig = CreateAsset<UCodexProjectileConfigDataAsset>(DataProjectilePath, ProjectileConfigName, DataAssetFactory);
 
 	UBlueprint* GameInstanceBlueprint = CreateBlueprint(BlueprintsCorePath, GameInstanceBlueprintName, UCodexGameInstance::StaticClass());
 	UBlueprint* GameModeBlueprint = CreateBlueprint(BlueprintsGameModePath, GameModeBlueprintName, ACodexTopDownGameMode::StaticClass());
 	UBlueprint* PlayerControllerBlueprint = CreateBlueprint(BlueprintsPlayerPath, PlayerControllerBlueprintName, ACodexTopDownPlayerController::StaticClass());
 	UBlueprint* CharacterBlueprint = CreateBlueprint(BlueprintsPlayerPath, CharacterBlueprintName, ACodexTopDownCharacter::StaticClass());
+	UBlueprint* ProjectileBlueprint = CreateBlueprint(BlueprintsProjectilePath, ProjectileBlueprintName, ACodexProjectileActor::StaticClass());
 
-	if (MoveAction == nullptr || MappingContext == nullptr || InputConfig == nullptr ||
+	if (MoveAction == nullptr || FireAction == nullptr || MappingContext == nullptr || InputConfig == nullptr || ProjectileConfig == nullptr ||
 		GameInstanceBlueprint == nullptr || GameModeBlueprint == nullptr ||
-		PlayerControllerBlueprint == nullptr || CharacterBlueprint == nullptr)
+		PlayerControllerBlueprint == nullptr || CharacterBlueprint == nullptr || ProjectileBlueprint == nullptr)
 	{
 		return;
 	}
 
 	ConfigureMoveAction(*MoveAction);
-	ConfigureMoveContext(*MappingContext, *MoveAction);
-	ConfigureInputConfig(*InputConfig, *MappingContext, *MoveAction);
-	ConfigureGameInstanceBlueprint(*GameInstanceBlueprint, *InputConfig);
+	ConfigureFireAction(*FireAction);
+	ConfigureMoveMappings(*MappingContext, *MoveAction);
+	ConfigureFireMappings(*MappingContext, *FireAction);
+	ConfigureInputConfig(*InputConfig, *MappingContext, *MoveAction, *FireAction);
+	ConfigureProjectileConfig(*ProjectileConfig, *ProjectileBlueprint);
+	ConfigureGameInstanceBlueprint(*GameInstanceBlueprint, *InputConfig, *ProjectileConfig);
 	ConfigureGameModeBlueprint(*GameModeBlueprint, *PlayerControllerBlueprint, *CharacterBlueprint);
 	ConfigureProjectDefaults(*GameInstanceBlueprint, *GameModeBlueprint);
 
 	SaveAssets(
 		{
 			MoveAction,
+			FireAction,
 			MappingContext,
 			InputConfig,
+			ProjectileConfig,
 			GameInstanceBlueprint,
 			GameModeBlueprint,
 			PlayerControllerBlueprint,
-			CharacterBlueprint
+			CharacterBlueprint,
+			ProjectileBlueprint
 		});
 }
 

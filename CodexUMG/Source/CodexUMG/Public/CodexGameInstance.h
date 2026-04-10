@@ -7,6 +7,7 @@
 #include "CodexGameInstance.generated.h"
 
 class UCodexTopDownInputConfigDataAsset;
+class UCodexProjectileConfigDataAsset;
 
 UCLASS(Blueprintable)
 class CODEXUMG_API UCodexGameInstance : public UGameInstance
@@ -20,7 +21,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Codex|Input")
 	void SetTopDownInputConfig(UCodexTopDownInputConfigDataAsset* NewConfig);
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Codex|Projectile")
+	const UCodexProjectileConfigDataAsset* GetPlayerProjectileConfig() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Codex|Projectile")
+	void SetPlayerProjectileConfig(UCodexProjectileConfigDataAsset* NewConfig);
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Codex|Input")
 	TObjectPtr<UCodexTopDownInputConfigDataAsset> TopDownInputConfig;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Codex|Projectile")
+	TObjectPtr<UCodexProjectileConfigDataAsset> PlayerProjectileConfig;
 };

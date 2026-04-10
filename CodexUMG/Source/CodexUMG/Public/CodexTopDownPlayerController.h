@@ -19,11 +19,16 @@ public:
 private:
 	void ApplyTopDownInputMappingContext();
 	void BindTopDownMoveAction();
+	void BindTopDownFireAction();
 	void HandleMoveInput(const FInputActionValue& InputValue);
+	void HandleFireInput(const FInputActionValue& InputValue);
 
 	UPROPERTY(Transient)
 	bool bHasAppliedTopDownInputContext = false;
 
 	UPROPERTY(Transient)
 	bool bHasBoundMoveAction = false;
+
+	UPROPERTY(Transient)
+	bool bHasBoundFireAction = false;
 };

@@ -3,6 +3,9 @@
 #include "CodexTopDownCharacter.h"
 
 #include "Camera/CameraComponent.h"
+#include "CodexGameInstance.h"
+#include "CodexProjectileActor.h"
+#include "CodexProjectileConfigDataAsset.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
@@ -47,4 +50,34 @@ void ACodexTopDownCharacter::ConsumeMoveInput_Implementation(FVector2D MoveAxis)
 
 	AddMovementInput(ForwardDirection, MoveAxis.Y);
 	AddMovementInput(RightDirection, MoveAxis.X);
+}
+
+void ACodexTopDownCharacter::ConsumeFireInput_Implementation()
+{
+	const UCodexGameInstance* CodexGameInstance = GetGameInstance<UCodexGameInstance>();
+	const UCodexProjectileConfigDataAsset* ProjectileConfig = CodexGameInstance ? CodexGameInstance->GetPlayerProjectileConfig() : nullptr;
+	const TSubclassOf<ACodexProjectileActor> ProjectileClass = ProjectileConfig ? ProjectileConfig->GetProjectileClass() : TSubclassOf<ACodexProjectileActor>();
+
+	if (!ProjectileClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Projectile config is missing on %s."), *GetName());
+		return;
+	}
+
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	const FVector ForwardDirection = GetActorForwardVector().GetSafeNormal();
+	const FVector SpawnLocation = GetActorLocation() + (ForwardDirection * ProjectileSpawnDistance) + FVector(0.0f, 0.0f, ProjectileSpawnHeight);
+	const FRotator SpawnRotation = ForwardDirection.Rotation();
+
+	FActorSpawnParameters SpawnParameters;
+	SpawnParameters.Owner = this;
+	SpawnParameters.Instigator = this;
+	SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+	World->SpawnActor<ACodexProjectileActor>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParameters);
 }
