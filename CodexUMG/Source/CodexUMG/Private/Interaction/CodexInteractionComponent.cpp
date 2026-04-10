@@ -132,12 +132,12 @@ void UCodexInteractionComponent::EnsureIndicatorWidget()
 	GetOwner()->AddOwnedComponent(IndicatorWidgetComponent);
 	IndicatorWidgetComponent->SetupAttachment(RootComponent);
 	IndicatorWidgetComponent->SetRelativeLocation(WidgetOffset);
-	IndicatorWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
+	IndicatorWidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
 	IndicatorWidgetComponent->SetBlendMode(EWidgetBlendMode::Transparent);
 	IndicatorWidgetComponent->SetTickWhenOffscreen(true);
-	IndicatorWidgetComponent->SetTwoSided(true);
+	IndicatorWidgetComponent->SetTwoSided(false);
 	IndicatorWidgetComponent->SetDrawSize(FVector2D(240.0f, 64.0f));
-	IndicatorWidgetComponent->SetPivot(FVector2D(0.0f, 0.5f));
+	IndicatorWidgetComponent->SetPivot(FVector2D(16.0f / 240.0f, 0.5f));
 	IndicatorWidgetComponent->SetWidgetClass(ResolvedWidgetClass);
 	IndicatorWidgetComponent->SetCastShadow(false);
 	IndicatorWidgetComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);

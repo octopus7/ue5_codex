@@ -39,18 +39,20 @@ void UCodexInteractionIndicatorWidget::ApplyInteractionState(const ECodexInterac
 
 void UCodexInteractionIndicatorWidget::RefreshVisualState() const
 {
-	const bool bAnyVisible = CurrentVisibleAlpha > KINDA_SMALL_NUMBER || CurrentPromptAlpha > KINDA_SMALL_NUMBER;
+	const bool bShouldTickMarker = TargetState != ECodexInteractionWidgetState::Hidden || CurrentVisibleAlpha > KINDA_SMALL_NUMBER;
+	const bool bShouldTickPrompt = TargetState == ECodexInteractionWidgetState::Interactable || CurrentPromptAlpha > KINDA_SMALL_NUMBER;
+	const bool bAnyVisible = bShouldTickMarker || bShouldTickPrompt;
 	const_cast<UCodexInteractionIndicatorWidget*>(this)->SetVisibility(bAnyVisible ? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
 
 	if (IMG_FilledCircle)
 	{
-		IMG_FilledCircle->SetVisibility(CurrentVisibleAlpha > KINDA_SMALL_NUMBER ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		IMG_FilledCircle->SetVisibility(bShouldTickMarker ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 		IMG_FilledCircle->SetRenderOpacity(CurrentVisibleAlpha);
 	}
 
 	if (IMG_OuterRing)
 	{
-		IMG_OuterRing->SetVisibility(CurrentVisibleAlpha > KINDA_SMALL_NUMBER ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		IMG_OuterRing->SetVisibility(bShouldTickMarker ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 		IMG_OuterRing->SetRenderOpacity(CurrentVisibleAlpha * 0.45f);
 		const float RingScale = FMath::Lerp(1.6f, 1.0f, CurrentVisibleAlpha);
 		IMG_OuterRing->SetRenderScale(FVector2D(RingScale, RingScale));
@@ -58,7 +60,7 @@ void UCodexInteractionIndicatorWidget::RefreshVisualState() const
 
 	if (BOR_PromptBackground)
 	{
-		BOR_PromptBackground->SetVisibility(CurrentPromptAlpha > KINDA_SMALL_NUMBER ? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
+		BOR_PromptBackground->SetVisibility(bShouldTickPrompt ? ESlateVisibility::SelfHitTestInvisible : ESlateVisibility::Collapsed);
 		BOR_PromptBackground->SetRenderOpacity(CurrentPromptAlpha);
 		BOR_PromptBackground->SetRenderTranslation(FVector2D(FMath::Lerp(12.0f, 0.0f, CurrentPromptAlpha), 0.0f));
 	}
@@ -66,7 +68,7 @@ void UCodexInteractionIndicatorWidget::RefreshVisualState() const
 	if (TXT_Prompt)
 	{
 		TXT_Prompt->SetText(CurrentPromptText);
-		TXT_Prompt->SetVisibility(CurrentPromptAlpha > KINDA_SMALL_NUMBER ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+		TXT_Prompt->SetVisibility(bShouldTickPrompt ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 		TXT_Prompt->SetRenderOpacity(CurrentPromptAlpha);
 	}
 }
