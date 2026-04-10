@@ -404,6 +404,14 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 2. 보조 에이전트는 문서, 매니페스트 점검, 샘플 소스 생성 규칙 검토 같은 부가 작업을 맡는다.
 3. 결과 통합은 메인 작업자가 한 번에 수행한다.
 
+## 플레이어 BP 연계 규칙
+- 이 문서에서 다루는 갈색닭 메시의 플레이어 적용 시점은 순수 VOX 생성 단계가 아니라 Track A와 Track B가 만나는 통합 지점으로 취급한다.
+- Track B에서 `/Game/Vox/Meshes/Characters/SM_Vox_BrownChicken` 생성이 끝났고, Track A에서 `/Game/Blueprints/Player/BP_Character_TopDown` 생성이 끝났으면 그 다음 단계에서 플레이어 BP에 메시를 연결한다.
+- 연결 대상은 `BP_Character_TopDown`의 플레이어 가시성용 별도 `StaticMeshComponent`다.
+- 메시 지정 값은 `/Game/Vox/Meshes/Characters/SM_Vox_BrownChicken`로 고정한다.
+- 둘 중 하나라도 아직 없으면 억지로 선행하지 않고 대기한다.
+- 이 연결 작업은 VOX 메시 생성 성공 직후가 아니라 "갈색닭 메시 생성 완료"와 "플레이어 BP 생성 완료" 두 조건이 모두 충족된 뒤 수행한다.
+
 ## 실제 실행 순서
 1. `Scripts/GenerateSampleVoxSources.ps1`로 `32^3` 샘플 `.vox`를 준비한다.
 2. 같은 단계에서 `-GeneratePreviews` 또는 `Scripts/GenerateVoxPreviewPngs.py`로 비스듬한 PNG 미리보기를 생성한다.
@@ -412,10 +420,12 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 5. `CodexUMGBootstrapEditor` 모듈에 parser/mesh builder/material builder/generator/commandlet을 구현한다.
 6. `Scripts/RunVoxAssetBuild.ps1`로 에디터 실행 여부를 먼저 검사한다.
 7. 에디터가 꺼져 있으면 커맨드렛을 실행해 애셋을 생성한다.
-8. 결과 메시를 Static Mesh Editor에서 열어 자세, 노멀 방향, 버텍스 컬러를 검증한다.
-9. `SM_Vox_Strawberry`만 부드럽고 `SM_Vox_RainbowDiagnostic`의 상단 원색과 하단 그레이 램프가 모두 정상이라면 SourceArt 팔레트 의도로 판단한다.
-10. `SM_Vox_RainbowDiagnostic` 상단 원색이나 하단 그레이 램프까지 연분홍/민트/파스텔처럼 보이면 버텍스 컬러 컬러스페이스 경로를 점검한다.
-11. 좌표계, winding, 피벗, 팔레트, 컬러스페이스 규칙이 어긋난 사례가 나오면 먼저 이 문서 기준을 갱신하고 코드에 반영한다.
+8. `SM_Vox_BrownChicken`와 `BP_Character_TopDown`가 모두 존재하면 `BP_Character_TopDown`의 별도 `StaticMeshComponent`에 갈색닭 메시를 지정한다.
+9. 결과 메시를 Static Mesh Editor에서 열어 자세, 노멀 방향, 버텍스 컬러를 검증한다.
+10. 갈색닭 메시를 지정한 플레이어 BP도 함께 열어 탑다운 시점에서 가시성, 크기, 오프셋이 적절한지 확인한다.
+11. `SM_Vox_Strawberry`만 부드럽고 `SM_Vox_RainbowDiagnostic`의 상단 원색과 하단 그레이 램프가 모두 정상이라면 SourceArt 팔레트 의도로 판단한다.
+12. `SM_Vox_RainbowDiagnostic` 상단 원색이나 하단 그레이 램프까지 연분홍/민트/파스텔처럼 보이면 버텍스 컬러 컬러스페이스 경로를 점검한다.
+13. 좌표계, winding, 피벗, 팔레트, 컬러스페이스 규칙이 어긋난 사례가 나오면 먼저 이 문서 기준을 갱신하고 코드에 반영한다.
 
 ## 최종 검증 체크리스트
 1. 모든 `.vox` 소스가 `32^3` 해상도다.
@@ -431,6 +441,8 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 11. `SM_Vox_RainbowDiagnostic` 상단은 순수 원색 줄무늬가 강한 채도로 보이고, 하단은 검정에서 흰색까지 16단계 그레이가 분리되어 보인다.
 12. 색이 전반적으로 한 단계씩 밀린 듯 보이지 않는다.
 13. 색이 전반적으로 파스텔처럼 뜨지 않는다.
+14. `BP_Character_TopDown`가 존재하면, 플레이어 가시성용 별도 `StaticMeshComponent`가 `/Game/Vox/Meshes/Characters/SM_Vox_BrownChicken`를 참조한다.
+15. 플레이어 BP에 갈색닭 메시를 연결한 뒤 탑다운 카메라 기준으로 실루엣 식별이 가능하다.
 
 ## 유지보수 메모
 - VOX 샘플 생성 스크립트가 `Y-up` 기준을 유지하는지 먼저 확인한다.
