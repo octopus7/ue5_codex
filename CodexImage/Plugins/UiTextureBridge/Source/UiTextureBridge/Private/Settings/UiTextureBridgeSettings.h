@@ -51,5 +51,5 @@ public:
 	float RequestTimeoutSeconds = 10.0f;
 
 	UPROPERTY(EditAnywhere, Config, Category = "Server")
-	bool bAutoStart = false;
+	bool bAutoStart = true;
 };
