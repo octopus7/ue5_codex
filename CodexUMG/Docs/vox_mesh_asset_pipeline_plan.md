@@ -12,6 +12,7 @@
 4. 생성은 실행 중인 에디터 UI 세션이 없는 상태에서 `Commandlet`로 수행한다.
 5. 에디터 실행 중 충돌 가능성이 있으면 즉시 사용자에게 알리고 작업을 중단한다.
 6. 다음 실행에서도 메시가 눕거나, 노멀이 뒤집히거나, 파일 연결이 틀어지지 않도록 재발 방지 기준을 문서화한다.
+7. 샘플 팔레트는 전체적으로 이전보다 높은 채도로 유지하고, SourceArt 단계에서 비스듬한 미리보기 PNG도 함께 생성한다.
 
 ## 대상 애셋 목록
 
@@ -41,12 +42,17 @@
 - 조약돌 바닥
 - 수련
 
+### 진단 / 검증용
+- 고채도 무지개 진단 메시
+
 ## 산출물
 
 ### SourceArt
 - `SourceArt/Vox/Sources/` 아래의 `.vox` 파일
 - 샘플 생성 스크립트: `Scripts/GenerateSampleVoxSources.ps1`
+- 비스듬한 미리보기 PNG 생성 스크립트: `Scripts/GenerateVoxPreviewPngs.py`
 - 매니페스트: `SourceArt/Vox/VoxAssetManifest.json`
+- 미리보기 출력: `SourceArt/Vox/Previews/<Category>/SM_Vox_*.png`
 
 ### UE 애셋
 - 공용 머터리얼
@@ -55,6 +61,7 @@
   - `/Game/Vox/Meshes/Characters/`
   - `/Game/Vox/Meshes/Food/`
   - `/Game/Vox/Meshes/Props/`
+    - `/Game/Vox/Meshes/Props/SM_Vox_RainbowDiagnostic`
   - `/Game/Vox/Meshes/Foliage/`
   - `/Game/Vox/Meshes/Ground/`
 
@@ -97,10 +104,14 @@
 - 딸기처럼 색이 분명한 샘플을 기준 검증용으로 사용한다.
   - `SM_Vox_Strawberry` 본체는 빨강
   - `SM_Vox_Strawberry` 꼭지는 초록
-- 현재 샘플 팔레트는 테스트용 저채도 스타일을 일부 포함한다.
-  - 예: `Red = (232, 74, 60)`, `LeafGreen = (130, 220, 100)`
-  - 따라서 사과/딸기류가 완전한 원색보다는 약간 부드러운 색으로 보이는 것은 현재 SourceArt 기준에서는 정상이다.
-- 더 선명한 원색이 필요하면 머터리얼이나 버텍스 컬러 저장 경로를 건드리지 말고 `Scripts/GenerateSampleVoxSources.ps1`의 팔레트 정의를 조정한다.
+- 원색 경로 자체를 검증하기 위해 별도 진단 메시를 항상 함께 생성한다.
+  - `SM_Vox_RainbowDiagnostic`는 순수 sRGB `255/0/0`, `255/127/0`, `255/255/0`, `0/255/0`, `0/255/255`, `0/0/255`, `255/0/255` 줄무늬를 사용한다.
+  - 이 메시가 `Unlit`에서도 선명하면 기존 샘플의 저채도는 SourceArt 의도일 가능성이 높다.
+  - 이 메시까지 파스텔처럼 뜨면 `sRGB -> Linear` 변환이나 버텍스 컬러 저장 경로를 먼저 점검한다.
+- 현재 샘플 팔레트는 테스트 가독성을 위해 전체적으로 높은 채도로 유지한다.
+  - 예: `Red = (248, 48, 48)`, `LeafGreen = (84, 224, 78)`, `BananaYellow = (250, 224, 52)`
+  - 다만 `WhitePetal`, `Bone`, `PebbleGray` 같은 중성색은 재질 성격상 완전 원색으로 밀지 않는다.
+- 채도를 더 조정할 때는 머터리얼이나 버텍스 컬러 저장 경로를 건드리지 말고 `Scripts/GenerateSampleVoxSources.ps1`의 팔레트 정의를 수정한 뒤 `.vox`와 미리보기 PNG를 같이 재생성한다.
 - 메시가 흐릿한 파스텔 톤이나 전혀 다른 색으로 보이면 머터리얼보다 먼저 팔레트 오프셋 버그를 의심한다.
 - 팔레트 인덱스는 맞는데 전체가 밝고 뿌옇게 뜨면 컬러스페이스 경로를 먼저 의심한다.
   - 대표 증상:
@@ -169,8 +180,10 @@
 6. Static Mesh Editor에서 `Show > Advanced > Vertex Colors`를 켰을 때 색이 정상적으로 보인다.
 7. `SM_Vox_Strawberry`를 Unlit으로 봤을 때 본체가 노랑/아이보리가 아니라 빨강이어야 한다.
 8. `SM_Vox_Strawberry` 꼭지가 민트색이 아니라 초록이어야 한다.
-9. 색이 전반적으로 한 칸씩 밀린 것처럼 보이면 `.vox` `RGBA` 청크 직렬화부터 재검토한다.
-10. 색이 전체적으로 밝고 뿌옇게 보이면 `sRGB -> Linear` 변환 누락 여부를 확인한다.
+9. `SM_Vox_RainbowDiagnostic`를 Unlit으로 봤을 때 빨강, 주황, 노랑, 초록, 시안, 파랑, 마젠타 줄무늬가 탁하지 않고 강하게 보여야 한다.
+10. 딸기만 부드럽고 `SM_Vox_RainbowDiagnostic`는 선명하면 기존 샘플 팔레트가 원래 저채도인 것이다.
+11. 색이 전반적으로 한 칸씩 밀린 것처럼 보이면 `.vox` `RGBA` 청크 직렬화부터 재검토한다.
+12. 레인보우 메시까지 전체적으로 밝고 뿌옇게 보이면 `sRGB -> Linear` 변환 누락 여부를 확인한다.
 
 현재 구현 기준 기대 확인값 예시:
 - `SM_Vox_Pig`: `extent=(42.5, 22.5, 32.5)`
@@ -242,10 +255,33 @@
 
 ### SourceArt 팔레트 규칙
 - 샘플 `.vox`를 다시 생성했으면, 변경된 SourceArt만으로 끝내지 않고 커맨드렛으로 UE 메시도 재생성해야 한다.
+- 팔레트나 복셀 형태가 바뀌면 `SourceArt/Vox/Previews/` 아래의 비스듬한 PNG도 같이 재생성해 SourceArt 단계에서 색감과 실루엣을 먼저 확인한다.
 - SourceArt와 UE 애셋 사이에 색이 어긋나면 먼저 `.vox` 팔레트와 `XYZI.ColorIndex` 매핑을 확인한다.
 - 팔레트 검증 기준 예시:
   - 딸기 본체에 쓰는 `ColorIndex=5`는 빨강 계열이어야 한다.
   - 잎에 쓰는 `ColorIndex=12`는 초록 계열이어야 한다.
+  - `SM_Vox_RainbowDiagnostic` 줄무늬는 순서대로 빨강, 주황, 노랑, 초록, 시안, 파랑, 마젠타여야 한다.
+
+## 비스듬한 미리보기 PNG
+
+### 목적
+- UE 에디터를 열기 전에 SourceArt 단계에서 색감, 실루엣, 팔레트 오프셋 이상을 빠르게 확인한다.
+- `SM_Vox_Strawberry`와 `SM_Vox_RainbowDiagnostic`를 바로 비교해 authored palette 문제와 컬러스페이스 문제를 초기에 분리한다.
+
+### 생성 방식
+- `Scripts/GenerateVoxPreviewPngs.py`는 `VoxAssetManifest.json`을 읽고 각 `.vox` 파일을 파싱한다.
+- 렌더링은 투명 배경의 비스듬한 orthographic voxel preview 기준으로 수행한다.
+- 노출된 `Top`, `+X`, `+Z` face만 그려서 가벼운 검수용 이미지를 만든다.
+- 출력은 `SourceArt/Vox/Previews/<Category>/SM_Vox_*.png` 형식으로 정리한다.
+
+### 사용 예시
+```powershell
+.\Scripts\GenerateSampleVoxSources.ps1 -GeneratePreviews
+```
+
+```powershell
+python .\Scripts\GenerateVoxPreviewPngs.py --manifest .\SourceArt\Vox\VoxAssetManifest.json --source-root .\SourceArt\Vox --output-root .\SourceArt\Vox\Previews
+```
 
 ## 커맨드렛 설계
 
@@ -338,14 +374,16 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 
 ## 실제 실행 순서
 1. `Scripts/GenerateSampleVoxSources.ps1`로 `32^3` 샘플 `.vox`를 준비한다.
-2. `SourceArt/Vox/VoxAssetManifest.json`을 작성한다.
-3. `CodexUMGBootstrapEditor` 모듈에 parser/mesh builder/material builder/generator/commandlet을 구현한다.
-4. `Scripts/RunVoxAssetBuild.ps1`로 에디터 실행 여부를 먼저 검사한다.
-5. 에디터가 꺼져 있으면 커맨드렛을 실행해 애셋을 생성한다.
-6. 결과 메시를 Static Mesh Editor에서 열어 자세, 노멀 방향, 버텍스 컬러를 검증한다.
-7. 색상 변경이 포함된 경우 `SM_Vox_Strawberry` 같은 기준 메시를 Unlit으로 열어 팔레트 오프셋이 없는지 확인한다.
-8. `SM_Vox_Strawberry`가 여전히 연분홍/민트처럼 보이면 버텍스 컬러 컬러스페이스 경로를 점검한다.
-9. 좌표계, winding, 피벗, 팔레트, 컬러스페이스 규칙이 어긋난 사례가 나오면 먼저 이 문서 기준을 갱신하고 코드에 반영한다.
+2. 같은 단계에서 `-GeneratePreviews` 또는 `Scripts/GenerateVoxPreviewPngs.py`로 비스듬한 PNG 미리보기를 생성한다.
+3. `SourceArt/Vox/VoxAssetManifest.json`을 작성하거나 재생성한다.
+4. `SM_Vox_Strawberry.png`와 `SM_Vox_RainbowDiagnostic.png`를 먼저 확인해 색감과 팔레트 오프셋 이상이 없는지 본다.
+5. `CodexUMGBootstrapEditor` 모듈에 parser/mesh builder/material builder/generator/commandlet을 구현한다.
+6. `Scripts/RunVoxAssetBuild.ps1`로 에디터 실행 여부를 먼저 검사한다.
+7. 에디터가 꺼져 있으면 커맨드렛을 실행해 애셋을 생성한다.
+8. 결과 메시를 Static Mesh Editor에서 열어 자세, 노멀 방향, 버텍스 컬러를 검증한다.
+9. `SM_Vox_Strawberry`만 부드럽고 `SM_Vox_RainbowDiagnostic`가 선명하면 SourceArt 팔레트 의도로 판단한다.
+10. `SM_Vox_RainbowDiagnostic`까지 연분홍/민트/파스텔처럼 보이면 버텍스 컬러 컬러스페이스 경로를 점검한다.
+11. 좌표계, winding, 피벗, 팔레트, 컬러스페이스 규칙이 어긋난 사례가 나오면 먼저 이 문서 기준을 갱신하고 코드에 반영한다.
 
 ## 최종 검증 체크리스트
 1. 모든 `.vox` 소스가 `32^3` 해상도다.
@@ -357,8 +395,10 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 7. 실행 중인 에디터가 있으면 커맨드렛이 즉시 실패하고 사용자에게 이유를 알린다.
 8. 매니페스트 경로와 실제 `.vox` 파일명이 일치한다.
 9. `SM_Vox_Strawberry` 본체는 빨강, 꼭지는 초록으로 보인다.
-10. 색이 전반적으로 한 단계씩 밀린 듯 보이지 않는다.
-11. 색이 전반적으로 파스텔처럼 뜨지 않는다.
+10. `SourceArt/Vox/Previews/` 아래의 비스듬한 PNG가 최신 `.vox`와 함께 재생성되어 있다.
+11. `SM_Vox_RainbowDiagnostic`는 순수 원색 줄무늬가 강한 채도로 보인다.
+12. 색이 전반적으로 한 단계씩 밀린 듯 보이지 않는다.
+13. 색이 전반적으로 파스텔처럼 뜨지 않는다.
 
 ## 유지보수 메모
 - VOX 샘플 생성 스크립트가 `Y-up` 기준을 유지하는지 먼저 확인한다.
@@ -366,4 +406,6 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 - `VOX -> UE` 변환식이나 winding 규칙을 바꾸려면 캐릭터 썸네일, 바닥 타일, 울타리 결과를 다시 검증한다.
 - 메시가 다시 눕거나 노멀이 뒤집히면 `CodexVoxMeshBuilder`의 축 변환, 삼각형 순서, 피벗 규칙부터 확인한다.
 - 색이 이상하면 머터리얼보다 먼저 `GenerateSampleVoxSources.ps1`의 팔레트 엔트리 배치와 `CodexVoxParser`의 `RGBA` 해석부터 확인한다.
+- 색이 탁하게 보이는 이슈는 `SM_Vox_Strawberry`와 `SM_Vox_RainbowDiagnostic`를 같이 열어 authored palette 문제인지 컬러스페이스 문제인지 먼저 분리한다.
+- 팔레트나 복셀 실루엣을 바꾸면 UE를 보기 전에 `GenerateVoxPreviewPngs.py`로 비스듬한 PNG를 다시 뽑아 SourceArt 차이부터 확인한다.
 - 색이 맞는 계열인데도 뿌옇고 밝게 뜨면 `CodexVoxMeshBuilder`가 sRGB 팔레트를 선형 버텍스 컬러로 변환하고 있는지 먼저 확인한다.
