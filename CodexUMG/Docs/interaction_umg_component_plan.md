@@ -75,6 +75,7 @@
 - `/Game/Data/Input/DA_TopDownInputConfig` 갱신
 - `/Game/Blueprints/Interaction/BP_Interactable_Apple`
 - `/Game/Blueprints/Interaction/BP_Interactable_Strawberry`
+- `/Game/Maps/BasicMap` 내 테스트용 사과/딸기 배치 갱신
 
 ## 권장 런타임 구조
 
@@ -258,6 +259,8 @@
   - `DA_TopDownInputConfig`에 `InteractAction` 연결
   - `WBP_InteractionIndicator` 생성 또는 갱신
   - 테스트용 `BP_Interactable_Apple`, `BP_Interactable_Strawberry` 생성 또는 갱신
+  - `BasicMap`을 로드해 테스트용 사과/딸기를 플레이어 시작 지점 근처에 배치 또는 재배치
+  - 수정된 `BasicMap` 저장
   - 애셋 컴파일 및 저장
 - 실행 전제
   - 에디터 UI 세션이 열려 있지 않은 상태에서 실행한다.
@@ -309,9 +312,9 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 
 ## 테스트 대상 배치 계획
 - 기본 검증 맵은 기존 `Content/Maps/BasicMap.umap`을 우선 사용한다.
-- 사과와 딸기를 플레이어 이동 경로 근처에 배치한다.
+- 커맨드렛이 `BasicMap`을 직접 열고 테스트용 사과/딸기를 플레이어 이동 경로 근처에 배치한다.
 - 일부러 서로 가까운 거리에도 배치해, 두 대상이 동시에 상호작용 거리 안에 들어와도 프롬프트가 하나만 열리는지 확인한다.
-- 가시 거리 안이지만 상호작용 거리는 아닌 지점도 만들고, 마커만 보이는 상태를 확인한다.
+- 시작 직후에는 가시 거리 안이지만 상호작용 거리는 아닌 지점에 두고, 이동 후 프롬프트 단일 표시를 확인한다.
 
 ## 권장 작업 순서
 1. 런타임 타입과 인터페이스를 먼저 고정한다.
@@ -323,7 +326,7 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 7. 입력 설정 확장과 플레이어 컨트롤러 바인딩을 기존 패턴에 맞춰 추가한다.
 8. 에디터 모듈에 위젯/테스트 BP 생성 코드를 추가한다.
 9. `UCodexInteractionAssetBuildCommandlet`를 구현하고 애셋을 실제 생성한다.
-10. `BasicMap`에 테스트 BP를 놓고 PIE 검증을 수행한다.
+10. 커맨드렛으로 `BasicMap`까지 갱신한 뒤 PIE 검증을 수행한다.
 
 ## 리드타임 단축을 위한 에이전트 운영 방식
 
@@ -390,6 +393,8 @@ UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=Codex
 - `IA_Interact`의 키 매핑이 `F` 키인가
 - `Commandlet` 실행만으로 `WBP_InteractionIndicator`가 실제 애셋으로 생성되는가
 - `Commandlet` 실행만으로 테스트용 사과/딸기 BP가 실제 애셋으로 생성되는가
+- `Commandlet` 실행만으로 `BasicMap`에 테스트용 사과/딸기가 실제로 배치되는가
+- 프로젝트 실행 직후 `BasicMap`에서 사과/딸기가 카메라에 보이는가
 - 플레이어가 멀리 있을 때 위젯이 전혀 보이지 않는가
 - 가시 거리 진입 시 채워진 원과 동심원이 페이드/스케일 보간으로 나타나는가
 - 가시 거리 이탈 시 동일 전환이 역방향으로 재생되는가
