@@ -240,6 +240,18 @@
                        "pivotRule":  "GroundCentered",
                        "collisionType":  "None",
                        "notes":  "Sample water lily."
+                   },
+                   {
+                       "id":  "rainbow_diagnostic",
+                       "displayName":  "Rainbow Diagnostic",
+                       "sourceVoxFile":  "Sources/SM_Vox_RainbowDiagnostic.vox",
+                       "targetPackagePath":  "/Game/Vox/Meshes/Props",
+                       "targetAssetName":  "SM_Vox_RainbowDiagnostic",
+                       "category":  "Props",
+                       "repeatable":  false,
+                       "pivotRule":  "GroundCentered",
+                       "collisionType":  "UseComplexAsSimple",
+                       "notes":  "Pure high-saturation sRGB rainbow stripes for color-space diagnostics."
                    }
                ]
 }

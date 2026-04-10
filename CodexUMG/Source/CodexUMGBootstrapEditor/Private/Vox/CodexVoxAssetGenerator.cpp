@@ -9,6 +9,7 @@
 #include "Misc/FileHelper.h"
 #include "Misc/PackageName.h"
 #include "Misc/Paths.h"
+#include "Misc/StringBuilder.h"
 #include "PhysicsEngine/BodySetup.h"
 #include "PhysicsEngine/BoxElem.h"
 #include "Serialization/JsonReader.h"
@@ -111,6 +112,34 @@ namespace
 		}
 
 		return true;
+	}
+
+	FString EscapePowerShellSingleQuotedString(const FString& Value)
+	{
+		FString Escaped(Value);
+		Escaped.ReplaceInline(TEXT("'"), TEXT("''"));
+		return Escaped;
+	}
+
+	bool IsCurrentProjectEditorRunning()
+	{
+		const FString ProjectFilePath = FPaths::ConvertRelativePathToFull(FPaths::GetProjectFilePath());
+		const FString EscapedProjectFilePath = EscapePowerShellSingleQuotedString(ProjectFilePath);
+		const FString PowerShellScript = FString::Printf(
+			TEXT("$p = Get-CimInstance Win32_Process -Filter \"Name = 'UnrealEditor.exe'\" | Where-Object { $_.CommandLine -and $_.CommandLine -match [regex]::Escape('%s') } | Select-Object -First 1; if ($p) { Write-Output 'RUNNING' }"),
+			*EscapedProjectFilePath);
+
+		FString StdOut;
+		FString StdErr;
+		int32 ReturnCode = 0;
+		FPlatformProcess::ExecProcess(
+			TEXT("powershell.exe"),
+			*FString::Printf(TEXT("-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"%s\""), *PowerShellScript.ReplaceCharWithEscapedChar()),
+			&ReturnCode,
+			&StdOut,
+			&StdErr);
+
+		return ReturnCode == 0 && StdOut.Contains(TEXT("RUNNING"));
 	}
 
 	bool SaveAsset(UObject& Asset, FString& OutError)
@@ -327,7 +356,7 @@ bool FCodexVoxAssetGenerator::RunBuild(const CodexVox::FBuildOptions& Options, F
 		return false;
 	}
 
-	if (FPlatformProcess::IsApplicationRunning(TEXT("UnrealEditor.exe")))
+	if (IsCurrentProjectEditorRunning())
 	{
 		OutError = TEXT("An Unreal Editor session for this project is running. Stop the editor and rerun the VOX asset build.");
 		return false;

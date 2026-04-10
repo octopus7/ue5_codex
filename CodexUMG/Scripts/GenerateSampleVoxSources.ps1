@@ -1,7 +1,9 @@
 [CmdletBinding()]
 param(
 	[string]$OutputRoot,
-	[switch]$Clean
+	[switch]$Clean,
+	[switch]$GeneratePreviews,
+	[string]$PythonExe = 'python'
 )
 
 Set-StrictMode -Version Latest
@@ -15,6 +17,7 @@ if (-not $OutputRoot) {
 $resolution = 32
 $sourcesRoot = Join-Path $OutputRoot 'Sources'
 $manifestPath = Join-Path $OutputRoot 'VoxAssetManifest.json'
+$previewsRoot = Join-Path $OutputRoot 'Previews'
 
 function New-VoxelGrid {
 	return New-Object 'byte[,,]' $resolution, $resolution, $resolution
@@ -383,6 +386,26 @@ function Build-WaterLily {
 	Add-Flower -Grid $Grid -StemHeight 3 -StemColor $PadColor -PetalColor $BlossomColor -CenterColor $BlossomColor -PetalRadius 2 -CenterX 16 -CenterZ 16
 }
 
+function Build-RainbowDiagnostic {
+	param(
+		[byte[,,]]$Grid,
+		[byte[]]$StripeColors
+	)
+
+	$startX = 2
+	$stripeWidth = 4
+	$minY = 0
+	$maxY = 23
+	$minZ = 10
+	$maxZ = 17
+
+	for ($stripeIndex = 0; $stripeIndex -lt $StripeColors.Length; $stripeIndex++) {
+		$minX = $startX + ($stripeIndex * $stripeWidth)
+		$maxX = $minX + $stripeWidth - 1
+		Add-Box -Grid $Grid -MinX $minX -MinY $minY -MinZ $minZ -MaxX $maxX -MaxY $maxY -MaxZ $maxZ -ColorIndex $StripeColors[$stripeIndex]
+	}
+}
+
 function New-ChunkBytes {
 	param(
 		[string]$Id,
@@ -504,6 +527,10 @@ if ($Clean -and (Test-Path $sourcesRoot)) {
 	Remove-Item $sourcesRoot -Recurse -Force
 }
 
+if ($Clean -and (Test-Path $previewsRoot)) {
+	Remove-Item $previewsRoot -Recurse -Force
+}
+
 New-Item -ItemType Directory -Path $sourcesRoot -Force | Out-Null
 
 $palette = New-Object object[] 256
@@ -512,30 +539,37 @@ for ($index = 0; $index -lt $palette.Length; $index++) {
 }
 
 $paletteDefinitions = @(
-	@{ Name = 'WhiteChicken'; R = 240; G = 236; B = 224 },
-	@{ Name = 'BrownChicken'; R = 166; G = 113; B = 69 },
-	@{ Name = 'ChickYellow'; R = 242; G = 217; B = 109 },
-	@{ Name = 'PigPink'; R = 227; G = 160; B = 167 },
-	@{ Name = 'Red'; R = 232; G = 74; B = 60 },
-	@{ Name = 'AppleGreen'; R = 154; G = 196; B = 78 },
-	@{ Name = 'MilkBlue'; R = 154; G = 190; B = 226 },
-	@{ Name = 'BananaYellow'; R = 232; G = 209; B = 92 },
-	@{ Name = 'GrapePurple'; R = 132; G = 96; B = 170 },
-	@{ Name = 'MeatRed'; R = 170; G = 70; B = 62 },
-	@{ Name = 'RoastBrown'; R = 138; G = 90; B = 58 },
-	@{ Name = 'LeafGreen'; R = 130; G = 220; B = 100 },
-	@{ Name = 'FenceBrown'; R = 130; G = 97; B = 63 },
-	@{ Name = 'BushGreen'; R = 92; G = 150; B = 82 },
-	@{ Name = 'GrassGreen'; R = 118; G = 180; B = 95 },
-	@{ Name = 'YellowFlower'; R = 235; G = 199; B = 83 },
-	@{ Name = 'WhitePetal'; R = 238; G = 238; B = 230 },
-	@{ Name = 'FlowerRed'; R = 214; G = 90; B = 86 },
-	@{ Name = 'SunflowerBrown'; R = 112; G = 78; B = 42 },
-	@{ Name = 'PebbleGray'; R = 136; G = 136; B = 136 },
-	@{ Name = 'WaterLilyPink'; R = 228; G = 176; B = 194 },
-	@{ Name = 'SoilBrown'; R = 96; G = 72; B = 52 },
-	@{ Name = 'StemGreen'; R = 104; G = 154; B = 74 },
-	@{ Name = 'Bone'; R = 232; G = 220; B = 191 }
+	@{ Name = 'WhiteChicken'; R = 248; G = 243; B = 230 },
+	@{ Name = 'BrownChicken'; R = 189; G = 117; B = 42 },
+	@{ Name = 'ChickYellow'; R = 255; G = 225; B = 72 },
+	@{ Name = 'PigPink'; R = 255; G = 146; B = 175 },
+	@{ Name = 'Red'; R = 248; G = 48; B = 48 },
+	@{ Name = 'AppleGreen'; R = 136; G = 214; B = 52 },
+	@{ Name = 'MilkBlue'; R = 104; G = 188; B = 248 },
+	@{ Name = 'BananaYellow'; R = 250; G = 224; B = 52 },
+	@{ Name = 'GrapePurple'; R = 150; G = 82; B = 226 },
+	@{ Name = 'MeatRed'; R = 198; G = 60; B = 60 },
+	@{ Name = 'RoastBrown'; R = 165; G = 88; B = 38 },
+	@{ Name = 'LeafGreen'; R = 84; G = 224; B = 78 },
+	@{ Name = 'FenceBrown'; R = 156; G = 96; B = 36 },
+	@{ Name = 'BushGreen'; R = 64; G = 176; B = 72 },
+	@{ Name = 'GrassGreen'; R = 86; G = 210; B = 84 },
+	@{ Name = 'YellowFlower'; R = 255; G = 210; B = 38 },
+	@{ Name = 'WhitePetal'; R = 248; G = 245; B = 238 },
+	@{ Name = 'FlowerRed'; R = 242; G = 72; B = 96 },
+	@{ Name = 'SunflowerBrown'; R = 136; G = 82; B = 24 },
+	@{ Name = 'PebbleGray'; R = 154; G = 148; B = 142 },
+	@{ Name = 'WaterLilyPink'; R = 248; G = 162; B = 214 },
+	@{ Name = 'SoilBrown'; R = 118; G = 76; B = 34 },
+	@{ Name = 'StemGreen'; R = 74; G = 174; B = 64 },
+	@{ Name = 'Bone'; R = 242; G = 229; B = 194 },
+	@{ Name = 'PureRed'; R = 255; G = 0; B = 0 },
+	@{ Name = 'PureOrange'; R = 255; G = 127; B = 0 },
+	@{ Name = 'PureYellow'; R = 255; G = 255; B = 0 },
+	@{ Name = 'PureGreen'; R = 0; G = 255; B = 0 },
+	@{ Name = 'PureCyan'; R = 0; G = 255; B = 255 },
+	@{ Name = 'PureBlue'; R = 0; G = 0; B = 255 },
+	@{ Name = 'PureMagenta'; R = 255; G = 0; B = 255 }
 )
 
 $colorIndex = @{}
@@ -576,7 +610,8 @@ $assets = @(
 	[ordered]@{ Id = 'red_flower'; DisplayName = 'Red Flower'; SourceVoxFile = 'Sources/SM_Vox_RedFlower.vox'; TargetPackagePath = '/Game/Vox/Meshes/Foliage'; TargetAssetName = 'SM_Vox_RedFlower'; Category = 'Foliage'; Repeatable = $true; PivotRule = 'GroundCentered'; CollisionType = 'None'; Notes = 'Sample red flower.'; Builder = 'RedFlower' },
 	[ordered]@{ Id = 'sunflower'; DisplayName = 'Sunflower'; SourceVoxFile = 'Sources/SM_Vox_Sunflower.vox'; TargetPackagePath = '/Game/Vox/Meshes/Foliage'; TargetAssetName = 'SM_Vox_Sunflower'; Category = 'Foliage'; Repeatable = $true; PivotRule = 'GroundCentered'; CollisionType = 'None'; Notes = 'Sample sunflower.'; Builder = 'Sunflower' },
 	[ordered]@{ Id = 'pebble_ground_tile'; DisplayName = 'Pebble Ground Tile'; SourceVoxFile = 'Sources/SM_Vox_PebbleGroundTile.vox'; TargetPackagePath = '/Game/Vox/Meshes/Ground'; TargetAssetName = 'SM_Vox_PebbleGroundTile'; Category = 'Ground'; Repeatable = $true; PivotRule = 'Centered'; CollisionType = 'SimpleBox'; Notes = 'Flat repeatable ground tile.'; Builder = 'PebbleGroundTile' },
-	[ordered]@{ Id = 'water_lily'; DisplayName = 'Water Lily'; SourceVoxFile = 'Sources/SM_Vox_WaterLily.vox'; TargetPackagePath = '/Game/Vox/Meshes/Foliage'; TargetAssetName = 'SM_Vox_WaterLily'; Category = 'Foliage'; Repeatable = $true; PivotRule = 'GroundCentered'; CollisionType = 'None'; Notes = 'Sample water lily.'; Builder = 'WaterLily' }
+	[ordered]@{ Id = 'water_lily'; DisplayName = 'Water Lily'; SourceVoxFile = 'Sources/SM_Vox_WaterLily.vox'; TargetPackagePath = '/Game/Vox/Meshes/Foliage'; TargetAssetName = 'SM_Vox_WaterLily'; Category = 'Foliage'; Repeatable = $true; PivotRule = 'GroundCentered'; CollisionType = 'None'; Notes = 'Sample water lily.'; Builder = 'WaterLily' },
+	[ordered]@{ Id = 'rainbow_diagnostic'; DisplayName = 'Rainbow Diagnostic'; SourceVoxFile = 'Sources/SM_Vox_RainbowDiagnostic.vox'; TargetPackagePath = '/Game/Vox/Meshes/Props'; TargetAssetName = 'SM_Vox_RainbowDiagnostic'; Category = 'Props'; Repeatable = $false; PivotRule = 'GroundCentered'; CollisionType = 'UseComplexAsSimple'; Notes = 'Pure high-saturation sRGB rainbow stripes for color-space diagnostics.'; Builder = 'RainbowDiagnostic' }
 )
 
 $manifestAssets = New-Object 'System.Collections.Generic.List[object]'
@@ -605,6 +640,7 @@ foreach ($asset in $assets) {
 		'Sunflower' { Build-Sunflower -Grid $grid -StemColor (Get-ColorIndex 'StemGreen') -PetalColor (Get-ColorIndex 'YellowFlower') -CenterColor (Get-ColorIndex 'SunflowerBrown') }
 		'PebbleGroundTile' { Build-PebbleGroundTile -Grid $grid -BaseColor (Get-ColorIndex 'SoilBrown') -PebbleColor (Get-ColorIndex 'PebbleGray') }
 		'WaterLily' { Build-WaterLily -Grid $grid -PadColor (Get-ColorIndex 'LeafGreen') -BlossomColor (Get-ColorIndex 'WaterLilyPink') }
+		'RainbowDiagnostic' { Build-RainbowDiagnostic -Grid $grid -StripeColors @((Get-ColorIndex 'PureRed'), (Get-ColorIndex 'PureOrange'), (Get-ColorIndex 'PureYellow'), (Get-ColorIndex 'PureGreen'), (Get-ColorIndex 'PureCyan'), (Get-ColorIndex 'PureBlue'), (Get-ColorIndex 'PureMagenta')) }
 		default { throw "Unknown builder '$($asset.Builder)'." }
 	}
 
@@ -634,3 +670,17 @@ $manifest | ConvertTo-Json -Depth 8 | Set-Content -Path $manifestPath -Encoding 
 
 Write-Host "Generated $($assets.Count) VOX sample sources under '$sourcesRoot'."
 Write-Host "Wrote manifest '$manifestPath'."
+
+if ($GeneratePreviews) {
+	$previewScriptPath = Join-Path $projectRoot 'Scripts\GenerateVoxPreviewPngs.py'
+	if (-not (Test-Path $previewScriptPath)) {
+		throw "Preview script not found at '$previewScriptPath'."
+	}
+
+	& $PythonExe $previewScriptPath --manifest $manifestPath --source-root $OutputRoot --output-root $previewsRoot
+	if ($LASTEXITCODE -ne 0) {
+		throw "Preview generation failed with exit code $LASTEXITCODE."
+	}
+
+	Write-Host "Generated angled preview PNGs under '$previewsRoot'."
+}
