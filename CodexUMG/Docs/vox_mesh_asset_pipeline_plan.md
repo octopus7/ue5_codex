@@ -1,31 +1,34 @@
-# VOX 테스트 메시 에셋 생성 계획
+# VOX 메시 애셋 생성 계획
 
 ## 문서 목적
+플레이어/적 테스트용 VOX 메시를 `32 x 32 x 32` 규격으로 준비하고, `CodexUMGBootstrapEditor` 에디터 모듈 코드와 커맨드렛을 이용해 UE5 프로젝트용 `StaticMesh` 애셋으로 생성하는 구현 계획과 운영 기준을 정리한다.
 
-플레이어와 적 테스트에 사용할 저해상도 VOX 메시를 제작하고, 이를 `CodexUMGBootstrapEditor` 에디터 모듈의 코드와 커맨드렛을 통해 UE5 프로젝트용 `StaticMesh` 에셋으로 생성하는 작업 계획을 정리한다.
+이 문서는 단순 아이디어 메모가 아니라, 다음 실행 때 같은 문제가 반복되지 않도록 좌표계, winding, 노멀, 피벗, 파일명 규칙, 검증 절차까지 포함하는 기준 문서다.
 
-이번 계획의 핵심 목표는 아래와 같다.
+## 목표
+1. 모든 원본 VOX 소스는 `32^3` 해상도로 통일한다.
+2. 색상은 버텍스 컬러로만 표현한다.
+3. 모든 메시가 공용 머터리얼 `M_VoxVertexColor` 하나만 사용하도록 만든다.
+4. 생성은 실행 중인 에디터 UI 세션이 없는 상태에서 `Commandlet`로 수행한다.
+5. 에디터 실행 중 충돌 가능성이 있으면 즉시 사용자에게 알리고 작업을 중단한다.
+6. 다음 실행에서도 메시가 눕거나, 노멀이 뒤집히거나, 파일 연결이 틀어지지 않도록 재발 방지 기준을 문서화한다.
 
-1. 원본 VOX 소스는 `32 x 32 x 32` 해상도로 통일한다.
-2. 색상은 머터리얼 색상이 아니라 버텍스 컬러로 표현한다.
-3. 메시마다 색상별 머터리얼 슬롯을 늘리지 않고, 모든 메시가 공용 VOX 머터리얼 하나를 사용한다.
-4. 생성은 실행 중인 에디터 UI 세션이 없는 상태를 전제로 `Commandlet` 로 수행한다.
-5. 에디터 실행 중 충돌로 보이는 에러가 나면 사용자에게 즉시 알리고 중단한다.
+## 대상 애셋 목록
 
-## 대상 에셋 목록
-
-### 캐릭터 / 아이템
+### 캐릭터 / 동물 / 생물
 - 흰닭
 - 갈색닭
 - 병아리
 - 돼지
+
+### 음식 / 아이템
 - 사과
 - 병우유
 - 딸기
 - 바나나
 - 포도송이
 - 생고기
-- 뼈가있는구은고기
+- 뼈가 있는 구운 고기
 
 ### 반복 배치 가능한 요소
 - 울타리
@@ -38,14 +41,14 @@
 - 조약돌 바닥
 - 수련
 
-## 최종 산출물
+## 산출물
 
-### 소스 아트
-- `SourceArt/Vox/` 아래에 `32^3` 규격의 `.vox` 파일을 둔다.
-- 반복 배치 요소를 포함한 모든 모델은 1개 파일당 1개 오브젝트 기준으로 관리한다.
-- 소스 파일명과 생성될 UE 에셋명은 1:1 매핑한다.
+### SourceArt
+- `SourceArt/Vox/Sources/` 아래의 `.vox` 파일
+- 샘플 생성 스크립트: `Scripts/GenerateSampleVoxSources.ps1`
+- 매니페스트: `SourceArt/Vox/VoxAssetManifest.json`
 
-### UE 에셋
+### UE 애셋
 - 공용 머터리얼
   - `/Game/Vox/Materials/M_VoxVertexColor`
 - 정적 메시
@@ -54,69 +57,168 @@
   - `/Game/Vox/Meshes/Props/`
   - `/Game/Vox/Meshes/Foliage/`
   - `/Game/Vox/Meshes/Ground/`
-- 생성 규칙 메타데이터 또는 매니페스트
-  - `SourceArt/Vox/VoxAssetManifest.json`
 
-## 에셋 명세
+## UE 애셋 명세
 
 ### 색상 처리
-- `.vox` 팔레트 색상은 각 메시의 버텍스 컬러로 기록한다.
-- 머터리얼은 `Vertex Color` 노드의 RGB를 `Base Color` 에 연결하는 공용 머터리얼 하나만 사용한다.
-- 메시당 머터리얼 슬롯은 기본적으로 1개만 둔다.
-- 색상별 머터리얼을 여러 개 만드는 구조는 채택하지 않는다.
+- `.vox` 팔레트 색상은 메시의 버텍스 컬러로 기록한다.
+- 머터리얼은 `Vertex Color RGB -> Base Color` 구조의 공용 머터리얼 하나만 사용한다.
+- 색상별 머터리얼을 여러 개 생성하거나, 메시 하나가 많은 머터리얼 슬롯을 가지는 구조는 채택하지 않는다.
+- `XYZI`의 `ColorIndex`는 리터럴 RGB 값이 아니라 VOX 팔레트 인덱스다.
+- 따라서 메시 빌더는 `Voxel.ColorIndex -> Palette[ColorIndex]` 매핑으로 실제 색을 읽어야 한다.
+- VOX 팔레트의 RGB 값은 보통 sRGB 기준으로 authored 되므로, `MeshDescription`에 기록할 때는 선형 색으로 변환해서 버텍스 컬러에 넣어야 한다.
+- 즉 `FColor`를 단순히 `/255`로 나눈 값을 쓰지 않고, `sRGB -> Linear` 변환 후 기록한다.
 
-### 메시 생성 규칙
-- 각 채워진 복셀은 기본 큐브 셀로 간주한다.
-- 메시 생성 시 내부 면은 제거하고 외부로 드러나는 면만 생성한다.
-- 1차 구현은 단순 노출면 생성 방식으로 진행한다.
-- 해상도가 `32^3` 고 테스트 자산 수가 제한적이므로, 1차 구현에서 그리디 메시까지 강제하지 않는다.
-- 삼각형 수가 예상보다 커질 때만 2차 최적화 항목으로 그리디 메시 병합을 검토한다.
+### 버텍스 컬러 컬러스페이스 규칙
+- UE의 `MeshDescription` 버텍스 컬러 속성은 선형 색공간 기준으로 다룬다.
+- 샘플 VOX 팔레트는 sRGB authored color로 취급한다.
+- 따라서 구현 기준은 아래와 같다.
+  - 입력: `.vox` 팔레트의 `FColor` sRGB 값
+  - 저장: `FLinearColor::FromSRGBColor(...)`로 변환한 선형 버텍스 컬러
+  - 머터리얼: `Vertex Color`를 바로 `Base Color`에 연결
+- 이 경로를 지키면 UE의 정적 메시 빌드와 렌더링 경로에서 색이 과하게 연해지지 않는다.
 
-### 피벗 및 배치 규칙
-- 동물과 음식은 바닥 기준 중앙 피벗을 사용한다.
-- 꽃, 풀, 덤불, 수련은 지면 접점이 `Z=0` 에 오도록 맞춘다.
-- 울타리는 연결 방향이 명확하도록 로컬 `+X` 방향을 전면으로 통일한다.
-- 조약돌 바닥은 반복 배치 전용 타일로 보고 경계가 어색하지 않도록 제작한다.
+### 절대 금지 사항
+- sRGB 팔레트 색을 `R/255`, `G/255`, `B/255`로만 나눠서 선형 버텍스 컬러처럼 저장하지 않는다.
+  - 이 경우 화면에서 감마가 한 번 더 적용되어 색이 뿌옇고 파스텔처럼 뜬다.
+- 감마 문제를 머터리얼 슬롯 추가나 색상별 머터리얼 분기로 해결하지 않는다.
+  - 원인은 색공간 변환 경로이므로, 해결은 버텍스 컬러 저장 경로에서 해야 한다.
 
-## 실제 프로젝트 기준 구현 방향
+### VOX 팔레트 직렬화 규칙
+- 샘플 `.vox`는 MagicaVoxel `RGBA` 청크 규칙을 그대로 따른다.
+- `RGBA` raw entry `0`은 palette index `1`에 대응한다.
+- `RGBA` raw entry `255`는 unused 슬롯으로 둔다.
+- 따라서 샘플 생성 스크립트는 `RGBA` 청크 앞에 더미 색을 하나 밀어 넣지 않는다.
+- `XYZI.ColorIndex`는 `1-based` 팔레트 인덱스처럼 동작하므로, 샘플 소스 작성과 파서 구현 모두 이 규칙을 기준으로 맞춘다.
+- 샘플 생성기에서 색 배열 첫 항목은 실제로 palette index `1`에 들어갈 색이어야 한다.
 
-현재 프로젝트에는 `CodexUMGBootstrapEditor` 모듈이 이미 존재하고, `AssetTools`, 팩토리, 저장 유틸을 이용해 블루프린트와 데이터 에셋을 만드는 패턴이 잡혀 있다. 이번 기능은 그 패턴을 재사용하되, VOX 파싱과 `StaticMesh` 빌드 부분만 신규 구현으로 추가한다.
+### 팔레트 재발 방지 규칙
+- 샘플 생성 스크립트 수정 시 `RGBA` 청크와 `XYZI.ColorIndex`가 한 칸 밀리지 않는지 먼저 확인한다.
+- 딸기처럼 색이 분명한 샘플을 기준 검증용으로 사용한다.
+  - `SM_Vox_Strawberry` 본체는 빨강
+  - `SM_Vox_Strawberry` 꼭지는 초록
+- 현재 샘플 팔레트는 테스트용 저채도 스타일을 일부 포함한다.
+  - 예: `Red = (232, 74, 60)`, `LeafGreen = (130, 220, 100)`
+  - 따라서 사과/딸기류가 완전한 원색보다는 약간 부드러운 색으로 보이는 것은 현재 SourceArt 기준에서는 정상이다.
+- 더 선명한 원색이 필요하면 머터리얼이나 버텍스 컬러 저장 경로를 건드리지 말고 `Scripts/GenerateSampleVoxSources.ps1`의 팔레트 정의를 조정한다.
+- 메시가 흐릿한 파스텔 톤이나 전혀 다른 색으로 보이면 머터리얼보다 먼저 팔레트 오프셋 버그를 의심한다.
+- 팔레트 인덱스는 맞는데 전체가 밝고 뿌옇게 뜨면 컬러스페이스 경로를 먼저 의심한다.
+  - 대표 증상:
+  - 빨강이 연분홍으로 보임
+  - 초록이 민트색처럼 보임
+  - Unlit인데도 전체가 파스텔 톤처럼 뜸
 
-### 재사용할 기존 패턴
-- 디렉터리 생성
-- 기존 에셋 존재 여부 확인
-- 에셋 생성
-- 저장
-- 필요 시 부트스트랩 진입점과 헤드리스 진입점 분리
+### 메시 생성 기본 규칙
+- 내부에 가려지는 면은 제거하고 외부로 드러나는 면만 메시로 생성한다.
+- 1차 구현은 단순 face extraction 방식으로 진행한다.
+- 각 면은 4개의 코너와 2개의 삼각형으로 생성한다.
+- 같은 면의 4개 버텍스 인스턴스에는 동일한 VOX 색을 버텍스 컬러로 기록한다.
 
-### 신규로 추가할 핵심 구성
-- VOX 파일 파서
-- VOX 생성용 매니페스트 로더
-- 버텍스 컬러 포함 `StaticMesh` 빌더
-- 공용 VOX 머터리얼 생성 또는 갱신 로직
-- 헤드리스 실행용 `UCommandlet`
+## 좌표계, Winding, 피벗 규칙
 
-## 제안 파일 구조
+이 섹션은 재발 방지용 핵심 기준이다. 메시가 눕거나, 노멀이 뒤집히거나, 썸네일이 비정상적으로 보이면 먼저 이 규칙부터 확인한다.
 
-### 에디터 모듈 코드
+### VOX 원본 좌표계
+- 샘플 `.vox`는 `Y-up` 기준으로 만든다.
+- 즉 VOX 원본에서 높이축은 `+Y`다.
+- 닭, 돼지, 병우유 같은 세로형 오브젝트는 높이 방향이 VOX `Y`축이다.
+- 울타리의 길이 방향은 기본적으로 `+X`를 사용한다.
+
+### UE 변환 좌표계
+- UE는 `Z-up` 기준이므로 가져올 때 축 변환을 반드시 적용한다.
+- 위치 변환 공식:
+  - `VOX (X, Y, Z) -> UE (X, -Z, Y) * VoxelSize`
+- 방향 벡터 변환 공식:
+  - `VOX (X, Y, Z) -> UE (X, -Z, Y)`
+- 노멀과 탄젠트도 위치와 동일한 축 변환을 적용해야 한다.
+
+### UE winding 규칙
+- UE static mesh는 좌수계 좌표계와 `CCW front face` 기준을 사용한다.
+- 따라서 VOX 코너를 UE 축으로 변환한 뒤에는 각 면의 삼각형 winding을 한 번 반전해서 기록해야 한다.
+- quad 분할 예시:
+  - 원본 순서가 `(0, 1, 2)` / `(0, 2, 3)`이면
+  - UE 기록은 `(0, 2, 1)` / `(0, 3, 2)`를 사용한다.
+- 이 규칙을 빼먹으면 메시 자세는 정상이어도 front face와 노멀 방향이 반대로 보일 수 있다.
+
+### 절대 금지 사항
+- VOX 좌표를 `UE (X, Y, Z)`로 그대로 사용하지 않는다.
+  - 이 경우 `Y-up` 원본이 UE에서 옆으로 눕는다.
+- 축 변환만 하고 winding 반전을 생략하지 않는다.
+  - 이 경우 노멀, 셰이딩, culling 방향이 뒤집힐 수 있다.
+- winding을 두 번 반전하지 않는다.
+  - 필요한 반전은 한 번뿐이며, 중복 반전은 다시 잘못된 방향을 만든다.
+- 피벗 계산에서 높이축을 VOX `Z`로 가정하지 않는다.
+  - 샘플 VOX 소스의 높이축은 VOX `Y`다.
+
+### 피벗 규칙
+- `GroundCentered`
+  - 바닥 접지 기준 피벗
+  - VOX 기준 최저 `Y`가 UE에서 `Z=0`이 되도록 맞춘다.
+- `Centered`
+  - 모델 중심 피벗
+  - VOX 기준 `Y`를 포함한 전체 bounding box 중심을 사용한다.
+
+## 좌표계 및 노멀 재발 방지 체크리스트
+메시 재생성 후 아래 항목을 반드시 확인한다.
+
+1. `SM_Vox_WhiteChicken`, `SM_Vox_Pig` 썸네일이 옆으로 누워 있지 않아야 한다.
+2. 캐릭터류 메시는 `Z extent`가 `Y extent`보다 크거나 비슷해야 한다.
+3. `SM_Vox_PebbleGroundTile`는 납작한 바닥 메시여야 하며 `Z extent`가 작아야 한다.
+4. 메시 표면이 바깥이 아니라 안쪽처럼 보이면 winding/노멀 반전 가능성을 먼저 본다.
+5. Static Mesh Editor에서 face normal 표시를 켰을 때 노멀이 바깥을 향해야 한다.
+6. Static Mesh Editor에서 `Show > Advanced > Vertex Colors`를 켰을 때 색이 정상적으로 보인다.
+7. `SM_Vox_Strawberry`를 Unlit으로 봤을 때 본체가 노랑/아이보리가 아니라 빨강이어야 한다.
+8. `SM_Vox_Strawberry` 꼭지가 민트색이 아니라 초록이어야 한다.
+9. 색이 전반적으로 한 칸씩 밀린 것처럼 보이면 `.vox` `RGBA` 청크 직렬화부터 재검토한다.
+10. 색이 전체적으로 밝고 뿌옇게 보이면 `sRGB -> Linear` 변환 누락 여부를 확인한다.
+
+현재 구현 기준 기대 확인값 예시:
+- `SM_Vox_Pig`: `extent=(42.5, 22.5, 32.5)`
+- `SM_Vox_WhiteChicken`: `extent=(32.5, 17.5, 37.5)`
+- `SM_Vox_PebbleGroundTile`: `extent=(80.0, 80.0, 10.0)`
+
+## 구현 방향
+
+### 모듈 구성
 - `Source/CodexUMGBootstrapEditor/Public/Commandlets/CodexVoxAssetBuildCommandlet.h`
 - `Source/CodexUMGBootstrapEditor/Private/Commandlets/CodexVoxAssetBuildCommandlet.cpp`
 - `Source/CodexUMGBootstrapEditor/Public/Vox/CodexVoxTypes.h`
+- `Source/CodexUMGBootstrapEditor/Public/Vox/CodexVoxParser.h`
+- `Source/CodexUMGBootstrapEditor/Public/Vox/CodexVoxMeshBuilder.h`
+- `Source/CodexUMGBootstrapEditor/Public/Vox/CodexVoxMaterialBuilder.h`
+- `Source/CodexUMGBootstrapEditor/Public/Vox/CodexVoxAssetGenerator.h`
 - `Source/CodexUMGBootstrapEditor/Private/Vox/CodexVoxParser.cpp`
 - `Source/CodexUMGBootstrapEditor/Private/Vox/CodexVoxMeshBuilder.cpp`
-- `Source/CodexUMGBootstrapEditor/Private/Vox/CodexVoxAssetGenerator.cpp`
 - `Source/CodexUMGBootstrapEditor/Private/Vox/CodexVoxMaterialBuilder.cpp`
+- `Source/CodexUMGBootstrapEditor/Private/Vox/CodexVoxAssetGenerator.cpp`
 
-### 보조 파일
-- `SourceArt/Vox/VoxAssetManifest.json`
-- `Scripts/RunVoxAssetBuild.ps1`
+### 구성요소 책임
+- `CodexVoxParser`
+  - `.vox` 파일에서 `SIZE`, `XYZI`, `RGBA`를 읽는다.
+  - 단일 모델만 사용한다.
+  - `32^3` 해상도 검증을 수행한다.
+  - `XYZI.ColorIndex`와 `RGBA` 팔레트의 MagicaVoxel 인덱싱 규칙을 그대로 따른다.
+- `CodexVoxMeshBuilder`
+  - 외부 face만 추출한다.
+  - 버텍스 컬러를 기록한다.
+  - VOX 팔레트 sRGB 색을 선형 버텍스 컬러로 변환해서 저장한다.
+  - `VOX -> UE` 축 변환, winding 반전, 피벗 보정을 담당한다.
+- `CodexVoxMaterialBuilder`
+  - 공용 머터리얼 `M_VoxVertexColor`를 생성 또는 갱신한다.
+- `CodexVoxAssetGenerator`
+  - 매니페스트 로드
+  - 에디터 세션 실행 여부 확인
+  - 메시 생성/저장
+  - 공용 머터리얼 연결
+- `CodexVoxAssetBuildCommandlet`
+  - 헤드리스 실행 진입점
+  - `-Manifest=`, `-Verbose`, `-NoOverwrite` 처리
 
-## 매니페스트 설계
+## 매니페스트 규칙
 
-매니페스트는 원본 `.vox` 와 목적지 UE 에셋 경로를 명시하고, 카테고리와 반복 배치 여부를 함께 관리한다.
+매니페스트는 `SourceArt/Vox/VoxAssetManifest.json`에 둔다.
 
-예시 필드:
-
+### 필드
 - `id`
 - `displayName`
 - `sourceVoxFile`
@@ -128,187 +230,140 @@
 - `collisionType`
 - `notes`
 
-예시 ID:
+### sourceVoxFile 규칙
+- 샘플 생성 스크립트는 `SourceArt/Vox/Sources/SM_Vox_*.vox` 형식으로 파일을 만든다.
+- 따라서 `sourceVoxFile`은 실제 생성 파일명과 정확히 일치해야 한다.
+- 잘못된 예:
+  - `Sources/white_chicken.vox`
+- 올바른 예:
+  - `Sources/SM_Vox_WhiteChicken.vox`
 
-- `SM_Vox_WhiteChicken`
-- `SM_Vox_BrownChicken`
-- `SM_Vox_Chick`
-- `SM_Vox_Pig`
-- `SM_Vox_Apple`
-- `SM_Vox_MilkBottle`
-- `SM_Vox_Strawberry`
-- `SM_Vox_Banana`
-- `SM_Vox_GrapeCluster`
-- `SM_Vox_RawMeat`
-- `SM_Vox_CookedMeatWithBone`
-- `SM_Vox_Fence`
-- `SM_Vox_Bush`
-- `SM_Vox_Grass`
-- `SM_Vox_YellowFlower`
-- `SM_Vox_WhiteFlower`
-- `SM_Vox_RedFlower`
-- `SM_Vox_Sunflower`
-- `SM_Vox_PebbleGroundTile`
-- `SM_Vox_WaterLily`
+이 규칙을 어기면 커맨드렛이 정상 실행되더라도 `.vox` 파일을 찾지 못해 실패한다.
+
+### SourceArt 팔레트 규칙
+- 샘플 `.vox`를 다시 생성했으면, 변경된 SourceArt만으로 끝내지 않고 커맨드렛으로 UE 메시도 재생성해야 한다.
+- SourceArt와 UE 애셋 사이에 색이 어긋나면 먼저 `.vox` 팔레트와 `XYZI.ColorIndex` 매핑을 확인한다.
+- 팔레트 검증 기준 예시:
+  - 딸기 본체에 쓰는 `ColorIndex=5`는 빨강 계열이어야 한다.
+  - 잎에 쓰는 `ColorIndex=12`는 초록 계열이어야 한다.
 
 ## 커맨드렛 설계
 
-### 커맨드렛 이름
-- 클래스명: `UCodexVoxAssetBuildCommandlet`
-- 실행명: `CodexVoxAssetBuild`
+### 클래스명
+- `UCodexVoxAssetBuildCommandlet`
+
+### 실제 실행 토큰
+- `CodexUMGBootstrapEditor.CodexVoxAssetBuildCommandlet`
 
 ### 실행 예시
-
 ```powershell
-UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=CodexVoxAssetBuild -Manifest="D:\github\ue5_codex\CodexUMG\SourceArt\Vox\VoxAssetManifest.json" -unattended -nop4 -nosplash
+UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=CodexUMGBootstrapEditor.CodexVoxAssetBuildCommandlet -Manifest="D:\github\ue5_codex\CodexUMG\SourceArt\Vox\VoxAssetManifest.json" -unattended -nop4 -nosplash
 ```
 
-### 기본 동작 순서
+### 동작 순서
 1. 입력 인자와 매니페스트 경로를 검증한다.
-2. 실행 중인 일반 에디터 세션이 없는지 사전 점검한다.
-3. 공용 머터리얼 `M_VoxVertexColor` 를 생성하거나 갱신한다.
-4. 매니페스트를 순회하며 `.vox` 파일을 읽는다.
-5. 각 복셀 데이터에서 외부 면만 추출해 메시 데이터를 만든다.
-6. 면 색상을 버텍스 컬러에 기록한다.
-7. `StaticMesh` 에셋을 생성 또는 갱신한다.
-8. 공용 머터리얼을 슬롯 0에 지정한다.
-9. 저장 후 결과를 리포트한다.
-10. 하나라도 치명적 오류가 나면 즉시 실패 코드로 종료한다.
+2. 현재 프로젝트를 연 `UnrealEditor.exe` 프로세스가 있는지 확인한다.
+3. 에디터가 실행 중이면 사용자에게 알리고 즉시 중단한다.
+4. 공용 머터리얼 `M_VoxVertexColor`를 생성 또는 갱신한다.
+5. 매니페스트를 순회하며 각 `.vox` 파일을 로드한다.
+6. VOX 복셀 데이터를 외부 face 메시로 변환한다.
+7. 버텍스 컬러와 공용 머터리얼 슬롯을 적용한다.
+8. `StaticMesh` 애셋을 생성 또는 갱신한다.
+9. 하나라도 치명 오류가 나면 즉시 실패 코드로 종료한다.
 
 ## 에디터 실행 중 충돌 대응
+이 기능은 에디터가 닫혀 있다는 가정에서 동작한다.
 
-이번 기능은 에디터가 실행 중이지 않다는 가정에서 동작해야 한다. 따라서 정상 경로는 항상 헤드리스 커맨드렛 실행이다.
+### 러너 스크립트
+- `Scripts/RunVoxAssetBuild.ps1`
+- 역할:
+  - 샘플 `.vox` 생성 옵션 처리
+  - 실행 중인 `UnrealEditor.exe` 확인
+  - 커맨드렛 호출
 
-### 사전 점검
-- `Scripts/RunVoxAssetBuild.ps1` 에서 `UnrealEditor.exe` 또는 같은 프로젝트를 잡고 있는 관련 프로세스를 먼저 확인한다.
-- 실행 중인 에디터가 감지되면 커맨드렛을 실행하지 않고 아래 메시지로 종료한다.
-
-권장 메시지:
-
-`CodexUMG 에디터 세션이 실행 중이므로 VOX 에셋 빌드를 중단합니다. 에디터를 종료한 뒤 다시 실행하세요.`
-
-### 런타임 에러 대응
-- 사전 점검을 통과했더라도 패키지 저장 실패, 파일 잠금, 에셋 레지스트리 충돌, 이미 열려 있는 에디터 세션 관련 에러가 발생하면 그 즉시 중단한다.
-- 커맨드렛은 실패 원인을 로그에 남기고 비정상 종료 코드를 반환한다.
-- 사용자에게는 "에디터 실행 상태 또는 파일 잠금으로 인해 중단되었다" 는 점을 분명히 알린다.
-- 실패한 상태에서 일부 에셋만 생성된 경우, 다음 실행에서 안전하게 덮어쓸 수 있게 생성 로직을 idempotent 하게 설계한다.
+### 중단 정책
+- 같은 프로젝트를 연 에디터 세션이 보이면 작업을 멈춘다.
+- 메시 예시:
+  - `An Unreal Editor session for this project is running. Stop the editor and rerun the VOX asset build.`
 
 ## 공용 머터리얼 설계
 
 ### 목표
-- 모든 VOX 메시가 동일한 공용 머터리얼 하나를 사용한다.
-- 메시의 시각적 차이는 오직 버텍스 컬러로 표현한다.
+- 모든 VOX 메시가 동일한 머터리얼 하나를 사용한다.
+- 시각 차이는 버텍스 컬러로만 표현한다.
 
 ### 머터리얼 구성
-- `Base Color` <- `Vertex Color RGB`
-- `Opacity Mask` 는 사용하지 않는다.
-- 기본 표면은 불투명 `Opaque` 로 둔다.
-- `Roughness` 는 상수값으로 단순화한다.
-- 필요 시 `AO`, `Metallic`, `Specular` 는 상수로 고정한다.
+- `Base Color <- Vertex Color`
+- `Blend Mode = Opaque`
+- `Roughness = 1.0`
+- `Specular = 0.0`
 
-### 구현 방안
-- 1안: 코드로 `UMaterial` 과 필요한 표현식을 생성한다.
-- 2안: 템플릿 머터리얼을 하나 두고, 커맨드렛은 존재 확인과 할당만 담당한다.
-
-초기 구현은 재현성과 자동화를 위해 1안을 우선 검토하되, 머터리얼 그래프 생성 코드가 과하게 복잡해지면 2안으로 즉시 전환한다.
-
-## 메시 빌드 세부 방향
+## 메시 빌드 방향
 
 ### 1차 구현
-- `.vox` 의 복셀 occupancy 와 팔레트를 읽는다.
-- 각 복셀에 대해 6면 중 외부 노출면만 검사한다.
-- 각 면을 4개 버텍스와 2개 삼각형으로 만든다.
-- 각 버텍스에 동일한 면 색을 버텍스 컬러로 기록한다.
-- 노멀과 UV는 단순 기본값으로 구성한다.
-- 콜리전은 자동 생성 또는 단순 박스 기반으로 시작한다.
+- 각 복셀에 대해 6방향 이웃을 검사한다.
+- 이웃이 없거나 모델 바깥이면 해당 face를 생성한다.
+- face당 4개 vertex instance와 2개 triangle을 생성한다.
+- 버텍스 컬러는 face 단위로 동일값을 넣는다.
+- UV는 공통 기본값만 유지하고, 셰이딩 문제는 winding과 노멀 기준으로 해결한다.
 
-### 2차 구현 후보
-- 그리디 메시 병합
-- 카테고리별 충돌 설정 차등화
-- 자동 LOD 또는 Nanite 검토
-- 반복 배치 요소 전용 피벗/스냅 규칙 강화
+### 빌드 세팅
+- `bRecomputeNormals = false`
+- `bRecomputeTangents = false`
+- `bGenerateLightmapUVs = false`
+- `bRemoveDegenerates = false`
 
-이번 범위에서는 1차 구현만 완료해도 목적 달성으로 본다.
+직접 기록한 노멀/탄젠트와 winding 규칙이 기준이므로, 이 기준을 바꾸지 않는 한 재계산에 의존하지 않는다.
+직접 기록한 버텍스 컬러도 선형값 기준이므로, sRGB 팔레트를 넣을 때는 먼저 선형 변환을 적용한다.
 
-## 구현 단계
+## 병렬 처리 및 에이전트 활용
+작업 중 가능하면 에이전트를 이용해 병렬 처리하여 리드타임을 줄인다. 단, 쓰기 충돌이 없는 범위에서만 병렬화한다.
 
-### 1단계. 소스 아트 기준 확정
-- `32^3` 해상도와 피벗 규칙을 고정한다.
-- 자산명과 카테고리를 확정한다.
-- `.vox` 파일 제작 규칙을 문서화한다.
+### 병렬화 후보
+- SourceArt 샘플 `.vox` 생성 규칙 정리
+- 매니페스트 검증
+- 에셋 카테고리별 대상 목록 정리
+- 문서/체크리스트 보강
+- 읽기 전용 검증 스크립트 작성
 
-### 2단계. 매니페스트와 디렉터리 준비
-- `SourceArt/Vox/` 디렉터리를 추가한다.
-- `VoxAssetManifest.json` 에 전체 목록을 등록한다.
-- `/Game/Vox/Materials` 와 `/Game/Vox/Meshes/*` 경로를 준비한다.
+### 병렬화 금지 대상
+- 동일 파일을 동시에 수정하는 작업
+- 동일 StaticMesh 애셋을 동시에 생성/저장하는 작업
+- 공용 머터리얼 단일 애셋을 동시에 갱신하는 작업
 
-### 3단계. VOX 파서 구현
-- `.vox` 파일에서 크기, 복셀, 팔레트 정보를 읽는다.
-- `32^3` 규격 위반 시 실패 처리한다.
-- 필수 chunk 누락 시 실패 처리한다.
+### 권장 운영 방식
+1. 메인 작업자는 커맨드렛/메시 빌더 구현을 담당한다.
+2. 보조 에이전트는 문서, 매니페스트 점검, 샘플 소스 생성 규칙 검토 같은 부가 작업을 맡는다.
+3. 결과 통합은 메인 작업자가 한 번에 수행한다.
 
-### 4단계. 메시 생성기 구현
-- 복셀 데이터를 `MeshDescription` 또는 동등한 생성 경로로 변환한다.
-- 외부 면만 만들고 버텍스 컬러를 채운다.
-- 머터리얼 슬롯은 1개만 유지한다.
+## 실제 실행 순서
+1. `Scripts/GenerateSampleVoxSources.ps1`로 `32^3` 샘플 `.vox`를 준비한다.
+2. `SourceArt/Vox/VoxAssetManifest.json`을 작성한다.
+3. `CodexUMGBootstrapEditor` 모듈에 parser/mesh builder/material builder/generator/commandlet을 구현한다.
+4. `Scripts/RunVoxAssetBuild.ps1`로 에디터 실행 여부를 먼저 검사한다.
+5. 에디터가 꺼져 있으면 커맨드렛을 실행해 애셋을 생성한다.
+6. 결과 메시를 Static Mesh Editor에서 열어 자세, 노멀 방향, 버텍스 컬러를 검증한다.
+7. 색상 변경이 포함된 경우 `SM_Vox_Strawberry` 같은 기준 메시를 Unlit으로 열어 팔레트 오프셋이 없는지 확인한다.
+8. `SM_Vox_Strawberry`가 여전히 연분홍/민트처럼 보이면 버텍스 컬러 컬러스페이스 경로를 점검한다.
+9. 좌표계, winding, 피벗, 팔레트, 컬러스페이스 규칙이 어긋난 사례가 나오면 먼저 이 문서 기준을 갱신하고 코드에 반영한다.
 
-### 5단계. 공용 머터리얼 생성
-- `M_VoxVertexColor` 존재 여부를 확인한다.
-- 없으면 생성하고, 있으면 구조가 요구사항과 맞는지 검증한다.
-- 메시 빌드 결과는 항상 이 머터리얼을 사용하게 한다.
+## 최종 검증 체크리스트
+1. 모든 `.vox` 소스가 `32^3` 해상도다.
+2. 모든 메시가 공용 머터리얼 `M_VoxVertexColor` 하나만 사용한다.
+3. 메시의 색상은 머터리얼 슬롯 분기가 아니라 버텍스 컬러에서 보인다.
+4. 흰닭, 갈색닭, 병아리, 돼지 메시가 올바르게 서 있다.
+5. 울타리, 조약돌 바닥, 수련 같은 반복 배치 요소가 용도에 맞는 비율을 가진다.
+6. 노멀 반전 없이 썸네일과 미리보기가 정상적으로 보인다.
+7. 실행 중인 에디터가 있으면 커맨드렛이 즉시 실패하고 사용자에게 이유를 알린다.
+8. 매니페스트 경로와 실제 `.vox` 파일명이 일치한다.
+9. `SM_Vox_Strawberry` 본체는 빨강, 꼭지는 초록으로 보인다.
+10. 색이 전반적으로 한 단계씩 밀린 듯 보이지 않는다.
+11. 색이 전반적으로 파스텔처럼 뜨지 않는다.
 
-### 6단계. 커맨드렛 구현
-- 매니페스트 기반 일괄 생성 진입점을 만든다.
-- 실패 시 즉시 중단하고 0 이외의 종료 코드를 반환한다.
-- 에디터 실행 충돌 관련 메시지를 명확하게 남긴다.
-
-### 7단계. 검증
-- 전체 목록이 지정 경로에 생성되는지 확인한다.
-- 머터리얼 슬롯이 1개인지 확인한다.
-- 버텍스 컬러가 보이는지 확인한다.
-- 반복 배치 요소의 피벗과 스냅 감각을 점검한다.
-
-## 에이전트 병렬 처리 전략
-
-작업 중 에이전트를 사용할 수 있다면 병렬 분해로 리드타임을 줄인다. 단, 같은 파일을 여러 에이전트가 동시에 수정하지 않도록 책임 범위를 분리한다.
-
-### 권장 분해
-- Agent A
-  - `SourceArt/Vox/*.vox` 원본 제작
-  - `VoxAssetManifest.json` 초안 작성
-- Agent B
-  - `CodexVoxParser` 와 관련 타입 구현
-- Agent C
-  - `CodexVoxMeshBuilder` 와 `CodexVoxAssetGenerator` 구현
-- Agent D
-  - `M_VoxVertexColor` 생성 로직과 커맨드렛 진입점 구현
-- Agent E
-  - 검증 체크리스트 정리와 실패 메시지/운영 스크립트 작성
-
-### 병렬 처리 원칙
-- 즉시 막히는 핵심 경로는 메인 작업자가 직접 처리한다.
-- 에이전트에는 독립 파일 집합만 맡긴다.
-- 머지 시에는 다른 에이전트의 변경을 되돌리지 않는다.
-- 공용 타입 파일은 가능한 늦게 확정하지 말고 먼저 잠근다.
-- 리뷰 전용 에이전트는 구현과 분리한다.
-
-## 범위 밖
-
-이번 계획에서는 아래 항목을 필수 범위로 보지 않는다.
-
-- 애니메이션 지원
-- 복셀 파괴 표현
-- 색상 교체용 머터리얼 인스턴스 체계
-- 런타임 동적 생성
-- 복잡한 자동 리토폴로지
-
-## 완료 조건
-
-아래가 모두 만족되면 1차 완료로 본다.
-
-1. 목록의 모든 대상에 대해 `32^3` 기반 `.vox` 소스가 준비된다.
-2. 커맨드렛 1회 실행으로 공용 머터리얼과 메시 에셋이 생성된다.
-3. 모든 메시는 버텍스 컬러를 사용하고 머터리얼 슬롯은 1개다.
-4. 생성 실패 시 즉시 멈추고 원인을 사용자에게 알린다.
-5. 에디터 실행 중 충돌로 보이는 경우 작업을 계속하지 않는다.
-6. 반복 배치 요소가 최소한 테스트 맵에서 무리 없이 배치된다.
+## 유지보수 메모
+- VOX 샘플 생성 스크립트가 `Y-up` 기준을 유지하는지 먼저 확인한다.
+- VOX 샘플 생성 스크립트가 `RGBA` 청크를 MagicaVoxel 규칙대로 직렬화하는지 먼저 확인한다.
+- `VOX -> UE` 변환식이나 winding 규칙을 바꾸려면 캐릭터 썸네일, 바닥 타일, 울타리 결과를 다시 검증한다.
+- 메시가 다시 눕거나 노멀이 뒤집히면 `CodexVoxMeshBuilder`의 축 변환, 삼각형 순서, 피벗 규칙부터 확인한다.
+- 색이 이상하면 머터리얼보다 먼저 `GenerateSampleVoxSources.ps1`의 팔레트 엔트리 배치와 `CodexVoxParser`의 `RGBA` 해석부터 확인한다.
+- 색이 맞는 계열인데도 뿌옇고 밝게 뜨면 `CodexVoxMeshBuilder`가 sRGB 팔레트를 선형 버텍스 컬러로 변환하고 있는지 먼저 확인한다.
