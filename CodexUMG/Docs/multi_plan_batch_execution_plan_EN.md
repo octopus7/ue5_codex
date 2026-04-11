@@ -32,10 +32,14 @@
 - Working copies
   - `Docs/multi_plan_batch_execution_status_EN.md`
   - `Docs/multi_plan_batch_execution_timeline_EN.md`
+- Monitoring working copies
+  - `Docs/Monitor/index.html`
+  - `Docs/Monitor/data/monitor-data.current.json`
 - Preserved Templates
   - `Docs/Template/multi_plan_batch_execution_status_EN.md`
   - `Docs/Template/multi_plan_batch_execution_timeline_EN.md`
 - Work always proceeds from the working copies in the `Docs/` root, and the preserved originals in `Docs/Template/` are copied back only when the work truly must be reset and restarted from scratch.
+- `Docs/Monitor/data/monitor-data.current.json` is a derived monitoring artifact projected from the status board, timeline, and lock state, not an authoritative state source.
 
 ## Shared Resource Serialization Rules
 
@@ -70,6 +74,8 @@
 - Do not modify the same file, the same Blueprint, the same input asset, or the same commandlet entry point at the same time.
 - The main worker maintains `Docs/multi_plan_batch_execution_status_EN.md` as the official status board and updates it immediately whenever work starts, waits, blocks, resumes, or completes.
 - Actual execution timestamps, handoffs, and parallel start / stop / merge moments are recorded in `Docs/multi_plan_batch_execution_timeline_EN.md` using the `YYYY-MM-DD HH:mm:ss KST` format.
+- A monitoring-only agent updates `Docs/Monitor/data/monitor-data.current.json` immediately after status-board, timeline, or lock-state changes.
+- The monitoring JSON is read-only derived output. The authoritative state source always remains the official status-board and timeline working copies.
 - Do not request user-facing mid-implementation validation before the whole batch reaches the final rerun-verification stage.
 - Internal checks during the middle of the batch are allowed, but user-facing verification belongs only to the final complete batch state unless a real blocker forces otherwise.
 
@@ -139,7 +145,7 @@
 
 ### Phase 0. Overall analysis and task breakdown
 1. Read all 8 official batch plan documents and identify shared dependencies, potential conflict files, blocking conditions, and real map-write windows.
-2. Check whether `Docs/multi_plan_batch_execution_status_EN.md` and `Docs/multi_plan_batch_execution_timeline_EN.md` already exist, and initialize them from `Docs/Template/` only when needed.
+2. Check whether `Docs/multi_plan_batch_execution_status_EN.md`, `Docs/multi_plan_batch_execution_timeline_EN.md`, and `Docs/Monitor/data/monitor-data.current.json` already exist. Initialize the status board and timeline from `Docs/Template/` only when needed, and initialize the monitor JSON from the sample JSON only when needed.
 3. Split the work into the tracks below.
    - Track A: `topdown_fixed_camera_wasd_plan`
    - Track B: `vox_mesh_asset_pipeline_plan`
@@ -149,10 +155,11 @@
    - Track F: `interaction_scroll_message_popup_plan`
    - Track G: `interaction_dual_tile_transfer_popup_plan`
    - Track H: `basicmap_floor_stylized_grass_dirt_material_plan`
-4. Fix ownership of shared files, Blueprints, assets, and the `BasicMap` save window before implementation starts.
-5. Autonomously rearrange the detailed order of Tracks C and D and the order of shared edit windows.
-6. Reserve Tracks E, F, and G as later popup tracks after Tracks B and C.
-7. Reserve Track H as the late `BasicMap` floor track and keep its real start time tied to the `BasicMap` lock state.
+4. Attach a separate monitoring-only agent that is responsible only for updating `Docs/Monitor/data/monitor-data.current.json`.
+5. Fix ownership of shared files, Blueprints, assets, and the `BasicMap` save window before implementation starts.
+6. Autonomously rearrange the detailed order of Tracks C and D and the order of shared edit windows.
+7. Reserve Tracks E, F, and G as later popup tracks after Tracks B and C.
+8. Reserve Track H as the late `BasicMap` floor track and keep its real start time tied to the `BasicMap` lock state.
 
 ### Phase 1A. Execute the top-down foundation plan
 1. Run `topdown_fixed_camera_wasd_plan` first.
@@ -212,11 +219,14 @@
 
 ## Status Board And Timeline Operating Rules
 - Keep the official working copies `Docs/multi_plan_batch_execution_status_EN.md` and `Docs/multi_plan_batch_execution_timeline_EN.md` in the repository.
+- Keep `Docs/Monitor/data/monitor-data.current.json` as the monitoring JSON working copy.
 - Keep the initialization templates `Docs/Template/multi_plan_batch_execution_status_EN.md` and `Docs/Template/multi_plan_batch_execution_timeline_EN.md` separately as preserved originals.
 - Copy the templates into the working copies only when the working copies are corrupted or the work truly must restart from scratch.
+- The monitoring JSON is generated from the official status board, timeline, and lock state. It must never replace those authoritative sources.
 - The status board must use at least `Not Started`, `In Progress`, `Waiting`, `Blocked`, `Verifying`, and `Done`.
 - A `Done` state means the track or phase is complete within this batch scope. It does not mean the full repository document set is complete.
 - The main worker updates the status board whenever work starts, pauses, resumes, completes, begins verification, becomes blocked, becomes unblocked, or the execution order changes.
+- Whenever the main worker updates the status board, timeline, or lock state, the monitoring-only agent should synchronize the JSON working copy as soon as possible.
 - The timeline records start, completion, blocked, handoff, merge, verification, and lock acquire / release moments for shared files, shared Blueprints, shared `Commandlet`s, shared editor modules, the `BasicMap` save window, and floor-specific assets.
 - `Verifying` means batch-level or final rerun verification, not a casual mid-implementation check.
 
@@ -247,6 +257,11 @@
   - `basicmap_floor_stylized_grass_dirt_material_plan`
 - Agent I
   - final verification or review
+- Agent J
+  - monitoring only
+  - updates `Docs/Monitor/data/monitor-data.current.json`
+  - maintains the derived state snapshot read by `Docs/Monitor/index.html`
+  - must not change the authoritative status board or timeline directly
 
 ## Execution Principles Summary
 - Leading gate: `character movement handling complete` in `topdown_fixed_camera_wasd_plan`
@@ -256,5 +271,7 @@
 - Official floor track: `basicmap_floor_stylized_grass_dirt_material_plan`
 - The floor track is explicitly included in this batch scope.
 - Tracks C, E, F, G, and H are all treated as potential `BasicMap` writers, and their real map-save windows are serialized.
+- Monitoring JSON working copy: `Docs/Monitor/data/monitor-data.current.json`
+- Agent J reads the official status board, timeline, and lock state and only mirrors them into monitor JSON.
 - `Done` on the status board means `batch scope complete`, not `repo docs fully complete`.
 - `UIPlayground` remains a separate track and is currently out of this batch scope.

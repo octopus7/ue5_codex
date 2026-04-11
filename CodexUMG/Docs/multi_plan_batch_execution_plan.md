@@ -32,10 +32,14 @@
 - 작업본
   - `Docs/multi_plan_batch_execution_status.md`
   - `Docs/multi_plan_batch_execution_timeline.md`
+- 모니터링 작업본
+  - `Docs/Monitor/index.html`
+  - `Docs/Monitor/data/monitor-data.current.json`
 - 보존용 Template
   - `Docs/Template/multi_plan_batch_execution_status.md`
   - `Docs/Template/multi_plan_batch_execution_timeline.md`
 - 작업은 항상 `Docs/` 루트 작업본에서 진행하고, 정말 처음부터 다시 시작해야 할 때만 `Docs/Template/`의 원본을 복사해 초기화한다.
+- `Docs/Monitor/data/monitor-data.current.json`은 공식 상태 원본이 아니라 상태판/타임라인/잠금 현황을 웹 모니터에 투영한 파생 산출물이다.
 
 ## 공용 리소스 직렬화 규칙
 
@@ -70,6 +74,8 @@
 - 같은 파일, 같은 Blueprint, 같은 입력 애셋, 같은 commandlet 진입점은 동시에 수정하지 않는다.
 - 메인 작업자는 `Docs/multi_plan_batch_execution_status.md`를 공식 상태판으로 유지하고, 시작/대기/차단/재개/완료 시 즉시 갱신한다.
 - 실제 수행 시각, 인계 시점, 병렬 시작/중단/병합 시점은 `Docs/multi_plan_batch_execution_timeline.md`에 `YYYY-MM-DD HH:mm:ss KST` 형식으로 기록한다.
+- 모니터링 전용 에이전트는 상태판, 타임라인, 잠금 현황 변경 직후 `Docs/Monitor/data/monitor-data.current.json`을 갱신한다.
+- 단, JSON 모니터 작업본은 읽기 전용 파생 출력이며, 공식 상태 변경의 authoritative source는 언제나 상태판과 타임라인 작업본이다.
 - 전체 작업이 완료되기 전에는 사용자에게 중간 구현 상태 검증을 요구하지 않는다.
 - 중간 단계에서는 내부 점검만 수행하고, 사용자 검증 요청은 전체 트랙이 완료된 뒤 최종 재수행 검증이 필요할 때만 사용한다.
 - 사용자 확인 대기나 중간 점검을 이유로 흐름을 멈추지 않고, 실제 차단 사유가 없는 한 전체 작업을 끝까지 이어서 수행하는 것을 최우선 원칙으로 둔다.
@@ -141,7 +147,7 @@
 
 ### Phase 0. 전체 분석 및 작업 분해
 1. 8개 공식 배치 대상 플랜 문서를 모두 읽고 공용 의존성, 잠재 충돌 파일, 하위 문서 내부 절차, 차단 조건을 정리한다.
-2. `Docs/multi_plan_batch_execution_status.md`, `Docs/multi_plan_batch_execution_timeline.md` 작업본 존재 여부를 확인하고 필요한 경우에만 Template 원본으로 초기화한다.
+2. `Docs/multi_plan_batch_execution_status.md`, `Docs/multi_plan_batch_execution_timeline.md`, `Docs/Monitor/data/monitor-data.current.json` 작업본 존재 여부를 확인하고, 필요한 경우에만 상태판/타임라인은 Template 원본으로, 모니터 JSON은 샘플 JSON으로 초기화한다.
 3. 메인 작업자가 아래 트랙으로 작업을 분리한다.
    - Track A: `topdown_fixed_camera_wasd_plan`
    - Track B: `vox_mesh_asset_pipeline_plan`
@@ -151,10 +157,11 @@
    - Track F: `interaction_scroll_message_popup_plan`
    - Track G: `interaction_dual_tile_transfer_popup_plan`
    - Track H: `basicmap_floor_stylized_grass_dirt_material_plan`
-4. 파일/BP/애셋 책임 범위와 `BasicMap` 저장 창구 소유권을 먼저 고정한다.
-5. Track C와 Track D의 세부 순서, 공용 파일 점유 순서, 병렬 시작 시점을 자율 재배치한다.
-6. Track E, F, G는 Track B와 Track C 완료 후 시작하는 후행 팝업 트랙으로 예약한다.
-7. Track H는 `BasicMap` late map-write 트랙으로 예약하되, 실제 착수 시점은 `BasicMap` 잠금 해제 후로 고정한다.
+4. 별도 모니터링 전용 에이전트를 붙여 `Docs/Monitor/data/monitor-data.current.json` 갱신만 담당하게 한다.
+5. 파일/BP/애셋 책임 범위와 `BasicMap` 저장 창구 소유권을 먼저 고정한다.
+6. Track C와 Track D의 세부 순서, 공용 파일 점유 순서, 병렬 시작 시점을 자율 재배치한다.
+7. Track E, F, G는 Track B와 Track C 완료 후 시작하는 후행 팝업 트랙으로 예약한다.
+8. Track H는 `BasicMap` late map-write 트랙으로 예약하되, 실제 착수 시점은 `BasicMap` 잠금 해제 후로 고정한다.
 
 ### Phase 1A. 탑다운 기반 플랜 수행
 1. `topdown_fixed_camera_wasd_plan`을 먼저 수행한다.
@@ -219,11 +226,14 @@
 
 ## 상태판 및 타임라인 운영 규칙
 - 공식 작업본은 `Docs/multi_plan_batch_execution_status.md`, `Docs/multi_plan_batch_execution_timeline.md`다.
+- 모니터링용 JSON 작업본은 `Docs/Monitor/data/monitor-data.current.json`이다.
 - 초기화용 보존 원본은 `Docs/Template/multi_plan_batch_execution_status.md`, `Docs/Template/multi_plan_batch_execution_timeline.md`다.
 - 작업본이 손상되었거나 정말 처음부터 다시 시작해야 할 때만 Template을 작업본으로 복사한다.
+- 모니터링 JSON은 공식 상태판/타임라인/잠금 현황을 바탕으로 생성되는 파생 출력이며, 공식 상태 원본을 대체하지 않는다.
 - 상태판은 최소한 `미착수`, `진행중`, `대기`, `차단`, `검증중`, `완료` 상태를 사용한다.
 - 상태판의 `완료`는 해당 Track 또는 Phase가 `batch scope` 안에서 끝났다는 뜻이며, `repo docs 전체 완료`를 의미하지 않는다.
 - 시작, 중단, 재개, 완료, 검증 시작, 차단 발생, 차단 해제, 실행 순서 재배치 시 메인 작업자가 상태판을 갱신한다.
+- 메인 작업자가 상태판/타임라인/잠금 현황을 갱신하면, 모니터링 전용 에이전트는 가능한 한 즉시 JSON 작업본을 동기화한다.
 - 타임라인에는 각 Phase/Track의 시작, 완료, 차단, 인계, 병합, 검증 시점을 남긴다.
 - 공용 파일, 공용 Blueprint, 공용 `Commandlet`, 공용 에디터 모듈, `BasicMap` 저장 창구, floor 전용 애셋 잠금의 점유와 해제 시점도 기록한다.
 - 여기서 `검증중`은 구현 중간점검이 아니라 전체 또는 최종 재수행 검증 단계를 뜻한다.
@@ -256,6 +266,11 @@
   - `basicmap_floor_stylized_grass_dirt_material_plan` 전담
 - Agent I
   - 최종 검증 또는 리뷰 전담
+- Agent J
+  - 모니터링 전담
+  - `Docs/Monitor/data/monitor-data.current.json` 갱신 전담
+  - `Docs/Monitor/index.html`이 읽는 파생 상태 스냅샷 유지
+  - 공식 상태판/타임라인 상태를 변경하지 않고 읽기 전용으로 반영
 
 ## 실행 원칙 요약
 - 선행 게이트는 `topdown_fixed_camera_wasd_plan`의 `캐릭터 이동 처리 완료`다.
@@ -267,5 +282,7 @@
 - Track C, E, F, G, H는 모두 `BasicMap` 저장 가능 트랙으로 취급하고, map-write 단계는 직렬화한다.
 - 공식 상태판은 `Docs/multi_plan_batch_execution_status.md`다.
 - 공식 타임라인은 `Docs/multi_plan_batch_execution_timeline.md`다.
+- 모니터링 JSON 작업본은 `Docs/Monitor/data/monitor-data.current.json`이다.
+- Agent J는 공식 상태판/타임라인/잠금 현황을 읽어 모니터 JSON만 갱신한다.
 - 상태판의 `완료`는 batch scope 완료이지 repo docs 전체 완료가 아니다.
 - `UIPlayground`는 별도 트랙이며 현재 배치 제외다.

@@ -1,0 +1,317 @@
+{
+  "meta": {
+    "title": "CodexUMG Multi Plan Batch Monitor",
+    "description": "Docs 상태판과 타임라인을 JSON으로 옮긴 뒤 정적 웹에서 모니터링하는 샘플 화면입니다. 대기, 차단, 잠금 점유 시간은 브라우저가 실시간으로 계산합니다.",
+    "timezone": "Asia/Seoul",
+    "generated_at": "2026-04-12T03:08:00+09:00",
+    "refresh_hint_seconds": 5,
+    "source_documents": [
+      "Docs/multi_plan_batch_execution_status.md",
+      "Docs/multi_plan_batch_execution_timeline.md"
+    ]
+  },
+  "board": [
+    {
+      "priority": 0,
+      "id": "P0",
+      "kind": "Phase",
+      "title": "전체 분석 및 작업 분해",
+      "scope": "공식 배치 대상 8개 플랜 검토 및 순서 재배치",
+      "owner": "메인 에이전트",
+      "dependency": "없음",
+      "state": "완료",
+      "progress": 100,
+      "started_at": "2026-04-12T01:58:00+09:00",
+      "completed_at": "2026-04-12T02:14:00+09:00",
+      "updated_at": "2026-04-12T02:14:00+09:00",
+      "note": "BasicMap 잠금 창구와 floor late map-write 순서를 확정함"
+    },
+    {
+      "priority": 1,
+      "id": "A",
+      "kind": "Track",
+      "title": "topdown_fixed_camera_wasd_plan",
+      "scope": "선행 게이트",
+      "owner": "Agent A",
+      "dependency": "P0 완료",
+      "state": "완료",
+      "progress": 100,
+      "started_at": "2026-04-12T02:15:00+09:00",
+      "completed_at": "2026-04-12T02:37:00+09:00",
+      "updated_at": "2026-04-12T02:37:00+09:00",
+      "note": "캐릭터 이동 처리 완료, 후속 C/D 착수 가능"
+    },
+    {
+      "priority": 1,
+      "id": "B",
+      "kind": "Track",
+      "title": "vox_mesh_asset_pipeline_plan",
+      "scope": "독립 병렬 트랙",
+      "owner": "Agent B",
+      "dependency": "P0 완료",
+      "state": "진행중",
+      "progress": 68,
+      "started_at": "2026-04-12T02:18:00+09:00",
+      "updated_at": "2026-04-12T03:05:00+09:00",
+      "note": "VOX manifest 검증 및 mesh build 후반부"
+    },
+    {
+      "priority": 2,
+      "id": "C",
+      "kind": "Track",
+      "title": "interaction_umg_component_plan",
+      "scope": "후속 런타임 트랙",
+      "owner": "Agent C",
+      "dependency": "Track A 완료",
+      "state": "진행중",
+      "progress": 54,
+      "started_at": "2026-04-12T02:39:00+09:00",
+      "updated_at": "2026-04-12T03:07:00+09:00",
+      "note": "interaction component와 subsystem 연동 점검 중"
+    },
+    {
+      "priority": 2,
+      "id": "D",
+      "kind": "Track",
+      "title": "player_projectile_firing_plan",
+      "scope": "후속 런타임 트랙",
+      "owner": "Agent D",
+      "dependency": "Track A 완료",
+      "state": "대기",
+      "progress": 0,
+      "waiting_since": "2026-04-12T02:42:00+09:00",
+      "updated_at": "2026-04-12T03:01:00+09:00",
+      "note": "공용 입력 애셋 소유권 정리 후 착수 예정"
+    },
+    {
+      "priority": 3,
+      "id": "E",
+      "kind": "Track",
+      "title": "interaction_message_popup_plan",
+      "scope": "후행 팝업 트랙",
+      "owner": "Agent E",
+      "dependency": "Track B, C 완료",
+      "state": "미착수",
+      "progress": 0,
+      "updated_at": "2026-04-12T02:14:00+09:00",
+      "note": "착수 조건 대기중"
+    },
+    {
+      "priority": 3,
+      "id": "F",
+      "kind": "Track",
+      "title": "interaction_scroll_message_popup_plan",
+      "scope": "후행 팝업 트랙",
+      "owner": "Agent F",
+      "dependency": "Track B, C 완료",
+      "state": "미착수",
+      "progress": 0,
+      "updated_at": "2026-04-12T02:14:00+09:00",
+      "note": "Track E와 동일 착수 조건"
+    },
+    {
+      "priority": 3,
+      "id": "G",
+      "kind": "Track",
+      "title": "interaction_dual_tile_transfer_popup_plan",
+      "scope": "후행 팝업 트랙",
+      "owner": "Agent G",
+      "dependency": "Track B, C 완료",
+      "state": "차단",
+      "progress": 0,
+      "blocked_since": "2026-04-12T02:50:00+09:00",
+      "updated_at": "2026-04-12T03:02:00+09:00",
+      "note": "Dual tile popup asset path 합의 전이라 차단"
+    },
+    {
+      "priority": 4,
+      "id": "H",
+      "kind": "Track",
+      "title": "basicmap_floor_stylized_grass_dirt_material_plan",
+      "scope": "late map-write floor 트랙",
+      "owner": "Agent H",
+      "dependency": "BasicMap 잠금 해제",
+      "state": "대기",
+      "progress": 0,
+      "waiting_since": "2026-04-12T02:55:00+09:00",
+      "updated_at": "2026-04-12T03:06:00+09:00",
+      "note": "Track C가 BasicMap 저장 창구를 점유중이라 대기"
+    },
+    {
+      "priority": 5,
+      "id": "P4",
+      "kind": "Phase",
+      "title": "통합 및 최종 검증",
+      "scope": "batch scope 최종 검증",
+      "owner": "메인 에이전트 또는 Agent I",
+      "dependency": "A~H 결과 확보",
+      "state": "미착수",
+      "progress": 0,
+      "updated_at": "2026-04-12T02:14:00+09:00",
+      "note": "각 트랙 검증 완료 후 착수"
+    }
+  ],
+  "locks": [
+    {
+      "resource": "/Game/Maps/BasicMap",
+      "owner": "Track C",
+      "related_tracks": [
+        "C",
+        "E",
+        "F",
+        "G",
+        "H"
+      ],
+      "state": "점유중",
+      "claimed_at": "2026-04-12T02:58:00+09:00",
+      "updated_at": "2026-04-12T03:07:00+09:00",
+      "note": "interaction component 배치 테스트 중. 실제 저장 구간은 직렬화."
+    },
+    {
+      "resource": "Interaction Asset Build BasicMap Save Window",
+      "owner": "Track C",
+      "related_tracks": [
+        "C",
+        "E",
+        "F",
+        "G"
+      ],
+      "state": "점유중",
+      "claimed_at": "2026-04-12T03:00:00+09:00",
+      "updated_at": "2026-04-12T03:07:00+09:00",
+      "note": "asset builder가 BasicMap 저장 직전 단계에 진입함"
+    },
+    {
+      "resource": "/Game/Materials/T_Stylized_Grass_Dirt_01",
+      "owner": "-",
+      "related_tracks": [
+        "H"
+      ],
+      "state": "열림",
+      "updated_at": "2026-04-12T03:06:00+09:00",
+      "note": "floor 텍스처 애셋"
+    },
+    {
+      "resource": "/Game/Materials/M_BasicMapFloor_StylizedGrassDirt01",
+      "owner": "-",
+      "related_tracks": [
+        "H"
+      ],
+      "state": "열림",
+      "updated_at": "2026-04-12T03:06:00+09:00",
+      "note": "floor 머터리얼 애셋"
+    },
+    {
+      "resource": "UCodexBasicMapFloorBuildCommandlet",
+      "owner": "-",
+      "related_tracks": [
+        "H"
+      ],
+      "state": "열림",
+      "updated_at": "2026-04-12T03:06:00+09:00",
+      "note": "Track H late map-write 창구"
+    }
+  ],
+  "timeline": [
+    {
+      "timestamp": "2026-04-12T03:07:00+09:00",
+      "reporter": "메인 에이전트",
+      "kind": "Lock",
+      "track": "C",
+      "event": "BasicMap 저장 창구 점유 유지",
+      "event_state": "진행중",
+      "detail": "Track C가 interaction asset build 단계에서 BasicMap 저장 구간을 유지함",
+      "next_action": "Track C 저장 완료 후 H 대기 해제 여부 판단"
+    },
+    {
+      "timestamp": "2026-04-12T03:05:00+09:00",
+      "reporter": "Agent B",
+      "kind": "Track",
+      "track": "B",
+      "event": "VOX mesh build 진행",
+      "event_state": "진행중",
+      "detail": "manifest 정합성 검증과 mesh 생성 후반부에 진입",
+      "next_action": "팝업 트랙 참조용 asset path 정리"
+    },
+    {
+      "timestamp": "2026-04-12T03:02:00+09:00",
+      "reporter": "메인 에이전트",
+      "kind": "Track",
+      "track": "G",
+      "event": "차단 전환",
+      "event_state": "차단",
+      "detail": "dual tile transfer popup asset path 합의가 없어 Track G를 차단 상태로 전환",
+      "next_action": "공용 asset naming 합의 후 차단 해제"
+    },
+    {
+      "timestamp": "2026-04-12T03:01:00+09:00",
+      "reporter": "메인 에이전트",
+      "kind": "Track",
+      "track": "D",
+      "event": "대기 유지",
+      "event_state": "대기",
+      "detail": "공용 입력 애셋 소유권 조정 때문에 Track D 착수 보류",
+      "next_action": "Track C 진행 구간 종료 시 재평가"
+    },
+    {
+      "timestamp": "2026-04-12T02:58:00+09:00",
+      "reporter": "메인 에이전트",
+      "kind": "Lock",
+      "track": "C",
+      "event": "BasicMap 잠금 선점",
+      "event_state": "진행중",
+      "detail": "Track C가 실제 맵 로드 및 저장 구간으로 진입",
+      "next_action": "후행 팝업 트랙과 floor 트랙 직렬화 유지"
+    },
+    {
+      "timestamp": "2026-04-12T02:55:00+09:00",
+      "reporter": "메인 에이전트",
+      "kind": "Track",
+      "track": "H",
+      "event": "대기 전환",
+      "event_state": "대기",
+      "detail": "Track H를 late map-write queue에 유지하고 BasicMap 잠금 해제를 대기시킴",
+      "next_action": "Track C 완료 후 재배치 검토"
+    },
+    {
+      "timestamp": "2026-04-12T02:42:00+09:00",
+      "reporter": "메인 에이전트",
+      "kind": "Track",
+      "track": "D",
+      "event": "착수 대기 등록",
+      "event_state": "대기",
+      "detail": "Track A 완료 후 착수 가능하지만 공용 입력 애셋 충돌을 피하기 위해 잠시 대기",
+      "next_action": "공용 입력 창구 해제 확인"
+    },
+    {
+      "timestamp": "2026-04-12T02:39:00+09:00",
+      "reporter": "Agent C",
+      "kind": "Track",
+      "track": "C",
+      "event": "착수",
+      "event_state": "진행중",
+      "detail": "interaction subsystem과 component 연동 작업 시작",
+      "next_action": "BasicMap 저장 구간 진입 전 잠금 기록 유지"
+    },
+    {
+      "timestamp": "2026-04-12T02:37:00+09:00",
+      "reporter": "Agent A",
+      "kind": "Track",
+      "track": "A",
+      "event": "완료",
+      "event_state": "완료",
+      "detail": "캐릭터 이동 처리 완료로 C와 D 착수 조건 충족",
+      "next_action": "후속 런타임 트랙 분기"
+    },
+    {
+      "timestamp": "2026-04-12T02:18:00+09:00",
+      "reporter": "Agent B",
+      "kind": "Track",
+      "track": "B",
+      "event": "착수",
+      "event_state": "진행중",
+      "detail": "독립 병렬 VOX asset pipeline 시작",
+      "next_action": "팝업 트랙 선행 리소스 준비"
+    }
+  ]
+}
