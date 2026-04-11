@@ -1,13 +1,14 @@
 # 다중 플랜 일괄 실행 계획
 
 ## 문서 목적
-- 아래 4개 플랜의 의존성, 착수 조건, 병렬 처리 경계를 하나의 상위 실행 계획으로 정리한다.
+- 아래 5개 플랜의 의존성, 착수 조건, 병렬 처리 경계를 하나의 상위 실행 계획으로 정리한다.
 - 순차로 처리해야 할 트랙과 병렬로 처리할 수 있는 트랙을 명확히 나눈다.
 - 공용 파일, 공용 Blueprint, 공용 에디터 모듈 충돌을 줄이기 위한 작업 원칙을 고정한다.
 
 ## 대상 플랜
 - `Docs/topdown_fixed_camera_wasd_plan.md`
 - `Docs/interaction_umg_component_plan.md`
+- `Docs/interaction_message_popup_plan.md`
 - `Docs/player_projectile_firing_plan.md`
 - `Docs/vox_mesh_asset_pipeline_plan.md`
 
@@ -22,7 +23,7 @@
 
 ## 최상위 실행 지침
 - "전체 분석해보고 자율적으로 에이전트를 이용해 병렬처리하여 리드타임을 줄이도록한다"를 본 계획의 최상위 지침으로 둔다.
-- 메인 작업자는 먼저 4개 플랜 전체를 분석한 뒤 공용 변경 지점과 책임 범위를 확정한다.
+- 메인 작업자는 먼저 5개 플랜 전체를 분석한 뒤 공용 변경 지점과 책임 범위를 확정한다.
 - 상위 문서에 적힌 Phase 순서는 기준선으로 유지하되, 메인 작업자는 각 하위 플랜 문서의 세부 절차, 착수 조건, 차단 조건, 공용 수정 지점을 다시 읽고 세부 실행 순서를 자율적으로 재배치한다.
 - 세부 실행 순서를 재배치하더라도 선행 게이트, 공용 수정 지점 보호, 병렬 충돌 금지 규칙은 깨지지 않아야 한다.
 - 병렬 처리는 적극적으로 사용하되, 같은 파일, 같은 Blueprint, 같은 입력 에셋, 같은 커맨드렛 진입점을 동시에 수정하지 않는다.
@@ -41,6 +42,7 @@
   - 먼저 구현해야 후속 검증이 쉬워지는 공용 기반 작업 존재 여부
 - `topdown_fixed_camera_wasd_plan`의 선행 게이트와 `vox_mesh_asset_pipeline_plan`의 독립 병렬 트랙 성격은 유지한다.
 - `interaction_umg_component_plan`와 `player_projectile_firing_plan`의 상대 순서, 공용 수정 지점 선점 순서, 검증 시점은 메인 작업자가 하위 문서 내용을 반영해 자율 결정한다.
+- `interaction_message_popup_plan`는 `interaction_umg_component_plan` 완료와 `vox_mesh_asset_pipeline_plan` 완료 이후에만 착수할 수 있는 후행 플랜으로 고정한다.
 - 재배치 결과가 바뀌면 메인 작업자는 사유와 변경 결과를 상태판과 타임라인에 즉시 반영한다.
 
 ## 의존성 정리
@@ -91,18 +93,31 @@
   - 탑다운/상호작용/투사체 트랙은 입력 에셋, 플레이어 BP, 게임 인스턴스/게임 모드, 탑다운용 부트스트랩 자산을 우선 소유한다.
   - 공용 모듈 등록 파일이나 공용 타입 파일은 메인 작업자가 먼저 잠그거나 병합 지점을 지정한다.
 
+### 5. `interaction_message_popup_plan` 후행
+- `interaction_message_popup_plan`는 아래 두 플랜이 모두 완료된 뒤에만 착수한다.
+  - `interaction_umg_component_plan`
+  - `vox_mesh_asset_pipeline_plan`
+- 이유는 팝업 플랜이 아래 기반을 동시에 필요로 하기 때문이다.
+  - 기존 상호작용 컴포넌트와 전역 상호작용 서브시스템
+  - 기존 상호작용 입력 경로와 `IMC_` / `IA_` / `DA_` 확장 구조
+  - VOX 파이프라인으로 생성된 나무 팻말 메시
+- 따라서 팝업 플랜은 상호작용 트랙과 VOX 트랙의 완료 산출물을 재사용하는 통합 후행 플랜이다.
+- 이 플랜은 `player_projectile_firing_plan` 완료를 기다릴 필요는 없지만, 공용 입력 에셋과 공용 상호작용 서브시스템 수정 구간은 메인 작업자가 선점 순서를 정한다.
+
 ## 권장 수행 순서
 
 ### Phase 0. 전체 분석 및 작업 분해
-1. 네 플랜 문서를 모두 읽고 공용 의존성, 충돌 가능 파일, 하위 문서 내부의 세부 실행 절차와 차단 조건을 식별한다.
+1. 다섯 플랜 문서를 모두 읽고 공용 의존성, 충돌 가능 파일, 하위 문서 내부의 세부 실행 절차와 차단 조건을 식별한다.
 2. 메인 작업자가 `Docs/multi_plan_batch_execution_status.md`, `Docs/multi_plan_batch_execution_timeline.md` 작업본 존재 여부를 확인하고, 초기화가 필요할 때만 `Docs/Template/`의 보존용 원본으로 덮어쓴 뒤 첫 기록을 남긴다.
 3. 메인 작업자가 작업 트랙을 아래처럼 분리한다.
    - Track A: `topdown_fixed_camera_wasd_plan`
    - Track B: `vox_mesh_asset_pipeline_plan`
    - Track C: `interaction_umg_component_plan`
    - Track D: `player_projectile_firing_plan`
+   - Track E: `interaction_message_popup_plan`
 4. 에이전트별 파일/BP/에셋 책임 범위를 먼저 고정한다.
 5. 하위 문서 분석 결과를 기준으로 Track C와 Track D의 세부 순서, 공용 파일 선점 순서, 병렬 착수 시점을 자율 재배치한다.
+6. Track E는 Track B와 Track C 완료 후 착수하는 후행 통합 트랙으로 예약한다.
 
 ### Phase 1A. 탑다운 기반 플랜 수행
 1. `topdown_fixed_camera_wasd_plan`를 먼저 수행한다.
@@ -146,9 +161,18 @@
 8. Track C와 Track D 중 누가 먼저 공용 입력/컨트롤러/`GameInstance` 수정 구간을 사용할지는 메인 작업자가 선점 순서로 정하고 상태판에 기록한다.
 9. 병렬 에이전트가 있으면 각 에이전트는 메인 작업자에게 상태 변경과 핸드오프를 보고하고, 메인 작업자가 공식 상태판과 타임라인을 갱신한다.
 
-### Phase 3. 통합 및 최종 검증
-1. Track A의 기반 결과 위에 Track C와 Track D 결과를 통합 검증한다.
-2. Track B의 VOX 결과를 별도로 검증한 뒤 메인 브랜치 수준에서 병합한다.
+### Phase 3. 팝업 후행 플랜 수행
+1. `interaction_umg_component_plan` 완료와 `vox_mesh_asset_pipeline_plan` 완료가 모두 확인되면 `interaction_message_popup_plan` 착수 가능 상태가 된다.
+2. Track E는 아래 기반을 재사용한다.
+   - Track C의 상호작용 컴포넌트 / 상호작용 서브시스템 / 입력 확장 결과
+   - Track B의 VOX 나무 팻말 메시 결과
+3. Track E는 Track C의 상호작용 시스템을 확장하는 성격이므로, 공용 상호작용 서브시스템, 공용 입력 자산, 공용 상호작용 커맨드렛 수정 구간은 메인 작업자가 먼저 선점 순서를 정한다.
+4. Track E는 Track B와 Track C가 끝나기 전에는 착수하지 않는다.
+5. `player_projectile_firing_plan`는 Track E의 선행 조건이 아니므로, 메인 작업자는 Track D와 Track E를 병렬 또는 순차로 배치할 수 있다.
+
+### Phase 4. 통합 및 최종 검증
+1. Track A의 기반 결과 위에 Track C, Track D, Track E 결과를 통합 검증한다.
+2. Track B의 VOX 결과를 별도로 검증한 뒤, 팝업 트랙이 그 산출물을 정상 참조하는지 함께 점검한다.
 3. 공용 모듈, 공용 설정, 공용 타입, 공용 입력 자산 충돌은 마지막에 메인 작업자가 정리한다.
 4. 최종 병합 전 메인 작업자는 상태판의 미착수/대기/차단 항목을 점검하고, 최종 검증 시각과 병합 시점을 타임라인에 남긴다.
 
@@ -183,6 +207,9 @@
   - `player_projectile_firing_plan` 전담
   - 단, Agent A의 캐릭터 이동 처리 게이트 통과 후 착수
 - Agent E
+  - `interaction_message_popup_plan` 전담
+  - 단, Agent C 완료와 Agent B 완료 후 착수
+- Agent F
   - 최종 검증 또는 리뷰 전담
 - 모든 병렬 에이전트
   - 상태 변경, 선점 요청, 완료 보고를 메인 작업자에게 전달
@@ -195,6 +222,8 @@
 - 세부 실행순서는 하위 플랜 문서를 다시 읽은 뒤 메인 작업자가 자율 재배치한다.
 - 병렬 트랙: `vox_mesh_asset_pipeline_plan`
 - 조건부 병렬 트랙: `interaction_umg_component_plan` + `player_projectile_firing_plan`
+- 후행 통합 트랙: `interaction_message_popup_plan`
+- 팝업 트랙 착수 조건: `interaction_umg_component_plan` 완료 + `vox_mesh_asset_pipeline_plan` 완료
 - 상태판 작업본: `Docs/multi_plan_batch_execution_status.md`
 - 타임라인 작업본: `Docs/multi_plan_batch_execution_timeline.md`
 - Template 원본: `Docs/Template/multi_plan_batch_execution_status.md`, `Docs/Template/multi_plan_batch_execution_timeline.md`

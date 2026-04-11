@@ -19,12 +19,16 @@
 5. [vox_mesh_asset_pipeline_plan.md](./vox_mesh_asset_pipeline_plan.md)
    `.vox` 원본 파일을 UE5용 `StaticMesh` 에셋으로 변환하는 파이프라인 계획이다. 공용 VOX 머터리얼, 버텍스 컬러 사용, 매니페스트 구조, VOX 전용 커맨드렛과 산출물 경로를 정리한다.
 
+6. [interaction_message_popup_plan.md](./interaction_message_popup_plan.md)
+   나무 팻말 상호작용으로 열리는 중앙 메시지 팝업 구현 계획이다. 실제 팝업 `Widget Blueprint` 애셋, `Space` 닫기 입력, `OK` / `YesNo` 버튼 레이아웃, 상호작용 서브시스템으로의 결과 전달 구조를 정의한다.
+
 ## 파일별 요약
 
 ### [multi_plan_batch_execution_plan.md](./multi_plan_batch_execution_plan.md)
 
-- `topdown_fixed_camera_wasd_plan`, `player_projectile_firing_plan`, `vox_mesh_asset_pipeline_plan` 세 문서를 묶는 상위 배치 실행 계획이다.
+- `topdown_fixed_camera_wasd_plan`, `interaction_umg_component_plan`, `interaction_message_popup_plan`, `player_projectile_firing_plan`, `vox_mesh_asset_pipeline_plan`을 묶는 상위 배치 실행 계획이다.
 - `topdown_fixed_camera_wasd_plan`을 선행 게이트로 두고, `vox_mesh_asset_pipeline_plan`은 별도 병렬 트랙으로 처리하는 구조를 정의한다.
+- `interaction_message_popup_plan`은 `interaction_umg_component_plan`과 `vox_mesh_asset_pipeline_plan` 완료 후에만 착수하는 후행 통합 트랙으로 다룬다.
 - 메인 작업자와 병렬 작업 에이전트의 책임 분리, 공용 파일 충돌 회피, 최종 검증 흐름을 설명한다.
 
 ### [topdown_fixed_camera_wasd_plan.md](./topdown_fixed_camera_wasd_plan.md)
@@ -52,3 +56,10 @@
 - 소스 아트 위치, 생성 대상 메시 카테고리, UE 에셋 출력 경로, 매니페스트와 자동화 범위를 설명한다.
 - `SM_Vox_RainbowDiagnostic` 같은 고채도 검증 메시를 함께 생성해, 원본 팔레트 저채도와 컬러스페이스 버그를 구분하는 절차도 포함한다.
 - 최근 기준으로는 샘플 팔레트 전체 채도를 높이고, `GenerateVoxPreviewPngs.py`로 비스듬한 PNG 미리보기까지 같이 생성하는 운영 절차를 포함한다.
+
+### [interaction_message_popup_plan.md](./interaction_message_popup_plan.md)
+
+- 나무 팻말 상호작용으로 열리는 화면 중앙 메시지 팝업 계획 문서다.
+- 실제 `WBP_InteractionMessagePopup` 애셋을 에디터 모듈 코드와 `Commandlet`로 생성하고, 위젯 트리는 런타임 코드가 아니라 WBP 애셋 안에 존재해야 한다는 규칙을 따른다.
+- `OK` / `YesNo` 버튼 레이아웃, 닫기 버튼과 `Space` 키 닫기, 팝업 결과를 `UCodexInteractionSubsystem`으로 먼저 전달하는 구조를 정의한다.
+- 이 문서는 기존 상호작용 컴포넌트와 VOX 나무 팻말 메시를 재사용하므로, 읽기 순서상 `interaction_umg_component_plan.md`와 `vox_mesh_asset_pipeline_plan.md` 다음에 보는 것이 적절하다.
