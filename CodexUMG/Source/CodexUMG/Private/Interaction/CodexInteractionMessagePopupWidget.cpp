@@ -87,6 +87,7 @@ void UCodexInteractionMessagePopupWidget::SubmitPopupResult(const ECodexPopupRes
 	Response.RequestId = ActiveRequest.RequestId;
 	Response.InteractionRequest = ActiveRequest.InteractionRequest;
 	Response.Result = Result;
+	Response.bWasClosed = Result == ECodexPopupResult::Closed;
 	InteractionSubsystem->SubmitInteractionPopupResult(Response);
 }
 

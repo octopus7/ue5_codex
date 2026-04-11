@@ -3,8 +3,11 @@
 #include "Interaction/CodexInteractionAssetBuilder.h"
 
 #include "CodexTopDownInputConfigDataAsset.h"
+#include "Interaction/CodexDualTileTransferPopupInteractableActor.h"
 #include "Interaction/CodexInteractableActor.h"
 #include "Interaction/CodexInteractionAssetPaths.h"
+#include "Interaction/CodexInteractionDualTileTransferPopupWidget.h"
+#include "Interaction/CodexInteractionDualTileTransferTileEntryWidget.h"
 #include "Interaction/CodexInteractionMessagePopupWidget.h"
 #include "Interaction/CodexInteractionScrollMessagePopupWidget.h"
 #include "Interaction/CodexInteractionComponent.h"
@@ -28,6 +31,7 @@
 #include "Components/ScrollBoxSlot.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
+#include "Components/TileView.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Editor.h"
@@ -48,12 +52,15 @@
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Misc/PackageName.h"
 #include "Misc/Paths.h"
+#include "Fonts/SlateFontInfo.h"
 #include "Styling/SlateBrush.h"
 #include "Styling/SlateTypes.h"
 #include "Subsystems/EditorActorSubsystem.h"
 #include "Subsystems/EditorAssetSubsystem.h"
+#include "UObject/MetaData.h"
 #include "WidgetBlueprint.h"
 #include "WidgetBlueprintFactory.h"
+#include "UObject/UnrealType.h"
 
 namespace
 {
@@ -64,7 +71,23 @@ namespace
 	static const TCHAR* const InteractionPlacementLabelStrawberry = TEXT("InteractionTest_Strawberry");
 	static const TCHAR* const InteractionPlacementLabelWoodenSign = TEXT("InteractionTest_WoodenSignPopup");
 	static const TCHAR* const InteractionPlacementLabelWoodenSignScroll = TEXT("InteractionTest_WoodenSignScrollPopup");
+	static const TCHAR* const InteractionPlacementLabelWoodenSignDualTileTransfer = TEXT("InteractionTest_WoodenSignDualTileTransferPopup");
 	static const FName InteractionPlacementTag = TEXT("CodexInteractionTestPlacement");
+	static const TCHAR* const GeneratedAssetVersionKey = TEXT("CodexInteractionAssetBuilderVersion");
+	static const TCHAR* const FilledCircleTextureVersion = TEXT("filled_circle_texture_v1");
+	static const TCHAR* const OuterRingTextureVersion = TEXT("outer_ring_texture_v1");
+	static const TCHAR* const SmileIconTextureVersion = TEXT("smile_icon_texture_v1");
+	static const TCHAR* const TileRoundedGradientTextureVersion = TEXT("tile_rounded_gradient_texture_v1");
+	static const TCHAR* const IndicatorWidgetVersion = TEXT("indicator_widget_v1");
+	static const TCHAR* const MessagePopupWidgetVersion = TEXT("message_popup_widget_v1");
+	static const TCHAR* const ScrollMessagePopupWidgetVersion = TEXT("scroll_message_popup_widget_v1");
+	static const TCHAR* const DualTileTransferTileEntryWidgetVersion = TEXT("dual_tile_transfer_tile_entry_widget_v1");
+	static const TCHAR* const DualTileTransferPopupWidgetVersion = TEXT("dual_tile_transfer_popup_widget_v2");
+	static const TCHAR* const AppleInteractableBlueprintVersion = TEXT("apple_interactable_blueprint_v1");
+	static const TCHAR* const StrawberryInteractableBlueprintVersion = TEXT("strawberry_interactable_blueprint_v1");
+	static const TCHAR* const WoodenSignPopupBlueprintVersion = TEXT("wooden_sign_popup_blueprint_v1");
+	static const TCHAR* const WoodenSignScrollPopupBlueprintVersion = TEXT("wooden_sign_scroll_popup_blueprint_v1");
+	static const TCHAR* const WoodenSignDualTileTransferPopupBlueprintVersion = TEXT("wooden_sign_dual_tile_transfer_popup_blueprint_v2");
 
 	FString EscapePowerShellSingleQuotedString(const FString& Value)
 	{
@@ -185,8 +208,56 @@ namespace
 
 		if (UEditorAssetSubsystem* AssetSubsystem = GEditor->GetEditorSubsystem<UEditorAssetSubsystem>())
 		{
-			AssetSubsystem->SaveLoadedAssets(Assets, false);
+			TArray<UObject*> DirtyAssets;
+			for (UObject* Asset : Assets)
+			{
+				if (!IsValid(Asset))
+				{
+					continue;
+				}
+
+				UPackage* Package = Asset->GetOutermost();
+				if (Package != nullptr && Package->IsDirty())
+				{
+					DirtyAssets.Add(Asset);
+				}
+			}
+
+			if (DirtyAssets.Num() > 0)
+			{
+				AssetSubsystem->SaveLoadedAssets(DirtyAssets, false);
+			}
 		}
+	}
+
+	bool HasGeneratedAssetVersion(const UObject& Object, const TCHAR* ExpectedVersion)
+	{
+		UPackage* Package = Object.GetOutermost();
+		if (Package == nullptr)
+		{
+			return false;
+		}
+
+		FMetaData& MetaData = Package->GetMetaData();
+		return MetaData.GetValue(&Object, GeneratedAssetVersionKey).Equals(ExpectedVersion, ESearchCase::CaseSensitive);
+	}
+
+	void SetGeneratedAssetVersion(UObject& Object, const TCHAR* NewVersion)
+	{
+		UPackage* Package = Object.GetOutermost();
+		if (Package == nullptr)
+		{
+			return;
+		}
+
+		FMetaData& MetaData = Package->GetMetaData();
+		if (MetaData.GetValue(&Object, GeneratedAssetVersionKey).Equals(NewVersion, ESearchCase::CaseSensitive))
+		{
+			return;
+		}
+
+		MetaData.SetValue(&Object, GeneratedAssetVersionKey, NewVersion);
+		Object.MarkPackageDirty();
 	}
 
 	UEditorActorSubsystem* GetEditorActorSubsystem()
@@ -355,6 +426,43 @@ namespace
 		return Pixels;
 	}
 
+	TArray64<uint8> BuildRoundedGradientTexturePixels(const int32 Size, const float CornerRadius)
+	{
+		TArray64<uint8> Pixels;
+		Pixels.SetNumZeroed(Size * Size * 4);
+
+		const FVector2f HalfExtent(static_cast<float>(Size) * 0.5f - 2.0f, static_cast<float>(Size) * 0.5f - 2.0f);
+		const FVector2f InnerHalfExtent = HalfExtent - FVector2f(CornerRadius, CornerRadius);
+		const float Center = (static_cast<float>(Size) - 1.0f) * 0.5f;
+
+		for (int32 Y = 0; Y < Size; ++Y)
+		{
+			const float VerticalAlpha = static_cast<float>(Y) / FMath::Max(1.0f, static_cast<float>(Size - 1));
+			const float Brightness = FMath::Lerp(242.0f, 214.0f, VerticalAlpha);
+			const float Highlight = FMath::Lerp(10.0f, 0.0f, FMath::Clamp(1.0f - VerticalAlpha * 1.8f, 0.0f, 1.0f));
+
+			for (int32 X = 0; X < Size; ++X)
+			{
+				const FVector2f Point(FMath::Abs(static_cast<float>(X) - Center), FMath::Abs(static_cast<float>(Y) - Center));
+				const FVector2f Delta = Point - InnerHalfExtent;
+				const FVector2f ClampedDelta(FMath::Max(Delta.X, 0.0f), FMath::Max(Delta.Y, 0.0f));
+				const float OutsideDistance = ClampedDelta.Size();
+				const float InsideDistance = FMath::Min(FMath::Max(Delta.X, Delta.Y), 0.0f);
+				const float SignedDistance = OutsideDistance + InsideDistance - CornerRadius;
+				const float Alpha = FMath::Clamp(1.0f - SignedDistance, 0.0f, 1.0f);
+
+				const int64 PixelIndex = static_cast<int64>((Y * Size) + X) * 4;
+				const uint8 Gray = static_cast<uint8>(FMath::Clamp(Brightness + Highlight, 0.0f, 255.0f));
+				Pixels[PixelIndex + 0] = Gray;
+				Pixels[PixelIndex + 1] = Gray;
+				Pixels[PixelIndex + 2] = Gray;
+				Pixels[PixelIndex + 3] = static_cast<uint8>(Alpha * 255.0f);
+			}
+		}
+
+		return Pixels;
+	}
+
 	void ConfigureTexture(UTexture2D& Texture, TConstArrayView64<uint8> PixelData, const int32 Size)
 	{
 		Texture.Source.Init(Size, Size, 1, 1, TSF_BGRA8, PixelData.GetData());
@@ -425,6 +533,16 @@ namespace
 		{
 			OverlaySlot->SetHorizontalAlignment(HAlign_Center);
 			OverlaySlot->SetVerticalAlignment(VAlign_Center);
+		}
+	}
+
+	void ConfigureOverlaySlotFill(UWidget& Widget, const FMargin& Padding = FMargin(0.0f))
+	{
+		if (UOverlaySlot* OverlaySlot = Cast<UOverlaySlot>(Widget.Slot))
+		{
+			OverlaySlot->SetPadding(Padding);
+			OverlaySlot->SetHorizontalAlignment(HAlign_Fill);
+			OverlaySlot->SetVerticalAlignment(VAlign_Fill);
 		}
 	}
 
@@ -504,6 +622,15 @@ namespace
 		}
 
 		return Label;
+	}
+
+	void SetWidgetClassProperty(UObject& Object, const TCHAR* PropertyName, UClass* WidgetClass)
+	{
+		if (FClassProperty* ClassProperty = FindFProperty<FClassProperty>(Object.GetClass(), PropertyName))
+		{
+			ClassProperty->SetPropertyValue_InContainer(&Object, WidgetClass);
+			Object.MarkPackageDirty();
+		}
 	}
 
 	void ConfigureButtonStyle(UButton& Button, const FLinearColor& BaseColor)
@@ -1055,6 +1182,462 @@ namespace
 		return true;
 	}
 
+	bool ConfigureDualTileTransferTileEntryWidgetBlueprint(
+		UWidgetBlueprint& WidgetBlueprint,
+		UTexture2D& TileGradientTexture,
+		FString& OutError)
+	{
+		if (WidgetBlueprint.WidgetTree == nullptr)
+		{
+			OutError = TEXT("Dual tile transfer tile entry widget blueprint is missing a WidgetTree.");
+			return false;
+		}
+
+		UBorder* TileRoot = Cast<UBorder>(WidgetBlueprint.WidgetTree->RootWidget);
+		if (TileRoot == nullptr)
+		{
+			TileRoot = WidgetBlueprint.WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Border_TileRoot"));
+			WidgetBlueprint.WidgetTree->RootWidget = TileRoot;
+		}
+
+		if (TileRoot == nullptr)
+		{
+			OutError = TEXT("Failed to create Border_TileRoot for WBP_InteractionDualTileTransferTileEntry.");
+			return false;
+		}
+
+		EnsureWidgetGuid(WidgetBlueprint, *TileRoot);
+		TileRoot->bIsVariable = false;
+
+		UOverlay* TileContent = FindWidget<UOverlay>(WidgetBlueprint, TEXT("Overlay_TileContent"));
+		if (TileContent == nullptr)
+		{
+			TileContent = WidgetBlueprint.WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass(), TEXT("Overlay_TileContent"));
+		}
+
+		UImage* TileBackground = FindWidget<UImage>(WidgetBlueprint, TEXT("IMG_TileBackground"));
+		if (TileBackground == nullptr)
+		{
+			TileBackground = WidgetBlueprint.WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("IMG_TileBackground"));
+		}
+
+		UBorder* SelectedOutline = FindWidget<UBorder>(WidgetBlueprint, TEXT("Border_SelectedOutline"));
+		if (SelectedOutline == nullptr)
+		{
+			SelectedOutline = WidgetBlueprint.WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Border_SelectedOutline"));
+		}
+
+		UTextBlock* NumberText = FindWidget<UTextBlock>(WidgetBlueprint, TEXT("TXT_Number"));
+		if (NumberText == nullptr)
+		{
+			NumberText = WidgetBlueprint.WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TXT_Number"));
+		}
+
+		if (!TileContent || !TileBackground || !SelectedOutline || !NumberText)
+		{
+			OutError = TEXT("Failed to construct one or more widgets for WBP_InteractionDualTileTransferTileEntry.");
+			return false;
+		}
+
+		EnsureWidgetGuid(WidgetBlueprint, *TileContent);
+		EnsureWidgetGuid(WidgetBlueprint, *TileBackground);
+		EnsureWidgetGuid(WidgetBlueprint, *SelectedOutline);
+		EnsureWidgetGuid(WidgetBlueprint, *NumberText);
+
+		TileContent->bIsVariable = false;
+		TileBackground->bIsVariable = true;
+		SelectedOutline->bIsVariable = true;
+		NumberText->bIsVariable = true;
+
+		if (TileRoot->GetContent() != TileContent)
+		{
+			TileRoot->SetContent(TileContent);
+		}
+
+		if (TileContent->GetChildrenCount() != 3
+			|| TileContent->GetChildAt(0) != TileBackground
+			|| TileContent->GetChildAt(1) != SelectedOutline
+			|| TileContent->GetChildAt(2) != NumberText)
+		{
+			TileContent->ClearChildren();
+			TileContent->AddChild(TileBackground);
+			TileContent->AddChild(SelectedOutline);
+			TileContent->AddChild(NumberText);
+		}
+
+		TileRoot->SetPadding(FMargin(4.0f));
+		TileRoot->SetBrushColor(FLinearColor::Transparent);
+
+		TileBackground->SetBrushFromTexture(&TileGradientTexture, false);
+		{
+			FSlateBrush Brush = TileBackground->GetBrush();
+			Brush.ImageSize = FVector2D(76.0f, 76.0f);
+			TileBackground->SetBrush(Brush);
+		}
+		TileBackground->SetColorAndOpacity(FLinearColor::White);
+
+		SelectedOutline->SetPadding(FMargin(0.0f));
+		SelectedOutline->SetBrush(MakeRoundedBrush(FLinearColor::Transparent, 14.0f, FLinearColor(1.0f, 1.0f, 1.0f, 0.92f), 2.0f));
+		SelectedOutline->SetVisibility(ESlateVisibility::Collapsed);
+
+		NumberText->SetText(FText::AsNumber(11));
+		NumberText->SetJustification(ETextJustify::Center);
+		NumberText->SetColorAndOpacity(FSlateColor(FLinearColor(0.18f, 0.20f, 0.26f, 1.0f)));
+		{
+			FSlateFontInfo Font = NumberText->GetFont();
+			Font.Size = 22;
+			NumberText->SetFont(Font);
+		}
+
+		ConfigureOverlaySlotFill(*TileBackground);
+		ConfigureOverlaySlotFill(*SelectedOutline);
+		ConfigureOverlaySlot(*NumberText);
+
+		WidgetBlueprint.Modify();
+		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(&WidgetBlueprint);
+		CompileBlueprint(&WidgetBlueprint);
+		WidgetBlueprint.MarkPackageDirty();
+		return true;
+	}
+
+	bool ConfigureDualTileTransferPopupWidgetBlueprint(
+		UWidgetBlueprint& WidgetBlueprint,
+		UClass* TileEntryWidgetClass,
+		FString& OutError)
+	{
+		if (WidgetBlueprint.WidgetTree == nullptr)
+		{
+			OutError = TEXT("Dual tile transfer popup widget blueprint is missing a WidgetTree.");
+			return false;
+		}
+
+		UCanvasPanel* RootCanvas = Cast<UCanvasPanel>(WidgetBlueprint.WidgetTree->RootWidget);
+		if (RootCanvas == nullptr)
+		{
+			RootCanvas = WidgetBlueprint.WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("RootCanvas"));
+			WidgetBlueprint.WidgetTree->RootWidget = RootCanvas;
+		}
+
+		if (RootCanvas == nullptr)
+		{
+			OutError = TEXT("Failed to create RootCanvas for WBP_InteractionDualTileTransferPopup.");
+			return false;
+		}
+
+		EnsureWidgetGuid(WidgetBlueprint, *RootCanvas);
+		RootCanvas->bIsVariable = false;
+
+		UOverlay* ScreenRoot = EnsurePanelChild<UOverlay>(WidgetBlueprint, *RootCanvas, TEXT("Overlay_ScreenRoot"), false);
+		USizeBox* PopupFrame = EnsurePanelChild<USizeBox>(WidgetBlueprint, *ScreenRoot, TEXT("SizeBox_PopupFrame"), false);
+		if (!ScreenRoot || !PopupFrame)
+		{
+			OutError = TEXT("Failed to create screen root widgets for WBP_InteractionDualTileTransferPopup.");
+			return false;
+		}
+
+		UBackgroundBlur* BackgroundBlurPanel = FindWidget<UBackgroundBlur>(WidgetBlueprint, TEXT("BackgroundBlur_Panel"));
+		if (BackgroundBlurPanel == nullptr)
+		{
+			BackgroundBlurPanel = WidgetBlueprint.WidgetTree->ConstructWidget<UBackgroundBlur>(UBackgroundBlur::StaticClass(), TEXT("BackgroundBlur_Panel"));
+		}
+
+		UBorder* TintPanel = FindWidget<UBorder>(WidgetBlueprint, TEXT("Border_TintPanel"));
+		if (TintPanel == nullptr)
+		{
+			TintPanel = WidgetBlueprint.WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Border_TintPanel"));
+		}
+
+		UVerticalBox* ContentColumn = FindWidget<UVerticalBox>(WidgetBlueprint, TEXT("VerticalBox_Content"));
+		if (ContentColumn == nullptr)
+		{
+			ContentColumn = WidgetBlueprint.WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("VerticalBox_Content"));
+		}
+
+		UHorizontalBox* TitleBar = FindWidget<UHorizontalBox>(WidgetBlueprint, TEXT("HorizontalBox_TitleBar"));
+		if (TitleBar == nullptr)
+		{
+			TitleBar = WidgetBlueprint.WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("HorizontalBox_TitleBar"));
+		}
+
+		UTextBlock* TitleText = FindWidget<UTextBlock>(WidgetBlueprint, TEXT("TXT_Title"));
+		if (TitleText == nullptr)
+		{
+			TitleText = WidgetBlueprint.WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TXT_Title"));
+		}
+
+		UButton* CloseButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_Close"));
+		if (CloseButton == nullptr)
+		{
+			CloseButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_Close"));
+		}
+
+		UHorizontalBox* BodyRow = FindWidget<UHorizontalBox>(WidgetBlueprint, TEXT("HorizontalBox_Body"));
+		if (BodyRow == nullptr)
+		{
+			BodyRow = WidgetBlueprint.WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("HorizontalBox_Body"));
+		}
+
+		UVerticalBox* LeftPanel = FindWidget<UVerticalBox>(WidgetBlueprint, TEXT("VerticalBox_LeftPanel"));
+		if (LeftPanel == nullptr)
+		{
+			LeftPanel = WidgetBlueprint.WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("VerticalBox_LeftPanel"));
+		}
+
+		UHorizontalBox* LeftHeader = FindWidget<UHorizontalBox>(WidgetBlueprint, TEXT("HorizontalBox_LeftHeader"));
+		if (LeftHeader == nullptr)
+		{
+			LeftHeader = WidgetBlueprint.WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("HorizontalBox_LeftHeader"));
+		}
+
+		if (UTextBlock* LeftTitle = FindWidget<UTextBlock>(WidgetBlueprint, TEXT("TXT_LeftTitle")))
+		{
+			LeftTitle->RemoveFromParent();
+			WidgetBlueprint.WidgetTree->RemoveWidget(LeftTitle);
+			WidgetBlueprint.OnVariableRemoved(LeftTitle->GetFName());
+		}
+
+		UButton* LeftAddButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_LeftAdd"));
+		if (LeftAddButton == nullptr)
+		{
+			LeftAddButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_LeftAdd"));
+		}
+
+		UButton* LeftRemoveButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_LeftRemove"));
+		if (LeftRemoveButton == nullptr)
+		{
+			LeftRemoveButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_LeftRemove"));
+		}
+
+		UTileView* LeftTileView = FindWidget<UTileView>(WidgetBlueprint, TEXT("TileView_Left"));
+		if (LeftTileView == nullptr)
+		{
+			LeftTileView = WidgetBlueprint.WidgetTree->ConstructWidget<UTileView>(UTileView::StaticClass(), TEXT("TileView_Left"));
+		}
+
+		UVerticalBox* RightPanel = FindWidget<UVerticalBox>(WidgetBlueprint, TEXT("VerticalBox_RightPanel"));
+		if (RightPanel == nullptr)
+		{
+			RightPanel = WidgetBlueprint.WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("VerticalBox_RightPanel"));
+		}
+
+		UHorizontalBox* RightHeader = FindWidget<UHorizontalBox>(WidgetBlueprint, TEXT("HorizontalBox_RightHeader"));
+		if (RightHeader == nullptr)
+		{
+			RightHeader = WidgetBlueprint.WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("HorizontalBox_RightHeader"));
+		}
+
+		if (UTextBlock* RightTitle = FindWidget<UTextBlock>(WidgetBlueprint, TEXT("TXT_RightTitle")))
+		{
+			RightTitle->RemoveFromParent();
+			WidgetBlueprint.WidgetTree->RemoveWidget(RightTitle);
+			WidgetBlueprint.OnVariableRemoved(RightTitle->GetFName());
+		}
+
+		UButton* RightAddButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_RightAdd"));
+		if (RightAddButton == nullptr)
+		{
+			RightAddButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_RightAdd"));
+		}
+
+		UButton* RightRemoveButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_RightRemove"));
+		if (RightRemoveButton == nullptr)
+		{
+			RightRemoveButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_RightRemove"));
+		}
+
+		UTileView* RightTileView = FindWidget<UTileView>(WidgetBlueprint, TEXT("TileView_Right"));
+		if (RightTileView == nullptr)
+		{
+			RightTileView = WidgetBlueprint.WidgetTree->ConstructWidget<UTileView>(UTileView::StaticClass(), TEXT("TileView_Right"));
+		}
+
+		if (!BackgroundBlurPanel || !TintPanel || !ContentColumn || !TitleBar || !TitleText || !CloseButton || !BodyRow
+			|| !LeftPanel || !LeftHeader || !LeftAddButton || !LeftRemoveButton || !LeftTileView
+			|| !RightPanel || !RightHeader || !RightAddButton || !RightRemoveButton || !RightTileView)
+		{
+			OutError = TEXT("Failed to construct one or more popup widgets for WBP_InteractionDualTileTransferPopup.");
+			return false;
+		}
+
+		EnsureWidgetGuid(WidgetBlueprint, *BackgroundBlurPanel);
+		EnsureWidgetGuid(WidgetBlueprint, *TintPanel);
+		EnsureWidgetGuid(WidgetBlueprint, *ContentColumn);
+		EnsureWidgetGuid(WidgetBlueprint, *TitleBar);
+		EnsureWidgetGuid(WidgetBlueprint, *TitleText);
+		EnsureWidgetGuid(WidgetBlueprint, *CloseButton);
+		EnsureWidgetGuid(WidgetBlueprint, *BodyRow);
+		EnsureWidgetGuid(WidgetBlueprint, *LeftPanel);
+		EnsureWidgetGuid(WidgetBlueprint, *LeftHeader);
+		EnsureWidgetGuid(WidgetBlueprint, *LeftAddButton);
+		EnsureWidgetGuid(WidgetBlueprint, *LeftRemoveButton);
+		EnsureWidgetGuid(WidgetBlueprint, *LeftTileView);
+		EnsureWidgetGuid(WidgetBlueprint, *RightPanel);
+		EnsureWidgetGuid(WidgetBlueprint, *RightHeader);
+		EnsureWidgetGuid(WidgetBlueprint, *RightAddButton);
+		EnsureWidgetGuid(WidgetBlueprint, *RightRemoveButton);
+		EnsureWidgetGuid(WidgetBlueprint, *RightTileView);
+
+		BackgroundBlurPanel->bIsVariable = false;
+		TintPanel->bIsVariable = false;
+		ContentColumn->bIsVariable = false;
+		TitleBar->bIsVariable = false;
+		TitleText->bIsVariable = true;
+		CloseButton->bIsVariable = true;
+		BodyRow->bIsVariable = false;
+		LeftPanel->bIsVariable = false;
+		LeftHeader->bIsVariable = false;
+		LeftAddButton->bIsVariable = true;
+		LeftRemoveButton->bIsVariable = true;
+		LeftTileView->bIsVariable = true;
+		RightPanel->bIsVariable = false;
+		RightHeader->bIsVariable = false;
+		RightAddButton->bIsVariable = true;
+		RightRemoveButton->bIsVariable = true;
+		RightTileView->bIsVariable = true;
+
+		if (PopupFrame->GetContent() != BackgroundBlurPanel)
+		{
+			PopupFrame->SetContent(BackgroundBlurPanel);
+		}
+
+		if (BackgroundBlurPanel->GetContent() != TintPanel)
+		{
+			BackgroundBlurPanel->SetContent(TintPanel);
+		}
+
+		if (TintPanel->GetContent() != ContentColumn)
+		{
+			TintPanel->SetContent(ContentColumn);
+		}
+
+		if (TitleBar->GetChildrenCount() != 2 || TitleBar->GetChildAt(0) != TitleText || TitleBar->GetChildAt(1) != CloseButton)
+		{
+			TitleBar->ClearChildren();
+			TitleBar->AddChildToHorizontalBox(TitleText);
+			TitleBar->AddChildToHorizontalBox(CloseButton);
+		}
+
+		if (LeftHeader->GetChildrenCount() != 2
+			|| LeftHeader->GetChildAt(0) != LeftAddButton
+			|| LeftHeader->GetChildAt(1) != LeftRemoveButton)
+		{
+			LeftHeader->ClearChildren();
+			LeftHeader->AddChildToHorizontalBox(LeftAddButton);
+			LeftHeader->AddChildToHorizontalBox(LeftRemoveButton);
+		}
+
+		if (LeftPanel->GetChildrenCount() != 2 || LeftPanel->GetChildAt(0) != LeftHeader || LeftPanel->GetChildAt(1) != LeftTileView)
+		{
+			LeftPanel->ClearChildren();
+			LeftPanel->AddChildToVerticalBox(LeftHeader);
+			LeftPanel->AddChildToVerticalBox(LeftTileView);
+		}
+
+		if (RightHeader->GetChildrenCount() != 2
+			|| RightHeader->GetChildAt(0) != RightAddButton
+			|| RightHeader->GetChildAt(1) != RightRemoveButton)
+		{
+			RightHeader->ClearChildren();
+			RightHeader->AddChildToHorizontalBox(RightAddButton);
+			RightHeader->AddChildToHorizontalBox(RightRemoveButton);
+		}
+
+		if (RightPanel->GetChildrenCount() != 2 || RightPanel->GetChildAt(0) != RightHeader || RightPanel->GetChildAt(1) != RightTileView)
+		{
+			RightPanel->ClearChildren();
+			RightPanel->AddChildToVerticalBox(RightHeader);
+			RightPanel->AddChildToVerticalBox(RightTileView);
+		}
+
+		if (BodyRow->GetChildrenCount() != 2 || BodyRow->GetChildAt(0) != LeftPanel || BodyRow->GetChildAt(1) != RightPanel)
+		{
+			BodyRow->ClearChildren();
+			BodyRow->AddChildToHorizontalBox(LeftPanel);
+			BodyRow->AddChildToHorizontalBox(RightPanel);
+		}
+
+		if (ContentColumn->GetChildrenCount() != 2 || ContentColumn->GetChildAt(0) != TitleBar || ContentColumn->GetChildAt(1) != BodyRow)
+		{
+			ContentColumn->ClearChildren();
+			ContentColumn->AddChildToVerticalBox(TitleBar);
+			ContentColumn->AddChildToVerticalBox(BodyRow);
+		}
+
+		ConfigureCanvasAnchors(*ScreenRoot, FAnchors(0.0f, 0.0f, 1.0f, 1.0f), FMargin(0.0f), FVector2D::ZeroVector);
+		ConfigureOverlaySlot(*PopupFrame);
+
+		PopupFrame->SetWidthOverride(960.0f);
+		PopupFrame->SetHeightOverride(920.0f);
+
+		BackgroundBlurPanel->SetBlurStrength(18.0f);
+		BackgroundBlurPanel->SetOverrideAutoRadiusCalculation(true);
+		BackgroundBlurPanel->SetBlurRadius(12);
+		BackgroundBlurPanel->SetApplyAlphaToBlur(true);
+		BackgroundBlurPanel->SetCornerRadius(FVector4(20.0f, 20.0f, 20.0f, 20.0f));
+
+		TintPanel->SetPadding(FMargin(24.0f, 22.0f));
+		TintPanel->SetBrush(MakeRoundedBrush(FLinearColor(0.98f, 0.80f, 0.44f, 0.15f), 20.0f, FLinearColor(1.0f, 1.0f, 1.0f, 0.08f), 1.0f));
+
+		TitleText->SetText(FText::FromString(TEXT("Transfer Numbers")));
+		TitleText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+		{
+			FSlateFontInfo Font = TitleText->GetFont();
+			Font.Size = 20;
+			TitleText->SetFont(Font);
+		}
+
+		CloseButton->SetToolTipText(FText::FromString(TEXT("Close")));
+		ConfigureButtonStyle(*CloseButton, FLinearColor(0.68f, 0.36f, 0.22f, 0.96f));
+		EnsureButtonLabel(WidgetBlueprint, *CloseButton, TEXT("TXT_CloseLabel"), FText::FromString(TEXT("Close")));
+
+		ConfigureButtonStyle(*LeftAddButton, FLinearColor(0.39f, 0.66f, 0.74f, 0.96f));
+		ConfigureButtonStyle(*LeftRemoveButton, FLinearColor(0.27f, 0.38f, 0.55f, 0.96f));
+		ConfigureButtonStyle(*RightAddButton, FLinearColor(0.42f, 0.68f, 0.58f, 0.96f));
+		ConfigureButtonStyle(*RightRemoveButton, FLinearColor(0.33f, 0.43f, 0.58f, 0.96f));
+		EnsureButtonLabel(WidgetBlueprint, *LeftAddButton, TEXT("TXT_LeftAddLabel"), FText::FromString(TEXT("+ Add")));
+		EnsureButtonLabel(WidgetBlueprint, *LeftRemoveButton, TEXT("TXT_LeftRemoveLabel"), FText::FromString(TEXT("- Remove")));
+		EnsureButtonLabel(WidgetBlueprint, *RightAddButton, TEXT("TXT_RightAddLabel"), FText::FromString(TEXT("+ Add")));
+		EnsureButtonLabel(WidgetBlueprint, *RightRemoveButton, TEXT("TXT_RightRemoveLabel"), FText::FromString(TEXT("- Remove")));
+
+		LeftTileView->SetEntryWidth(76.0f);
+		LeftTileView->SetEntryHeight(76.0f);
+		LeftTileView->SetHorizontalEntrySpacing(8.0f);
+		LeftTileView->SetVerticalEntrySpacing(8.0f);
+		LeftTileView->SetSelectionMode(ESelectionMode::Single);
+		SetWidgetClassProperty(*LeftTileView, TEXT("EntryWidgetClass"), TileEntryWidgetClass);
+
+		RightTileView->SetEntryWidth(76.0f);
+		RightTileView->SetEntryHeight(76.0f);
+		RightTileView->SetHorizontalEntrySpacing(8.0f);
+		RightTileView->SetVerticalEntrySpacing(8.0f);
+		RightTileView->SetSelectionMode(ESelectionMode::Single);
+		SetWidgetClassProperty(*RightTileView, TEXT("EntryWidgetClass"), TileEntryWidgetClass);
+
+		ConfigureVerticalBoxSlot(*TitleBar, FMargin(0.0f, 0.0f, 0.0f, 18.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*BodyRow, FMargin(0.0f), ESlateSizeRule::Fill, HAlign_Fill, VAlign_Fill);
+
+		ConfigureHorizontalBoxSlot(*TitleText, FMargin(0.0f, 0.0f, 12.0f, 0.0f), ESlateSizeRule::Fill, HAlign_Left, VAlign_Center);
+		ConfigureHorizontalBoxSlot(*CloseButton, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Right, VAlign_Center);
+		ConfigureHorizontalBoxSlot(*LeftPanel, FMargin(0.0f, 0.0f, 10.0f, 0.0f), ESlateSizeRule::Fill, HAlign_Fill, VAlign_Fill);
+		ConfigureHorizontalBoxSlot(*RightPanel, FMargin(10.0f, 0.0f, 0.0f, 0.0f), ESlateSizeRule::Fill, HAlign_Fill, VAlign_Fill);
+
+		ConfigureVerticalBoxSlot(*LeftHeader, FMargin(0.0f, 0.0f, 0.0f, 10.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*LeftTileView, FMargin(0.0f), ESlateSizeRule::Fill, HAlign_Fill, VAlign_Fill);
+		ConfigureVerticalBoxSlot(*RightHeader, FMargin(0.0f, 0.0f, 0.0f, 10.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*RightTileView, FMargin(0.0f), ESlateSizeRule::Fill, HAlign_Fill, VAlign_Fill);
+
+		ConfigureHorizontalBoxSlot(*LeftAddButton, FMargin(0.0f, 0.0f, 8.0f, 0.0f), ESlateSizeRule::Automatic, HAlign_Right, VAlign_Center);
+		ConfigureHorizontalBoxSlot(*LeftRemoveButton, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Right, VAlign_Center);
+		ConfigureHorizontalBoxSlot(*RightAddButton, FMargin(0.0f, 0.0f, 8.0f, 0.0f), ESlateSizeRule::Automatic, HAlign_Right, VAlign_Center);
+		ConfigureHorizontalBoxSlot(*RightRemoveButton, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Right, VAlign_Center);
+
+		WidgetBlueprint.Modify();
+		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(&WidgetBlueprint);
+		CompileBlueprint(&WidgetBlueprint);
+		WidgetBlueprint.MarkPackageDirty();
+		return true;
+	}
+
 	bool ConfigureInteractableBlueprint(UBlueprint& Blueprint, UStaticMesh& StaticMesh, const FText& PromptText, FString& OutError)
 	{
 		CompileBlueprint(&Blueprint);
@@ -1120,6 +1703,50 @@ namespace
 		DefaultObject->SetPopupTitle(PopupTitle);
 		DefaultObject->SetPopupMessage(PopupMessage);
 		DefaultObject->SetPopupButtonLayout(ButtonLayout);
+		DefaultObject->MarkPackageDirty();
+		Blueprint.MarkPackageDirty();
+		FBlueprintEditorUtils::MarkBlueprintAsModified(&Blueprint);
+		CompileBlueprint(&Blueprint);
+		return true;
+	}
+
+	bool ConfigureDualTileTransferPopupInteractableBlueprint(
+		UBlueprint& Blueprint,
+		UStaticMesh& StaticMesh,
+		const FText& PromptText,
+		const FText& PopupTitle,
+		const TArray<int32>& LeftNumbers,
+		const TArray<int32>& RightNumbers,
+		const bool bAllowDuplicateNumbers,
+		FString& OutError)
+	{
+		CompileBlueprint(&Blueprint);
+
+		ACodexDualTileTransferPopupInteractableActor* DefaultObject =
+			Blueprint.GeneratedClass ? Cast<ACodexDualTileTransferPopupInteractableActor>(Blueprint.GeneratedClass->GetDefaultObject()) : nullptr;
+		if (DefaultObject == nullptr)
+		{
+			OutError = FString::Printf(TEXT("Failed to access dual tile transfer popup default object for %s."), *Blueprint.GetName());
+			return false;
+		}
+
+		UStaticMeshComponent* StaticMeshComponent = DefaultObject->GetStaticMeshComponent();
+		UCodexInteractionComponent* InteractionComponent = DefaultObject->GetInteractionComponent();
+		if (StaticMeshComponent == nullptr || InteractionComponent == nullptr)
+		{
+			OutError = FString::Printf(TEXT("Dual tile transfer popup blueprint %s is missing required native components."), *Blueprint.GetName());
+			return false;
+		}
+
+		StaticMeshComponent->SetStaticMesh(&StaticMesh);
+		InteractionComponent->SetInteractionType(ECodexInteractionType::Use);
+		InteractionComponent->SetPromptText(PromptText);
+		InteractionComponent->SetVisibleDistance(340.0f);
+		InteractionComponent->SetInteractableDistance(150.0f);
+		DefaultObject->SetPopupTitle(PopupTitle);
+		DefaultObject->SetLeftNumbers(LeftNumbers);
+		DefaultObject->SetRightNumbers(RightNumbers);
+		DefaultObject->SetAllowDuplicateNumbers(bAllowDuplicateNumbers);
 		DefaultObject->MarkPackageDirty();
 		Blueprint.MarkPackageDirty();
 		FBlueprintEditorUtils::MarkBlueprintAsModified(&Blueprint);
@@ -1197,8 +1824,11 @@ namespace
 		const FString& ActorLabel,
 		const FVector& ActorLocation,
 		const FRotator& ActorRotation,
-		FString& OutError)
+		FString& OutError,
+		bool& bOutWasChanged)
 	{
+		bOutWasChanged = false;
+
 		if (ActorClass == nullptr)
 		{
 			OutError = FString::Printf(TEXT("Placement class is missing for %s."), *ActorLabel);
@@ -1210,6 +1840,7 @@ namespace
 		{
 			ActorSubsystem.DestroyActor(Actor);
 			Actor = nullptr;
+			bOutWasChanged = true;
 		}
 
 		if (Actor == nullptr)
@@ -1220,14 +1851,51 @@ namespace
 				OutError = FString::Printf(TEXT("Failed to place %s into BasicMap."), *ActorLabel);
 				return nullptr;
 			}
+
+			bOutWasChanged = true;
 		}
 
-		Actor->Modify();
-		Actor->Tags.AddUnique(InteractionPlacementTag);
-		Actor->SetActorLocationAndRotation(ActorLocation, ActorRotation, false, nullptr, ETeleportType::TeleportPhysics);
-		Actor->SetActorHiddenInGame(false);
-		Actor->SetActorLabel(ActorLabel);
-		Actor->MarkPackageDirty();
+		bool bNeedsActorUpdate = false;
+		auto BeginActorUpdate = [&Actor, &bNeedsActorUpdate]()
+		{
+			if (!bNeedsActorUpdate)
+			{
+				Actor->Modify();
+				bNeedsActorUpdate = true;
+			}
+		};
+
+		if (!Actor->Tags.Contains(InteractionPlacementTag))
+		{
+			BeginActorUpdate();
+			Actor->Tags.AddUnique(InteractionPlacementTag);
+		}
+
+		if (!Actor->GetActorLocation().Equals(ActorLocation, 0.01f)
+			|| !Actor->GetActorRotation().Equals(ActorRotation, 0.01f))
+		{
+			BeginActorUpdate();
+			Actor->SetActorLocationAndRotation(ActorLocation, ActorRotation, false, nullptr, ETeleportType::TeleportPhysics);
+		}
+
+		if (Actor->IsHidden())
+		{
+			BeginActorUpdate();
+			Actor->SetActorHiddenInGame(false);
+		}
+
+		if (Actor->GetActorLabel() != ActorLabel)
+		{
+			BeginActorUpdate();
+			Actor->SetActorLabel(ActorLabel);
+		}
+
+		if (bNeedsActorUpdate)
+		{
+			Actor->MarkPackageDirty();
+			bOutWasChanged = true;
+		}
+
 		return Actor;
 	}
 
@@ -1236,6 +1904,7 @@ namespace
 		UBlueprint& StrawberryBlueprint,
 		UBlueprint& WoodenSignBlueprint,
 		UBlueprint& WoodenSignScrollBlueprint,
+		UBlueprint& WoodenSignDualTileTransferBlueprint,
 		FString& OutError)
 	{
 		FString MapFilename;
@@ -1272,26 +1941,44 @@ namespace
 		const FVector StrawberryLocation = PlacementOrigin + (Forward * 240.0f) + (Right * 48.0f);
 		const FVector WoodenSignLocation = PlacementOrigin + (Forward * 320.0f) - (Right * 72.0f);
 		const FVector WoodenSignScrollLocation = PlacementOrigin + (Forward * 360.0f) + (Right * 72.0f);
+		const FVector WoodenSignDualTileTransferLocation = PlacementOrigin + (Forward * 430.0f);
 		const FRotator PlacementRotation = FRotator::ZeroRotator;
+		bool bMapChanged = false;
+		bool bActorChanged = false;
 
-		if (SpawnOrUpdatePlacedActor(*ActorSubsystem, AppleBlueprint.GeneratedClass, InteractionPlacementLabelApple, AppleLocation, PlacementRotation, OutError) == nullptr)
+		if (SpawnOrUpdatePlacedActor(*ActorSubsystem, AppleBlueprint.GeneratedClass, InteractionPlacementLabelApple, AppleLocation, PlacementRotation, OutError, bActorChanged) == nullptr)
 		{
 			return false;
 		}
+		bMapChanged |= bActorChanged;
 
-		if (SpawnOrUpdatePlacedActor(*ActorSubsystem, StrawberryBlueprint.GeneratedClass, InteractionPlacementLabelStrawberry, StrawberryLocation, PlacementRotation, OutError) == nullptr)
+		if (SpawnOrUpdatePlacedActor(*ActorSubsystem, StrawberryBlueprint.GeneratedClass, InteractionPlacementLabelStrawberry, StrawberryLocation, PlacementRotation, OutError, bActorChanged) == nullptr)
 		{
 			return false;
 		}
+		bMapChanged |= bActorChanged;
 
-		if (SpawnOrUpdatePlacedActor(*ActorSubsystem, WoodenSignBlueprint.GeneratedClass, InteractionPlacementLabelWoodenSign, WoodenSignLocation, PlacementRotation, OutError) == nullptr)
+		if (SpawnOrUpdatePlacedActor(*ActorSubsystem, WoodenSignBlueprint.GeneratedClass, InteractionPlacementLabelWoodenSign, WoodenSignLocation, PlacementRotation, OutError, bActorChanged) == nullptr)
 		{
 			return false;
 		}
+		bMapChanged |= bActorChanged;
 
-		if (SpawnOrUpdatePlacedActor(*ActorSubsystem, WoodenSignScrollBlueprint.GeneratedClass, InteractionPlacementLabelWoodenSignScroll, WoodenSignScrollLocation, PlacementRotation, OutError) == nullptr)
+		if (SpawnOrUpdatePlacedActor(*ActorSubsystem, WoodenSignScrollBlueprint.GeneratedClass, InteractionPlacementLabelWoodenSignScroll, WoodenSignScrollLocation, PlacementRotation, OutError, bActorChanged) == nullptr)
 		{
 			return false;
+		}
+		bMapChanged |= bActorChanged;
+
+		if (SpawnOrUpdatePlacedActor(*ActorSubsystem, WoodenSignDualTileTransferBlueprint.GeneratedClass, InteractionPlacementLabelWoodenSignDualTileTransfer, WoodenSignDualTileTransferLocation, PlacementRotation, OutError, bActorChanged) == nullptr)
+		{
+			return false;
+		}
+		bMapChanged |= bActorChanged;
+
+		if (!bMapChanged)
+		{
+			return true;
 		}
 
 		World->MarkPackageDirty();
@@ -1353,7 +2040,8 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 	UTexture2D* FilledCircleTexture = CreateAsset<UTexture2D>(UIPath, FilledCircleTextureName, TextureFactory);
 	UTexture2D* OuterRingTexture = CreateAsset<UTexture2D>(UIPath, OuterRingTextureName, TextureFactory);
 	UTexture2D* SmileIconTexture = CreateAsset<UTexture2D>(UIPath, SmileIconTextureName, TextureFactory);
-	if (FilledCircleTexture == nullptr || OuterRingTexture == nullptr || SmileIconTexture == nullptr)
+	UTexture2D* TileRoundedGradientTexture = CreateAsset<UTexture2D>(UIPath, TileRoundedGradientTextureName, TextureFactory);
+	if (FilledCircleTexture == nullptr || OuterRingTexture == nullptr || SmileIconTexture == nullptr || TileRoundedGradientTexture == nullptr)
 	{
 		OutError = TEXT("Failed to create interaction texture assets.");
 		return false;
@@ -1362,9 +2050,30 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 	const TArray64<uint8> FilledCirclePixels = BuildTexturePixels(64, 0.0f, 16.0f);
 	const TArray64<uint8> OuterRingPixels = BuildTexturePixels(64, 20.0f, 24.0f);
 	const TArray64<uint8> SmileIconPixels = BuildSmileTexturePixels(128);
-	ConfigureTexture(*FilledCircleTexture, FilledCirclePixels, 64);
-	ConfigureTexture(*OuterRingTexture, OuterRingPixels, 64);
-	ConfigureTexture(*SmileIconTexture, SmileIconPixels, 128);
+	const TArray64<uint8> TileRoundedGradientPixels = BuildRoundedGradientTexturePixels(128, 18.0f);
+	if (!HasGeneratedAssetVersion(*FilledCircleTexture, FilledCircleTextureVersion))
+	{
+		ConfigureTexture(*FilledCircleTexture, FilledCirclePixels, 64);
+		SetGeneratedAssetVersion(*FilledCircleTexture, FilledCircleTextureVersion);
+	}
+
+	if (!HasGeneratedAssetVersion(*OuterRingTexture, OuterRingTextureVersion))
+	{
+		ConfigureTexture(*OuterRingTexture, OuterRingPixels, 64);
+		SetGeneratedAssetVersion(*OuterRingTexture, OuterRingTextureVersion);
+	}
+
+	if (!HasGeneratedAssetVersion(*SmileIconTexture, SmileIconTextureVersion))
+	{
+		ConfigureTexture(*SmileIconTexture, SmileIconPixels, 128);
+		SetGeneratedAssetVersion(*SmileIconTexture, SmileIconTextureVersion);
+	}
+
+	if (!HasGeneratedAssetVersion(*TileRoundedGradientTexture, TileRoundedGradientTextureVersion))
+	{
+		ConfigureTexture(*TileRoundedGradientTexture, TileRoundedGradientPixels, 128);
+		SetGeneratedAssetVersion(*TileRoundedGradientTexture, TileRoundedGradientTextureVersion);
+	}
 
 	UWidgetBlueprint* IndicatorWidget = CreateWidgetBlueprint(UIPath, IndicatorWidgetName, UCodexInteractionIndicatorWidget::StaticClass());
 	if (IndicatorWidget == nullptr)
@@ -1373,9 +2082,15 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 		return false;
 	}
 
-	if (!ConfigureInteractionWidgetBlueprint(*IndicatorWidget, *FilledCircleTexture, *OuterRingTexture, OutError))
+	if (!HasGeneratedAssetVersion(*IndicatorWidget, IndicatorWidgetVersion)
+		&& !ConfigureInteractionWidgetBlueprint(*IndicatorWidget, *FilledCircleTexture, *OuterRingTexture, OutError))
 	{
 		return false;
+	}
+
+	if (!HasGeneratedAssetVersion(*IndicatorWidget, IndicatorWidgetVersion))
+	{
+		SetGeneratedAssetVersion(*IndicatorWidget, IndicatorWidgetVersion);
 	}
 
 	UWidgetBlueprint* MessagePopupWidget = CreateWidgetBlueprint(UIPath, MessagePopupWidgetName, UCodexInteractionMessagePopupWidget::StaticClass());
@@ -1385,9 +2100,15 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 		return false;
 	}
 
-	if (!ConfigureMessagePopupWidgetBlueprint(*MessagePopupWidget, OutError))
+	if (!HasGeneratedAssetVersion(*MessagePopupWidget, MessagePopupWidgetVersion)
+		&& !ConfigureMessagePopupWidgetBlueprint(*MessagePopupWidget, OutError))
 	{
 		return false;
+	}
+
+	if (!HasGeneratedAssetVersion(*MessagePopupWidget, MessagePopupWidgetVersion))
+	{
+		SetGeneratedAssetVersion(*MessagePopupWidget, MessagePopupWidgetVersion);
 	}
 
 	UWidgetBlueprint* ScrollMessagePopupWidget = CreateWidgetBlueprint(UIPath, ScrollMessagePopupWidgetName, UCodexInteractionScrollMessagePopupWidget::StaticClass());
@@ -1397,9 +2118,57 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 		return false;
 	}
 
-	if (!ConfigureScrollMessagePopupWidgetBlueprint(*ScrollMessagePopupWidget, *SmileIconTexture, OutError))
+	if (!HasGeneratedAssetVersion(*ScrollMessagePopupWidget, ScrollMessagePopupWidgetVersion)
+		&& !ConfigureScrollMessagePopupWidgetBlueprint(*ScrollMessagePopupWidget, *SmileIconTexture, OutError))
 	{
 		return false;
+	}
+
+	if (!HasGeneratedAssetVersion(*ScrollMessagePopupWidget, ScrollMessagePopupWidgetVersion))
+	{
+		SetGeneratedAssetVersion(*ScrollMessagePopupWidget, ScrollMessagePopupWidgetVersion);
+	}
+
+	UWidgetBlueprint* DualTileTransferTileEntryWidget = CreateWidgetBlueprint(
+		UIPath,
+		DualTileTransferTileEntryWidgetName,
+		UCodexInteractionDualTileTransferTileEntryWidget::StaticClass());
+	if (DualTileTransferTileEntryWidget == nullptr)
+	{
+		OutError = TEXT("Failed to create WBP_InteractionDualTileTransferTileEntry.");
+		return false;
+	}
+
+	if (!HasGeneratedAssetVersion(*DualTileTransferTileEntryWidget, DualTileTransferTileEntryWidgetVersion)
+		&& !ConfigureDualTileTransferTileEntryWidgetBlueprint(*DualTileTransferTileEntryWidget, *TileRoundedGradientTexture, OutError))
+	{
+		return false;
+	}
+
+	if (!HasGeneratedAssetVersion(*DualTileTransferTileEntryWidget, DualTileTransferTileEntryWidgetVersion))
+	{
+		SetGeneratedAssetVersion(*DualTileTransferTileEntryWidget, DualTileTransferTileEntryWidgetVersion);
+	}
+
+	UWidgetBlueprint* DualTileTransferPopupWidget = CreateWidgetBlueprint(
+		UIPath,
+		DualTileTransferPopupWidgetName,
+		UCodexInteractionDualTileTransferPopupWidget::StaticClass());
+	if (DualTileTransferPopupWidget == nullptr)
+	{
+		OutError = TEXT("Failed to create WBP_InteractionDualTileTransferPopup.");
+		return false;
+	}
+
+	if (!HasGeneratedAssetVersion(*DualTileTransferPopupWidget, DualTileTransferPopupWidgetVersion)
+		&& !ConfigureDualTileTransferPopupWidgetBlueprint(*DualTileTransferPopupWidget, DualTileTransferTileEntryWidget->GeneratedClass, OutError))
+	{
+		return false;
+	}
+
+	if (!HasGeneratedAssetVersion(*DualTileTransferPopupWidget, DualTileTransferPopupWidgetVersion))
+	{
+		SetGeneratedAssetVersion(*DualTileTransferPopupWidget, DualTileTransferPopupWidgetVersion);
 	}
 
 	UStaticMesh* AppleMesh = LoadAsset<UStaticMesh>(AppleMeshObjectPath);
@@ -1415,7 +2184,15 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 	UBlueprint* StrawberryBlueprint = CreateBlueprint(BlueprintsPath, InteractableStrawberryName, ACodexInteractableActor::StaticClass());
 	UBlueprint* WoodenSignBlueprint = CreateBlueprint(BlueprintsPath, InteractableWoodenSignPopupName, ACodexPopupInteractableActor::StaticClass());
 	UBlueprint* WoodenSignScrollBlueprint = CreateBlueprint(BlueprintsPath, InteractableWoodenSignScrollPopupName, ACodexScrollMessagePopupInteractableActor::StaticClass());
-	if (AppleBlueprint == nullptr || StrawberryBlueprint == nullptr || WoodenSignBlueprint == nullptr || WoodenSignScrollBlueprint == nullptr)
+	UBlueprint* WoodenSignDualTileTransferBlueprint = CreateBlueprint(
+		BlueprintsPath,
+		InteractableWoodenSignDualTileTransferPopupName,
+		ACodexDualTileTransferPopupInteractableActor::StaticClass());
+	if (AppleBlueprint == nullptr
+		|| StrawberryBlueprint == nullptr
+		|| WoodenSignBlueprint == nullptr
+		|| WoodenSignScrollBlueprint == nullptr
+		|| WoodenSignDualTileTransferBlueprint == nullptr)
 	{
 		OutError = TEXT("Failed to create one or more interactable test blueprints.");
 		return false;
@@ -1462,39 +2239,95 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 	const FText ScrollPopupPromptText = FText::FromString(TEXT("\uC77D\uAE30"));
 	const FText ScrollPopupTitleText = FText::FromString(TEXT("\uAC8C\uC2DC\uD310"));
 	const FText ScrollPopupBodyText = FText::FromString(TEXT("Codex village notice.\n\nThis popup verifies a long scrolling message layout. The panel follows the existing popup style, but the soft tint is yellow instead of sky blue.\n\nThe popup should only close through the OK button. Space key close handling must be ignored for this popup, and the result should still flow through the interaction subsystem.\n\nMake sure long text keeps the layout stable and scrolls naturally."));
+	const FText DualTileTransferPromptText = FText::FromString(TEXT("\uC774\uB3D9\uD558\uAE30"));
+	const FText DualTileTransferTitleText = FText::FromString(TEXT("\uBC88\uD638 \uC774\uB3D9 \uD14C\uC2A4\uD2B8"));
+	TArray<int32> DualTileTransferLeftNumbers;
+	TArray<int32> DualTileTransferRightNumbers;
+	for (int32 Number = 1; Number <= 5; ++Number)
+	{
+		DualTileTransferLeftNumbers.Add(Number);
+	}
 
-	if (!ConfigureInteractableBlueprint(*AppleBlueprint, *AppleMesh, EatPromptText, OutError))
+	for (int32 Number = 6; Number <= 10; ++Number)
+	{
+		DualTileTransferRightNumbers.Add(Number);
+	}
+
+	if (!HasGeneratedAssetVersion(*AppleBlueprint, AppleInteractableBlueprintVersion)
+		&& !ConfigureInteractableBlueprint(*AppleBlueprint, *AppleMesh, EatPromptText, OutError))
 	{
 		return false;
 	}
 
-	if (!ConfigureInteractableBlueprint(*StrawberryBlueprint, *StrawberryMesh, EatPromptText, OutError))
+	if (!HasGeneratedAssetVersion(*AppleBlueprint, AppleInteractableBlueprintVersion))
+	{
+		SetGeneratedAssetVersion(*AppleBlueprint, AppleInteractableBlueprintVersion);
+	}
+
+	if (!HasGeneratedAssetVersion(*StrawberryBlueprint, StrawberryInteractableBlueprintVersion)
+		&& !ConfigureInteractableBlueprint(*StrawberryBlueprint, *StrawberryMesh, EatPromptText, OutError))
 	{
 		return false;
 	}
 
-	if (!ConfigurePopupInteractableBlueprint(
-		*WoodenSignBlueprint,
-		*WoodenSignMesh,
-		MessagePopupPromptText,
-		MessagePopupTitleText,
-		MessagePopupBodyText,
-		ECodexPopupButtonLayout::Ok,
-		OutError))
+	if (!HasGeneratedAssetVersion(*StrawberryBlueprint, StrawberryInteractableBlueprintVersion))
+	{
+		SetGeneratedAssetVersion(*StrawberryBlueprint, StrawberryInteractableBlueprintVersion);
+	}
+
+	if (!HasGeneratedAssetVersion(*WoodenSignBlueprint, WoodenSignPopupBlueprintVersion)
+		&& !ConfigurePopupInteractableBlueprint(
+			*WoodenSignBlueprint,
+			*WoodenSignMesh,
+			MessagePopupPromptText,
+			MessagePopupTitleText,
+			MessagePopupBodyText,
+			ECodexPopupButtonLayout::Ok,
+			OutError))
 	{
 		return false;
 	}
 
-	if (!ConfigurePopupInteractableBlueprint(
-		*WoodenSignScrollBlueprint,
-		*WoodenSignMesh,
-		ScrollPopupPromptText,
-		ScrollPopupTitleText,
-		ScrollPopupBodyText,
-		ECodexPopupButtonLayout::Ok,
-		OutError))
+	if (!HasGeneratedAssetVersion(*WoodenSignBlueprint, WoodenSignPopupBlueprintVersion))
+	{
+		SetGeneratedAssetVersion(*WoodenSignBlueprint, WoodenSignPopupBlueprintVersion);
+	}
+
+	if (!HasGeneratedAssetVersion(*WoodenSignScrollBlueprint, WoodenSignScrollPopupBlueprintVersion)
+		&& !ConfigurePopupInteractableBlueprint(
+			*WoodenSignScrollBlueprint,
+			*WoodenSignMesh,
+			ScrollPopupPromptText,
+			ScrollPopupTitleText,
+			ScrollPopupBodyText,
+			ECodexPopupButtonLayout::Ok,
+			OutError))
 	{
 		return false;
+	}
+
+	if (!HasGeneratedAssetVersion(*WoodenSignScrollBlueprint, WoodenSignScrollPopupBlueprintVersion))
+	{
+		SetGeneratedAssetVersion(*WoodenSignScrollBlueprint, WoodenSignScrollPopupBlueprintVersion);
+	}
+
+	if (!HasGeneratedAssetVersion(*WoodenSignDualTileTransferBlueprint, WoodenSignDualTileTransferPopupBlueprintVersion)
+		&& !ConfigureDualTileTransferPopupInteractableBlueprint(
+			*WoodenSignDualTileTransferBlueprint,
+			*WoodenSignMesh,
+			DualTileTransferPromptText,
+			DualTileTransferTitleText,
+			DualTileTransferLeftNumbers,
+			DualTileTransferRightNumbers,
+			false,
+			OutError))
+	{
+		return false;
+	}
+
+	if (!HasGeneratedAssetVersion(*WoodenSignDualTileTransferBlueprint, WoodenSignDualTileTransferPopupBlueprintVersion))
+	{
+		SetGeneratedAssetVersion(*WoodenSignDualTileTransferBlueprint, WoodenSignDualTileTransferPopupBlueprintVersion);
 	}
 
 	SaveAssets(
@@ -1506,16 +2339,26 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 			FilledCircleTexture,
 			OuterRingTexture,
 			SmileIconTexture,
+			TileRoundedGradientTexture,
 			IndicatorWidget,
 			MessagePopupWidget,
 			ScrollMessagePopupWidget,
+			DualTileTransferTileEntryWidget,
+			DualTileTransferPopupWidget,
 			AppleBlueprint,
 			StrawberryBlueprint,
 			WoodenSignBlueprint,
-			WoodenSignScrollBlueprint
+			WoodenSignScrollBlueprint,
+			WoodenSignDualTileTransferBlueprint
 		});
 
-	if (!PlaceInteractionTestActorsInMap(*AppleBlueprint, *StrawberryBlueprint, *WoodenSignBlueprint, *WoodenSignScrollBlueprint, OutError))
+	if (!PlaceInteractionTestActorsInMap(
+		*AppleBlueprint,
+		*StrawberryBlueprint,
+		*WoodenSignBlueprint,
+		*WoodenSignScrollBlueprint,
+		*WoodenSignDualTileTransferBlueprint,
+		OutError))
 	{
 		return false;
 	}

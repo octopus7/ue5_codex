@@ -16,6 +16,7 @@ public:
 	virtual void HandleInteractionRequested_Implementation(const FCodexInteractionRequest& Request) override;
 	virtual ECodexInteractionPopupStyle GetPopupStyle() const;
 	virtual bool AllowsPopupControllerClose() const;
+	virtual void PopulatePopupRequest(FCodexInteractionPopupRequest& PopupRequest) const;
 
 	const FText& GetPopupTitle() const { return PopupTitle; }
 	const FText& GetPopupMessage() const { return PopupMessage; }

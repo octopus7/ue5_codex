@@ -57,5 +57,6 @@ void UCodexInteractionScrollMessagePopupWidget::SubmitPopupResult(const ECodexPo
 	Response.RequestId = ActiveRequest.RequestId;
 	Response.InteractionRequest = ActiveRequest.InteractionRequest;
 	Response.Result = Result;
+	Response.bWasClosed = Result == ECodexPopupResult::Closed;
 	InteractionSubsystem->SubmitInteractionPopupResult(Response);
 }

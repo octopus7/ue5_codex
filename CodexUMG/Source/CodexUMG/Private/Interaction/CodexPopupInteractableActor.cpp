@@ -22,6 +22,15 @@ bool ACodexPopupInteractableActor::AllowsPopupControllerClose() const
 	return true;
 }
 
+void ACodexPopupInteractableActor::PopulatePopupRequest(FCodexInteractionPopupRequest& PopupRequest) const
+{
+	PopupRequest.Title = PopupTitle;
+	PopupRequest.Message = PopupMessage;
+	PopupRequest.ButtonLayout = PopupButtonLayout;
+	PopupRequest.PopupStyle = GetPopupStyle();
+	PopupRequest.bAllowControllerClose = AllowsPopupControllerClose();
+}
+
 void ACodexPopupInteractableActor::SetPopupTitle(const FText& NewPopupTitle)
 {
 	PopupTitle = NewPopupTitle;

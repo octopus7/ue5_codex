@@ -37,7 +37,8 @@ UENUM(BlueprintType)
 enum class ECodexInteractionPopupStyle : uint8
 {
 	Message,
-	ScrollMessage
+	ScrollMessage,
+	DualTileTransfer
 };
 
 UENUM(BlueprintType)
@@ -47,6 +48,13 @@ enum class ECodexPopupResult : uint8
 	Yes,
 	No,
 	Closed
+};
+
+UENUM(BlueprintType)
+enum class ECodexTileTransferPanelSide : uint8
+{
+	Left,
+	Right
 };
 
 USTRUCT(BlueprintType)
@@ -95,6 +103,15 @@ struct CODEXUMG_API FCodexInteractionPopupRequest
 
 	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
 	bool bAllowControllerClose = true;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
+	TArray<int32> LeftNumbers;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
+	TArray<int32> RightNumbers;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
+	bool bAllowDuplicateNumbers = false;
 };
 
 USTRUCT(BlueprintType)
@@ -110,4 +127,13 @@ struct CODEXUMG_API FCodexInteractionPopupResponse
 
 	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
 	ECodexPopupResult Result = ECodexPopupResult::Closed;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
+	TArray<int32> LeftNumbers;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
+	TArray<int32> RightNumbers;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
+	bool bWasClosed = false;
 };

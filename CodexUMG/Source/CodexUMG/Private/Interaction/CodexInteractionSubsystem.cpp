@@ -4,6 +4,7 @@
 
 #include "Interaction/CodexInteractionAssetPaths.h"
 #include "Interaction/CodexInteractionComponent.h"
+#include "Interaction/CodexInteractionDualTileTransferPopupWidget.h"
 #include "Interaction/CodexInteractionMessagePopupWidget.h"
 #include "Interaction/CodexInteractionScrollMessagePopupWidget.h"
 #include "Interaction/CodexPopupInteractableActor.h"
@@ -38,9 +39,22 @@ namespace
 
 	TSubclassOf<UUserWidget> ResolvePopupWidgetClass(const ECodexInteractionPopupStyle PopupStyle)
 	{
-		const TCHAR* AssetObjectPath = PopupStyle == ECodexInteractionPopupStyle::ScrollMessage
-			? CodexInteractionAssetPaths::ScrollMessagePopupWidgetObjectPath
-			: CodexInteractionAssetPaths::MessagePopupWidgetObjectPath;
+		const TCHAR* AssetObjectPath = CodexInteractionAssetPaths::MessagePopupWidgetObjectPath;
+		switch (PopupStyle)
+		{
+		case ECodexInteractionPopupStyle::ScrollMessage:
+			AssetObjectPath = CodexInteractionAssetPaths::ScrollMessagePopupWidgetObjectPath;
+			break;
+
+		case ECodexInteractionPopupStyle::DualTileTransfer:
+			AssetObjectPath = CodexInteractionAssetPaths::DualTileTransferPopupWidgetObjectPath;
+			break;
+
+		case ECodexInteractionPopupStyle::Message:
+		default:
+			break;
+		}
+
 		return LoadClass<UUserWidget>(nullptr, *CodexInteractionAssetPaths::MakeGeneratedClassObjectPath(AssetObjectPath));
 	}
 }
@@ -120,11 +134,7 @@ void UCodexInteractionSubsystem::RequestInteraction(APlayerController* Requestin
 		FCodexInteractionPopupRequest PopupRequest;
 		PopupRequest.RequestId = FGuid::NewGuid();
 		PopupRequest.InteractionRequest = Request;
-		PopupRequest.Title = PopupActor->GetPopupTitle();
-		PopupRequest.Message = PopupActor->GetPopupMessage();
-		PopupRequest.ButtonLayout = PopupActor->GetPopupButtonLayout();
-		PopupRequest.PopupStyle = PopupActor->GetPopupStyle();
-		PopupRequest.bAllowControllerClose = PopupActor->AllowsPopupControllerClose();
+		PopupActor->PopulatePopupRequest(PopupRequest);
 
 		if (!OpenInteractionPopup(PopupRequest))
 		{
@@ -173,6 +183,17 @@ bool UCodexInteractionSubsystem::OpenInteractionPopup(const FCodexInteractionPop
 
 		ScrollPopupWidget->ApplyPopupRequest(Request, *this);
 		PopupWidget = ScrollPopupWidget;
+	}
+	else if (Request.PopupStyle == ECodexInteractionPopupStyle::DualTileTransfer)
+	{
+		UCodexInteractionDualTileTransferPopupWidget* DualTilePopupWidget = CreateWidget<UCodexInteractionDualTileTransferPopupWidget>(RequestingController, PopupWidgetClass);
+		if (DualTilePopupWidget == nullptr)
+		{
+			return false;
+		}
+
+		DualTilePopupWidget->ApplyPopupRequest(Request, *this);
+		PopupWidget = DualTilePopupWidget;
 	}
 	else
 	{
@@ -250,10 +271,20 @@ void UCodexInteractionSubsystem::RequestCloseActivePopup(APlayerController* Requ
 		return;
 	}
 
+	if (ActivePopupRequest.PopupStyle == ECodexInteractionPopupStyle::DualTileTransfer)
+	{
+		if (UCodexInteractionDualTileTransferPopupWidget* DualTilePopupWidget = Cast<UCodexInteractionDualTileTransferPopupWidget>(ActivePopupWidget))
+		{
+			DualTilePopupWidget->HandleControllerCloseRequested();
+			return;
+		}
+	}
+
 	FCodexInteractionPopupResponse Response;
 	Response.RequestId = ActivePopupRequest.RequestId;
 	Response.InteractionRequest = ActivePopupRequest.InteractionRequest;
 	Response.Result = ECodexPopupResult::Closed;
+	Response.bWasClosed = true;
 	SubmitInteractionPopupResult(Response);
 }
 
