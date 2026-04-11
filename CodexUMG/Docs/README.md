@@ -25,14 +25,17 @@
 7. [interaction_scroll_message_popup_plan.md](./interaction_scroll_message_popup_plan.md)
    긴 텍스트를 스크롤해서 보여주는 중앙 팝업 구현 계획이다. 기존 단순 팝업과 거의 같은 레이아웃을 유지하면서, 노란 스마일 아이콘, 스크롤 영역, `OK` 단일 버튼, 노란 계열 틴트 차이만 추가한 변형 계획이다.
 
+8. [interaction_dual_tile_transfer_popup_plan.md](./interaction_dual_tile_transfer_popup_plan.md)
+   좌우로 나란한 2개의 스크롤 타일뷰 사이에서 숫자 타일을 드래그로 옮기는 팝업 구현 계획이다. `4 x 10` 가시 영역, `1~99` 숫자 정사각형 타일, 좌우 `타일추가` `타일지우기`, 닫기 버튼, 라운드 그라데이션 타일 텍스처 생성 계획을 포함한다.
+
 ## 파일별 요약
 
 ### [multi_plan_batch_execution_plan.md](./multi_plan_batch_execution_plan.md)
 
-- `topdown_fixed_camera_wasd_plan`, `interaction_umg_component_plan`, `interaction_message_popup_plan`, `interaction_scroll_message_popup_plan`, `player_projectile_firing_plan`, `vox_mesh_asset_pipeline_plan`을 묶는 상위 배치 실행 계획이다.
+- `topdown_fixed_camera_wasd_plan`, `interaction_umg_component_plan`, `interaction_message_popup_plan`, `interaction_scroll_message_popup_plan`, `interaction_dual_tile_transfer_popup_plan`, `player_projectile_firing_plan`, `vox_mesh_asset_pipeline_plan`을 묶는 상위 배치 실행 계획이다.
 - `topdown_fixed_camera_wasd_plan`을 선행 게이트로 두고, `vox_mesh_asset_pipeline_plan`은 별도 병렬 트랙으로 처리한다.
-- `interaction_message_popup_plan`과 `interaction_scroll_message_popup_plan`은 둘 다 `interaction_umg_component_plan`과 `vox_mesh_asset_pipeline_plan` 완료 후 착수하는 후행 팝업 트랙이다.
-- 두 팝업 트랙은 가능한 시점부터 병렬 처리 가능한 독립 작업으로 본다.
+- `interaction_message_popup_plan`, `interaction_scroll_message_popup_plan`, `interaction_dual_tile_transfer_popup_plan`은 모두 `interaction_umg_component_plan`과 `vox_mesh_asset_pipeline_plan` 완료 후 착수하는 후행 팝업 트랙이다.
+- 세 팝업 트랙은 가능한 시점부터 병렬 처리 가능한 독립 작업으로 본다.
 
 ### [topdown_fixed_camera_wasd_plan.md](./topdown_fixed_camera_wasd_plan.md)
 
@@ -69,3 +72,9 @@
 - 긴 텍스트를 스크롤해서 보여주는 변형 팝업 계획 문서다.
 - 기존 `interaction_message_popup_plan.md`와 거의 같은 패널 구조를 유지하면서, 노란 스마일 아이콘, `ScrollBox` 기반 긴 본문, `OK` 단일 버튼, 노란 계열 저투명 틴트를 추가한다.
 - 상호작용 이름은 `읽기`로 고정하고, 결과는 기존 상호작용 서브시스템을 통해 먼저 전달되도록 설계한다.
+
+### [interaction_dual_tile_transfer_popup_plan.md](./interaction_dual_tile_transfer_popup_plan.md)
+
+- 좌우 2개의 스크롤 타일뷰 사이에서 숫자 타일을 드래그로 옮기는 팝업 계획 문서다.
+- `4 x 10` 가시 영역, `1~99` 숫자 정사각형 항목, 좌우별 `타일추가` `타일지우기`, 닫기 버튼, 선택/이동 흐름을 실제 WBP 애셋 기준으로 정리한다.
+- 약한 라운딩이 들어간 세로 그라데이션 텍스처를 에디터 모듈 코드와 `Commandlet`로 생성하고, 파스텔톤 단색 틴트를 입혀 타일 배경으로 재사용하는 구조를 정의한다.

@@ -1,7 +1,7 @@
 # 다중 플랜 일괄 실행 계획
 
 ## 문서 목적
-- 아래 6개 플랜의 의존 관계, 착수 조건, 병렬 처리 경계를 하나의 상위 실행 계획으로 정리한다.
+- 아래 7개 플랜의 의존 관계, 착수 조건, 병렬 처리 경계를 하나의 상위 실행 계획으로 정리한다.
 - 반드시 순차로 처리해야 하는 트랙과 병렬 처리 가능한 트랙을 분리한다.
 - 공용 파일, 공용 Blueprint, 공용 에디터 모듈 충돌을 줄이기 위한 작업 원칙을 고정한다.
 - 이 배치 플랜의 검증 목적은 구현 중간점검이 아니라, 이미 개별 검증이 끝난 작업들을 다시 수행했을 때 전체 재수행이 올바르게 재현되는지 확인하는 것이다.
@@ -12,6 +12,7 @@
 - `Docs/interaction_umg_component_plan.md`
 - `Docs/interaction_message_popup_plan.md`
 - `Docs/interaction_scroll_message_popup_plan.md`
+- `Docs/interaction_dual_tile_transfer_popup_plan.md`
 - `Docs/player_projectile_firing_plan.md`
 - `Docs/vox_mesh_asset_pipeline_plan.md`
 
@@ -42,7 +43,7 @@
 - 병렬 에이전트를 투입할 수 있는지와 메인 작업자가 병합 가능한 시점을 함께 본다.
 - 이후 검증을 쉽게 만드는 공용 기반 작업이 있다면 먼저 구현한다.
 - `topdown_fixed_camera_wasd_plan`의 선행 게이트 성격과 `vox_mesh_asset_pipeline_plan`의 독립 병렬 트랙 성격은 유지한다.
-- `interaction_message_popup_plan`과 `interaction_scroll_message_popup_plan`은 동일한 착수 조건을 공유하지만, 계획 단위 기준으로는 병렬 처리 가능한 독립 작업으로 본다.
+- `interaction_message_popup_plan`, `interaction_scroll_message_popup_plan`, `interaction_dual_tile_transfer_popup_plan`은 동일한 착수 조건을 공유하지만, 계획 단위 기준으로는 병렬 처리 가능한 독립 작업으로 본다.
 
 ## 의존성 정리
 
@@ -93,10 +94,18 @@
 - 이 플랜은 `interaction_message_popup_plan`과 계획 단위 기준으로는 독립적이며, 가능한 시점부터 병렬 처리 가능한 별도 트랙으로 본다.
 - 두 팝업 플랜 모두 상호작용 서브시스템과 WBP 생성 흐름을 재사용하므로 실제 파일 소유권 충돌은 메인 작업자가 조정한다.
 
+### 7. `interaction_dual_tile_transfer_popup_plan` 병렬 독립 후행 트랙
+- 아래 두 플랜이 모두 완료된 뒤에만 착수한다.
+  - `interaction_umg_component_plan`
+  - `vox_mesh_asset_pipeline_plan`
+- 착수 시점은 `interaction_message_popup_plan`, `interaction_scroll_message_popup_plan`과 동일하다.
+- 이 플랜은 기존 두 메시지 팝업 플랜과 계획 단위 기준으로는 독립적이며, 가능한 시점부터 병렬 처리 가능한 별도 트랙으로 본다.
+- 세 팝업 플랜 모두 상호작용 서브시스템과 WBP 생성 흐름, 에디터 모듈 자동화 패턴을 재사용할 수 있으므로 실제 파일 소유권 충돌은 메인 작업자가 조정한다.
+
 ## 권장 수행 순서
 
 ### Phase 0. 전체 분석 및 작업 분해
-1. 6개 플랜 문서를 모두 읽고 공용 의존성, 잠재 충돌 파일, 하위 문서 내부 절차, 차단 조건을 정리한다.
+1. 7개 플랜 문서를 모두 읽고 공용 의존성, 잠재 충돌 파일, 하위 문서 내부 절차, 차단 조건을 정리한다.
 2. `Docs/multi_plan_batch_execution_status.md`, `Docs/multi_plan_batch_execution_timeline.md` 작업본 존재 여부를 확인하고 필요한 경우에만 Template 원본으로 초기화한다.
 3. 메인 작업자가 아래 트랙으로 작업을 분리한다.
    - Track A: `topdown_fixed_camera_wasd_plan`
@@ -105,9 +114,10 @@
    - Track D: `player_projectile_firing_plan`
    - Track E: `interaction_message_popup_plan`
    - Track F: `interaction_scroll_message_popup_plan`
+   - Track G: `interaction_dual_tile_transfer_popup_plan`
 4. 파일/BP/애셋 책임 범위를 먼저 고정한다.
 5. Track C와 Track D의 세부 순서, 공용 파일 점유 순서, 병렬 시작 시점을 자율 재배치한다.
-6. Track E와 Track F는 Track B와 Track C 완료 후 시작하는 후행 팝업 트랙으로 예약한다.
+6. Track E, Track F, Track G는 Track B와 Track C 완료 후 시작하는 후행 팝업 트랙으로 예약한다.
 
 ### Phase 1A. 탑다운 기반 플랜 수행
 1. `topdown_fixed_camera_wasd_plan`을 먼저 수행한다.
@@ -142,16 +152,17 @@
    - 같은 Blueprint와 같은 commandlet 진입점을 동시에 수정하지 않을 것
 
 ### Phase 3. 후행 팝업 트랙 수행
-1. `interaction_umg_component_plan`과 `vox_mesh_asset_pipeline_plan`이 모두 완료되면 `interaction_message_popup_plan`과 `interaction_scroll_message_popup_plan`이 동시에 착수 가능 상태가 된다.
+1. `interaction_umg_component_plan`과 `vox_mesh_asset_pipeline_plan`이 모두 완료되면 `interaction_message_popup_plan`, `interaction_scroll_message_popup_plan`, `interaction_dual_tile_transfer_popup_plan`이 동시에 착수 가능 상태가 된다.
 2. Track E는 기본 메시지 팝업 트랙이다.
 3. Track F는 스크롤 메시지 팝업 트랙이다.
-4. Track E와 Track F는 계획 단위 기준으로는 독립 작업이며, 가능한 시점부터 병렬 처리 가능한 별도 트랙으로 본다.
-5. 다만 두 트랙 모두 상호작용 서브시스템, 입력 확장, WBP 생성 자동화 흐름을 공유할 수 있으므로 실제 파일 점유는 메인 작업자가 조정한다.
-6. `player_projectile_firing_plan`은 Track E와 Track F의 선행 조건이 아니므로 메인 작업자는 Track D, Track E, Track F를 병렬 또는 순차로 배치할 수 있다.
+4. Track G는 좌우 이중 타일 전송 팝업 트랙이다.
+5. Track E, Track F, Track G는 계획 단위 기준으로는 독립 작업이며, 가능한 시점부터 병렬 처리 가능한 별도 트랙으로 본다.
+6. 다만 세 트랙 모두 상호작용 서브시스템, 입력 확장, WBP 생성 자동화 흐름을 공유할 수 있으므로 실제 파일 점유는 메인 작업자가 조정한다.
+7. `player_projectile_firing_plan`은 Track E, Track F, Track G의 선행 조건이 아니므로 메인 작업자는 Track D, Track E, Track F, Track G를 병렬 또는 순차로 배치할 수 있다.
 
 ### Phase 4. 통합 및 최종 검증
-1. Track A 기반 위에서 Track C, Track D, Track E, Track F 결과를 통합 검증한다.
-2. Track B의 VOX 결과가 두 팝업 트랙에서 올바르게 참조되는지 별도로 검증한다.
+1. Track A 기반 위에서 Track C, Track D, Track E, Track F, Track G 결과를 통합 검증한다.
+2. Track B의 VOX 결과가 세 팝업 트랙에서 올바르게 참조되는지 별도로 검증한다.
 3. 공용 모듈, 공용 설정, 공용 타입, 공용 입력 애셋 충돌을 메인 작업자가 최종 정리한다.
 4. 최종 병합 전에 상태판의 `미착수`, `대기`, `차단` 항목이 없는지 확인하고, 최종 검증 시각과 병합 시점을 타임라인에 기록한다.
 5. 이 단계의 검증은 미완성 중간 산출물 점검이 아니라, 이미 검증된 작업 묶음을 배치로 다시 수행했을 때 전체 재수행이 올바르게 되는지 확인하는 목적이다.
@@ -191,17 +202,19 @@
 - Agent F
   - `interaction_scroll_message_popup_plan` 전담
 - Agent G
+  - `interaction_dual_tile_transfer_popup_plan` 전담
+- Agent H
   - 최종 검증 또는 리뷰 전담
 
 ## 실행 원칙 요약
 - 선행 게이트는 `topdown_fixed_camera_wasd_plan`의 캐릭터 이동 처리 완료다.
 - 후속 런타임 트랙은 `interaction_umg_component_plan`, `player_projectile_firing_plan`이다.
 - 독립 병렬 트랙은 `vox_mesh_asset_pipeline_plan`이다.
-- 후행 팝업 트랙은 `interaction_message_popup_plan`, `interaction_scroll_message_popup_plan`이다.
-- 두 팝업 트랙의 착수 조건은 동일하다.
+- 후행 팝업 트랙은 `interaction_message_popup_plan`, `interaction_scroll_message_popup_plan`, `interaction_dual_tile_transfer_popup_plan`이다.
+- 세 팝업 트랙의 착수 조건은 동일하다.
   - `interaction_umg_component_plan` 완료
   - `vox_mesh_asset_pipeline_plan` 완료
-- `interaction_message_popup_plan`과 `interaction_scroll_message_popup_plan`은 가능한 시점부터 병렬 처리 가능한 독립 작업으로 본다.
+- `interaction_message_popup_plan`, `interaction_scroll_message_popup_plan`, `interaction_dual_tile_transfer_popup_plan`은 가능한 시점부터 병렬 처리 가능한 독립 작업으로 본다.
 - 공식 상태판은 `Docs/multi_plan_batch_execution_status.md`다.
 - 공식 타임라인은 `Docs/multi_plan_batch_execution_timeline.md`다.
 - 전체 작업 완료 전에는 사용자에게 중간 검증을 요구하지 않는다.
