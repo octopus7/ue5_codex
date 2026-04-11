@@ -6,9 +6,11 @@
 #include "Interaction/CodexInteractableActor.h"
 #include "Interaction/CodexInteractionAssetPaths.h"
 #include "Interaction/CodexInteractionMessagePopupWidget.h"
+#include "Interaction/CodexInteractionScrollMessagePopupWidget.h"
 #include "Interaction/CodexInteractionComponent.h"
 #include "Interaction/CodexInteractionIndicatorWidget.h"
 #include "Interaction/CodexPopupInteractableActor.h"
+#include "Interaction/CodexScrollMessagePopupInteractableActor.h"
 #include "Interaction/CodexInteractionTypes.h"
 #include "AssetToolsModule.h"
 #include "Blueprint/WidgetTree.h"
@@ -22,6 +24,8 @@
 #include "Components/Image.h"
 #include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
+#include "Components/ScrollBox.h"
+#include "Components/ScrollBoxSlot.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
@@ -59,6 +63,7 @@ namespace
 	static const TCHAR* const InteractionPlacementLabelApple = TEXT("InteractionTest_Apple");
 	static const TCHAR* const InteractionPlacementLabelStrawberry = TEXT("InteractionTest_Strawberry");
 	static const TCHAR* const InteractionPlacementLabelWoodenSign = TEXT("InteractionTest_WoodenSignPopup");
+	static const TCHAR* const InteractionPlacementLabelWoodenSignScroll = TEXT("InteractionTest_WoodenSignScrollPopup");
 	static const FName InteractionPlacementTag = TEXT("CodexInteractionTestPlacement");
 
 	FString EscapePowerShellSingleQuotedString(const FString& Value)
@@ -258,6 +263,92 @@ namespace
 				Pixels[PixelIndex + 1] = 255;
 				Pixels[PixelIndex + 2] = 255;
 				Pixels[PixelIndex + 3] = bIsOpaque ? 255 : 0;
+			}
+		}
+
+		return Pixels;
+	}
+
+	void SetTexturePixel(TArray64<uint8>& Pixels, const int32 Size, const int32 X, const int32 Y, const FColor& Color)
+	{
+		if (X < 0 || X >= Size || Y < 0 || Y >= Size)
+		{
+			return;
+		}
+
+		const int64 PixelIndex = static_cast<int64>((Y * Size) + X) * 4;
+		Pixels[PixelIndex + 0] = Color.B;
+		Pixels[PixelIndex + 1] = Color.G;
+		Pixels[PixelIndex + 2] = Color.R;
+		Pixels[PixelIndex + 3] = Color.A;
+	}
+
+	TArray64<uint8> BuildSmileTexturePixels(const int32 Size)
+	{
+		TArray64<uint8> Pixels;
+		Pixels.SetNumZeroed(Size * Size * 4);
+
+		const float Center = (static_cast<float>(Size) - 1.0f) * 0.5f;
+		const float FaceRadius = static_cast<float>(Size) * 0.34f;
+		const float OutlineRadius = FaceRadius + 1.5f;
+		const FColor OutlineColor(110, 86, 24, 255);
+		const FColor FaceColor(255, 221, 72, 255);
+		const FColor FeatureColor(78, 54, 12, 255);
+
+		for (int32 Y = 0; Y < Size; ++Y)
+		{
+			for (int32 X = 0; X < Size; ++X)
+			{
+				const float DeltaX = static_cast<float>(X) - Center;
+				const float DeltaY = static_cast<float>(Y) - Center;
+				const float Distance = FMath::Sqrt((DeltaX * DeltaX) + (DeltaY * DeltaY));
+				if (Distance <= FaceRadius)
+				{
+					SetTexturePixel(Pixels, Size, X, Y, FaceColor);
+				}
+				else if (Distance <= OutlineRadius)
+				{
+					SetTexturePixel(Pixels, Size, X, Y, OutlineColor);
+				}
+			}
+		}
+
+		auto DrawFilledCircle = [&Pixels, Size](const FVector2f CenterPoint, const float Radius, const FColor& Color)
+		{
+			const int32 MinX = FMath::FloorToInt(CenterPoint.X - Radius);
+			const int32 MaxX = FMath::CeilToInt(CenterPoint.X + Radius);
+			const int32 MinY = FMath::FloorToInt(CenterPoint.Y - Radius);
+			const int32 MaxY = FMath::CeilToInt(CenterPoint.Y + Radius);
+
+			for (int32 Y = MinY; Y <= MaxY; ++Y)
+			{
+				for (int32 X = MinX; X <= MaxX; ++X)
+				{
+					const float DeltaX = static_cast<float>(X) - CenterPoint.X;
+					const float DeltaY = static_cast<float>(Y) - CenterPoint.Y;
+					if ((DeltaX * DeltaX) + (DeltaY * DeltaY) <= Radius * Radius)
+					{
+						SetTexturePixel(Pixels, Size, X, Y, Color);
+					}
+				}
+			}
+		};
+
+		DrawFilledCircle(FVector2f(Center - 9.0f, Center - 7.0f), 3.2f, FeatureColor);
+		DrawFilledCircle(FVector2f(Center + 9.0f, Center - 7.0f), 3.2f, FeatureColor);
+
+		for (int32 Y = 0; Y < Size; ++Y)
+		{
+			for (int32 X = 0; X < Size; ++X)
+			{
+				const float DeltaX = static_cast<float>(X) - Center;
+				const float DeltaY = static_cast<float>(Y) - (Center + 3.0f);
+				const float Distance = FMath::Sqrt((DeltaX * DeltaX) + (DeltaY * DeltaY));
+				const bool bWithinMouthArc = DeltaY >= 2.0f && DeltaY <= 11.0f && Distance >= 11.0f && Distance <= 13.0f;
+				if (bWithinMouthArc)
+				{
+					SetTexturePixel(Pixels, Size, X, Y, FeatureColor);
+				}
 			}
 		}
 
@@ -737,6 +828,233 @@ namespace
 		return true;
 	}
 
+	bool ConfigureScrollMessagePopupWidgetBlueprint(UWidgetBlueprint& WidgetBlueprint, UTexture2D& SmileIconTexture, FString& OutError)
+	{
+		if (WidgetBlueprint.WidgetTree == nullptr)
+		{
+			OutError = TEXT("Scroll message popup widget blueprint is missing a WidgetTree.");
+			return false;
+		}
+
+		UCanvasPanel* RootCanvas = Cast<UCanvasPanel>(WidgetBlueprint.WidgetTree->RootWidget);
+		if (RootCanvas == nullptr)
+		{
+			RootCanvas = WidgetBlueprint.WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("RootCanvas"));
+			WidgetBlueprint.WidgetTree->RootWidget = RootCanvas;
+		}
+
+		if (RootCanvas == nullptr)
+		{
+			OutError = TEXT("Failed to create RootCanvas for WBP_InteractionScrollMessagePopup.");
+			return false;
+		}
+
+		EnsureWidgetGuid(WidgetBlueprint, *RootCanvas);
+		RootCanvas->bIsVariable = false;
+
+		UOverlay* ScreenRoot = EnsurePanelChild<UOverlay>(WidgetBlueprint, *RootCanvas, TEXT("Overlay_ScreenRoot"), false);
+		USizeBox* PopupFrame = EnsurePanelChild<USizeBox>(WidgetBlueprint, *ScreenRoot, TEXT("SizeBox_PopupFrame"), false);
+		if (!ScreenRoot || !PopupFrame)
+		{
+			OutError = TEXT("Failed to create screen root widgets for WBP_InteractionScrollMessagePopup.");
+			return false;
+		}
+
+		UBackgroundBlur* BackgroundBlurPanel = FindWidget<UBackgroundBlur>(WidgetBlueprint, TEXT("BackgroundBlur_Panel"));
+		if (BackgroundBlurPanel == nullptr)
+		{
+			BackgroundBlurPanel = WidgetBlueprint.WidgetTree->ConstructWidget<UBackgroundBlur>(UBackgroundBlur::StaticClass(), TEXT("BackgroundBlur_Panel"));
+		}
+
+		UBorder* YellowTintPanel = FindWidget<UBorder>(WidgetBlueprint, TEXT("Border_YellowTintPanel"));
+		if (YellowTintPanel == nullptr)
+		{
+			YellowTintPanel = WidgetBlueprint.WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Border_YellowTintPanel"));
+		}
+
+		UVerticalBox* ContentColumn = FindWidget<UVerticalBox>(WidgetBlueprint, TEXT("VerticalBox_Content"));
+		if (ContentColumn == nullptr)
+		{
+			ContentColumn = WidgetBlueprint.WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("VerticalBox_Content"));
+		}
+
+		UHorizontalBox* TitleBar = FindWidget<UHorizontalBox>(WidgetBlueprint, TEXT("HorizontalBox_TitleBar"));
+		if (TitleBar == nullptr)
+		{
+			TitleBar = WidgetBlueprint.WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("HorizontalBox_TitleBar"));
+		}
+
+		UTextBlock* TitleText = FindWidget<UTextBlock>(WidgetBlueprint, TEXT("TXT_Title"));
+		if (TitleText == nullptr)
+		{
+			TitleText = WidgetBlueprint.WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TXT_Title"));
+		}
+
+		UImage* SmileIcon = FindWidget<UImage>(WidgetBlueprint, TEXT("Image_SmileIcon"));
+		if (SmileIcon == nullptr)
+		{
+			SmileIcon = WidgetBlueprint.WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("Image_SmileIcon"));
+		}
+
+		UScrollBox* MessageScrollBox = FindWidget<UScrollBox>(WidgetBlueprint, TEXT("ScrollBox_Message"));
+		if (MessageScrollBox == nullptr)
+		{
+			MessageScrollBox = WidgetBlueprint.WidgetTree->ConstructWidget<UScrollBox>(UScrollBox::StaticClass(), TEXT("ScrollBox_Message"));
+		}
+
+		UTextBlock* MessageText = FindWidget<UTextBlock>(WidgetBlueprint, TEXT("TXT_Message"));
+		if (MessageText == nullptr)
+		{
+			MessageText = WidgetBlueprint.WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TXT_Message"));
+		}
+
+		UHorizontalBox* ButtonRow = FindWidget<UHorizontalBox>(WidgetBlueprint, TEXT("HorizontalBox_ButtonRow"));
+		if (ButtonRow == nullptr)
+		{
+			ButtonRow = WidgetBlueprint.WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("HorizontalBox_ButtonRow"));
+		}
+
+		UButton* OkButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_Ok"));
+		if (OkButton == nullptr)
+		{
+			OkButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_Ok"));
+		}
+
+		if (!BackgroundBlurPanel || !YellowTintPanel || !ContentColumn || !TitleBar || !TitleText || !SmileIcon || !MessageScrollBox || !MessageText || !ButtonRow || !OkButton)
+		{
+			OutError = TEXT("Failed to construct one or more popup widgets for WBP_InteractionScrollMessagePopup.");
+			return false;
+		}
+
+		EnsureWidgetGuid(WidgetBlueprint, *BackgroundBlurPanel);
+		EnsureWidgetGuid(WidgetBlueprint, *YellowTintPanel);
+		EnsureWidgetGuid(WidgetBlueprint, *ContentColumn);
+		EnsureWidgetGuid(WidgetBlueprint, *TitleBar);
+		EnsureWidgetGuid(WidgetBlueprint, *TitleText);
+		EnsureWidgetGuid(WidgetBlueprint, *SmileIcon);
+		EnsureWidgetGuid(WidgetBlueprint, *MessageScrollBox);
+		EnsureWidgetGuid(WidgetBlueprint, *MessageText);
+		EnsureWidgetGuid(WidgetBlueprint, *ButtonRow);
+		EnsureWidgetGuid(WidgetBlueprint, *OkButton);
+
+		BackgroundBlurPanel->bIsVariable = false;
+		YellowTintPanel->bIsVariable = false;
+		ContentColumn->bIsVariable = false;
+		TitleBar->bIsVariable = false;
+		TitleText->bIsVariable = true;
+		SmileIcon->bIsVariable = true;
+		MessageScrollBox->bIsVariable = true;
+		MessageText->bIsVariable = true;
+		ButtonRow->bIsVariable = false;
+		OkButton->bIsVariable = true;
+
+		if (PopupFrame->GetContent() != BackgroundBlurPanel)
+		{
+			PopupFrame->SetContent(BackgroundBlurPanel);
+		}
+
+		if (BackgroundBlurPanel->GetContent() != YellowTintPanel)
+		{
+			BackgroundBlurPanel->SetContent(YellowTintPanel);
+		}
+
+		if (YellowTintPanel->GetContent() != ContentColumn)
+		{
+			YellowTintPanel->SetContent(ContentColumn);
+		}
+
+		if (TitleBar->GetChildrenCount() != 1 || TitleBar->GetChildAt(0) != TitleText)
+		{
+			TitleBar->ClearChildren();
+			TitleBar->AddChildToHorizontalBox(TitleText);
+		}
+
+		if (MessageScrollBox->GetChildrenCount() != 1 || MessageScrollBox->GetChildAt(0) != MessageText)
+		{
+			MessageScrollBox->ClearChildren();
+			MessageScrollBox->AddChild(MessageText);
+		}
+
+		if (ButtonRow->GetChildrenCount() != 1 || ButtonRow->GetChildAt(0) != OkButton)
+		{
+			ButtonRow->ClearChildren();
+			ButtonRow->AddChildToHorizontalBox(OkButton);
+		}
+
+		if (ContentColumn->GetChildrenCount() != 4
+			|| ContentColumn->GetChildAt(0) != TitleBar
+			|| ContentColumn->GetChildAt(1) != SmileIcon
+			|| ContentColumn->GetChildAt(2) != MessageScrollBox
+			|| ContentColumn->GetChildAt(3) != ButtonRow)
+		{
+			ContentColumn->ClearChildren();
+			ContentColumn->AddChildToVerticalBox(TitleBar);
+			ContentColumn->AddChildToVerticalBox(SmileIcon);
+			ContentColumn->AddChildToVerticalBox(MessageScrollBox);
+			ContentColumn->AddChildToVerticalBox(ButtonRow);
+		}
+
+		ConfigureCanvasAnchors(*ScreenRoot, FAnchors(0.0f, 0.0f, 1.0f, 1.0f), FMargin(0.0f), FVector2D::ZeroVector);
+		ConfigureOverlaySlot(*PopupFrame);
+
+		PopupFrame->SetWidthOverride(580.0f);
+		PopupFrame->SetMinDesiredHeight(400.0f);
+
+		BackgroundBlurPanel->SetBlurStrength(18.0f);
+		BackgroundBlurPanel->SetOverrideAutoRadiusCalculation(true);
+		BackgroundBlurPanel->SetBlurRadius(12);
+		BackgroundBlurPanel->SetApplyAlphaToBlur(true);
+		BackgroundBlurPanel->SetCornerRadius(FVector4(20.0f, 20.0f, 20.0f, 20.0f));
+
+		YellowTintPanel->SetPadding(FMargin(24.0f, 20.0f));
+		YellowTintPanel->SetBrush(MakeRoundedBrush(FLinearColor(0.98f, 0.82f, 0.28f, 0.15f), 20.0f, FLinearColor(1.0f, 1.0f, 1.0f, 0.08f), 1.0f));
+
+		TitleText->SetText(FText::FromString(TEXT("읽기")));
+		TitleText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+
+		SmileIcon->SetBrushFromTexture(&SmileIconTexture, false);
+		{
+			FSlateBrush Brush = SmileIcon->GetBrush();
+			Brush.ImageSize = FVector2D(64.0f, 64.0f);
+			SmileIcon->SetBrush(Brush);
+		}
+		SmileIcon->SetColorAndOpacity(FLinearColor::White);
+
+		MessageScrollBox->SetAlwaysShowScrollbar(false);
+		MessageScrollBox->SetAnimateWheelScrolling(true);
+		MessageScrollBox->SetWheelScrollMultiplier(1.0f);
+		MessageScrollBox->SetConsumeMouseWheel(EConsumeMouseWheel::WhenScrollingPossible);
+
+		MessageText->SetText(FText::FromString(TEXT("첫 줄입니다.\n\n이 팝업은 긴 문장을 스크롤해서 읽는 형태를 테스트하기 위한 예시입니다.\n\n같은 패널 구조를 유지하면서도 본문은 내부 스크롤 영역 안에서만 움직여야 합니다.\n\n사용자는 읽기 상호작용으로 이 팝업을 열고, 내용을 확인한 뒤 OK 버튼으로 닫습니다.\n\n이 문단은 스크롤 동작을 확인하기 위해 일부러 길게 작성되었습니다.\n\n추가 문장 A.\n추가 문장 B.\n추가 문장 C.\n추가 문장 D.")));
+		MessageText->SetAutoWrapText(true);
+		MessageText->SetJustification(ETextJustify::Left);
+		MessageText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+
+		ConfigureButtonStyle(*OkButton, FLinearColor(0.70f, 0.50f, 0.10f, 0.96f));
+		EnsureButtonLabel(WidgetBlueprint, *OkButton, TEXT("TXT_OkLabel"), FText::FromString(TEXT("OK")));
+
+		ConfigureVerticalBoxSlot(*TitleBar, FMargin(0.0f, 0.0f, 0.0f, 14.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*SmileIcon, FMargin(0.0f, 0.0f, 0.0f, 12.0f), ESlateSizeRule::Automatic, HAlign_Center, VAlign_Center);
+		ConfigureVerticalBoxSlot(*MessageScrollBox, FMargin(0.0f, 0.0f, 0.0f, 18.0f), ESlateSizeRule::Fill, HAlign_Fill, VAlign_Fill);
+		ConfigureVerticalBoxSlot(*ButtonRow, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Right, VAlign_Bottom);
+
+		ConfigureHorizontalBoxSlot(*TitleText, FMargin(0.0f), ESlateSizeRule::Fill, HAlign_Left, VAlign_Center);
+		ConfigureHorizontalBoxSlot(*OkButton, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Right, VAlign_Center);
+
+		if (UScrollBoxSlot* ScrollBoxSlot = Cast<UScrollBoxSlot>(MessageText->Slot))
+		{
+			ScrollBoxSlot->SetPadding(FMargin(0.0f, 4.0f, 4.0f, 0.0f));
+			ScrollBoxSlot->SetHorizontalAlignment(HAlign_Fill);
+			ScrollBoxSlot->SetVerticalAlignment(VAlign_Top);
+		}
+
+		WidgetBlueprint.Modify();
+		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(&WidgetBlueprint);
+		CompileBlueprint(&WidgetBlueprint);
+		WidgetBlueprint.MarkPackageDirty();
+		return true;
+	}
+
 	bool ConfigureInteractableBlueprint(UBlueprint& Blueprint, UStaticMesh& StaticMesh, const FText& PromptText, FString& OutError)
 	{
 		CompileBlueprint(&Blueprint);
@@ -913,7 +1231,12 @@ namespace
 		return Actor;
 	}
 
-	bool PlaceInteractionTestActorsInMap(UBlueprint& AppleBlueprint, UBlueprint& StrawberryBlueprint, UBlueprint& WoodenSignBlueprint, FString& OutError)
+	bool PlaceInteractionTestActorsInMap(
+		UBlueprint& AppleBlueprint,
+		UBlueprint& StrawberryBlueprint,
+		UBlueprint& WoodenSignBlueprint,
+		UBlueprint& WoodenSignScrollBlueprint,
+		FString& OutError)
 	{
 		FString MapFilename;
 		if (!FPackageName::TryConvertLongPackageNameToFilename(BasicMapAssetPath, MapFilename, FPackageName::GetMapPackageExtension()))
@@ -947,7 +1270,8 @@ namespace
 
 		const FVector AppleLocation = PlacementOrigin + (Forward * 180.0f) - (Right * 48.0f);
 		const FVector StrawberryLocation = PlacementOrigin + (Forward * 240.0f) + (Right * 48.0f);
-		const FVector WoodenSignLocation = PlacementOrigin + (Forward * 320.0f);
+		const FVector WoodenSignLocation = PlacementOrigin + (Forward * 320.0f) - (Right * 72.0f);
+		const FVector WoodenSignScrollLocation = PlacementOrigin + (Forward * 360.0f) + (Right * 72.0f);
 		const FRotator PlacementRotation = FRotator::ZeroRotator;
 
 		if (SpawnOrUpdatePlacedActor(*ActorSubsystem, AppleBlueprint.GeneratedClass, InteractionPlacementLabelApple, AppleLocation, PlacementRotation, OutError) == nullptr)
@@ -961,6 +1285,11 @@ namespace
 		}
 
 		if (SpawnOrUpdatePlacedActor(*ActorSubsystem, WoodenSignBlueprint.GeneratedClass, InteractionPlacementLabelWoodenSign, WoodenSignLocation, PlacementRotation, OutError) == nullptr)
+		{
+			return false;
+		}
+
+		if (SpawnOrUpdatePlacedActor(*ActorSubsystem, WoodenSignScrollBlueprint.GeneratedClass, InteractionPlacementLabelWoodenSignScroll, WoodenSignScrollLocation, PlacementRotation, OutError) == nullptr)
 		{
 			return false;
 		}
@@ -1023,7 +1352,8 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 
 	UTexture2D* FilledCircleTexture = CreateAsset<UTexture2D>(UIPath, FilledCircleTextureName, TextureFactory);
 	UTexture2D* OuterRingTexture = CreateAsset<UTexture2D>(UIPath, OuterRingTextureName, TextureFactory);
-	if (FilledCircleTexture == nullptr || OuterRingTexture == nullptr)
+	UTexture2D* SmileIconTexture = CreateAsset<UTexture2D>(UIPath, SmileIconTextureName, TextureFactory);
+	if (FilledCircleTexture == nullptr || OuterRingTexture == nullptr || SmileIconTexture == nullptr)
 	{
 		OutError = TEXT("Failed to create interaction texture assets.");
 		return false;
@@ -1031,8 +1361,10 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 
 	const TArray64<uint8> FilledCirclePixels = BuildTexturePixels(64, 0.0f, 16.0f);
 	const TArray64<uint8> OuterRingPixels = BuildTexturePixels(64, 20.0f, 24.0f);
+	const TArray64<uint8> SmileIconPixels = BuildSmileTexturePixels(128);
 	ConfigureTexture(*FilledCircleTexture, FilledCirclePixels, 64);
 	ConfigureTexture(*OuterRingTexture, OuterRingPixels, 64);
+	ConfigureTexture(*SmileIconTexture, SmileIconPixels, 128);
 
 	UWidgetBlueprint* IndicatorWidget = CreateWidgetBlueprint(UIPath, IndicatorWidgetName, UCodexInteractionIndicatorWidget::StaticClass());
 	if (IndicatorWidget == nullptr)
@@ -1058,6 +1390,18 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 		return false;
 	}
 
+	UWidgetBlueprint* ScrollMessagePopupWidget = CreateWidgetBlueprint(UIPath, ScrollMessagePopupWidgetName, UCodexInteractionScrollMessagePopupWidget::StaticClass());
+	if (ScrollMessagePopupWidget == nullptr)
+	{
+		OutError = TEXT("Failed to create WBP_InteractionScrollMessagePopup.");
+		return false;
+	}
+
+	if (!ConfigureScrollMessagePopupWidgetBlueprint(*ScrollMessagePopupWidget, *SmileIconTexture, OutError))
+	{
+		return false;
+	}
+
 	UStaticMesh* AppleMesh = LoadAsset<UStaticMesh>(AppleMeshObjectPath);
 	UStaticMesh* StrawberryMesh = LoadAsset<UStaticMesh>(StrawberryMeshObjectPath);
 	UStaticMesh* WoodenSignMesh = LoadAsset<UStaticMesh>(WoodenSignMeshObjectPath);
@@ -1070,11 +1414,22 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 	UBlueprint* AppleBlueprint = CreateBlueprint(BlueprintsPath, InteractableAppleName, ACodexInteractableActor::StaticClass());
 	UBlueprint* StrawberryBlueprint = CreateBlueprint(BlueprintsPath, InteractableStrawberryName, ACodexInteractableActor::StaticClass());
 	UBlueprint* WoodenSignBlueprint = CreateBlueprint(BlueprintsPath, InteractableWoodenSignPopupName, ACodexPopupInteractableActor::StaticClass());
-	if (AppleBlueprint == nullptr || StrawberryBlueprint == nullptr || WoodenSignBlueprint == nullptr)
+	UBlueprint* WoodenSignScrollBlueprint = CreateBlueprint(BlueprintsPath, InteractableWoodenSignScrollPopupName, ACodexScrollMessagePopupInteractableActor::StaticClass());
+	if (AppleBlueprint == nullptr || StrawberryBlueprint == nullptr || WoodenSignBlueprint == nullptr || WoodenSignScrollBlueprint == nullptr)
 	{
 		OutError = TEXT("Failed to create one or more interactable test blueprints.");
 		return false;
 	}
+
+#if 0
+
+	const FText EatPrompt = FText::FromString(TEXT("먹기"));
+	const FText MessagePopupPrompt = FText::FromString(TEXT("보기"));
+	const FText MessagePopupTitle = FText::FromString(TEXT("안내"));
+	const FText MessagePopupBody = FText::FromString(TEXT("여기는 상호작용 메시지 팝업 예시입니다."));
+	const FText ScrollPopupPrompt = FText::FromString(TEXT("읽기"));
+	const FText ScrollPopupTitle = FText::FromString(TEXT("게시판"));
+	const FText ScrollPopupBody = FText::FromString(TEXT("코덱스 마을 안내문입니다.\n\n이 팝업은 긴 텍스트를 스크롤해서 읽는 형태를 검증하기 위한 예시입니다.\n패널 외형은 기존 메시지 팝업과 거의 동일하지만, 밝은 하늘색 오버레이 대신 더 옅은 노란색 계열의 틴트를 사용합니다.\n\n사용자는 내용을 충분히 읽은 다음 OK 버튼으로만 닫을 수 있어야 합니다.\n스페이스 키는 이 팝업의 닫기 입력으로 처리되지 않아야 하며, 결과는 상호작용 서브시스템을 통해 통합 전달됩니다.\n\n문구가 길어져도 레이아웃이 깨지지 않고 자연스럽게 스크롤되는지 확인합니다."));
 
 	if (!ConfigureInteractableBlueprint(*AppleBlueprint, *AppleMesh, FText::FromString(TEXT("먹기")), OutError))
 	{
@@ -1098,6 +1453,50 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 		return false;
 	}
 
+#endif
+
+	const FText EatPromptText = FText::FromString(TEXT("\uBA39\uAE30"));
+	const FText MessagePopupPromptText = FText::FromString(TEXT("\uBCF4\uAE30"));
+	const FText MessagePopupTitleText = FText::FromString(TEXT("\uC548\uB0B4"));
+	const FText MessagePopupBodyText = FText::FromString(TEXT("This is a sample interaction message popup."));
+	const FText ScrollPopupPromptText = FText::FromString(TEXT("\uC77D\uAE30"));
+	const FText ScrollPopupTitleText = FText::FromString(TEXT("\uAC8C\uC2DC\uD310"));
+	const FText ScrollPopupBodyText = FText::FromString(TEXT("Codex village notice.\n\nThis popup verifies a long scrolling message layout. The panel follows the existing popup style, but the soft tint is yellow instead of sky blue.\n\nThe popup should only close through the OK button. Space key close handling must be ignored for this popup, and the result should still flow through the interaction subsystem.\n\nMake sure long text keeps the layout stable and scrolls naturally."));
+
+	if (!ConfigureInteractableBlueprint(*AppleBlueprint, *AppleMesh, EatPromptText, OutError))
+	{
+		return false;
+	}
+
+	if (!ConfigureInteractableBlueprint(*StrawberryBlueprint, *StrawberryMesh, EatPromptText, OutError))
+	{
+		return false;
+	}
+
+	if (!ConfigurePopupInteractableBlueprint(
+		*WoodenSignBlueprint,
+		*WoodenSignMesh,
+		MessagePopupPromptText,
+		MessagePopupTitleText,
+		MessagePopupBodyText,
+		ECodexPopupButtonLayout::Ok,
+		OutError))
+	{
+		return false;
+	}
+
+	if (!ConfigurePopupInteractableBlueprint(
+		*WoodenSignScrollBlueprint,
+		*WoodenSignMesh,
+		ScrollPopupPromptText,
+		ScrollPopupTitleText,
+		ScrollPopupBodyText,
+		ECodexPopupButtonLayout::Ok,
+		OutError))
+	{
+		return false;
+	}
+
 	SaveAssets(
 		{
 			InteractAction,
@@ -1106,14 +1505,17 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 			InputConfig,
 			FilledCircleTexture,
 			OuterRingTexture,
+			SmileIconTexture,
 			IndicatorWidget,
 			MessagePopupWidget,
+			ScrollMessagePopupWidget,
 			AppleBlueprint,
 			StrawberryBlueprint,
-			WoodenSignBlueprint
+			WoodenSignBlueprint,
+			WoodenSignScrollBlueprint
 		});
 
-	if (!PlaceInteractionTestActorsInMap(*AppleBlueprint, *StrawberryBlueprint, *WoodenSignBlueprint, OutError))
+	if (!PlaceInteractionTestActorsInMap(*AppleBlueprint, *StrawberryBlueprint, *WoodenSignBlueprint, *WoodenSignScrollBlueprint, OutError))
 	{
 		return false;
 	}

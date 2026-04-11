@@ -8,7 +8,7 @@
 
 class APlayerController;
 class UCodexInteractionComponent;
-class UCodexInteractionMessagePopupWidget;
+class UUserWidget;
 
 UCLASS()
 class CODEXUMG_API UCodexInteractionSubsystem : public UTickableWorldSubsystem
@@ -46,7 +46,7 @@ private:
 	TObjectPtr<UCodexInteractionComponent> FocusedInteractionComponent;
 
 	UPROPERTY(Transient)
-	TObjectPtr<UCodexInteractionMessagePopupWidget> ActivePopupWidget;
+	TObjectPtr<UUserWidget> ActivePopupWidget;
 
 	UPROPERTY(Transient)
 	TObjectPtr<APlayerController> ActivePopupController;

@@ -34,6 +34,13 @@ enum class ECodexPopupButtonLayout : uint8
 };
 
 UENUM(BlueprintType)
+enum class ECodexInteractionPopupStyle : uint8
+{
+	Message,
+	ScrollMessage
+};
+
+UENUM(BlueprintType)
 enum class ECodexPopupResult : uint8
 {
 	Ok,
@@ -82,6 +89,12 @@ struct CODEXUMG_API FCodexInteractionPopupRequest
 
 	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
 	ECodexPopupButtonLayout ButtonLayout = ECodexPopupButtonLayout::Ok;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
+	ECodexInteractionPopupStyle PopupStyle = ECodexInteractionPopupStyle::Message;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
+	bool bAllowControllerClose = true;
 };
 
 USTRUCT(BlueprintType)

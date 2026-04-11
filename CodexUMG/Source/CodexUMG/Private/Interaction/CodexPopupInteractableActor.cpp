@@ -12,6 +12,16 @@ void ACodexPopupInteractableActor::HandleInteractionRequested_Implementation(con
 	ReceiveInteractionRequested(Request);
 }
 
+ECodexInteractionPopupStyle ACodexPopupInteractableActor::GetPopupStyle() const
+{
+	return ECodexInteractionPopupStyle::Message;
+}
+
+bool ACodexPopupInteractableActor::AllowsPopupControllerClose() const
+{
+	return true;
+}
+
 void ACodexPopupInteractableActor::SetPopupTitle(const FText& NewPopupTitle)
 {
 	PopupTitle = NewPopupTitle;

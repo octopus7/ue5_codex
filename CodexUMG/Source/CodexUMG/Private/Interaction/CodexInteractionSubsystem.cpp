@@ -5,6 +5,7 @@
 #include "Interaction/CodexInteractionAssetPaths.h"
 #include "Interaction/CodexInteractionComponent.h"
 #include "Interaction/CodexInteractionMessagePopupWidget.h"
+#include "Interaction/CodexInteractionScrollMessagePopupWidget.h"
 #include "Interaction/CodexPopupInteractableActor.h"
 #include "Interaction/CodexInteractionTarget.h"
 #include "Blueprint/UserWidget.h"
@@ -35,9 +36,12 @@ namespace
 		return TEXT("Unknown");
 	}
 
-	TSubclassOf<UUserWidget> ResolvePopupWidgetClass()
+	TSubclassOf<UUserWidget> ResolvePopupWidgetClass(const ECodexInteractionPopupStyle PopupStyle)
 	{
-		return LoadClass<UUserWidget>(nullptr, *CodexInteractionAssetPaths::MakeGeneratedClassObjectPath(CodexInteractionAssetPaths::MessagePopupWidgetObjectPath));
+		const TCHAR* AssetObjectPath = PopupStyle == ECodexInteractionPopupStyle::ScrollMessage
+			? CodexInteractionAssetPaths::ScrollMessagePopupWidgetObjectPath
+			: CodexInteractionAssetPaths::MessagePopupWidgetObjectPath;
+		return LoadClass<UUserWidget>(nullptr, *CodexInteractionAssetPaths::MakeGeneratedClassObjectPath(AssetObjectPath));
 	}
 }
 
@@ -119,6 +123,8 @@ void UCodexInteractionSubsystem::RequestInteraction(APlayerController* Requestin
 		PopupRequest.Title = PopupActor->GetPopupTitle();
 		PopupRequest.Message = PopupActor->GetPopupMessage();
 		PopupRequest.ButtonLayout = PopupActor->GetPopupButtonLayout();
+		PopupRequest.PopupStyle = PopupActor->GetPopupStyle();
+		PopupRequest.bAllowControllerClose = PopupActor->AllowsPopupControllerClose();
 
 		if (!OpenInteractionPopup(PopupRequest))
 		{
@@ -150,13 +156,36 @@ bool UCodexInteractionSubsystem::OpenInteractionPopup(const FCodexInteractionPop
 		return false;
 	}
 
-	const TSubclassOf<UUserWidget> PopupWidgetClass = ResolvePopupWidgetClass();
+	const TSubclassOf<UUserWidget> PopupWidgetClass = ResolvePopupWidgetClass(Request.PopupStyle);
 	if (!PopupWidgetClass)
 	{
 		return false;
 	}
 
-	UCodexInteractionMessagePopupWidget* PopupWidget = CreateWidget<UCodexInteractionMessagePopupWidget>(RequestingController, PopupWidgetClass);
+	UUserWidget* PopupWidget = nullptr;
+	if (Request.PopupStyle == ECodexInteractionPopupStyle::ScrollMessage)
+	{
+		UCodexInteractionScrollMessagePopupWidget* ScrollPopupWidget = CreateWidget<UCodexInteractionScrollMessagePopupWidget>(RequestingController, PopupWidgetClass);
+		if (ScrollPopupWidget == nullptr)
+		{
+			return false;
+		}
+
+		ScrollPopupWidget->ApplyPopupRequest(Request, *this);
+		PopupWidget = ScrollPopupWidget;
+	}
+	else
+	{
+		UCodexInteractionMessagePopupWidget* MessagePopupWidget = CreateWidget<UCodexInteractionMessagePopupWidget>(RequestingController, PopupWidgetClass);
+		if (MessagePopupWidget == nullptr)
+		{
+			return false;
+		}
+
+		MessagePopupWidget->ApplyPopupRequest(Request, *this);
+		PopupWidget = MessagePopupWidget;
+	}
+
 	if (PopupWidget == nullptr)
 	{
 		return false;
@@ -167,7 +196,6 @@ bool UCodexInteractionSubsystem::OpenInteractionPopup(const FCodexInteractionPop
 	ActivePopupController = RequestingController;
 	ActivePopupWidget = PopupWidget;
 
-	PopupWidget->ApplyPopupRequest(Request, *this);
 	PopupWidget->AddToViewport(1000);
 	ApplyPopupInputMode(*RequestingController);
 	return true;
@@ -208,6 +236,11 @@ void UCodexInteractionSubsystem::SubmitInteractionPopupResult(const FCodexIntera
 void UCodexInteractionSubsystem::RequestCloseActivePopup(APlayerController* RequestingController)
 {
 	if (!HasActivePopup() || !bHasActivePopupRequest)
+	{
+		return;
+	}
+
+	if (!ActivePopupRequest.bAllowControllerClose)
 	{
 		return;
 	}

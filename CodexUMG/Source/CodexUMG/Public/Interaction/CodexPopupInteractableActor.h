@@ -14,6 +14,8 @@ public:
 	ACodexPopupInteractableActor();
 
 	virtual void HandleInteractionRequested_Implementation(const FCodexInteractionRequest& Request) override;
+	virtual ECodexInteractionPopupStyle GetPopupStyle() const;
+	virtual bool AllowsPopupControllerClose() const;
 
 	const FText& GetPopupTitle() const { return PopupTitle; }
 	const FText& GetPopupMessage() const { return PopupMessage; }
