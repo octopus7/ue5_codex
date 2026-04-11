@@ -129,6 +129,8 @@ Execution rules:
 - `BP_Character_TopDown` includes the default `SkeletalMeshComponent` plus one additional `StaticMeshComponent`.
 - This static mesh is not just a debug aid. It is treated as a real visibility aid so the player can be recognized immediately during gameplay.
 - Attach the static mesh to the root or another appropriate visual reference component, and give it a size and offset that reads well from the top-down viewpoint.
+- If a character VOX mesh is authored so that its visual front points along local `+Y` (the right-hand direction) instead of local `+X`, do not reauthor the mesh asset itself. Align it to the `BP_Character_TopDown` forward `+X` by applying a relative `Yaw = -90` correction on the extra player-visibility `StaticMeshComponent` or its parent `SceneComponent`.
+- This axis correction is handled only in the player-visual attachment layer, and this issue alone must not trigger changes to the shared VOX axis-conversion rules or general mesh-generation rules.
 - In other words, do not stop at "the character already has a skeletal mesh, so that is enough."
 
 ## Asset Layout Proposal
@@ -242,7 +244,7 @@ The execution form is fixed to a `Commandlet`.
 8. Execute the commandlet directly during the retry process so asset generation finishes without user intervention
 9. Set up the Blueprint graph so `BP_PlayerController` applies input through `GameInstance -> DA_`
 10. Build the north-aligned fixed camera and planar movement logic inside `BP_Character_TopDown`
-11. Set up both the skeletal mesh and the additional `StaticMeshComponent` in `BP_Character_TopDown`
+11. Set up both the skeletal mesh and the additional `StaticMeshComponent` in `BP_Character_TopDown`, and if the character mesh is authored with visual front along local `+Y`, apply a relative `Yaw -90` correction on the extra mesh
 12. Once the whole configuration reaches a testable state, open the project in the editor and move directly into verification
 
 ## Recommended Verification Items
@@ -256,6 +258,7 @@ The execution form is fixed to a `Commandlet`.
 - Is the camera north-aligned instead of tilted diagonally
 - Does `WASD` produce the intended planar movement
 - Is the extra static mesh visible so the player can be recognized immediately from the top-down view
+- Does the visual front of the player-visibility static mesh align with the forward / movement direction of `BP_Character_TopDown`
 - Once the above conditions are met and the project is testable, does the editor actually open so play verification can begin immediately
 
 ## Notes

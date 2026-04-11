@@ -430,6 +430,8 @@ When possible, use agents to parallelize work and reduce lead time. However, par
 - After Track B finishes generating `/Game/Vox/Meshes/Characters/SM_Vox_BrownChicken` and Track A finishes generating `/Game/Blueprints/Player/BP_Character_TopDown`, assign the mesh to the player BP in the next step.
 - The target is the extra `StaticMeshComponent` used for player visibility in `BP_Character_TopDown`.
 - Fix the mesh assignment to `/Game/Vox/Meshes/Characters/SM_Vox_BrownChicken`.
+- If the character VOX mesh is authored so that its visual front points along local `+Y` (the right-hand direction) rather than local `+X`, align it to the `BP_Character_TopDown` forward `+X` by applying a relative `Yaw = -90` offset on the `StaticMeshComponent` or its parent `SceneComponent` when wiring it into the player BP.
+- Do not solve this alignment issue by changing the shared VOX `VOX -> UE` axis-conversion rules or by rewriting the authored forward axis of the mesh asset itself just for this case.
 - If either side does not exist yet, do not force the work to run early. Wait.
 - Perform this connection only after both "brown chicken mesh generated" and "player BP generated" are satisfied, not immediately after VOX mesh generation alone.
 
@@ -441,7 +443,7 @@ When possible, use agents to parallelize work and reduce lead time. However, par
 5. Implement the parser / mesh builder / material builder / generator / commandlet inside the `CodexUMGBootstrapEditor` module.
 6. Use `Scripts/RunVoxAssetBuild.ps1` to check first whether the editor is running.
 7. If the editor is closed, run the commandlet and generate the assets.
-8. If both `SM_Vox_BrownChicken` and `BP_Character_TopDown` exist, assign the brown-chicken mesh to the extra `StaticMeshComponent` of `BP_Character_TopDown`.
+8. If both `SM_Vox_BrownChicken` and `BP_Character_TopDown` exist, assign the brown-chicken mesh to the extra `StaticMeshComponent` of `BP_Character_TopDown`, and apply a relative `Yaw -90` correction so the mesh's authored local `+Y` front faces the player BP forward `+X`.
 9. Open the resulting meshes in Static Mesh Editor and verify pose, normal direction, and vertex colors.
 10. Also open the player BP with the brown-chicken mesh assigned and verify visibility, size, and offset from the top-down view.
 11. If only `SM_Vox_Strawberry` looks muted while both the top primaries and the bottom gray ramp of `SM_Vox_RainbowDiagnostic` are correct, treat it as a SourceArt palette choice.
@@ -463,7 +465,8 @@ When possible, use agents to parallelize work and reduce lead time. However, par
 12. Colors do not look shifted by one palette step overall.
 13. Colors do not look pastel overall.
 14. If `BP_Character_TopDown` exists, its extra visibility `StaticMeshComponent` references `/Game/Vox/Meshes/Characters/SM_Vox_BrownChicken`.
-15. After wiring the brown-chicken mesh to the player BP, the silhouette remains recognizable from the top-down camera.
+15. When the brown-chicken mesh is wired to the player BP, a relative `Yaw -90` correction is applied so the authored local `+Y` front aligns with the `BP_Character_TopDown` forward `+X`.
+16. After wiring the brown-chicken mesh to the player BP, the silhouette remains recognizable from the top-down camera.
 
 ## Maintenance Notes
 - First verify that the VOX sample generation script still uses `Y-up`.
@@ -477,3 +480,4 @@ When possible, use agents to parallelize work and reduce lead time. However, par
 - If the palette or voxel silhouette changes, regenerate angled PNGs with `GenerateVoxPreviewPngs.py` before looking at UE so SourceArt differences are checked first.
 - If colors are in the right family but still look washed out and bright, first verify that both `FromSRGBColor(...)` in `CodexVoxMeshBuilder` and the custom `sRGB -> linear` decode in the shared VOX material are still present.
 - If fences, gray ramps, or ivory tones look especially brighter than the authored palette, do not remove `FromSRGBColor(...)`. First verify that the shared VOX material wiring is still `Vertex Color -> custom sRGB-to-linear decode -> Base Color`.
+- If the brown-chicken mesh attached to the player BP looks sideways, verify first that the relative `Yaw -90` correction on the player-visibility `StaticMeshComponent` is still in place before touching the shared VOX axis-conversion rules.

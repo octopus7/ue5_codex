@@ -433,6 +433,8 @@ UnrealEditor-Cmd.exe $ProjectPath -run=CodexUMGBootstrapEditor.CodexVoxAssetBuil
 - Track B에서 `/Game/Vox/Meshes/Characters/SM_Vox_BrownChicken` 생성이 끝났고, Track A에서 `/Game/Blueprints/Player/BP_Character_TopDown` 생성이 끝났으면 그 다음 단계에서 플레이어 BP에 메시를 연결한다.
 - 연결 대상은 `BP_Character_TopDown`의 플레이어 가시성용 별도 `StaticMeshComponent`다.
 - 메시 지정 값은 `/Game/Vox/Meshes/Characters/SM_Vox_BrownChicken`로 고정한다.
+- 현재 캐릭터용 VOX 메시의 시각적 정면이 로컬 `+X`가 아니라 오른손 방향인 로컬 `+Y`를 향한다면, 플레이어 BP에 연결할 때 `StaticMeshComponent` 또는 그 부모 `SceneComponent`에서 상대 `Yaw = -90` 오프셋으로 `BP_Character_TopDown`의 정면 `+X`와 맞춘다.
+- 이 정렬 문제를 해결하려고 VOX 공용 `VOX -> UE` 축 변환 규칙이나 메시 애셋 자체의 authored 전방축을 이 건만으로 바꾸지 않는다.
 - 둘 중 하나라도 아직 없으면 억지로 선행하지 않고 대기한다.
 - 이 연결 작업은 VOX 메시 생성 성공 직후가 아니라 "갈색닭 메시 생성 완료"와 "플레이어 BP 생성 완료" 두 조건이 모두 충족된 뒤 수행한다.
 
@@ -444,7 +446,7 @@ UnrealEditor-Cmd.exe $ProjectPath -run=CodexUMGBootstrapEditor.CodexVoxAssetBuil
 5. `CodexUMGBootstrapEditor` 모듈에 parser/mesh builder/material builder/generator/commandlet을 구현한다.
 6. `Scripts/RunVoxAssetBuild.ps1`로 에디터 실행 여부를 먼저 검사한다.
 7. 에디터가 꺼져 있으면 커맨드렛을 실행해 애셋을 생성한다.
-8. `SM_Vox_BrownChicken`와 `BP_Character_TopDown`가 모두 존재하면 `BP_Character_TopDown`의 별도 `StaticMeshComponent`에 갈색닭 메시를 지정한다.
+8. `SM_Vox_BrownChicken`와 `BP_Character_TopDown`가 모두 존재하면 `BP_Character_TopDown`의 별도 `StaticMeshComponent`에 갈색닭 메시를 지정하고, 메시의 로컬 `+Y` authored 정면이 플레이어 BP 정면 `+X`를 보도록 상대 `Yaw -90` 보정을 둔다.
 9. 결과 메시를 Static Mesh Editor에서 열어 자세, 노멀 방향, 버텍스 컬러를 검증한다.
 10. 갈색닭 메시를 지정한 플레이어 BP도 함께 열어 탑다운 시점에서 가시성, 크기, 오프셋이 적절한지 확인한다.
 11. `SM_Vox_Strawberry`만 부드럽고 `SM_Vox_RainbowDiagnostic`의 상단 원색과 하단 그레이 램프가 모두 정상이라면 SourceArt 팔레트 의도로 판단한다.
@@ -466,7 +468,8 @@ UnrealEditor-Cmd.exe $ProjectPath -run=CodexUMGBootstrapEditor.CodexVoxAssetBuil
 12. 색이 전반적으로 한 단계씩 밀린 듯 보이지 않는다.
 13. 색이 전반적으로 파스텔처럼 뜨지 않는다.
 14. `BP_Character_TopDown`가 존재하면, 플레이어 가시성용 별도 `StaticMeshComponent`가 `/Game/Vox/Meshes/Characters/SM_Vox_BrownChicken`를 참조한다.
-15. 플레이어 BP에 갈색닭 메시를 연결한 뒤 탑다운 카메라 기준으로 실루엣 식별이 가능하다.
+15. 플레이어 BP에 갈색닭 메시를 연결할 때 로컬 `+Y` authored 정면을 `BP_Character_TopDown`의 정면 `+X`에 맞추는 상대 `Yaw -90` 보정이 적용되어 있다.
+16. 플레이어 BP에 갈색닭 메시를 연결한 뒤 탑다운 카메라 기준으로 실루엣 식별이 가능하다.
 
 ## 유지보수 메모
 - VOX 샘플 생성 스크립트가 `Y-up` 기준을 유지하는지 먼저 확인한다.
@@ -480,3 +483,4 @@ UnrealEditor-Cmd.exe $ProjectPath -run=CodexUMGBootstrapEditor.CodexVoxAssetBuil
 - 팔레트나 복셀 실루엣을 바꾸면 UE를 보기 전에 `GenerateVoxPreviewPngs.py`로 비스듬한 PNG를 다시 뽑아 SourceArt 차이부터 확인한다.
 - 색이 맞는 계열인데도 뿌옇고 밝게 뜨면 `CodexVoxMeshBuilder`의 `FromSRGBColor(...)`와 공유 VOX 머터리얼의 custom `sRGB -> linear` 디코드가 둘 다 유지되고 있는지 먼저 확인한다.
 - 울타리, 회색 램프, 아이보리 계열이 authored palette보다 유난히 밝게 보이면 `FromSRGBColor(...)`를 제거하지 말고 공유 VOX 머터리얼 연결이 `Vertex Color -> custom sRGB-to-linear decode -> Base Color`인지 먼저 확인한다.
+- 플레이어 BP에 붙인 갈색닭 메시가 옆을 보면, VOX 공용 축 변환을 다시 건드리기 전에 먼저 플레이어 가시성용 `StaticMeshComponent`의 상대 `Yaw -90` 보정이 유지되는지 확인한다.
