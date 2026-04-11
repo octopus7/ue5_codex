@@ -19,6 +19,9 @@ namespace CodexInteractionAssetPaths
 	static const TCHAR* const ScrollMessagePopupWidgetName = TEXT("WBP_InteractionScrollMessagePopup");
 	static const TCHAR* const DualTileTransferPopupWidgetName = TEXT("WBP_InteractionDualTileTransferPopup");
 	static const TCHAR* const DualTileTransferTileEntryWidgetName = TEXT("WBP_InteractionDualTileTransferTileEntry");
+	static const TCHAR* const UIPlaygroundPopupWidgetName = TEXT("WBP_InteractionUIPlaygroundPopup");
+	static const TCHAR* const UIPlaygroundListEntryWidgetName = TEXT("WBP_InteractionUIPlaygroundListEntry");
+	static const TCHAR* const UIPlaygroundTileEntryWidgetName = TEXT("WBP_InteractionUIPlaygroundTileEntry");
 	static const TCHAR* const InteractActionName = TEXT("IA_Interact");
 	static const TCHAR* const PopupCloseActionName = TEXT("IA_PopupClose");
 	static const TCHAR* const MappingContextName = TEXT("IMC_TopDown");
@@ -28,6 +31,7 @@ namespace CodexInteractionAssetPaths
 	static const TCHAR* const InteractableWoodenSignPopupName = TEXT("BP_Interactable_WoodenSignPopup");
 	static const TCHAR* const InteractableWoodenSignScrollPopupName = TEXT("BP_Interactable_WoodenSignScrollPopup");
 	static const TCHAR* const InteractableWoodenSignDualTileTransferPopupName = TEXT("BP_Interactable_WoodenSignDualTileTransferPopup");
+	static const TCHAR* const InteractableWoodenSignUIPlaygroundPopupName = TEXT("BP_Interactable_WoodenSignUIPlaygroundPopup");
 
 	static const TCHAR* const FilledCircleTextureObjectPath = TEXT("/Game/UI/Interaction/T_InteractionFilledCircle.T_InteractionFilledCircle");
 	static const TCHAR* const OuterRingTextureObjectPath = TEXT("/Game/UI/Interaction/T_InteractionOuterRing.T_InteractionOuterRing");
@@ -38,6 +42,9 @@ namespace CodexInteractionAssetPaths
 	static const TCHAR* const ScrollMessagePopupWidgetObjectPath = TEXT("/Game/UI/Interaction/WBP_InteractionScrollMessagePopup.WBP_InteractionScrollMessagePopup");
 	static const TCHAR* const DualTileTransferPopupWidgetObjectPath = TEXT("/Game/UI/Interaction/WBP_InteractionDualTileTransferPopup.WBP_InteractionDualTileTransferPopup");
 	static const TCHAR* const DualTileTransferTileEntryWidgetObjectPath = TEXT("/Game/UI/Interaction/WBP_InteractionDualTileTransferTileEntry.WBP_InteractionDualTileTransferTileEntry");
+	static const TCHAR* const UIPlaygroundPopupWidgetObjectPath = TEXT("/Game/UI/Interaction/WBP_InteractionUIPlaygroundPopup.WBP_InteractionUIPlaygroundPopup");
+	static const TCHAR* const UIPlaygroundListEntryWidgetObjectPath = TEXT("/Game/UI/Interaction/WBP_InteractionUIPlaygroundListEntry.WBP_InteractionUIPlaygroundListEntry");
+	static const TCHAR* const UIPlaygroundTileEntryWidgetObjectPath = TEXT("/Game/UI/Interaction/WBP_InteractionUIPlaygroundTileEntry.WBP_InteractionUIPlaygroundTileEntry");
 	static const TCHAR* const InteractActionObjectPath = TEXT("/Game/Input/Actions/IA_Interact.IA_Interact");
 	static const TCHAR* const PopupCloseActionObjectPath = TEXT("/Game/Input/Actions/IA_PopupClose.IA_PopupClose");
 	static const TCHAR* const MappingContextObjectPath = TEXT("/Game/Input/Contexts/IMC_TopDown.IMC_TopDown");

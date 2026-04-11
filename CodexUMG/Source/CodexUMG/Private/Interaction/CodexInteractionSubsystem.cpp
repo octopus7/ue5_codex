@@ -7,6 +7,7 @@
 #include "Interaction/CodexInteractionDualTileTransferPopupWidget.h"
 #include "Interaction/CodexInteractionMessagePopupWidget.h"
 #include "Interaction/CodexInteractionScrollMessagePopupWidget.h"
+#include "Interaction/CodexInteractionUIPlaygroundPopupWidget.h"
 #include "Interaction/CodexPopupInteractableActor.h"
 #include "Interaction/CodexInteractionTarget.h"
 #include "Blueprint/UserWidget.h"
@@ -48,6 +49,10 @@ namespace
 
 		case ECodexInteractionPopupStyle::DualTileTransfer:
 			AssetObjectPath = CodexInteractionAssetPaths::DualTileTransferPopupWidgetObjectPath;
+			break;
+
+		case ECodexInteractionPopupStyle::UIPlayground:
+			AssetObjectPath = CodexInteractionAssetPaths::UIPlaygroundPopupWidgetObjectPath;
 			break;
 
 		case ECodexInteractionPopupStyle::Message:
@@ -194,6 +199,17 @@ bool UCodexInteractionSubsystem::OpenInteractionPopup(const FCodexInteractionPop
 
 		DualTilePopupWidget->ApplyPopupRequest(Request, *this);
 		PopupWidget = DualTilePopupWidget;
+	}
+	else if (Request.PopupStyle == ECodexInteractionPopupStyle::UIPlayground)
+	{
+		UCodexInteractionUIPlaygroundPopupWidget* UIPlaygroundPopupWidget = CreateWidget<UCodexInteractionUIPlaygroundPopupWidget>(RequestingController, PopupWidgetClass);
+		if (UIPlaygroundPopupWidget == nullptr)
+		{
+			return false;
+		}
+
+		UIPlaygroundPopupWidget->ApplyPopupRequest(Request, *this);
+		PopupWidget = UIPlaygroundPopupWidget;
 	}
 	else
 	{

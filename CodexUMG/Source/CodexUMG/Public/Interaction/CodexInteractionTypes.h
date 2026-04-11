@@ -8,6 +8,7 @@
 class AActor;
 class APlayerController;
 class UCodexInteractionComponent;
+class UCodexInteractionUIPlaygroundPayload;
 
 UENUM(BlueprintType)
 enum class ECodexInteractionType : uint8
@@ -38,7 +39,17 @@ enum class ECodexInteractionPopupStyle : uint8
 {
 	Message,
 	ScrollMessage,
-	DualTileTransfer
+	DualTileTransfer,
+	UIPlayground
+};
+
+UENUM(BlueprintType)
+enum class ECodexUIPlaygroundSection : uint8
+{
+	Basic,
+	Input,
+	Collection,
+	Advanced
 };
 
 UENUM(BlueprintType)
@@ -112,6 +123,9 @@ struct CODEXUMG_API FCodexInteractionPopupRequest
 
 	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
 	bool bAllowDuplicateNumbers = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
+	TObjectPtr<UCodexInteractionUIPlaygroundPayload> UIPlaygroundPayload = nullptr;
 };
 
 USTRUCT(BlueprintType)
@@ -136,4 +150,7 @@ struct CODEXUMG_API FCodexInteractionPopupResponse
 
 	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
 	bool bWasClosed = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
+	TObjectPtr<UCodexInteractionUIPlaygroundPayload> UIPlaygroundPayload = nullptr;
 };

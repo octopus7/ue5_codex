@@ -10,30 +10,42 @@
 #include "Interaction/CodexInteractionDualTileTransferTileEntryWidget.h"
 #include "Interaction/CodexInteractionMessagePopupWidget.h"
 #include "Interaction/CodexInteractionScrollMessagePopupWidget.h"
+#include "Interaction/CodexInteractionUIPlaygroundPayload.h"
 #include "Interaction/CodexInteractionComponent.h"
 #include "Interaction/CodexInteractionIndicatorWidget.h"
 #include "Interaction/CodexPopupInteractableActor.h"
 #include "Interaction/CodexScrollMessagePopupInteractableActor.h"
 #include "Interaction/CodexInteractionTypes.h"
 #include "AssetToolsModule.h"
+#include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/BackgroundBlur.h"
 #include "Components/Button.h"
 #include "Components/Border.h"
+#include "Components/CheckBox.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
+#include "Components/ComboBoxString.h"
+#include "Components/EditableTextBox.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
+#include "Components/ListView.h"
+#include "Components/MultiLineEditableTextBox.h"
 #include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
+#include "Components/ProgressBar.h"
 #include "Components/ScrollBox.h"
 #include "Components/ScrollBoxSlot.h"
+#include "Components/Slider.h"
 #include "Components/SizeBox.h"
+#include "Components/SpinBox.h"
 #include "Components/TextBlock.h"
 #include "Components/TileView.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
+#include "Components/WidgetSwitcher.h"
+#include "Components/WrapBox.h"
 #include "Editor.h"
 #include "Engine/Blueprint.h"
 #include "Engine/StaticMesh.h"
@@ -72,6 +84,7 @@ namespace
 	static const TCHAR* const InteractionPlacementLabelWoodenSign = TEXT("InteractionTest_WoodenSignPopup");
 	static const TCHAR* const InteractionPlacementLabelWoodenSignScroll = TEXT("InteractionTest_WoodenSignScrollPopup");
 	static const TCHAR* const InteractionPlacementLabelWoodenSignDualTileTransfer = TEXT("InteractionTest_WoodenSignDualTileTransferPopup");
+	static const TCHAR* const InteractionPlacementLabelWoodenSignUIPlayground = TEXT("InteractionTest_WoodenSignUIPlaygroundPopup");
 	static const FName InteractionPlacementTag = TEXT("CodexInteractionTestPlacement");
 	static const TCHAR* const GeneratedAssetVersionKey = TEXT("CodexInteractionAssetBuilderVersion");
 	static const TCHAR* const FilledCircleTextureVersion = TEXT("filled_circle_texture_v1");
@@ -83,11 +96,15 @@ namespace
 	static const TCHAR* const ScrollMessagePopupWidgetVersion = TEXT("scroll_message_popup_widget_v1");
 	static const TCHAR* const DualTileTransferTileEntryWidgetVersion = TEXT("dual_tile_transfer_tile_entry_widget_v1");
 	static const TCHAR* const DualTileTransferPopupWidgetVersion = TEXT("dual_tile_transfer_popup_widget_v2");
+	static const TCHAR* const UIPlaygroundListEntryWidgetVersion = TEXT("ui_playground_list_entry_widget_v2");
+	static const TCHAR* const UIPlaygroundTileEntryWidgetVersion = TEXT("ui_playground_tile_entry_widget_v2");
+	static const TCHAR* const UIPlaygroundPopupWidgetVersion = TEXT("ui_playground_popup_widget_v2");
 	static const TCHAR* const AppleInteractableBlueprintVersion = TEXT("apple_interactable_blueprint_v1");
 	static const TCHAR* const StrawberryInteractableBlueprintVersion = TEXT("strawberry_interactable_blueprint_v1");
 	static const TCHAR* const WoodenSignPopupBlueprintVersion = TEXT("wooden_sign_popup_blueprint_v1");
 	static const TCHAR* const WoodenSignScrollPopupBlueprintVersion = TEXT("wooden_sign_scroll_popup_blueprint_v1");
 	static const TCHAR* const WoodenSignDualTileTransferPopupBlueprintVersion = TEXT("wooden_sign_dual_tile_transfer_popup_blueprint_v2");
+	static const TCHAR* const WoodenSignUIPlaygroundPopupBlueprintVersion = TEXT("wooden_sign_ui_playground_popup_blueprint_v2");
 
 	FString EscapePowerShellSingleQuotedString(const FString& Value)
 	{
@@ -121,6 +138,12 @@ namespace
 	AssetType* LoadAsset(const FString& AssetPath)
 	{
 		return LoadObject<AssetType>(nullptr, *AssetPath);
+	}
+
+	template <typename ClassType>
+	UClass* LoadNativeClass(const TCHAR* ClassName)
+	{
+		return LoadClass<ClassType>(nullptr, *FString::Printf(TEXT("/Script/CodexUMG.%s"), ClassName));
 	}
 
 	FString MakeObjectPath(const FString& PackagePath, const FString& AssetName)
@@ -636,12 +659,13 @@ namespace
 	void ConfigureButtonStyle(UButton& Button, const FLinearColor& BaseColor)
 	{
 		FButtonStyle Style = Button.GetStyle();
+		const FMargin SharedPadding(14.0f, 8.0f);
 		Style.SetNormal(MakeRoundedBrush(BaseColor, 12.0f, FLinearColor(1.0f, 1.0f, 1.0f, 0.15f), 1.0f));
 		Style.SetHovered(MakeRoundedBrush(BaseColor * 1.12f, 12.0f, FLinearColor(1.0f, 1.0f, 1.0f, 0.22f), 1.0f));
 		Style.SetPressed(MakeRoundedBrush(BaseColor * 0.88f, 12.0f, FLinearColor(1.0f, 1.0f, 1.0f, 0.22f), 1.0f));
 		Style.SetDisabled(MakeRoundedBrush(BaseColor * 0.5f, 12.0f, FLinearColor(1.0f, 1.0f, 1.0f, 0.12f), 1.0f));
-		Style.SetNormalPadding(FMargin(14.0f, 8.0f));
-		Style.SetPressedPadding(FMargin(14.0f, 8.0f, 14.0f, 6.0f));
+		Style.SetNormalPadding(SharedPadding);
+		Style.SetPressedPadding(SharedPadding);
 		Button.SetStyle(Style);
 		Button.SetBackgroundColor(FLinearColor::White);
 		Button.SetColorAndOpacity(FLinearColor::White);
@@ -1638,6 +1662,1155 @@ namespace
 		return true;
 	}
 
+	bool ConfigureUIPlaygroundListEntryWidgetBlueprint(UWidgetBlueprint& WidgetBlueprint, FString& OutError)
+	{
+		if (WidgetBlueprint.WidgetTree == nullptr)
+		{
+			OutError = TEXT("UI playground list entry widget blueprint is missing a WidgetTree.");
+			return false;
+		}
+
+		UBorder* RootBorder = Cast<UBorder>(WidgetBlueprint.WidgetTree->RootWidget);
+		if (RootBorder == nullptr)
+		{
+			RootBorder = WidgetBlueprint.WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Border_Root"));
+			WidgetBlueprint.WidgetTree->RootWidget = RootBorder;
+		}
+
+		if (RootBorder == nullptr)
+		{
+			OutError = TEXT("Failed to create Border_Root for WBP_InteractionUIPlaygroundListEntry.");
+			return false;
+		}
+
+		EnsureWidgetGuid(WidgetBlueprint, *RootBorder);
+		RootBorder->bIsVariable = true;
+
+		UOverlay* ListContent = FindWidget<UOverlay>(WidgetBlueprint, TEXT("Overlay_ListContent"));
+		if (ListContent == nullptr)
+		{
+			ListContent = WidgetBlueprint.WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass(), TEXT("Overlay_ListContent"));
+		}
+
+		UBorder* SelectedOutline = FindWidget<UBorder>(WidgetBlueprint, TEXT("Border_Selection"));
+		if (SelectedOutline == nullptr)
+		{
+			SelectedOutline = WidgetBlueprint.WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Border_Selection"));
+		}
+
+		UVerticalBox* ContentColumn = FindWidget<UVerticalBox>(WidgetBlueprint, TEXT("VerticalBox_Content"));
+		if (ContentColumn == nullptr)
+		{
+			ContentColumn = WidgetBlueprint.WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("VerticalBox_Content"));
+		}
+
+		UTextBlock* LabelText = FindWidget<UTextBlock>(WidgetBlueprint, TEXT("TXT_Label"));
+		if (LabelText == nullptr)
+		{
+			LabelText = WidgetBlueprint.WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TXT_Label"));
+		}
+
+		UTextBlock* DescriptionText = FindWidget<UTextBlock>(WidgetBlueprint, TEXT("TXT_Description"));
+		if (DescriptionText == nullptr)
+		{
+			DescriptionText = WidgetBlueprint.WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TXT_Description"));
+		}
+
+		if (!ListContent || !SelectedOutline || !ContentColumn || !LabelText || !DescriptionText)
+		{
+			OutError = TEXT("Failed to construct one or more widgets for WBP_InteractionUIPlaygroundListEntry.");
+			return false;
+		}
+
+		EnsureWidgetGuid(WidgetBlueprint, *ListContent);
+		EnsureWidgetGuid(WidgetBlueprint, *SelectedOutline);
+		EnsureWidgetGuid(WidgetBlueprint, *ContentColumn);
+		EnsureWidgetGuid(WidgetBlueprint, *LabelText);
+		EnsureWidgetGuid(WidgetBlueprint, *DescriptionText);
+
+		ListContent->bIsVariable = true;
+		SelectedOutline->bIsVariable = true;
+		ContentColumn->bIsVariable = true;
+		LabelText->bIsVariable = true;
+		DescriptionText->bIsVariable = true;
+
+		if (RootBorder->GetContent() != ListContent)
+		{
+			RootBorder->SetContent(ListContent);
+		}
+
+		if (ListContent->GetChildrenCount() != 2 || ListContent->GetChildAt(0) != SelectedOutline || ListContent->GetChildAt(1) != ContentColumn)
+		{
+			ListContent->ClearChildren();
+			ListContent->AddChild(SelectedOutline);
+			ListContent->AddChild(ContentColumn);
+		}
+
+		if (ContentColumn->GetChildrenCount() != 2
+			|| ContentColumn->GetChildAt(0) != LabelText
+			|| ContentColumn->GetChildAt(1) != DescriptionText)
+		{
+			ContentColumn->ClearChildren();
+			ContentColumn->AddChildToVerticalBox(LabelText);
+			ContentColumn->AddChildToVerticalBox(DescriptionText);
+		}
+
+		ConfigureOverlaySlotFill(*SelectedOutline);
+		ConfigureOverlaySlotFill(*ContentColumn, FMargin(12.0f, 10.0f));
+		ConfigureVerticalBoxSlot(*LabelText, FMargin(0.0f, 0.0f, 0.0f, 4.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*DescriptionText, FMargin(0.0f, 0.0f, 0.0f, 4.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+
+		RootBorder->SetPadding(FMargin(4.0f));
+		RootBorder->SetBrush(MakeRoundedBrush(FLinearColor(0.16f, 0.22f, 0.28f, 0.92f), 12.0f, FLinearColor(1.0f, 1.0f, 1.0f, 0.10f), 1.0f));
+
+		SelectedOutline->SetPadding(FMargin(0.0f));
+		SelectedOutline->SetBrush(MakeRoundedBrush(FLinearColor::Transparent, 12.0f, FLinearColor(0.86f, 0.95f, 1.0f, 0.90f), 2.0f));
+		SelectedOutline->SetVisibility(ESlateVisibility::Collapsed);
+
+		LabelText->SetText(FText::FromString(TEXT("Label")));
+		LabelText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+		{
+			FSlateFontInfo Font = LabelText->GetFont();
+			Font.Size = 18;
+			LabelText->SetFont(Font);
+		}
+
+		DescriptionText->SetText(FText::FromString(TEXT("Description")));
+		DescriptionText->SetAutoWrapText(true);
+		DescriptionText->SetJustification(ETextJustify::Left);
+		DescriptionText->SetColorAndOpacity(FSlateColor(FLinearColor(0.88f, 0.91f, 0.95f, 1.0f)));
+		{
+			FSlateFontInfo Font = DescriptionText->GetFont();
+			Font.Size = 13;
+			DescriptionText->SetFont(Font);
+		}
+
+		WidgetBlueprint.Modify();
+		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(&WidgetBlueprint);
+		CompileBlueprint(&WidgetBlueprint);
+		WidgetBlueprint.MarkPackageDirty();
+		return true;
+	}
+
+	bool ConfigureUIPlaygroundTileEntryWidgetBlueprint(UWidgetBlueprint& WidgetBlueprint, UTexture2D& TileGradientTexture, FString& OutError)
+	{
+		if (WidgetBlueprint.WidgetTree == nullptr)
+		{
+			OutError = TEXT("UI playground tile entry widget blueprint is missing a WidgetTree.");
+			return false;
+		}
+
+		UBorder* TileRoot = Cast<UBorder>(WidgetBlueprint.WidgetTree->RootWidget);
+		if (TileRoot == nullptr)
+		{
+			TileRoot = WidgetBlueprint.WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Border_TileRoot"));
+			WidgetBlueprint.WidgetTree->RootWidget = TileRoot;
+		}
+
+		if (TileRoot == nullptr)
+		{
+			OutError = TEXT("Failed to create Border_TileRoot for WBP_InteractionUIPlaygroundTileEntry.");
+			return false;
+		}
+
+		EnsureWidgetGuid(WidgetBlueprint, *TileRoot);
+		TileRoot->bIsVariable = true;
+
+		UOverlay* TileContent = FindWidget<UOverlay>(WidgetBlueprint, TEXT("Overlay_TileContent"));
+		if (TileContent == nullptr)
+		{
+			TileContent = WidgetBlueprint.WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass(), TEXT("Overlay_TileContent"));
+		}
+
+		UImage* TileBackground = FindWidget<UImage>(WidgetBlueprint, TEXT("IMG_TileBackground"));
+		if (TileBackground == nullptr)
+		{
+			TileBackground = WidgetBlueprint.WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("IMG_TileBackground"));
+		}
+
+		UBorder* SelectedOutline = FindWidget<UBorder>(WidgetBlueprint, TEXT("Border_Outline"));
+		if (SelectedOutline == nullptr)
+		{
+			SelectedOutline = WidgetBlueprint.WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Border_Outline"));
+		}
+
+		UTextBlock* LabelText = FindWidget<UTextBlock>(WidgetBlueprint, TEXT("TXT_Label"));
+		if (LabelText == nullptr)
+		{
+			LabelText = WidgetBlueprint.WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TXT_Label"));
+		}
+
+		if (!TileContent || !TileBackground || !SelectedOutline || !LabelText)
+		{
+			OutError = TEXT("Failed to construct one or more widgets for WBP_InteractionUIPlaygroundTileEntry.");
+			return false;
+		}
+
+		EnsureWidgetGuid(WidgetBlueprint, *TileContent);
+		EnsureWidgetGuid(WidgetBlueprint, *TileBackground);
+		EnsureWidgetGuid(WidgetBlueprint, *SelectedOutline);
+		EnsureWidgetGuid(WidgetBlueprint, *LabelText);
+
+		TileContent->bIsVariable = true;
+		TileBackground->bIsVariable = true;
+		SelectedOutline->bIsVariable = true;
+		LabelText->bIsVariable = true;
+
+		if (TileRoot->GetContent() != TileContent)
+		{
+			TileRoot->SetContent(TileContent);
+		}
+
+		if (TileContent->GetChildrenCount() != 3
+			|| TileContent->GetChildAt(0) != TileBackground
+			|| TileContent->GetChildAt(1) != SelectedOutline
+			|| TileContent->GetChildAt(2) != LabelText)
+		{
+			TileContent->ClearChildren();
+			TileContent->AddChild(TileBackground);
+			TileContent->AddChild(SelectedOutline);
+			TileContent->AddChild(LabelText);
+		}
+
+		TileRoot->SetPadding(FMargin(4.0f));
+		TileRoot->SetBrush(MakeRoundedBrush(FLinearColor::Transparent, 14.0f, FLinearColor(1.0f, 1.0f, 1.0f, 0.10f), 1.0f));
+
+		TileBackground->SetBrushFromTexture(&TileGradientTexture, false);
+		{
+			FSlateBrush Brush = TileBackground->GetBrush();
+			Brush.ImageSize = FVector2D(76.0f, 76.0f);
+			TileBackground->SetBrush(Brush);
+		}
+		TileBackground->SetColorAndOpacity(FLinearColor::White);
+
+		SelectedOutline->SetPadding(FMargin(0.0f));
+		SelectedOutline->SetBrush(MakeRoundedBrush(FLinearColor::Transparent, 14.0f, FLinearColor(1.0f, 1.0f, 1.0f, 0.92f), 2.0f));
+		SelectedOutline->SetVisibility(ESlateVisibility::Collapsed);
+
+		LabelText->SetText(FText::FromString(TEXT("11")));
+		LabelText->SetJustification(ETextJustify::Center);
+		LabelText->SetColorAndOpacity(FSlateColor(FLinearColor(0.18f, 0.20f, 0.26f, 1.0f)));
+		{
+			FSlateFontInfo Font = LabelText->GetFont();
+			Font.Size = 22;
+			LabelText->SetFont(Font);
+		}
+
+		ConfigureOverlaySlotFill(*TileBackground);
+		ConfigureOverlaySlotFill(*SelectedOutline);
+		ConfigureOverlaySlot(*LabelText);
+
+		WidgetBlueprint.Modify();
+		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(&WidgetBlueprint);
+		CompileBlueprint(&WidgetBlueprint);
+		WidgetBlueprint.MarkPackageDirty();
+		return true;
+	}
+
+	bool ConfigureUIPlaygroundBasicPageWidget(UWidgetBlueprint& WidgetBlueprint, UTexture2D& FilledCircleTexture, UTexture2D& OuterRingTexture, UTexture2D& SmileIconTexture, FString& OutError)
+	{
+		UVerticalBox* BasicContent = FindWidget<UVerticalBox>(WidgetBlueprint, TEXT("VerticalBox_PageBasicContent"));
+		UTextBlock* BasicHeadline = FindWidget<UTextBlock>(WidgetBlueprint, TEXT("TXT_BasicHeadline"));
+		if (BasicHeadline == nullptr)
+		{
+			BasicHeadline = WidgetBlueprint.WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TXT_BasicHeadline"));
+		}
+
+		UTextBlock* BasicBody = FindWidget<UTextBlock>(WidgetBlueprint, TEXT("TXT_BasicDescription"));
+		if (BasicBody == nullptr)
+		{
+			BasicBody = WidgetBlueprint.WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TXT_BasicDescription"));
+		}
+
+		UHorizontalBox* BasicImages = FindWidget<UHorizontalBox>(WidgetBlueprint, TEXT("HorizontalBox_ImagePreview"));
+		if (BasicImages == nullptr)
+		{
+			BasicImages = WidgetBlueprint.WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("HorizontalBox_ImagePreview"));
+		}
+
+		UImage* BasicFilledCircle = FindWidget<UImage>(WidgetBlueprint, TEXT("IMG_FilledCircle"));
+		if (BasicFilledCircle == nullptr)
+		{
+			BasicFilledCircle = WidgetBlueprint.WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("IMG_FilledCircle"));
+		}
+
+		UImage* BasicOuterRing = FindWidget<UImage>(WidgetBlueprint, TEXT("IMG_OuterRing"));
+		if (BasicOuterRing == nullptr)
+		{
+			BasicOuterRing = WidgetBlueprint.WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("IMG_OuterRing"));
+		}
+
+		UImage* BasicSmileIcon = FindWidget<UImage>(WidgetBlueprint, TEXT("IMG_SmileIcon"));
+		if (BasicSmileIcon == nullptr)
+		{
+			BasicSmileIcon = WidgetBlueprint.WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("IMG_SmileIcon"));
+		}
+
+		UWrapBox* BasicButtons = FindWidget<UWrapBox>(WidgetBlueprint, TEXT("WrapBox_ButtonSamples"));
+		if (BasicButtons == nullptr)
+		{
+			BasicButtons = WidgetBlueprint.WidgetTree->ConstructWidget<UWrapBox>(UWrapBox::StaticClass(), TEXT("WrapBox_ButtonSamples"));
+		}
+
+		UButton* BasicPrimaryButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_Primary"));
+		if (BasicPrimaryButton == nullptr)
+		{
+			BasicPrimaryButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_Primary"));
+		}
+
+		UButton* BasicSecondaryButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_Secondary"));
+		if (BasicSecondaryButton == nullptr)
+		{
+			BasicSecondaryButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_Secondary"));
+		}
+
+		UButton* BasicDisabledButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_DisabledSample"));
+		if (BasicDisabledButton == nullptr)
+		{
+			BasicDisabledButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_DisabledSample"));
+		}
+
+		UButton* BasicPingButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_StatusPing"));
+		if (BasicPingButton == nullptr)
+		{
+			BasicPingButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_StatusPing"));
+		}
+
+		UProgressBar* BasicProgressBar = FindWidget<UProgressBar>(WidgetBlueprint, TEXT("ProgressBar_Sample"));
+		if (BasicProgressBar == nullptr)
+		{
+			BasicProgressBar = WidgetBlueprint.WidgetTree->ConstructWidget<UProgressBar>(UProgressBar::StaticClass(), TEXT("ProgressBar_Sample"));
+		}
+
+		if (!BasicContent || !BasicHeadline || !BasicBody || !BasicImages || !BasicFilledCircle || !BasicOuterRing || !BasicSmileIcon
+			|| !BasicButtons || !BasicPrimaryButton || !BasicSecondaryButton || !BasicDisabledButton || !BasicPingButton || !BasicProgressBar)
+		{
+			OutError = TEXT("Failed to construct basic page widgets for WBP_InteractionUIPlaygroundPopup.");
+			return false;
+		}
+
+		EnsureWidgetGuid(WidgetBlueprint, *BasicContent);
+		EnsureWidgetGuid(WidgetBlueprint, *BasicHeadline);
+		EnsureWidgetGuid(WidgetBlueprint, *BasicBody);
+		EnsureWidgetGuid(WidgetBlueprint, *BasicImages);
+		EnsureWidgetGuid(WidgetBlueprint, *BasicFilledCircle);
+		EnsureWidgetGuid(WidgetBlueprint, *BasicOuterRing);
+		EnsureWidgetGuid(WidgetBlueprint, *BasicSmileIcon);
+		EnsureWidgetGuid(WidgetBlueprint, *BasicButtons);
+		EnsureWidgetGuid(WidgetBlueprint, *BasicPrimaryButton);
+		EnsureWidgetGuid(WidgetBlueprint, *BasicSecondaryButton);
+		EnsureWidgetGuid(WidgetBlueprint, *BasicDisabledButton);
+		EnsureWidgetGuid(WidgetBlueprint, *BasicPingButton);
+		EnsureWidgetGuid(WidgetBlueprint, *BasicProgressBar);
+
+		BasicContent->bIsVariable = true;
+		BasicHeadline->bIsVariable = true;
+		BasicBody->bIsVariable = true;
+		BasicImages->bIsVariable = true;
+		BasicFilledCircle->bIsVariable = true;
+		BasicOuterRing->bIsVariable = true;
+		BasicSmileIcon->bIsVariable = true;
+		BasicButtons->bIsVariable = true;
+		BasicPrimaryButton->bIsVariable = true;
+		BasicSecondaryButton->bIsVariable = true;
+		BasicDisabledButton->bIsVariable = true;
+		BasicPingButton->bIsVariable = true;
+		BasicProgressBar->bIsVariable = true;
+
+		BasicContent->ClearChildren();
+		BasicContent->AddChildToVerticalBox(BasicHeadline);
+		BasicContent->AddChildToVerticalBox(BasicBody);
+		BasicContent->AddChildToVerticalBox(BasicImages);
+		BasicContent->AddChildToVerticalBox(BasicButtons);
+		BasicContent->AddChildToVerticalBox(BasicProgressBar);
+
+		BasicImages->ClearChildren();
+		BasicImages->AddChildToHorizontalBox(BasicFilledCircle);
+		BasicImages->AddChildToHorizontalBox(BasicOuterRing);
+		BasicImages->AddChildToHorizontalBox(BasicSmileIcon);
+
+		BasicButtons->ClearChildren();
+		BasicButtons->AddChildToWrapBox(BasicPrimaryButton);
+		BasicButtons->AddChildToWrapBox(BasicSecondaryButton);
+		BasicButtons->AddChildToWrapBox(BasicDisabledButton);
+		BasicButtons->AddChildToWrapBox(BasicPingButton);
+
+		BasicHeadline->SetText(FText::FromString(TEXT("Basic Controls")));
+		BasicBody->SetText(FText::FromString(TEXT("Start here: click Primary, Secondary, or Ping. The disabled button should stay inert while the status bar and progress bar react.")));
+		BasicBody->SetAutoWrapText(true);
+		BasicFilledCircle->SetBrushFromTexture(&FilledCircleTexture, false);
+		BasicOuterRing->SetBrushFromTexture(&OuterRingTexture, false);
+		BasicSmileIcon->SetBrushFromTexture(&SmileIconTexture, false);
+		BasicProgressBar->SetPercent(0.42f);
+
+		ConfigureButtonStyle(*BasicPrimaryButton, FLinearColor(0.30f, 0.56f, 0.78f, 0.96f));
+		ConfigureButtonStyle(*BasicSecondaryButton, FLinearColor(0.24f, 0.38f, 0.56f, 0.96f));
+		ConfigureButtonStyle(*BasicDisabledButton, FLinearColor(0.18f, 0.23f, 0.31f, 0.96f));
+		ConfigureButtonStyle(*BasicPingButton, FLinearColor(0.36f, 0.68f, 0.58f, 0.96f));
+		BasicDisabledButton->SetIsEnabled(false);
+		EnsureButtonLabel(WidgetBlueprint, *BasicPrimaryButton, TEXT("TXT_PrimaryLabel"), FText::FromString(TEXT("Primary")));
+		EnsureButtonLabel(WidgetBlueprint, *BasicSecondaryButton, TEXT("TXT_SecondaryLabel"), FText::FromString(TEXT("Secondary")));
+		EnsureButtonLabel(WidgetBlueprint, *BasicDisabledButton, TEXT("TXT_DisabledSampleLabel"), FText::FromString(TEXT("Disabled")));
+		EnsureButtonLabel(WidgetBlueprint, *BasicPingButton, TEXT("TXT_StatusPingLabel"), FText::FromString(TEXT("Ping")));
+
+		ConfigureVerticalBoxSlot(*BasicHeadline, FMargin(0.0f, 0.0f, 0.0f, 10.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*BasicBody, FMargin(0.0f, 0.0f, 0.0f, 18.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*BasicImages, FMargin(0.0f, 0.0f, 0.0f, 22.0f), ESlateSizeRule::Automatic, HAlign_Left, VAlign_Center);
+		ConfigureVerticalBoxSlot(*BasicButtons, FMargin(0.0f, 0.0f, 0.0f, 18.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*BasicProgressBar, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureHorizontalBoxSlot(*BasicFilledCircle, FMargin(0.0f, 0.0f, 14.0f, 0.0f), ESlateSizeRule::Automatic, HAlign_Left, VAlign_Center);
+		ConfigureHorizontalBoxSlot(*BasicOuterRing, FMargin(0.0f, 0.0f, 14.0f, 0.0f), ESlateSizeRule::Automatic, HAlign_Left, VAlign_Center);
+		ConfigureHorizontalBoxSlot(*BasicSmileIcon, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Left, VAlign_Center);
+
+		return true;
+	}
+
+	bool ConfigureUIPlaygroundInputPageWidget(UWidgetBlueprint& WidgetBlueprint, FString& OutError)
+	{
+		UVerticalBox* InputContent = FindWidget<UVerticalBox>(WidgetBlueprint, TEXT("VerticalBox_PageInputContent"));
+		UTextBlock* InputSummary = FindWidget<UTextBlock>(WidgetBlueprint, TEXT("TXT_InputSummary"));
+		if (InputSummary == nullptr)
+		{
+			InputSummary = WidgetBlueprint.WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TXT_InputSummary"));
+		}
+
+		UEditableTextBox* NameTextBox = FindWidget<UEditableTextBox>(WidgetBlueprint, TEXT("ETB_InputText"));
+		if (NameTextBox == nullptr)
+		{
+			NameTextBox = WidgetBlueprint.WidgetTree->ConstructWidget<UEditableTextBox>(UEditableTextBox::StaticClass(), TEXT("ETB_InputText"));
+		}
+
+		UMultiLineEditableTextBox* NotesTextBox = FindWidget<UMultiLineEditableTextBox>(WidgetBlueprint, TEXT("MultiLineEditableTextBox_Notes"));
+		if (NotesTextBox == nullptr)
+		{
+			NotesTextBox = WidgetBlueprint.WidgetTree->ConstructWidget<UMultiLineEditableTextBox>(UMultiLineEditableTextBox::StaticClass(), TEXT("MultiLineEditableTextBox_Notes"));
+		}
+
+		UCheckBox* EnableOptionCheckBox = FindWidget<UCheckBox>(WidgetBlueprint, TEXT("CHK_Toggle"));
+		if (EnableOptionCheckBox == nullptr)
+		{
+			EnableOptionCheckBox = WidgetBlueprint.WidgetTree->ConstructWidget<UCheckBox>(UCheckBox::StaticClass(), TEXT("CHK_Toggle"));
+		}
+
+		USlider* ValueSlider = FindWidget<USlider>(WidgetBlueprint, TEXT("SLD_Value"));
+		if (ValueSlider == nullptr)
+		{
+			ValueSlider = WidgetBlueprint.WidgetTree->ConstructWidget<USlider>(USlider::StaticClass(), TEXT("SLD_Value"));
+		}
+
+		USpinBox* CountSpinBox = FindWidget<USpinBox>(WidgetBlueprint, TEXT("SPN_Value"));
+		if (CountSpinBox == nullptr)
+		{
+			CountSpinBox = WidgetBlueprint.WidgetTree->ConstructWidget<USpinBox>(USpinBox::StaticClass(), TEXT("SPN_Value"));
+		}
+
+		UComboBoxString* ModeComboBox = FindWidget<UComboBoxString>(WidgetBlueprint, TEXT("CB_Preset"));
+		if (ModeComboBox == nullptr)
+		{
+			ModeComboBox = WidgetBlueprint.WidgetTree->ConstructWidget<UComboBoxString>(UComboBoxString::StaticClass(), TEXT("CB_Preset"));
+		}
+
+		if (!InputContent || !InputSummary || !NameTextBox || !NotesTextBox || !EnableOptionCheckBox || !ValueSlider || !CountSpinBox || !ModeComboBox)
+		{
+			OutError = TEXT("Failed to construct input page widgets for WBP_InteractionUIPlaygroundPopup.");
+			return false;
+		}
+
+		EnsureWidgetGuid(WidgetBlueprint, *InputContent);
+		EnsureWidgetGuid(WidgetBlueprint, *InputSummary);
+		EnsureWidgetGuid(WidgetBlueprint, *NameTextBox);
+		EnsureWidgetGuid(WidgetBlueprint, *NotesTextBox);
+		EnsureWidgetGuid(WidgetBlueprint, *EnableOptionCheckBox);
+		EnsureWidgetGuid(WidgetBlueprint, *ValueSlider);
+		EnsureWidgetGuid(WidgetBlueprint, *CountSpinBox);
+		EnsureWidgetGuid(WidgetBlueprint, *ModeComboBox);
+
+		InputContent->bIsVariable = true;
+		InputSummary->bIsVariable = true;
+		NameTextBox->bIsVariable = true;
+		NotesTextBox->bIsVariable = true;
+		EnableOptionCheckBox->bIsVariable = true;
+		ValueSlider->bIsVariable = true;
+		CountSpinBox->bIsVariable = true;
+		ModeComboBox->bIsVariable = true;
+
+		InputContent->ClearChildren();
+		InputContent->AddChildToVerticalBox(InputSummary);
+		InputContent->AddChildToVerticalBox(NameTextBox);
+		InputContent->AddChildToVerticalBox(NotesTextBox);
+		InputContent->AddChildToVerticalBox(EnableOptionCheckBox);
+		InputContent->AddChildToVerticalBox(ValueSlider);
+		InputContent->AddChildToVerticalBox(CountSpinBox);
+		InputContent->AddChildToVerticalBox(ModeComboBox);
+
+		InputSummary->SetText(FText::FromString(TEXT("Commit the name field, type notes, toggle the checkbox, move the slider, adjust the spin box, and pick a preset. Each change should update the status bar.")));
+		InputSummary->SetAutoWrapText(true);
+
+		NameTextBox->SetText(FText::FromString(TEXT("Codex")));
+		NameTextBox->SetHintText(FText::FromString(TEXT("Enter a name")));
+
+		NotesTextBox->SetText(FText::FromString(TEXT("Sample notes for multiline entry.")));
+		NotesTextBox->SetHintText(FText::FromString(TEXT("Enter notes")));
+
+		EnableOptionCheckBox->SetIsChecked(true);
+		ValueSlider->SetMinValue(0.0f);
+		ValueSlider->SetMaxValue(1.0f);
+		ValueSlider->SetValue(0.65f);
+		ValueSlider->SetStepSize(0.05f);
+		CountSpinBox->SetMinValue(0.0f);
+		CountSpinBox->SetMaxValue(10.0f);
+		CountSpinBox->SetValue(3.0f);
+		CountSpinBox->SetDelta(1.0f);
+
+		ModeComboBox->ClearOptions();
+		ModeComboBox->AddOption(TEXT("Mode A"));
+		ModeComboBox->AddOption(TEXT("Mode B"));
+		ModeComboBox->AddOption(TEXT("Mode C"));
+		ModeComboBox->SetSelectedOption(TEXT("Mode B"));
+
+		ConfigureVerticalBoxSlot(*InputSummary, FMargin(0.0f, 0.0f, 0.0f, 16.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*NameTextBox, FMargin(0.0f, 0.0f, 0.0f, 12.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*NotesTextBox, FMargin(0.0f, 0.0f, 0.0f, 16.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*EnableOptionCheckBox, FMargin(0.0f, 0.0f, 0.0f, 16.0f), ESlateSizeRule::Automatic, HAlign_Left, VAlign_Center);
+		ConfigureVerticalBoxSlot(*ValueSlider, FMargin(0.0f, 0.0f, 0.0f, 14.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*CountSpinBox, FMargin(0.0f, 0.0f, 0.0f, 14.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*ModeComboBox, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+
+		return true;
+	}
+
+	bool ConfigureUIPlaygroundCollectionPageWidget(
+		UWidgetBlueprint& WidgetBlueprint,
+		UClass* ListEntryWidgetClass,
+		UClass* TileEntryWidgetClass,
+		FString& OutError)
+	{
+		(void)TileEntryWidgetClass;
+
+		UVerticalBox* CollectionContent = FindWidget<UVerticalBox>(WidgetBlueprint, TEXT("VerticalBox_PageCollectionContent"));
+		UTextBlock* CollectionSummary = FindWidget<UTextBlock>(WidgetBlueprint, TEXT("TXT_CollectionSummary"));
+		if (CollectionSummary == nullptr)
+		{
+			CollectionSummary = WidgetBlueprint.WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TXT_CollectionSummary"));
+		}
+
+		UHorizontalBox* CollectionActions = FindWidget<UHorizontalBox>(WidgetBlueprint, TEXT("HorizontalBox_CollectionActions"));
+		if (CollectionActions == nullptr)
+		{
+			CollectionActions = WidgetBlueprint.WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("HorizontalBox_CollectionActions"));
+		}
+
+		UButton* ListAddButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_ListAdd"));
+		if (ListAddButton == nullptr)
+		{
+			ListAddButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_ListAdd"));
+		}
+
+		UButton* ListRemoveButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_ListRemove"));
+		if (ListRemoveButton == nullptr)
+		{
+			ListRemoveButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_ListRemove"));
+		}
+
+		UButton* ListToggleSelectionButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_ListToggleSelection"));
+		if (ListToggleSelectionButton == nullptr)
+		{
+			ListToggleSelectionButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_ListToggleSelection"));
+		}
+
+		USizeBox* CollectionListViewport = FindWidget<USizeBox>(WidgetBlueprint, TEXT("SizeBox_CollectionListViewport"));
+		if (CollectionListViewport == nullptr)
+		{
+			CollectionListViewport = WidgetBlueprint.WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("SizeBox_CollectionListViewport"));
+		}
+
+		UListView* ListViewItems = FindWidget<UListView>(WidgetBlueprint, TEXT("ListView_Items"));
+		if (ListViewItems == nullptr)
+		{
+			ListViewItems = WidgetBlueprint.WidgetTree->ConstructWidget<UListView>(UListView::StaticClass(), TEXT("ListView_Items"));
+		}
+
+		if (!CollectionContent || !CollectionSummary || !CollectionActions || !ListAddButton || !ListRemoveButton || !ListToggleSelectionButton
+			|| !CollectionListViewport || !ListViewItems)
+		{
+			OutError = TEXT("Failed to construct collection page widgets for WBP_InteractionUIPlaygroundPopup.");
+			return false;
+		}
+
+		EnsureWidgetGuid(WidgetBlueprint, *CollectionContent);
+		EnsureWidgetGuid(WidgetBlueprint, *CollectionSummary);
+		EnsureWidgetGuid(WidgetBlueprint, *CollectionActions);
+		EnsureWidgetGuid(WidgetBlueprint, *ListAddButton);
+		EnsureWidgetGuid(WidgetBlueprint, *ListRemoveButton);
+		EnsureWidgetGuid(WidgetBlueprint, *ListToggleSelectionButton);
+		EnsureWidgetGuid(WidgetBlueprint, *CollectionListViewport);
+		EnsureWidgetGuid(WidgetBlueprint, *ListViewItems);
+
+		CollectionContent->bIsVariable = true;
+		CollectionSummary->bIsVariable = true;
+		CollectionActions->bIsVariable = true;
+		ListAddButton->bIsVariable = true;
+		ListRemoveButton->bIsVariable = true;
+		ListToggleSelectionButton->bIsVariable = true;
+		CollectionListViewport->bIsVariable = true;
+		ListViewItems->bIsVariable = true;
+
+		CollectionContent->ClearChildren();
+		CollectionContent->AddChildToVerticalBox(CollectionSummary);
+		CollectionContent->AddChildToVerticalBox(CollectionActions);
+		CollectionContent->AddChildToVerticalBox(CollectionListViewport);
+
+		CollectionActions->ClearChildren();
+		CollectionActions->AddChildToHorizontalBox(ListAddButton);
+		CollectionActions->AddChildToHorizontalBox(ListRemoveButton);
+		CollectionActions->AddChildToHorizontalBox(ListToggleSelectionButton);
+
+		if (CollectionListViewport->GetContent() != ListViewItems)
+		{
+			CollectionListViewport->SetContent(ListViewItems);
+		}
+
+		CollectionSummary->SetText(FText::FromString(TEXT("Click a row to select it. Add creates rows, Remove deletes the selected row, and Select / Clear toggles the highlight. Keep adding rows until the viewport scrolls.")));
+		CollectionSummary->SetAutoWrapText(true);
+
+		ConfigureButtonStyle(*ListAddButton, FLinearColor(0.36f, 0.58f, 0.76f, 0.96f));
+		ConfigureButtonStyle(*ListRemoveButton, FLinearColor(0.38f, 0.34f, 0.42f, 0.96f));
+		ConfigureButtonStyle(*ListToggleSelectionButton, FLinearColor(0.46f, 0.64f, 0.48f, 0.96f));
+		EnsureButtonLabel(WidgetBlueprint, *ListAddButton, TEXT("TXT_ListAddLabel"), FText::FromString(TEXT("Add")));
+		EnsureButtonLabel(WidgetBlueprint, *ListRemoveButton, TEXT("TXT_ListRemoveLabel"), FText::FromString(TEXT("Remove")));
+		EnsureButtonLabel(WidgetBlueprint, *ListToggleSelectionButton, TEXT("TXT_ListToggleSelectionLabel"), FText::FromString(TEXT("Select / Clear")));
+
+		CollectionListViewport->SetHeightOverride(360.0f);
+		ConfigureVerticalBoxSlot(*CollectionSummary, FMargin(0.0f, 0.0f, 0.0f, 16.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*CollectionActions, FMargin(0.0f, 0.0f, 0.0f, 16.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*CollectionListViewport, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Fill);
+		ConfigureHorizontalBoxSlot(*ListAddButton, FMargin(0.0f, 0.0f, 10.0f, 0.0f), ESlateSizeRule::Automatic, HAlign_Left, VAlign_Center);
+		ConfigureHorizontalBoxSlot(*ListRemoveButton, FMargin(0.0f, 0.0f, 10.0f, 0.0f), ESlateSizeRule::Automatic, HAlign_Left, VAlign_Center);
+		ConfigureHorizontalBoxSlot(*ListToggleSelectionButton, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Left, VAlign_Center);
+
+		ListViewItems->SetSelectionMode(ESelectionMode::Single);
+		SetWidgetClassProperty(*ListViewItems, TEXT("EntryWidgetClass"), ListEntryWidgetClass);
+
+		return true;
+	}
+
+	bool ConfigureUIPlaygroundAdvancedPageWidget(UWidgetBlueprint& WidgetBlueprint, UClass* TileEntryWidgetClass, FString& OutError)
+	{
+		UVerticalBox* AdvancedContent = FindWidget<UVerticalBox>(WidgetBlueprint, TEXT("VerticalBox_PageAdvancedContent"));
+		UTextBlock* FocusStatus = FindWidget<UTextBlock>(WidgetBlueprint, TEXT("TXT_FocusStatus"));
+		if (FocusStatus == nullptr)
+		{
+			FocusStatus = WidgetBlueprint.WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TXT_FocusStatus"));
+		}
+
+		UTileView* TileViewSlots = FindWidget<UTileView>(WidgetBlueprint, TEXT("TileView_Slots"));
+		if (TileViewSlots == nullptr)
+		{
+			TileViewSlots = WidgetBlueprint.WidgetTree->ConstructWidget<UTileView>(UTileView::StaticClass(), TEXT("TileView_Slots"));
+		}
+
+		UTextBlock* DragStatus = FindWidget<UTextBlock>(WidgetBlueprint, TEXT("TXT_DragStatus"));
+		if (DragStatus == nullptr)
+		{
+			DragStatus = WidgetBlueprint.WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TXT_DragStatus"));
+		}
+
+		if (!AdvancedContent || !FocusStatus || !TileViewSlots || !DragStatus)
+		{
+			OutError = TEXT("Failed to construct advanced page widgets for WBP_InteractionUIPlaygroundPopup.");
+			return false;
+		}
+
+		EnsureWidgetGuid(WidgetBlueprint, *AdvancedContent);
+		EnsureWidgetGuid(WidgetBlueprint, *FocusStatus);
+		EnsureWidgetGuid(WidgetBlueprint, *TileViewSlots);
+		EnsureWidgetGuid(WidgetBlueprint, *DragStatus);
+
+		AdvancedContent->bIsVariable = true;
+		FocusStatus->bIsVariable = true;
+		TileViewSlots->bIsVariable = true;
+		DragStatus->bIsVariable = true;
+
+		AdvancedContent->ClearChildren();
+		AdvancedContent->AddChildToVerticalBox(FocusStatus);
+		AdvancedContent->AddChildToVerticalBox(TileViewSlots);
+		AdvancedContent->AddChildToVerticalBox(DragStatus);
+
+		FocusStatus->SetText(FText::FromString(TEXT("Click a tile to confirm focus and selection. Then drag a filled tile onto another slot in the same panel.")));
+		FocusStatus->SetAutoWrapText(true);
+		DragStatus->SetText(FText::FromString(TEXT("Filled and empty slots should both react. The status bar reports when a drag starts and when a drop succeeds.")));
+		DragStatus->SetAutoWrapText(true);
+
+		ConfigureVerticalBoxSlot(*FocusStatus, FMargin(0.0f, 0.0f, 0.0f, 16.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*TileViewSlots, FMargin(0.0f, 0.0f, 0.0f, 16.0f), ESlateSizeRule::Automatic, HAlign_Left, VAlign_Center);
+		ConfigureVerticalBoxSlot(*DragStatus, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+
+		TileViewSlots->SetEntryWidth(104.0f);
+		TileViewSlots->SetEntryHeight(68.0f);
+		TileViewSlots->SetSelectionMode(ESelectionMode::Single);
+		TileViewSlots->SetHorizontalEntrySpacing(10.0f);
+		TileViewSlots->SetVerticalEntrySpacing(10.0f);
+		SetWidgetClassProperty(*TileViewSlots, TEXT("EntryWidgetClass"), TileEntryWidgetClass);
+
+		ConfigureVerticalBoxSlot(*FocusStatus, FMargin(0.0f, 0.0f, 0.0f, 12.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*TileViewSlots, FMargin(0.0f, 0.0f, 0.0f, 12.0f), ESlateSizeRule::Fill, HAlign_Fill, VAlign_Fill);
+		ConfigureVerticalBoxSlot(*DragStatus, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+
+		return true;
+	}
+
+	bool ConfigureUIPlaygroundPopupWidgetBlueprint(
+		UWidgetBlueprint& WidgetBlueprint,
+		UClass* ListEntryWidgetClass,
+		UClass* TileEntryWidgetClass,
+		UTexture2D& FilledCircleTexture,
+		UTexture2D& OuterRingTexture,
+		UTexture2D& SmileIconTexture,
+		FString& OutError)
+	{
+		if (WidgetBlueprint.WidgetTree == nullptr)
+		{
+			OutError = TEXT("UI playground popup widget blueprint is missing a WidgetTree.");
+			return false;
+		}
+
+		UCanvasPanel* RootCanvas = Cast<UCanvasPanel>(WidgetBlueprint.WidgetTree->RootWidget);
+		if (RootCanvas == nullptr)
+		{
+			RootCanvas = WidgetBlueprint.WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("RootCanvas"));
+			WidgetBlueprint.WidgetTree->RootWidget = RootCanvas;
+		}
+
+		if (RootCanvas == nullptr)
+		{
+			OutError = TEXT("Failed to create RootCanvas for WBP_InteractionUIPlaygroundPopup.");
+			return false;
+		}
+
+		EnsureWidgetGuid(WidgetBlueprint, *RootCanvas);
+		RootCanvas->bIsVariable = false;
+
+		UOverlay* ScreenRoot = EnsurePanelChild<UOverlay>(WidgetBlueprint, *RootCanvas, TEXT("Overlay_ScreenRoot"), false);
+		USizeBox* PopupFrame = EnsurePanelChild<USizeBox>(WidgetBlueprint, *ScreenRoot, TEXT("SizeBox_PopupFrame"), false);
+		if (!ScreenRoot || !PopupFrame)
+		{
+			OutError = TEXT("Failed to create screen root widgets for WBP_InteractionUIPlaygroundPopup.");
+			return false;
+		}
+
+		UBackgroundBlur* BackgroundBlurPanel = FindWidget<UBackgroundBlur>(WidgetBlueprint, TEXT("BackgroundBlur_Panel"));
+		if (BackgroundBlurPanel == nullptr)
+		{
+			BackgroundBlurPanel = WidgetBlueprint.WidgetTree->ConstructWidget<UBackgroundBlur>(UBackgroundBlur::StaticClass(), TEXT("BackgroundBlur_Panel"));
+		}
+
+		UBorder* TintPanel = FindWidget<UBorder>(WidgetBlueprint, TEXT("Border_TintPanel"));
+		if (TintPanel == nullptr)
+		{
+			TintPanel = WidgetBlueprint.WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Border_TintPanel"));
+		}
+
+		UVerticalBox* ContentColumn = FindWidget<UVerticalBox>(WidgetBlueprint, TEXT("VerticalBox_Content"));
+		if (ContentColumn == nullptr)
+		{
+			ContentColumn = WidgetBlueprint.WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("VerticalBox_Content"));
+		}
+
+		UHorizontalBox* TitleBar = FindWidget<UHorizontalBox>(WidgetBlueprint, TEXT("HorizontalBox_TitleBar"));
+		if (TitleBar == nullptr)
+		{
+			TitleBar = WidgetBlueprint.WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("HorizontalBox_TitleBar"));
+		}
+
+		UTextBlock* TitleText = FindWidget<UTextBlock>(WidgetBlueprint, TEXT("TXT_Title"));
+		if (TitleText == nullptr)
+		{
+			TitleText = WidgetBlueprint.WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TXT_Title"));
+		}
+
+		UHorizontalBox* TitleActions = FindWidget<UHorizontalBox>(WidgetBlueprint, TEXT("HorizontalBox_TitleActions"));
+		if (TitleActions == nullptr)
+		{
+			TitleActions = WidgetBlueprint.WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("HorizontalBox_TitleActions"));
+		}
+
+		UButton* ResetButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_Reset"));
+		if (ResetButton == nullptr)
+		{
+			ResetButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_Reset"));
+		}
+
+		UButton* SubmitButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_Submit"));
+		if (SubmitButton == nullptr)
+		{
+			SubmitButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_Submit"));
+		}
+
+		UButton* CloseButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_Close"));
+		if (CloseButton == nullptr)
+		{
+			CloseButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_Close"));
+		}
+
+		UHorizontalBox* BodyRow = FindWidget<UHorizontalBox>(WidgetBlueprint, TEXT("HorizontalBox_Body"));
+		if (BodyRow == nullptr)
+		{
+			BodyRow = WidgetBlueprint.WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("HorizontalBox_Body"));
+		}
+
+		UBorder* LeftNav = FindWidget<UBorder>(WidgetBlueprint, TEXT("Border_LeftNav"));
+		if (LeftNav == nullptr)
+		{
+			LeftNav = WidgetBlueprint.WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Border_LeftNav"));
+		}
+
+		UVerticalBox* NavButtons = FindWidget<UVerticalBox>(WidgetBlueprint, TEXT("VerticalBox_NavButtons"));
+		if (NavButtons == nullptr)
+		{
+			NavButtons = WidgetBlueprint.WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("VerticalBox_NavButtons"));
+		}
+
+		UButton* TabBasicButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_TabBasic"));
+		if (TabBasicButton == nullptr)
+		{
+			TabBasicButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_TabBasic"));
+		}
+
+		UButton* TabInputButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_TabInput"));
+		if (TabInputButton == nullptr)
+		{
+			TabInputButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_TabInput"));
+		}
+
+		UButton* TabCollectionButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_TabCollection"));
+		if (TabCollectionButton == nullptr)
+		{
+			TabCollectionButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_TabCollection"));
+		}
+
+		UButton* TabAdvancedButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_TabAdvanced"));
+		if (TabAdvancedButton == nullptr)
+		{
+			TabAdvancedButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_TabAdvanced"));
+		}
+
+		UBorder* MainContent = FindWidget<UBorder>(WidgetBlueprint, TEXT("Border_MainContent"));
+		if (MainContent == nullptr)
+		{
+			MainContent = WidgetBlueprint.WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Border_MainContent"));
+		}
+
+		UWidgetSwitcher* PageSwitcher = FindWidget<UWidgetSwitcher>(WidgetBlueprint, TEXT("Switcher_Sections"));
+		if (PageSwitcher == nullptr)
+		{
+			PageSwitcher = WidgetBlueprint.WidgetTree->ConstructWidget<UWidgetSwitcher>(UWidgetSwitcher::StaticClass(), TEXT("Switcher_Sections"));
+		}
+
+		UScrollBox* PageBasic = FindWidget<UScrollBox>(WidgetBlueprint, TEXT("ScrollBox_PageBasic"));
+		if (PageBasic == nullptr)
+		{
+			PageBasic = WidgetBlueprint.WidgetTree->ConstructWidget<UScrollBox>(UScrollBox::StaticClass(), TEXT("ScrollBox_PageBasic"));
+		}
+
+		UScrollBox* PageInput = FindWidget<UScrollBox>(WidgetBlueprint, TEXT("ScrollBox_PageInput"));
+		if (PageInput == nullptr)
+		{
+			PageInput = WidgetBlueprint.WidgetTree->ConstructWidget<UScrollBox>(UScrollBox::StaticClass(), TEXT("ScrollBox_PageInput"));
+		}
+
+		UScrollBox* PageCollection = FindWidget<UScrollBox>(WidgetBlueprint, TEXT("ScrollBox_PageCollection"));
+		if (PageCollection == nullptr)
+		{
+			PageCollection = WidgetBlueprint.WidgetTree->ConstructWidget<UScrollBox>(UScrollBox::StaticClass(), TEXT("ScrollBox_PageCollection"));
+		}
+
+		UScrollBox* PageAdvanced = FindWidget<UScrollBox>(WidgetBlueprint, TEXT("ScrollBox_PageAdvanced"));
+		if (PageAdvanced == nullptr)
+		{
+			PageAdvanced = WidgetBlueprint.WidgetTree->ConstructWidget<UScrollBox>(UScrollBox::StaticClass(), TEXT("ScrollBox_PageAdvanced"));
+		}
+
+		if (!BackgroundBlurPanel || !TintPanel || !ContentColumn || !TitleBar || !TitleText || !TitleActions || !ResetButton || !SubmitButton || !CloseButton
+			|| !BodyRow || !LeftNav || !NavButtons || !TabBasicButton || !TabInputButton || !TabCollectionButton || !TabAdvancedButton
+			|| !MainContent || !PageSwitcher || !PageBasic || !PageInput || !PageCollection || !PageAdvanced)
+		{
+			OutError = TEXT("Failed to construct one or more popup widgets for WBP_InteractionUIPlaygroundPopup.");
+			return false;
+		}
+
+		EnsureWidgetGuid(WidgetBlueprint, *BackgroundBlurPanel);
+		EnsureWidgetGuid(WidgetBlueprint, *TintPanel);
+		EnsureWidgetGuid(WidgetBlueprint, *ContentColumn);
+		EnsureWidgetGuid(WidgetBlueprint, *TitleBar);
+		EnsureWidgetGuid(WidgetBlueprint, *TitleText);
+		EnsureWidgetGuid(WidgetBlueprint, *TitleActions);
+		EnsureWidgetGuid(WidgetBlueprint, *ResetButton);
+		EnsureWidgetGuid(WidgetBlueprint, *SubmitButton);
+		EnsureWidgetGuid(WidgetBlueprint, *CloseButton);
+		EnsureWidgetGuid(WidgetBlueprint, *BodyRow);
+		EnsureWidgetGuid(WidgetBlueprint, *LeftNav);
+		EnsureWidgetGuid(WidgetBlueprint, *NavButtons);
+		EnsureWidgetGuid(WidgetBlueprint, *TabBasicButton);
+		EnsureWidgetGuid(WidgetBlueprint, *TabInputButton);
+		EnsureWidgetGuid(WidgetBlueprint, *TabCollectionButton);
+		EnsureWidgetGuid(WidgetBlueprint, *TabAdvancedButton);
+		EnsureWidgetGuid(WidgetBlueprint, *MainContent);
+		EnsureWidgetGuid(WidgetBlueprint, *PageSwitcher);
+		EnsureWidgetGuid(WidgetBlueprint, *PageBasic);
+		EnsureWidgetGuid(WidgetBlueprint, *PageInput);
+		EnsureWidgetGuid(WidgetBlueprint, *PageCollection);
+		EnsureWidgetGuid(WidgetBlueprint, *PageAdvanced);
+
+		BackgroundBlurPanel->bIsVariable = true;
+		TintPanel->bIsVariable = true;
+		ContentColumn->bIsVariable = true;
+		TitleBar->bIsVariable = true;
+		TitleText->bIsVariable = true;
+		TitleActions->bIsVariable = true;
+		ResetButton->bIsVariable = true;
+		SubmitButton->bIsVariable = true;
+		CloseButton->bIsVariable = true;
+		BodyRow->bIsVariable = true;
+		LeftNav->bIsVariable = true;
+		NavButtons->bIsVariable = true;
+		TabBasicButton->bIsVariable = true;
+		TabInputButton->bIsVariable = true;
+		TabCollectionButton->bIsVariable = true;
+		TabAdvancedButton->bIsVariable = true;
+		MainContent->bIsVariable = true;
+		PageSwitcher->bIsVariable = true;
+		PageBasic->bIsVariable = true;
+		PageInput->bIsVariable = true;
+		PageCollection->bIsVariable = true;
+		PageAdvanced->bIsVariable = true;
+
+		if (ScreenRoot->GetChildrenCount() != 1 || ScreenRoot->GetChildAt(0) != PopupFrame)
+		{
+			ScreenRoot->ClearChildren();
+			ScreenRoot->AddChild(PopupFrame);
+		}
+
+		if (PopupFrame->GetContent() != BackgroundBlurPanel)
+		{
+			PopupFrame->SetContent(BackgroundBlurPanel);
+		}
+
+		if (BackgroundBlurPanel->GetContent() != TintPanel)
+		{
+			BackgroundBlurPanel->SetContent(TintPanel);
+		}
+
+		if (TintPanel->GetContent() != ContentColumn)
+		{
+			TintPanel->SetContent(ContentColumn);
+		}
+
+		UBorder* StatusBar = FindWidget<UBorder>(WidgetBlueprint, TEXT("Border_StatusBar"));
+		if (StatusBar == nullptr)
+		{
+			StatusBar = WidgetBlueprint.WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Border_StatusBar"));
+			EnsureWidgetGuid(WidgetBlueprint, *StatusBar);
+		}
+		StatusBar->bIsVariable = true;
+		UTextBlock* StatusText = FindWidget<UTextBlock>(WidgetBlueprint, TEXT("TXT_Status"));
+		if (StatusText == nullptr)
+		{
+			StatusText = WidgetBlueprint.WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TXT_Status"));
+			EnsureWidgetGuid(WidgetBlueprint, *StatusText);
+		}
+		StatusText->bIsVariable = true;
+		StatusText->SetText(FText::FromString(TEXT("Ready")));
+		StatusText->SetColorAndOpacity(FSlateColor(FLinearColor(0.84f, 0.91f, 0.96f, 1.0f)));
+		ConfigureVerticalBoxSlot(*StatusText, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Left, VAlign_Center);
+
+		if (ContentColumn->GetChildrenCount() != 3
+			|| ContentColumn->GetChildAt(0) != TitleBar
+			|| ContentColumn->GetChildAt(1) != BodyRow
+			|| ContentColumn->GetChildAt(2) != StatusBar)
+		{
+			ContentColumn->ClearChildren();
+			ContentColumn->AddChildToVerticalBox(TitleBar);
+			ContentColumn->AddChildToVerticalBox(BodyRow);
+			ContentColumn->AddChildToVerticalBox(StatusBar);
+		}
+
+		if (TitleBar->GetChildrenCount() != 2 || TitleBar->GetChildAt(0) != TitleText || TitleBar->GetChildAt(1) != TitleActions)
+		{
+			TitleBar->ClearChildren();
+			TitleBar->AddChildToHorizontalBox(TitleText);
+			TitleBar->AddChildToHorizontalBox(TitleActions);
+		}
+
+		if (TitleActions->GetChildrenCount() != 3
+			|| TitleActions->GetChildAt(0) != ResetButton
+			|| TitleActions->GetChildAt(1) != SubmitButton
+			|| TitleActions->GetChildAt(2) != CloseButton)
+		{
+			TitleActions->ClearChildren();
+			TitleActions->AddChildToHorizontalBox(ResetButton);
+			TitleActions->AddChildToHorizontalBox(SubmitButton);
+			TitleActions->AddChildToHorizontalBox(CloseButton);
+		}
+
+		if (BodyRow->GetChildrenCount() != 2 || BodyRow->GetChildAt(0) != LeftNav || BodyRow->GetChildAt(1) != MainContent)
+		{
+			BodyRow->ClearChildren();
+			BodyRow->AddChildToHorizontalBox(LeftNav);
+			BodyRow->AddChildToHorizontalBox(MainContent);
+		}
+
+		if (LeftNav->GetContent() != NavButtons)
+		{
+			LeftNav->SetContent(NavButtons);
+		}
+
+		if (NavButtons->GetChildrenCount() != 4)
+		{
+			NavButtons->ClearChildren();
+			NavButtons->AddChildToVerticalBox(TabBasicButton);
+			NavButtons->AddChildToVerticalBox(TabInputButton);
+			NavButtons->AddChildToVerticalBox(TabCollectionButton);
+			NavButtons->AddChildToVerticalBox(TabAdvancedButton);
+		}
+
+		if (MainContent->GetContent() != PageSwitcher)
+		{
+			MainContent->SetContent(PageSwitcher);
+		}
+
+		if (PageSwitcher->GetChildrenCount() != 4)
+		{
+			PageSwitcher->ClearChildren();
+			PageSwitcher->AddChild(PageBasic);
+			PageSwitcher->AddChild(PageInput);
+			PageSwitcher->AddChild(PageCollection);
+			PageSwitcher->AddChild(PageAdvanced);
+		}
+
+		if (PageBasic->GetChildrenCount() == 0)
+		{
+			UVerticalBox* BasicContent = WidgetBlueprint.WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("VerticalBox_PageBasicContent"));
+			EnsureWidgetGuid(WidgetBlueprint, *BasicContent);
+			BasicContent->bIsVariable = true;
+			PageBasic->AddChild(BasicContent);
+		}
+
+		if (PageInput->GetChildrenCount() == 0)
+		{
+			UVerticalBox* InputContent = WidgetBlueprint.WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("VerticalBox_PageInputContent"));
+			EnsureWidgetGuid(WidgetBlueprint, *InputContent);
+			InputContent->bIsVariable = true;
+			PageInput->AddChild(InputContent);
+		}
+
+		if (PageCollection->GetChildrenCount() == 0)
+		{
+			UVerticalBox* CollectionContent = WidgetBlueprint.WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("VerticalBox_PageCollectionContent"));
+			EnsureWidgetGuid(WidgetBlueprint, *CollectionContent);
+			CollectionContent->bIsVariable = true;
+			PageCollection->AddChild(CollectionContent);
+		}
+
+		if (PageAdvanced->GetChildrenCount() == 0)
+		{
+			UVerticalBox* AdvancedContent = WidgetBlueprint.WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("VerticalBox_PageAdvancedContent"));
+			EnsureWidgetGuid(WidgetBlueprint, *AdvancedContent);
+			AdvancedContent->bIsVariable = true;
+			PageAdvanced->AddChild(AdvancedContent);
+		}
+
+		ConfigureCanvasAnchors(*ScreenRoot, FAnchors(0.0f, 0.0f, 1.0f, 1.0f), FMargin(0.0f), FVector2D::ZeroVector);
+		ConfigureOverlaySlot(*PopupFrame);
+
+		PopupFrame->SetWidthOverride(1160.0f);
+		PopupFrame->SetHeightOverride(980.0f);
+
+		BackgroundBlurPanel->SetBlurStrength(18.0f);
+		BackgroundBlurPanel->SetOverrideAutoRadiusCalculation(true);
+		BackgroundBlurPanel->SetBlurRadius(12);
+		BackgroundBlurPanel->SetApplyAlphaToBlur(true);
+		BackgroundBlurPanel->SetCornerRadius(FVector4(20.0f, 20.0f, 20.0f, 20.0f));
+
+		TintPanel->SetPadding(FMargin(24.0f, 30.0f, 24.0f, 24.0f));
+		TintPanel->SetBrush(MakeRoundedBrush(FLinearColor(0.13f, 0.18f, 0.24f, 0.96f), 20.0f, FLinearColor(1.0f, 1.0f, 1.0f, 0.08f), 1.0f));
+
+		TitleText->SetText(FText::FromString(TEXT("UI Playground")));
+		TitleText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+		{
+			FSlateFontInfo Font = TitleText->GetFont();
+			Font.Size = 22;
+			TitleText->SetFont(Font);
+		}
+
+		ConfigureButtonStyle(*ResetButton, FLinearColor(0.34f, 0.40f, 0.48f, 0.96f));
+		ConfigureButtonStyle(*SubmitButton, FLinearColor(0.30f, 0.56f, 0.78f, 0.96f));
+		ConfigureButtonStyle(*CloseButton, FLinearColor(0.68f, 0.36f, 0.22f, 0.96f));
+		ConfigureButtonStyle(*TabBasicButton, FLinearColor(0.28f, 0.46f, 0.62f, 0.96f));
+		ConfigureButtonStyle(*TabInputButton, FLinearColor(0.26f, 0.44f, 0.52f, 0.96f));
+		ConfigureButtonStyle(*TabCollectionButton, FLinearColor(0.30f, 0.50f, 0.44f, 0.96f));
+		ConfigureButtonStyle(*TabAdvancedButton, FLinearColor(0.38f, 0.42f, 0.60f, 0.96f));
+		EnsureButtonLabel(WidgetBlueprint, *ResetButton, TEXT("TXT_ResetLabel"), FText::FromString(TEXT("Reset")));
+		EnsureButtonLabel(WidgetBlueprint, *SubmitButton, TEXT("TXT_SubmitLabel"), FText::FromString(TEXT("Submit")));
+		EnsureButtonLabel(WidgetBlueprint, *CloseButton, TEXT("TXT_CloseLabel"), FText::FromString(TEXT("Close")));
+		EnsureButtonLabel(WidgetBlueprint, *TabBasicButton, TEXT("TXT_TabBasicLabel"), FText::FromString(TEXT("Basic")));
+		EnsureButtonLabel(WidgetBlueprint, *TabInputButton, TEXT("TXT_TabInputLabel"), FText::FromString(TEXT("Input")));
+		EnsureButtonLabel(WidgetBlueprint, *TabCollectionButton, TEXT("TXT_TabCollectionLabel"), FText::FromString(TEXT("Collection")));
+		EnsureButtonLabel(WidgetBlueprint, *TabAdvancedButton, TEXT("TXT_TabAdvancedLabel"), FText::FromString(TEXT("Advanced")));
+
+		ConfigureVerticalBoxSlot(*TitleBar, FMargin(0.0f, 0.0f, 0.0f, 22.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*BodyRow, FMargin(0.0f, 0.0f, 0.0f, 18.0f), ESlateSizeRule::Fill, HAlign_Fill, VAlign_Fill);
+
+		ConfigureHorizontalBoxSlot(*TitleText, FMargin(0.0f, 0.0f, 12.0f, 0.0f), ESlateSizeRule::Fill, HAlign_Left, VAlign_Center);
+		ConfigureHorizontalBoxSlot(*TitleActions, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Right, VAlign_Center);
+		ConfigureHorizontalBoxSlot(*ResetButton, FMargin(0.0f, 0.0f, 10.0f, 0.0f), ESlateSizeRule::Automatic, HAlign_Right, VAlign_Center);
+		ConfigureHorizontalBoxSlot(*SubmitButton, FMargin(0.0f, 0.0f, 10.0f, 0.0f), ESlateSizeRule::Automatic, HAlign_Right, VAlign_Center);
+		ConfigureHorizontalBoxSlot(*CloseButton, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Right, VAlign_Center);
+
+		ConfigureHorizontalBoxSlot(*LeftNav, FMargin(0.0f, 0.0f, 18.0f, 0.0f), ESlateSizeRule::Automatic, HAlign_Left, VAlign_Fill);
+		ConfigureHorizontalBoxSlot(*MainContent, FMargin(0.0f), ESlateSizeRule::Fill, HAlign_Fill, VAlign_Fill);
+		LeftNav->SetPadding(FMargin(0.0f, 14.0f, 0.0f, 10.0f));
+
+		ConfigureVerticalBoxSlot(*TabBasicButton, FMargin(0.0f, 0.0f, 0.0f, 8.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*TabInputButton, FMargin(0.0f, 0.0f, 0.0f, 8.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*TabCollectionButton, FMargin(0.0f, 0.0f, 0.0f, 8.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*TabAdvancedButton, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+
+		StatusBar->SetPadding(FMargin(18.0f, 12.0f, 18.0f, 12.0f));
+		StatusBar->SetBrush(MakeRoundedBrush(FLinearColor(0.18f, 0.23f, 0.30f, 0.96f), 14.0f, FLinearColor(1.0f, 1.0f, 1.0f, 0.06f), 1.0f));
+		StatusBar->SetContent(StatusText);
+
+		StatusText->SetColorAndOpacity(FSlateColor(FLinearColor(0.84f, 0.91f, 0.96f, 1.0f)));
+		ConfigureVerticalBoxSlot(*StatusText, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Left, VAlign_Center);
+
+		PageSwitcher->SetActiveWidgetIndex(static_cast<int32>(ECodexUIPlaygroundSection::Basic));
+
+		if (!ConfigureUIPlaygroundBasicPageWidget(WidgetBlueprint, FilledCircleTexture, OuterRingTexture, SmileIconTexture, OutError))
+		{
+			return false;
+		}
+
+		if (!ConfigureUIPlaygroundInputPageWidget(WidgetBlueprint, OutError))
+		{
+			return false;
+		}
+
+		if (!ConfigureUIPlaygroundCollectionPageWidget(WidgetBlueprint, ListEntryWidgetClass, TileEntryWidgetClass, OutError))
+		{
+			return false;
+		}
+
+		if (!ConfigureUIPlaygroundAdvancedPageWidget(WidgetBlueprint, TileEntryWidgetClass, OutError))
+		{
+			return false;
+		}
+
+		WidgetBlueprint.Modify();
+		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(&WidgetBlueprint);
+		CompileBlueprint(&WidgetBlueprint);
+		WidgetBlueprint.MarkPackageDirty();
+		return true;
+	}
+
 	bool ConfigureInteractableBlueprint(UBlueprint& Blueprint, UStaticMesh& StaticMesh, const FText& PromptText, FString& OutError)
 	{
 		CompileBlueprint(&Blueprint);
@@ -1747,6 +2920,94 @@ namespace
 		DefaultObject->SetLeftNumbers(LeftNumbers);
 		DefaultObject->SetRightNumbers(RightNumbers);
 		DefaultObject->SetAllowDuplicateNumbers(bAllowDuplicateNumbers);
+		DefaultObject->MarkPackageDirty();
+		Blueprint.MarkPackageDirty();
+		FBlueprintEditorUtils::MarkBlueprintAsModified(&Blueprint);
+		CompileBlueprint(&Blueprint);
+		return true;
+	}
+
+	bool ConfigureUIPlaygroundPopupInteractableBlueprint(
+		UBlueprint& Blueprint,
+		UStaticMesh& StaticMesh,
+		const FText& PromptText,
+		FString& OutError)
+	{
+		CompileBlueprint(&Blueprint);
+
+		ACodexPopupInteractableActor* DefaultObject = Blueprint.GeneratedClass ? Cast<ACodexPopupInteractableActor>(Blueprint.GeneratedClass->GetDefaultObject()) : nullptr;
+		if (DefaultObject == nullptr)
+		{
+			OutError = FString::Printf(TEXT("Failed to access UI playground popup default object for %s."), *Blueprint.GetName());
+			return false;
+		}
+
+		UStaticMeshComponent* StaticMeshComponent = DefaultObject->GetStaticMeshComponent();
+		UCodexInteractionComponent* InteractionComponent = DefaultObject->GetInteractionComponent();
+		if (StaticMeshComponent == nullptr || InteractionComponent == nullptr)
+		{
+			OutError = FString::Printf(TEXT("UI playground popup blueprint %s is missing required native components."), *Blueprint.GetName());
+			return false;
+		}
+
+		StaticMeshComponent->SetStaticMesh(&StaticMesh);
+		InteractionComponent->SetInteractionType(ECodexInteractionType::Use);
+		InteractionComponent->SetPromptText(PromptText);
+		InteractionComponent->SetVisibleDistance(360.0f);
+		InteractionComponent->SetInteractableDistance(160.0f);
+
+		DefaultObject->SetPopupTitle(FText::FromString(TEXT("UI Playground")));
+		DefaultObject->SetPopupMessage(FText::FromString(TEXT("Exercise UMG controls, reusable entries, and drag-and-drop samples.")));
+		DefaultObject->SetPopupButtonLayout(ECodexPopupButtonLayout::Ok);
+
+		if (FObjectPropertyBase* PayloadProperty = FindFProperty<FObjectPropertyBase>(DefaultObject->GetClass(), TEXT("UIPlaygroundPayload")))
+		{
+			UCodexInteractionUIPlaygroundPayload* Payload = NewObject<UCodexInteractionUIPlaygroundPayload>(
+				DefaultObject,
+				UCodexInteractionUIPlaygroundPayload::StaticClass(),
+				TEXT("UIPlaygroundPayload"),
+				RF_Public | RF_Transactional);
+			if (Payload != nullptr)
+			{
+				Payload->Title = FText::FromString(TEXT("UI Playground"));
+				Payload->StatusText = FText::FromString(TEXT("Click Primary, Secondary, or Ping to compare button behavior."));
+				Payload->InitialSection = ECodexUIPlaygroundSection::Basic;
+				Payload->BasicDescription = FText::FromString(TEXT("Start here: click Primary, Secondary, or Ping. The disabled button should stay inert while the status bar and progress bar react."));
+				Payload->InputText = FText::FromString(TEXT("Sample text"));
+				Payload->bToggleValue = true;
+				Payload->SliderValue = 0.65f;
+				Payload->SpinValue = 3;
+				Payload->SelectedPreset = TEXT("Preset B");
+				Payload->PresetOptions =
+				{
+					TEXT("Preset A"),
+					TEXT("Preset B"),
+					TEXT("Preset C")
+				};
+
+				Payload->ListEntries =
+				{
+					FCodexUIPlaygroundListEntryData{FText::FromString(TEXT("Buttons")), FText::FromString(TEXT("Primary, secondary, disabled, and ping button states.")), FText::FromString(TEXT("Clickable")), ECodexUIPlaygroundSection::Collection, FLinearColor(0.30f, 0.52f, 0.78f, 1.0f), true},
+					FCodexUIPlaygroundListEntryData{FText::FromString(TEXT("Text Input")), FText::FromString(TEXT("Single-line and multi-line text editing.")), FText::FromString(TEXT("Editable")), ECodexUIPlaygroundSection::Collection, FLinearColor(0.36f, 0.66f, 0.58f, 1.0f), true},
+					FCodexUIPlaygroundListEntryData{FText::FromString(TEXT("Checkbox")), FText::FromString(TEXT("Binary on/off state handling.")), FText::FromString(TEXT("Toggle")), ECodexUIPlaygroundSection::Collection, FLinearColor(0.32f, 0.55f, 0.40f, 1.0f), true},
+					FCodexUIPlaygroundListEntryData{FText::FromString(TEXT("Slider")), FText::FromString(TEXT("Continuous value changes with immediate feedback.")), FText::FromString(TEXT("Value")), ECodexUIPlaygroundSection::Collection, FLinearColor(0.44f, 0.52f, 0.78f, 1.0f), true},
+					FCodexUIPlaygroundListEntryData{FText::FromString(TEXT("Reusable Entries")), FText::FromString(TEXT("ListView items rendered by a reusable entry widget.")), FText::FromString(TEXT("Virtualized")), ECodexUIPlaygroundSection::Collection, FLinearColor(0.66f, 0.52f, 0.78f, 1.0f), true},
+					FCodexUIPlaygroundListEntryData{FText::FromString(TEXT("Selection State")), FText::FromString(TEXT("Selection highlight can be set, cleared, and restored.")), FText::FromString(TEXT("Selectable")), ECodexUIPlaygroundSection::Collection, FLinearColor(0.72f, 0.60f, 0.38f, 1.0f), true},
+					FCodexUIPlaygroundListEntryData{FText::FromString(TEXT("Scrolling")), FText::FromString(TEXT("Add rows until the list viewport starts scrolling.")), FText::FromString(TEXT("Overflow")), ECodexUIPlaygroundSection::Collection, FLinearColor(0.32f, 0.62f, 0.66f, 1.0f), true}
+				};
+
+				Payload->TileSlots =
+				{
+					FCodexUIPlaygroundTileSlotData{0, FText::FromString(TEXT("Slot 0")), 10, FLinearColor(0.44f, 0.70f, 0.96f, 1.0f), false, ECodexUIPlaygroundSection::Advanced},
+					FCodexUIPlaygroundTileSlotData{1, FText::FromString(TEXT("Slot 1")), 11, FLinearColor(0.54f, 0.72f, 0.90f, 1.0f), false, ECodexUIPlaygroundSection::Advanced},
+					FCodexUIPlaygroundTileSlotData{2, FText::FromString(TEXT("Slot 2")), 0, FLinearColor::White, true, ECodexUIPlaygroundSection::Advanced},
+					FCodexUIPlaygroundTileSlotData{3, FText::FromString(TEXT("Slot 3")), 12, FLinearColor(0.76f, 0.66f, 0.44f, 1.0f), false, ECodexUIPlaygroundSection::Advanced}
+				};
+
+				PayloadProperty->SetObjectPropertyValue_InContainer(DefaultObject, Payload);
+			}
+		}
+
 		DefaultObject->MarkPackageDirty();
 		Blueprint.MarkPackageDirty();
 		FBlueprintEditorUtils::MarkBlueprintAsModified(&Blueprint);
@@ -1905,6 +3166,7 @@ namespace
 		UBlueprint& WoodenSignBlueprint,
 		UBlueprint& WoodenSignScrollBlueprint,
 		UBlueprint& WoodenSignDualTileTransferBlueprint,
+		UBlueprint& WoodenSignUIPlaygroundBlueprint,
 		FString& OutError)
 	{
 		FString MapFilename;
@@ -1942,6 +3204,7 @@ namespace
 		const FVector WoodenSignLocation = PlacementOrigin + (Forward * 320.0f) - (Right * 72.0f);
 		const FVector WoodenSignScrollLocation = PlacementOrigin + (Forward * 360.0f) + (Right * 72.0f);
 		const FVector WoodenSignDualTileTransferLocation = PlacementOrigin + (Forward * 430.0f);
+		const FVector WoodenSignUIPlaygroundLocation = PlacementOrigin + (Forward * 520.0f) + (Right * 72.0f);
 		const FRotator PlacementRotation = FRotator::ZeroRotator;
 		bool bMapChanged = false;
 		bool bActorChanged = false;
@@ -1971,6 +3234,12 @@ namespace
 		bMapChanged |= bActorChanged;
 
 		if (SpawnOrUpdatePlacedActor(*ActorSubsystem, WoodenSignDualTileTransferBlueprint.GeneratedClass, InteractionPlacementLabelWoodenSignDualTileTransfer, WoodenSignDualTileTransferLocation, PlacementRotation, OutError, bActorChanged) == nullptr)
+		{
+			return false;
+		}
+		bMapChanged |= bActorChanged;
+
+		if (SpawnOrUpdatePlacedActor(*ActorSubsystem, WoodenSignUIPlaygroundBlueprint.GeneratedClass, InteractionPlacementLabelWoodenSignUIPlayground, WoodenSignUIPlaygroundLocation, PlacementRotation, OutError, bActorChanged) == nullptr)
 		{
 			return false;
 		}
@@ -2171,6 +3440,76 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 		SetGeneratedAssetVersion(*DualTileTransferPopupWidget, DualTileTransferPopupWidgetVersion);
 	}
 
+	UWidgetBlueprint* UIPlaygroundListEntryWidget = CreateWidgetBlueprint(
+		UIPath,
+		UIPlaygroundListEntryWidgetName,
+		LoadNativeClass<UUserWidget>(TEXT("CodexInteractionUIPlaygroundListEntryWidget")));
+	if (UIPlaygroundListEntryWidget == nullptr)
+	{
+		OutError = TEXT("Failed to create WBP_InteractionUIPlaygroundListEntry.");
+		return false;
+	}
+
+	if (!HasGeneratedAssetVersion(*UIPlaygroundListEntryWidget, UIPlaygroundListEntryWidgetVersion)
+		&& !ConfigureUIPlaygroundListEntryWidgetBlueprint(*UIPlaygroundListEntryWidget, OutError))
+	{
+		return false;
+	}
+
+	if (!HasGeneratedAssetVersion(*UIPlaygroundListEntryWidget, UIPlaygroundListEntryWidgetVersion))
+	{
+		SetGeneratedAssetVersion(*UIPlaygroundListEntryWidget, UIPlaygroundListEntryWidgetVersion);
+	}
+
+	UWidgetBlueprint* UIPlaygroundTileEntryWidget = CreateWidgetBlueprint(
+		UIPath,
+		UIPlaygroundTileEntryWidgetName,
+		LoadNativeClass<UUserWidget>(TEXT("CodexInteractionUIPlaygroundTileEntryWidget")));
+	if (UIPlaygroundTileEntryWidget == nullptr)
+	{
+		OutError = TEXT("Failed to create WBP_InteractionUIPlaygroundTileEntry.");
+		return false;
+	}
+
+	if (!HasGeneratedAssetVersion(*UIPlaygroundTileEntryWidget, UIPlaygroundTileEntryWidgetVersion)
+		&& !ConfigureUIPlaygroundTileEntryWidgetBlueprint(*UIPlaygroundTileEntryWidget, *TileRoundedGradientTexture, OutError))
+	{
+		return false;
+	}
+
+	if (!HasGeneratedAssetVersion(*UIPlaygroundTileEntryWidget, UIPlaygroundTileEntryWidgetVersion))
+	{
+		SetGeneratedAssetVersion(*UIPlaygroundTileEntryWidget, UIPlaygroundTileEntryWidgetVersion);
+	}
+
+	UWidgetBlueprint* UIPlaygroundPopupWidget = CreateWidgetBlueprint(
+		UIPath,
+		UIPlaygroundPopupWidgetName,
+		LoadNativeClass<UUserWidget>(TEXT("CodexInteractionUIPlaygroundPopupWidget")));
+	if (UIPlaygroundPopupWidget == nullptr)
+	{
+		OutError = TEXT("Failed to create WBP_InteractionUIPlaygroundPopup.");
+		return false;
+	}
+
+	if (!HasGeneratedAssetVersion(*UIPlaygroundPopupWidget, UIPlaygroundPopupWidgetVersion)
+		&& !ConfigureUIPlaygroundPopupWidgetBlueprint(
+			*UIPlaygroundPopupWidget,
+			UIPlaygroundListEntryWidget->GeneratedClass,
+			UIPlaygroundTileEntryWidget->GeneratedClass,
+			*FilledCircleTexture,
+			*OuterRingTexture,
+			*SmileIconTexture,
+			OutError))
+	{
+		return false;
+	}
+
+	if (!HasGeneratedAssetVersion(*UIPlaygroundPopupWidget, UIPlaygroundPopupWidgetVersion))
+	{
+		SetGeneratedAssetVersion(*UIPlaygroundPopupWidget, UIPlaygroundPopupWidgetVersion);
+	}
+
 	UStaticMesh* AppleMesh = LoadAsset<UStaticMesh>(AppleMeshObjectPath);
 	UStaticMesh* StrawberryMesh = LoadAsset<UStaticMesh>(StrawberryMeshObjectPath);
 	UStaticMesh* WoodenSignMesh = LoadAsset<UStaticMesh>(WoodenSignMeshObjectPath);
@@ -2188,11 +3527,16 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 		BlueprintsPath,
 		InteractableWoodenSignDualTileTransferPopupName,
 		ACodexDualTileTransferPopupInteractableActor::StaticClass());
+	UBlueprint* WoodenSignUIPlaygroundBlueprint = CreateBlueprint(
+		BlueprintsPath,
+		InteractableWoodenSignUIPlaygroundPopupName,
+		LoadNativeClass<ACodexPopupInteractableActor>(TEXT("CodexUIPlaygroundPopupInteractableActor")));
 	if (AppleBlueprint == nullptr
 		|| StrawberryBlueprint == nullptr
 		|| WoodenSignBlueprint == nullptr
 		|| WoodenSignScrollBlueprint == nullptr
-		|| WoodenSignDualTileTransferBlueprint == nullptr)
+		|| WoodenSignDualTileTransferBlueprint == nullptr
+		|| WoodenSignUIPlaygroundBlueprint == nullptr)
 	{
 		OutError = TEXT("Failed to create one or more interactable test blueprints.");
 		return false;
@@ -2241,6 +3585,7 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 	const FText ScrollPopupBodyText = FText::FromString(TEXT("Codex village notice.\n\nThis popup verifies a long scrolling message layout. The panel follows the existing popup style, but the soft tint is yellow instead of sky blue.\n\nThe popup should only close through the OK button. Space key close handling must be ignored for this popup, and the result should still flow through the interaction subsystem.\n\nMake sure long text keeps the layout stable and scrolls naturally."));
 	const FText DualTileTransferPromptText = FText::FromString(TEXT("\uC774\uB3D9\uD558\uAE30"));
 	const FText DualTileTransferTitleText = FText::FromString(TEXT("\uBC88\uD638 \uC774\uB3D9 \uD14C\uC2A4\uD2B8"));
+	const FText UIPlaygroundPromptText = FText::FromString(TEXT("UI Playground"));
 	TArray<int32> DualTileTransferLeftNumbers;
 	TArray<int32> DualTileTransferRightNumbers;
 	for (int32 Number = 1; Number <= 5; ++Number)
@@ -2330,6 +3675,21 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 		SetGeneratedAssetVersion(*WoodenSignDualTileTransferBlueprint, WoodenSignDualTileTransferPopupBlueprintVersion);
 	}
 
+	if (!HasGeneratedAssetVersion(*WoodenSignUIPlaygroundBlueprint, WoodenSignUIPlaygroundPopupBlueprintVersion)
+		&& !ConfigureUIPlaygroundPopupInteractableBlueprint(
+			*WoodenSignUIPlaygroundBlueprint,
+			*WoodenSignMesh,
+			UIPlaygroundPromptText,
+			OutError))
+	{
+		return false;
+	}
+
+	if (!HasGeneratedAssetVersion(*WoodenSignUIPlaygroundBlueprint, WoodenSignUIPlaygroundPopupBlueprintVersion))
+	{
+		SetGeneratedAssetVersion(*WoodenSignUIPlaygroundBlueprint, WoodenSignUIPlaygroundPopupBlueprintVersion);
+	}
+
 	SaveAssets(
 		{
 			InteractAction,
@@ -2345,11 +3705,15 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 			ScrollMessagePopupWidget,
 			DualTileTransferTileEntryWidget,
 			DualTileTransferPopupWidget,
+			UIPlaygroundListEntryWidget,
+			UIPlaygroundTileEntryWidget,
+			UIPlaygroundPopupWidget,
 			AppleBlueprint,
 			StrawberryBlueprint,
 			WoodenSignBlueprint,
 			WoodenSignScrollBlueprint,
-			WoodenSignDualTileTransferBlueprint
+			WoodenSignDualTileTransferBlueprint,
+			WoodenSignUIPlaygroundBlueprint
 		});
 
 	if (!PlaceInteractionTestActorsInMap(
@@ -2358,6 +3722,7 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 		*WoodenSignBlueprint,
 		*WoodenSignScrollBlueprint,
 		*WoodenSignDualTileTransferBlueprint,
+		*WoodenSignUIPlaygroundBlueprint,
 		OutError))
 	{
 		return false;
