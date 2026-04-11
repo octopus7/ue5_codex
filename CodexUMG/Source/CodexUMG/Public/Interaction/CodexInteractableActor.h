@@ -21,6 +21,7 @@ public:
 
 	virtual void HandleInteractionRequested_Implementation(const FCodexInteractionRequest& Request) override;
 	virtual void HandleInteractionEnded_Implementation(const FCodexInteractionRequest& Request) override;
+	virtual void HandleInteractionPopupResult_Implementation(const FCodexInteractionPopupResponse& Response) override;
 
 	UStaticMeshComponent* GetStaticMeshComponent() const { return StaticMeshComponent; }
 	UCodexInteractionComponent* GetInteractionComponent() const { return InteractionComponent; }
@@ -31,6 +32,9 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Codex|Interaction", meta = (DisplayName = "On Interaction Ended"))
 	void ReceiveInteractionEnded(const FCodexInteractionRequest& Request);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Codex|Interaction", meta = (DisplayName = "On Interaction Popup Result"))
+	void ReceiveInteractionPopupResult(const FCodexInteractionPopupResponse& Response);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Codex|Interaction")
 	TObjectPtr<USceneComponent> SceneRoot;

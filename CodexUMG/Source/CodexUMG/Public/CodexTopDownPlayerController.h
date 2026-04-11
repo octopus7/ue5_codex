@@ -21,9 +21,11 @@ private:
 	void BindTopDownMoveAction();
 	void BindTopDownFireAction();
 	void BindTopDownInteractAction();
+	void BindTopDownPopupCloseAction();
 	void HandleMoveInput(const FInputActionValue& InputValue);
 	void HandleFireInput(const FInputActionValue& InputValue);
 	void HandleInteractInput(const FInputActionValue& InputValue);
+	void HandlePopupCloseInput(const FInputActionValue& InputValue);
 
 	UPROPERTY(Transient)
 	bool bHasAppliedTopDownInputContext = false;
@@ -36,4 +38,7 @@ private:
 
 	UPROPERTY(Transient)
 	bool bHasBoundInteractAction = false;
+
+	UPROPERTY(Transient)
+	bool bHasBoundPopupCloseAction = false;
 };

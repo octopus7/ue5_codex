@@ -64,6 +64,11 @@ void ACodexInteractableActor::HandleInteractionEnded_Implementation(const FCodex
 	ReceiveInteractionEnded(Request);
 }
 
+void ACodexInteractableActor::HandleInteractionPopupResult_Implementation(const FCodexInteractionPopupResponse& Response)
+{
+	ReceiveInteractionPopupResult(Response);
+}
+
 void ACodexInteractableActor::ConsumeAndDestroy()
 {
 	Destroy();

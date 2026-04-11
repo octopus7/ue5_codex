@@ -23,4 +23,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Codex|Interaction")
 	void HandleInteractionEnded(const FCodexInteractionRequest& Request);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Codex|Interaction")
+	void HandleInteractionPopupResult(const FCodexInteractionPopupResponse& Response);
 };

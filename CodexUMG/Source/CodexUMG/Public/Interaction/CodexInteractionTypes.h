@@ -26,6 +26,22 @@ enum class ECodexInteractionWidgetState : uint8
 	Interactable
 };
 
+UENUM(BlueprintType)
+enum class ECodexPopupButtonLayout : uint8
+{
+	Ok,
+	YesNo
+};
+
+UENUM(BlueprintType)
+enum class ECodexPopupResult : uint8
+{
+	Ok,
+	Yes,
+	No,
+	Closed
+};
+
 USTRUCT(BlueprintType)
 struct CODEXUMG_API FCodexInteractionRequest
 {
@@ -45,4 +61,40 @@ struct CODEXUMG_API FCodexInteractionRequest
 
 	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
 	FText PromptText;
+};
+
+USTRUCT(BlueprintType)
+struct CODEXUMG_API FCodexInteractionPopupRequest
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
+	FGuid RequestId;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
+	FCodexInteractionRequest InteractionRequest;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
+	FText Title;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
+	FText Message;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
+	ECodexPopupButtonLayout ButtonLayout = ECodexPopupButtonLayout::Ok;
+};
+
+USTRUCT(BlueprintType)
+struct CODEXUMG_API FCodexInteractionPopupResponse
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
+	FGuid RequestId;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
+	FCodexInteractionRequest InteractionRequest;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Codex|Interaction")
+	ECodexPopupResult Result = ECodexPopupResult::Closed;
 };

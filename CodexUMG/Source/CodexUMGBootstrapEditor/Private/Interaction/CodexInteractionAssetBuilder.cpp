@@ -5,18 +5,27 @@
 #include "CodexTopDownInputConfigDataAsset.h"
 #include "Interaction/CodexInteractableActor.h"
 #include "Interaction/CodexInteractionAssetPaths.h"
+#include "Interaction/CodexInteractionMessagePopupWidget.h"
 #include "Interaction/CodexInteractionComponent.h"
 #include "Interaction/CodexInteractionIndicatorWidget.h"
+#include "Interaction/CodexPopupInteractableActor.h"
 #include "Interaction/CodexInteractionTypes.h"
 #include "AssetToolsModule.h"
 #include "Blueprint/WidgetTree.h"
+#include "Components/BackgroundBlur.h"
+#include "Components/Button.h"
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
 #include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"
+#include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
+#include "Components/VerticalBoxSlot.h"
 #include "Editor.h"
 #include "Engine/Blueprint.h"
 #include "Engine/StaticMesh.h"
@@ -26,6 +35,7 @@
 #include "Factories/Texture2dFactoryNew.h"
 #include "FileHelpers.h"
 #include "GameFramework/PlayerStart.h"
+#include "HAL/PlatformProcess.h"
 #include "InputAction.h"
 #include "InputCoreTypes.h"
 #include "InputEditorModule.h"
@@ -33,6 +43,9 @@
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Misc/PackageName.h"
+#include "Misc/Paths.h"
+#include "Styling/SlateBrush.h"
+#include "Styling/SlateTypes.h"
 #include "Subsystems/EditorActorSubsystem.h"
 #include "Subsystems/EditorAssetSubsystem.h"
 #include "WidgetBlueprint.h"
@@ -45,7 +58,36 @@ namespace
 	static const TCHAR* const BasicMapAssetPath = TEXT("/Game/Maps/BasicMap");
 	static const TCHAR* const InteractionPlacementLabelApple = TEXT("InteractionTest_Apple");
 	static const TCHAR* const InteractionPlacementLabelStrawberry = TEXT("InteractionTest_Strawberry");
+	static const TCHAR* const InteractionPlacementLabelWoodenSign = TEXT("InteractionTest_WoodenSignPopup");
 	static const FName InteractionPlacementTag = TEXT("CodexInteractionTestPlacement");
+
+	FString EscapePowerShellSingleQuotedString(const FString& Value)
+	{
+		FString Escaped(Value);
+		Escaped.ReplaceInline(TEXT("'"), TEXT("''"));
+		return Escaped;
+	}
+
+	bool IsCurrentProjectEditorRunning()
+	{
+		const FString ProjectFilePath = FPaths::ConvertRelativePathToFull(FPaths::GetProjectFilePath());
+		const FString EscapedProjectFilePath = EscapePowerShellSingleQuotedString(ProjectFilePath);
+		const FString PowerShellScript = FString::Printf(
+			TEXT("$p = Get-CimInstance Win32_Process -Filter \"Name = 'UnrealEditor.exe'\" | Where-Object { $_.CommandLine -and $_.CommandLine -match [regex]::Escape('%s') } | Select-Object -First 1; if ($p) { Write-Output 'RUNNING' }"),
+			*EscapedProjectFilePath);
+
+		FString StdOut;
+		FString StdErr;
+		int32 ReturnCode = 0;
+		FPlatformProcess::ExecProcess(
+			TEXT("powershell.exe"),
+			*FString::Printf(TEXT("-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"%s\""), *PowerShellScript.ReplaceCharWithEscapedChar()),
+			&ReturnCode,
+			&StdOut,
+			&StdErr);
+
+		return ReturnCode == 0 && StdOut.Contains(TEXT("RUNNING"));
+	}
 
 	template <typename AssetType>
 	AssetType* LoadAsset(const FString& AssetPath)
@@ -155,6 +197,14 @@ namespace
 		InteractAction.MarkPackageDirty();
 	}
 
+	void ConfigurePopupCloseAction(UInputAction& PopupCloseAction)
+	{
+		PopupCloseAction.ValueType = EInputActionValueType::Boolean;
+		PopupCloseAction.Modifiers.Reset();
+		PopupCloseAction.Triggers.Reset();
+		PopupCloseAction.MarkPackageDirty();
+	}
+
 	void ConfigureInteractMappings(UInputMappingContext& MappingContext, UInputAction& InteractAction)
 	{
 		MappingContext.UnmapAllKeysFromAction(&InteractAction);
@@ -164,7 +214,20 @@ namespace
 		MappingContext.MarkPackageDirty();
 	}
 
-	void ConfigureInputConfig(UCodexTopDownInputConfigDataAsset& InputConfig, UInputMappingContext& MappingContext, UInputAction& InteractAction)
+	void ConfigurePopupCloseMappings(UInputMappingContext& MappingContext, UInputAction& PopupCloseAction)
+	{
+		MappingContext.UnmapAllKeysFromAction(&PopupCloseAction);
+
+		FEnhancedActionKeyMapping& SpaceKeyMapping = MappingContext.MapKey(&PopupCloseAction, EKeys::SpaceBar);
+		SpaceKeyMapping.Modifiers.Reset();
+		MappingContext.MarkPackageDirty();
+	}
+
+	void ConfigureInputConfig(
+		UCodexTopDownInputConfigDataAsset& InputConfig,
+		UInputMappingContext& MappingContext,
+		UInputAction& InteractAction,
+		UInputAction& PopupCloseAction)
 	{
 		if (InputConfig.DefaultMappingContext == nullptr)
 		{
@@ -172,6 +235,7 @@ namespace
 		}
 
 		InputConfig.InteractAction = &InteractAction;
+		InputConfig.PopupCloseAction = &PopupCloseAction;
 		InputConfig.MarkPackageDirty();
 	}
 
@@ -273,6 +337,98 @@ namespace
 		}
 	}
 
+	void ConfigureCanvasAnchors(UWidget& Widget, const FAnchors& Anchors, const FMargin& Offsets, const FVector2D& Alignment)
+	{
+		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Widget.Slot))
+		{
+			CanvasSlot->SetAnchors(Anchors);
+			CanvasSlot->SetOffsets(Offsets);
+			CanvasSlot->SetAlignment(Alignment);
+		}
+	}
+
+	void ConfigureHorizontalBoxSlot(
+		UWidget& Widget,
+		const FMargin& Padding,
+		const ESlateSizeRule::Type SizeRule,
+		const EHorizontalAlignment HorizontalAlignment,
+		const EVerticalAlignment VerticalAlignment)
+	{
+		if (UHorizontalBoxSlot* HorizontalBoxSlot = Cast<UHorizontalBoxSlot>(Widget.Slot))
+		{
+			HorizontalBoxSlot->SetPadding(Padding);
+			HorizontalBoxSlot->SetHorizontalAlignment(HorizontalAlignment);
+			HorizontalBoxSlot->SetVerticalAlignment(VerticalAlignment);
+			HorizontalBoxSlot->SetSize(FSlateChildSize(SizeRule));
+		}
+	}
+
+	void ConfigureVerticalBoxSlot(
+		UWidget& Widget,
+		const FMargin& Padding,
+		const ESlateSizeRule::Type SizeRule,
+		const EHorizontalAlignment HorizontalAlignment,
+		const EVerticalAlignment VerticalAlignment)
+	{
+		if (UVerticalBoxSlot* VerticalBoxSlot = Cast<UVerticalBoxSlot>(Widget.Slot))
+		{
+			VerticalBoxSlot->SetPadding(Padding);
+			VerticalBoxSlot->SetHorizontalAlignment(HorizontalAlignment);
+			VerticalBoxSlot->SetVerticalAlignment(VerticalAlignment);
+			VerticalBoxSlot->SetSize(FSlateChildSize(SizeRule));
+		}
+	}
+
+	FSlateBrush MakeRoundedBrush(const FLinearColor& FillColor, const float Radius, const FLinearColor& OutlineColor = FLinearColor::Transparent, const float OutlineWidth = 0.0f)
+	{
+		FSlateBrush Brush;
+		Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
+		Brush.TintColor = FSlateColor(FillColor);
+		Brush.OutlineSettings = FSlateBrushOutlineSettings(Radius, FSlateColor(OutlineColor), OutlineWidth);
+		return Brush;
+	}
+
+	UTextBlock* EnsureButtonLabel(UWidgetBlueprint& WidgetBlueprint, UButton& Button, const FName WidgetName, const FText& LabelText)
+	{
+		UTextBlock* Label = FindWidget<UTextBlock>(WidgetBlueprint, WidgetName);
+		if (Label == nullptr && WidgetBlueprint.WidgetTree != nullptr)
+		{
+			Label = WidgetBlueprint.WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), WidgetName);
+		}
+
+		if (Label == nullptr)
+		{
+			return nullptr;
+		}
+
+		EnsureWidgetGuid(WidgetBlueprint, *Label);
+		Label->bIsVariable = false;
+		Label->SetText(LabelText);
+		Label->SetJustification(ETextJustify::Center);
+		Label->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+
+		if (Button.GetContent() != Label)
+		{
+			Button.SetContent(Label);
+		}
+
+		return Label;
+	}
+
+	void ConfigureButtonStyle(UButton& Button, const FLinearColor& BaseColor)
+	{
+		FButtonStyle Style = Button.GetStyle();
+		Style.SetNormal(MakeRoundedBrush(BaseColor, 12.0f, FLinearColor(1.0f, 1.0f, 1.0f, 0.15f), 1.0f));
+		Style.SetHovered(MakeRoundedBrush(BaseColor * 1.12f, 12.0f, FLinearColor(1.0f, 1.0f, 1.0f, 0.22f), 1.0f));
+		Style.SetPressed(MakeRoundedBrush(BaseColor * 0.88f, 12.0f, FLinearColor(1.0f, 1.0f, 1.0f, 0.22f), 1.0f));
+		Style.SetDisabled(MakeRoundedBrush(BaseColor * 0.5f, 12.0f, FLinearColor(1.0f, 1.0f, 1.0f, 0.12f), 1.0f));
+		Style.SetNormalPadding(FMargin(14.0f, 8.0f));
+		Style.SetPressedPadding(FMargin(14.0f, 8.0f, 14.0f, 6.0f));
+		Button.SetStyle(Style);
+		Button.SetBackgroundColor(FLinearColor::White);
+		Button.SetColorAndOpacity(FLinearColor::White);
+	}
+
 	bool ConfigureInteractionWidgetBlueprint(UWidgetBlueprint& WidgetBlueprint, UTexture2D& FilledCircleTexture, UTexture2D& OuterRingTexture, FString& OutError)
 	{
 		if (WidgetBlueprint.WidgetTree == nullptr)
@@ -358,6 +514,229 @@ namespace
 		return true;
 	}
 
+	bool ConfigureMessagePopupWidgetBlueprint(UWidgetBlueprint& WidgetBlueprint, FString& OutError)
+	{
+		if (WidgetBlueprint.WidgetTree == nullptr)
+		{
+			OutError = TEXT("Message popup widget blueprint is missing a WidgetTree.");
+			return false;
+		}
+
+		UCanvasPanel* RootCanvas = Cast<UCanvasPanel>(WidgetBlueprint.WidgetTree->RootWidget);
+		if (RootCanvas == nullptr)
+		{
+			RootCanvas = WidgetBlueprint.WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("RootCanvas"));
+			WidgetBlueprint.WidgetTree->RootWidget = RootCanvas;
+		}
+
+		if (RootCanvas == nullptr)
+		{
+			OutError = TEXT("Failed to create RootCanvas for WBP_InteractionMessagePopup.");
+			return false;
+		}
+
+		EnsureWidgetGuid(WidgetBlueprint, *RootCanvas);
+		RootCanvas->bIsVariable = false;
+
+		UOverlay* ScreenRoot = EnsurePanelChild<UOverlay>(WidgetBlueprint, *RootCanvas, TEXT("Overlay_ScreenRoot"), false);
+		USizeBox* PopupFrame = EnsurePanelChild<USizeBox>(WidgetBlueprint, *ScreenRoot, TEXT("SizeBox_PopupFrame"), false);
+		if (!ScreenRoot || !PopupFrame)
+		{
+			OutError = TEXT("Failed to create screen root widgets for WBP_InteractionMessagePopup.");
+			return false;
+		}
+
+		UBackgroundBlur* BackgroundBlurPanel = FindWidget<UBackgroundBlur>(WidgetBlueprint, TEXT("BackgroundBlur_Panel"));
+		if (BackgroundBlurPanel == nullptr)
+		{
+			BackgroundBlurPanel = WidgetBlueprint.WidgetTree->ConstructWidget<UBackgroundBlur>(UBackgroundBlur::StaticClass(), TEXT("BackgroundBlur_Panel"));
+		}
+
+		UBorder* SkyTintPanel = FindWidget<UBorder>(WidgetBlueprint, TEXT("Border_SkyTintPanel"));
+		if (SkyTintPanel == nullptr)
+		{
+			SkyTintPanel = WidgetBlueprint.WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Border_SkyTintPanel"));
+		}
+
+		UVerticalBox* ContentColumn = FindWidget<UVerticalBox>(WidgetBlueprint, TEXT("VerticalBox_Content"));
+		if (ContentColumn == nullptr)
+		{
+			ContentColumn = WidgetBlueprint.WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("VerticalBox_Content"));
+		}
+
+		UHorizontalBox* TitleBar = FindWidget<UHorizontalBox>(WidgetBlueprint, TEXT("HorizontalBox_TitleBar"));
+		if (TitleBar == nullptr)
+		{
+			TitleBar = WidgetBlueprint.WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("HorizontalBox_TitleBar"));
+		}
+
+		UTextBlock* TitleText = FindWidget<UTextBlock>(WidgetBlueprint, TEXT("TXT_Title"));
+		if (TitleText == nullptr)
+		{
+			TitleText = WidgetBlueprint.WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TXT_Title"));
+		}
+
+		UButton* CloseButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_Close"));
+		if (CloseButton == nullptr)
+		{
+			CloseButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_Close"));
+		}
+
+		UTextBlock* MessageText = FindWidget<UTextBlock>(WidgetBlueprint, TEXT("TXT_Message"));
+		if (MessageText == nullptr)
+		{
+			MessageText = WidgetBlueprint.WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TXT_Message"));
+		}
+
+		UHorizontalBox* ActionButtons = FindWidget<UHorizontalBox>(WidgetBlueprint, TEXT("HB_ActionButtons"));
+		if (ActionButtons == nullptr)
+		{
+			ActionButtons = WidgetBlueprint.WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("HB_ActionButtons"));
+		}
+
+		UButton* OkButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_Ok"));
+		if (OkButton == nullptr)
+		{
+			OkButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_Ok"));
+		}
+
+		UButton* YesButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_Yes"));
+		if (YesButton == nullptr)
+		{
+			YesButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_Yes"));
+		}
+
+		UButton* NoButton = FindWidget<UButton>(WidgetBlueprint, TEXT("BTN_No"));
+		if (NoButton == nullptr)
+		{
+			NoButton = WidgetBlueprint.WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("BTN_No"));
+		}
+
+		if (!BackgroundBlurPanel || !SkyTintPanel || !ContentColumn || !TitleBar || !TitleText || !CloseButton || !MessageText || !ActionButtons || !OkButton || !YesButton || !NoButton)
+		{
+			OutError = TEXT("Failed to construct one or more popup widgets for WBP_InteractionMessagePopup.");
+			return false;
+		}
+
+		EnsureWidgetGuid(WidgetBlueprint, *BackgroundBlurPanel);
+		EnsureWidgetGuid(WidgetBlueprint, *SkyTintPanel);
+		EnsureWidgetGuid(WidgetBlueprint, *ContentColumn);
+		EnsureWidgetGuid(WidgetBlueprint, *TitleBar);
+		EnsureWidgetGuid(WidgetBlueprint, *TitleText);
+		EnsureWidgetGuid(WidgetBlueprint, *CloseButton);
+		EnsureWidgetGuid(WidgetBlueprint, *MessageText);
+		EnsureWidgetGuid(WidgetBlueprint, *ActionButtons);
+		EnsureWidgetGuid(WidgetBlueprint, *OkButton);
+		EnsureWidgetGuid(WidgetBlueprint, *YesButton);
+		EnsureWidgetGuid(WidgetBlueprint, *NoButton);
+
+		BackgroundBlurPanel->bIsVariable = false;
+		SkyTintPanel->bIsVariable = false;
+		ContentColumn->bIsVariable = false;
+		TitleBar->bIsVariable = false;
+		TitleText->bIsVariable = true;
+		CloseButton->bIsVariable = true;
+		MessageText->bIsVariable = true;
+		ActionButtons->bIsVariable = true;
+		OkButton->bIsVariable = true;
+		YesButton->bIsVariable = true;
+		NoButton->bIsVariable = true;
+
+		if (PopupFrame->GetContent() != BackgroundBlurPanel)
+		{
+			PopupFrame->SetContent(BackgroundBlurPanel);
+		}
+
+		if (BackgroundBlurPanel->GetContent() != SkyTintPanel)
+		{
+			BackgroundBlurPanel->SetContent(SkyTintPanel);
+		}
+
+		if (SkyTintPanel->GetContent() != ContentColumn)
+		{
+			SkyTintPanel->SetContent(ContentColumn);
+		}
+
+		if (TitleBar->GetChildrenCount() != 2 || TitleBar->GetChildAt(0) != TitleText || TitleBar->GetChildAt(1) != CloseButton)
+		{
+			TitleBar->ClearChildren();
+			TitleBar->AddChildToHorizontalBox(TitleText);
+			TitleBar->AddChildToHorizontalBox(CloseButton);
+		}
+
+		if (ActionButtons->GetChildrenCount() != 3
+			|| ActionButtons->GetChildAt(0) != OkButton
+			|| ActionButtons->GetChildAt(1) != YesButton
+			|| ActionButtons->GetChildAt(2) != NoButton)
+		{
+			ActionButtons->ClearChildren();
+			ActionButtons->AddChildToHorizontalBox(OkButton);
+			ActionButtons->AddChildToHorizontalBox(YesButton);
+			ActionButtons->AddChildToHorizontalBox(NoButton);
+		}
+
+		if (ContentColumn->GetChildrenCount() != 3
+			|| ContentColumn->GetChildAt(0) != TitleBar
+			|| ContentColumn->GetChildAt(1) != MessageText
+			|| ContentColumn->GetChildAt(2) != ActionButtons)
+		{
+			ContentColumn->ClearChildren();
+			ContentColumn->AddChildToVerticalBox(TitleBar);
+			ContentColumn->AddChildToVerticalBox(MessageText);
+			ContentColumn->AddChildToVerticalBox(ActionButtons);
+		}
+
+		ConfigureCanvasAnchors(*ScreenRoot, FAnchors(0.0f, 0.0f, 1.0f, 1.0f), FMargin(0.0f), FVector2D::ZeroVector);
+		ConfigureOverlaySlot(*PopupFrame);
+
+		PopupFrame->SetWidthOverride(520.0f);
+		PopupFrame->SetMinDesiredHeight(240.0f);
+
+		BackgroundBlurPanel->SetBlurStrength(18.0f);
+		BackgroundBlurPanel->SetOverrideAutoRadiusCalculation(true);
+		BackgroundBlurPanel->SetBlurRadius(12);
+		BackgroundBlurPanel->SetApplyAlphaToBlur(true);
+		BackgroundBlurPanel->SetCornerRadius(FVector4(20.0f, 20.0f, 20.0f, 20.0f));
+
+		SkyTintPanel->SetPadding(FMargin(24.0f, 20.0f));
+		SkyTintPanel->SetBrush(MakeRoundedBrush(FLinearColor(0.49f, 0.72f, 0.95f, 0.18f), 20.0f, FLinearColor(1.0f, 1.0f, 1.0f, 0.08f), 1.0f));
+
+		TitleText->SetText(FText::FromString(TEXT("Notice")));
+		TitleText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+
+		CloseButton->SetToolTipText(FText::FromString(TEXT("Close")));
+		ConfigureButtonStyle(*CloseButton, FLinearColor(0.22f, 0.42f, 0.60f, 0.96f));
+		EnsureButtonLabel(WidgetBlueprint, *CloseButton, TEXT("TXT_CloseLabel"), FText::FromString(TEXT("X")));
+
+		MessageText->SetText(FText::FromString(TEXT("This sign has no message.")));
+		MessageText->SetAutoWrapText(true);
+		MessageText->SetJustification(ETextJustify::Left);
+		MessageText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+
+		ConfigureButtonStyle(*OkButton, FLinearColor(0.24f, 0.52f, 0.74f, 0.96f));
+		ConfigureButtonStyle(*YesButton, FLinearColor(0.24f, 0.52f, 0.74f, 0.96f));
+		ConfigureButtonStyle(*NoButton, FLinearColor(0.15f, 0.27f, 0.40f, 0.96f));
+		EnsureButtonLabel(WidgetBlueprint, *OkButton, TEXT("TXT_OkLabel"), FText::FromString(TEXT("OK")));
+		EnsureButtonLabel(WidgetBlueprint, *YesButton, TEXT("TXT_YesLabel"), FText::FromString(TEXT("Yes")));
+		EnsureButtonLabel(WidgetBlueprint, *NoButton, TEXT("TXT_NoLabel"), FText::FromString(TEXT("No")));
+
+		ConfigureVerticalBoxSlot(*TitleBar, FMargin(0.0f, 0.0f, 0.0f, 18.0f), ESlateSizeRule::Automatic, HAlign_Fill, VAlign_Center);
+		ConfigureVerticalBoxSlot(*MessageText, FMargin(0.0f, 0.0f, 0.0f, 20.0f), ESlateSizeRule::Fill, HAlign_Fill, VAlign_Fill);
+		ConfigureVerticalBoxSlot(*ActionButtons, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Right, VAlign_Bottom);
+
+		ConfigureHorizontalBoxSlot(*TitleText, FMargin(0.0f, 0.0f, 12.0f, 0.0f), ESlateSizeRule::Fill, HAlign_Left, VAlign_Center);
+		ConfigureHorizontalBoxSlot(*CloseButton, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Right, VAlign_Center);
+		ConfigureHorizontalBoxSlot(*OkButton, FMargin(0.0f, 0.0f, 10.0f, 0.0f), ESlateSizeRule::Automatic, HAlign_Right, VAlign_Center);
+		ConfigureHorizontalBoxSlot(*YesButton, FMargin(0.0f, 0.0f, 10.0f, 0.0f), ESlateSizeRule::Automatic, HAlign_Right, VAlign_Center);
+		ConfigureHorizontalBoxSlot(*NoButton, FMargin(0.0f), ESlateSizeRule::Automatic, HAlign_Right, VAlign_Center);
+
+		WidgetBlueprint.Modify();
+		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(&WidgetBlueprint);
+		CompileBlueprint(&WidgetBlueprint);
+		WidgetBlueprint.MarkPackageDirty();
+		return true;
+	}
+
 	bool ConfigureInteractableBlueprint(UBlueprint& Blueprint, UStaticMesh& StaticMesh, const FText& PromptText, FString& OutError)
 	{
 		CompileBlueprint(&Blueprint);
@@ -382,6 +761,47 @@ namespace
 		InteractionComponent->SetPromptText(PromptText);
 		InteractionComponent->SetVisibleDistance(300.0f);
 		InteractionComponent->SetInteractableDistance(120.0f);
+		DefaultObject->MarkPackageDirty();
+		Blueprint.MarkPackageDirty();
+		FBlueprintEditorUtils::MarkBlueprintAsModified(&Blueprint);
+		CompileBlueprint(&Blueprint);
+		return true;
+	}
+
+	bool ConfigurePopupInteractableBlueprint(
+		UBlueprint& Blueprint,
+		UStaticMesh& StaticMesh,
+		const FText& PromptText,
+		const FText& PopupTitle,
+		const FText& PopupMessage,
+		const ECodexPopupButtonLayout ButtonLayout,
+		FString& OutError)
+	{
+		CompileBlueprint(&Blueprint);
+
+		ACodexPopupInteractableActor* DefaultObject = Blueprint.GeneratedClass ? Cast<ACodexPopupInteractableActor>(Blueprint.GeneratedClass->GetDefaultObject()) : nullptr;
+		if (DefaultObject == nullptr)
+		{
+			OutError = FString::Printf(TEXT("Failed to access popup interactable default object for %s."), *Blueprint.GetName());
+			return false;
+		}
+
+		UStaticMeshComponent* StaticMeshComponent = DefaultObject->GetStaticMeshComponent();
+		UCodexInteractionComponent* InteractionComponent = DefaultObject->GetInteractionComponent();
+		if (StaticMeshComponent == nullptr || InteractionComponent == nullptr)
+		{
+			OutError = FString::Printf(TEXT("Popup blueprint %s is missing required native components."), *Blueprint.GetName());
+			return false;
+		}
+
+		StaticMeshComponent->SetStaticMesh(&StaticMesh);
+		InteractionComponent->SetInteractionType(ECodexInteractionType::Use);
+		InteractionComponent->SetPromptText(PromptText);
+		InteractionComponent->SetVisibleDistance(320.0f);
+		InteractionComponent->SetInteractableDistance(140.0f);
+		DefaultObject->SetPopupTitle(PopupTitle);
+		DefaultObject->SetPopupMessage(PopupMessage);
+		DefaultObject->SetPopupButtonLayout(ButtonLayout);
 		DefaultObject->MarkPackageDirty();
 		Blueprint.MarkPackageDirty();
 		FBlueprintEditorUtils::MarkBlueprintAsModified(&Blueprint);
@@ -493,7 +913,7 @@ namespace
 		return Actor;
 	}
 
-	bool PlaceInteractionTestActorsInMap(UBlueprint& AppleBlueprint, UBlueprint& StrawberryBlueprint, FString& OutError)
+	bool PlaceInteractionTestActorsInMap(UBlueprint& AppleBlueprint, UBlueprint& StrawberryBlueprint, UBlueprint& WoodenSignBlueprint, FString& OutError)
 	{
 		FString MapFilename;
 		if (!FPackageName::TryConvertLongPackageNameToFilename(BasicMapAssetPath, MapFilename, FPackageName::GetMapPackageExtension()))
@@ -527,6 +947,7 @@ namespace
 
 		const FVector AppleLocation = PlacementOrigin + (Forward * 180.0f) - (Right * 48.0f);
 		const FVector StrawberryLocation = PlacementOrigin + (Forward * 240.0f) + (Right * 48.0f);
+		const FVector WoodenSignLocation = PlacementOrigin + (Forward * 320.0f);
 		const FRotator PlacementRotation = FRotator::ZeroRotator;
 
 		if (SpawnOrUpdatePlacedActor(*ActorSubsystem, AppleBlueprint.GeneratedClass, InteractionPlacementLabelApple, AppleLocation, PlacementRotation, OutError) == nullptr)
@@ -535,6 +956,11 @@ namespace
 		}
 
 		if (SpawnOrUpdatePlacedActor(*ActorSubsystem, StrawberryBlueprint.GeneratedClass, InteractionPlacementLabelStrawberry, StrawberryLocation, PlacementRotation, OutError) == nullptr)
+		{
+			return false;
+		}
+
+		if (SpawnOrUpdatePlacedActor(*ActorSubsystem, WoodenSignBlueprint.GeneratedClass, InteractionPlacementLabelWoodenSign, WoodenSignLocation, PlacementRotation, OutError) == nullptr)
 		{
 			return false;
 		}
@@ -558,6 +984,12 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 		return false;
 	}
 
+	if (IsCurrentProjectEditorRunning())
+	{
+		OutError = TEXT("An Unreal Editor session for this project is running. Stop the editor and rerun the interaction asset build.");
+		return false;
+	}
+
 	EnsureDirectory(UIPath);
 	EnsureDirectory(InputActionsPath);
 	EnsureDirectory(InputContextsPath);
@@ -569,19 +1001,22 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 	InputActionFactory->bEditAfterNew = false;
 
 	UInputAction* InteractAction = CreateAsset<UInputAction>(InputActionsPath, InteractActionName, InputActionFactory);
+	UInputAction* PopupCloseAction = CreateAsset<UInputAction>(InputActionsPath, PopupCloseActionName, InputActionFactory);
 
 	UInputMappingContext* MappingContext = LoadAsset<UInputMappingContext>(MappingContextObjectPath);
 	UCodexTopDownInputConfigDataAsset* InputConfig = LoadAsset<UCodexTopDownInputConfigDataAsset>(InputConfigObjectPath);
 
-	if (InteractAction == nullptr || MappingContext == nullptr || InputConfig == nullptr)
+	if (InteractAction == nullptr || PopupCloseAction == nullptr || MappingContext == nullptr || InputConfig == nullptr)
 	{
 		OutError = TEXT("Top-down input assets are missing. Run the base bootstrap before building interaction assets.");
 		return false;
 	}
 
 	ConfigureInteractAction(*InteractAction);
+	ConfigurePopupCloseAction(*PopupCloseAction);
 	ConfigureInteractMappings(*MappingContext, *InteractAction);
-	ConfigureInputConfig(*InputConfig, *MappingContext, *InteractAction);
+	ConfigurePopupCloseMappings(*MappingContext, *PopupCloseAction);
+	ConfigureInputConfig(*InputConfig, *MappingContext, *InteractAction, *PopupCloseAction);
 
 	UTexture2DFactoryNew* TextureFactory = NewObject<UTexture2DFactoryNew>();
 	TextureFactory->bEditAfterNew = false;
@@ -611,17 +1046,31 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 		return false;
 	}
 
+	UWidgetBlueprint* MessagePopupWidget = CreateWidgetBlueprint(UIPath, MessagePopupWidgetName, UCodexInteractionMessagePopupWidget::StaticClass());
+	if (MessagePopupWidget == nullptr)
+	{
+		OutError = TEXT("Failed to create WBP_InteractionMessagePopup.");
+		return false;
+	}
+
+	if (!ConfigureMessagePopupWidgetBlueprint(*MessagePopupWidget, OutError))
+	{
+		return false;
+	}
+
 	UStaticMesh* AppleMesh = LoadAsset<UStaticMesh>(AppleMeshObjectPath);
 	UStaticMesh* StrawberryMesh = LoadAsset<UStaticMesh>(StrawberryMeshObjectPath);
-	if (AppleMesh == nullptr || StrawberryMesh == nullptr)
+	UStaticMesh* WoodenSignMesh = LoadAsset<UStaticMesh>(WoodenSignMeshObjectPath);
+	if (AppleMesh == nullptr || StrawberryMesh == nullptr || WoodenSignMesh == nullptr)
 	{
-		OutError = TEXT("Required food meshes were not found for the interaction test blueprints.");
+		OutError = TEXT("Required meshes were not found for the interaction test blueprints.");
 		return false;
 	}
 
 	UBlueprint* AppleBlueprint = CreateBlueprint(BlueprintsPath, InteractableAppleName, ACodexInteractableActor::StaticClass());
 	UBlueprint* StrawberryBlueprint = CreateBlueprint(BlueprintsPath, InteractableStrawberryName, ACodexInteractableActor::StaticClass());
-	if (AppleBlueprint == nullptr || StrawberryBlueprint == nullptr)
+	UBlueprint* WoodenSignBlueprint = CreateBlueprint(BlueprintsPath, InteractableWoodenSignPopupName, ACodexPopupInteractableActor::StaticClass());
+	if (AppleBlueprint == nullptr || StrawberryBlueprint == nullptr || WoodenSignBlueprint == nullptr)
 	{
 		OutError = TEXT("Failed to create one or more interactable test blueprints.");
 		return false;
@@ -637,19 +1086,34 @@ bool FCodexInteractionAssetBuilder::RunBuild(FString& OutError)
 		return false;
 	}
 
+	if (!ConfigurePopupInteractableBlueprint(
+		*WoodenSignBlueprint,
+		*WoodenSignMesh,
+		FText::FromString(TEXT("보기")),
+		FText::FromString(TEXT("안내")),
+		FText::FromString(TEXT("여기서는 상호작용 팝업이 열립니다.")),
+		ECodexPopupButtonLayout::Ok,
+		OutError))
+	{
+		return false;
+	}
+
 	SaveAssets(
 		{
 			InteractAction,
+			PopupCloseAction,
 			MappingContext,
 			InputConfig,
 			FilledCircleTexture,
 			OuterRingTexture,
 			IndicatorWidget,
+			MessagePopupWidget,
 			AppleBlueprint,
-			StrawberryBlueprint
+			StrawberryBlueprint,
+			WoodenSignBlueprint
 		});
 
-	if (!PlaceInteractionTestActorsInMap(*AppleBlueprint, *StrawberryBlueprint, OutError))
+	if (!PlaceInteractionTestActorsInMap(*AppleBlueprint, *StrawberryBlueprint, *WoodenSignBlueprint, OutError))
 	{
 		return false;
 	}

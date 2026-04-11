@@ -27,6 +27,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Codex|Input")
 	TObjectPtr<UInputAction> InteractAction;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Codex|Input")
+	TObjectPtr<UInputAction> PopupCloseAction;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Codex|Input", meta = (ClampMin = "0"))
 	int32 MappingPriority = 0;
 
@@ -34,5 +37,6 @@ public:
 	const UInputAction* GetMoveAction() const;
 	const UInputAction* GetFireAction() const;
 	const UInputAction* GetInteractAction() const;
+	const UInputAction* GetPopupCloseAction() const;
 	int32 GetMappingPriority() const;
 };

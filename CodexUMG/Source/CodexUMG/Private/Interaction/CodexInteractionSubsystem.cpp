@@ -2,8 +2,12 @@
 
 #include "Interaction/CodexInteractionSubsystem.h"
 
+#include "Interaction/CodexInteractionAssetPaths.h"
 #include "Interaction/CodexInteractionComponent.h"
+#include "Interaction/CodexInteractionMessagePopupWidget.h"
+#include "Interaction/CodexPopupInteractableActor.h"
 #include "Interaction/CodexInteractionTarget.h"
+#include "Blueprint/UserWidget.h"
 #include "Engine/Engine.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/Pawn.h"
@@ -19,6 +23,21 @@ namespace
 		}
 
 		return TEXT("Unknown");
+	}
+
+	FString GetPopupResultName(const ECodexPopupResult PopupResult)
+	{
+		if (const UEnum* Enum = StaticEnum<ECodexPopupResult>())
+		{
+			return Enum->GetNameStringByValue(static_cast<int64>(PopupResult));
+		}
+
+		return TEXT("Unknown");
+	}
+
+	TSubclassOf<UUserWidget> ResolvePopupWidgetClass()
+	{
+		return LoadClass<UUserWidget>(nullptr, *CodexInteractionAssetPaths::MakeGeneratedClassObjectPath(CodexInteractionAssetPaths::MessagePopupWidgetObjectPath));
 	}
 }
 
@@ -64,6 +83,11 @@ void UCodexInteractionSubsystem::UnregisterInteractionComponent(UCodexInteractio
 
 void UCodexInteractionSubsystem::RequestInteraction(APlayerController* RequestingController)
 {
+	if (HasActivePopup())
+	{
+		return;
+	}
+
 	UCodexInteractionComponent* InteractionComponent = GetFocusedInteractionComponent();
 	if (!IsValid(InteractionComponent) || !InteractionComponent->IsInteractionEnabled())
 	{
@@ -82,22 +106,187 @@ void UCodexInteractionSubsystem::RequestInteraction(APlayerController* Requestin
 	const FString Description = DescribeInteractionComponent(InteractionComponent);
 	AddDebugMessage(FString::Printf(TEXT("Interaction Requested: %s"), *Description), FColor::Yellow);
 
+	if (ACodexPopupInteractableActor* PopupActor = Cast<ACodexPopupInteractableActor>(TargetActor))
+	{
+		if (IsValid(TargetActor) && TargetActor->GetClass()->ImplementsInterface(UCodexInteractionTarget::StaticClass()))
+		{
+			ICodexInteractionTarget::Execute_HandleInteractionRequested(TargetActor, Request);
+		}
+
+		FCodexInteractionPopupRequest PopupRequest;
+		PopupRequest.RequestId = FGuid::NewGuid();
+		PopupRequest.InteractionRequest = Request;
+		PopupRequest.Title = PopupActor->GetPopupTitle();
+		PopupRequest.Message = PopupActor->GetPopupMessage();
+		PopupRequest.ButtonLayout = PopupActor->GetPopupButtonLayout();
+
+		if (!OpenInteractionPopup(PopupRequest))
+		{
+			AddDebugMessage(FString::Printf(TEXT("Interaction Popup Failed: %s"), *Description), FColor::Red);
+			EndInteractionRequest(Request);
+		}
+
+		return;
+	}
+
 	if (IsValid(TargetActor) && TargetActor->GetClass()->ImplementsInterface(UCodexInteractionTarget::StaticClass()))
 	{
 		ICodexInteractionTarget::Execute_HandleInteractionRequested(TargetActor, Request);
 	}
 
-	AddDebugMessage(FString::Printf(TEXT("Interaction Ended: %s"), *Description), FColor::Orange);
+	EndInteractionRequest(Request);
+}
 
+bool UCodexInteractionSubsystem::OpenInteractionPopup(const FCodexInteractionPopupRequest& Request)
+{
+	if (HasActivePopup())
+	{
+		return false;
+	}
+
+	APlayerController* RequestingController = Request.InteractionRequest.RequestingController;
+	if (!IsValid(RequestingController))
+	{
+		return false;
+	}
+
+	const TSubclassOf<UUserWidget> PopupWidgetClass = ResolvePopupWidgetClass();
+	if (!PopupWidgetClass)
+	{
+		return false;
+	}
+
+	UCodexInteractionMessagePopupWidget* PopupWidget = CreateWidget<UCodexInteractionMessagePopupWidget>(RequestingController, PopupWidgetClass);
+	if (PopupWidget == nullptr)
+	{
+		return false;
+	}
+
+	ActivePopupRequest = Request;
+	bHasActivePopupRequest = true;
+	ActivePopupController = RequestingController;
+	ActivePopupWidget = PopupWidget;
+
+	PopupWidget->ApplyPopupRequest(Request, *this);
+	PopupWidget->AddToViewport(1000);
+	ApplyPopupInputMode(*RequestingController);
+	return true;
+}
+
+void UCodexInteractionSubsystem::SubmitInteractionPopupResult(const FCodexInteractionPopupResponse& Response)
+{
+	if (!HasActivePopup() || !bHasActivePopupRequest || Response.RequestId != ActivePopupRequest.RequestId)
+	{
+		return;
+	}
+
+	const FCodexInteractionPopupRequest CompletedRequest = ActivePopupRequest;
+	FCodexInteractionPopupResponse CompletedResponse = Response;
+	if (CompletedResponse.InteractionRequest.TargetActor == nullptr)
+	{
+		CompletedResponse.InteractionRequest = CompletedRequest.InteractionRequest;
+	}
+
+	CloseActivePopup();
+
+	AddDebugMessage(
+		FString::Printf(
+			TEXT("Interaction Popup Result: %s -> %s"),
+			*DescribeInteractionComponent(CompletedRequest.InteractionRequest.InteractionComponent),
+			*GetPopupResultName(CompletedResponse.Result)),
+		FColor::Green);
+
+	AActor* TargetActor = CompletedResponse.InteractionRequest.TargetActor;
+	if (IsValid(TargetActor) && TargetActor->GetClass()->ImplementsInterface(UCodexInteractionTarget::StaticClass()))
+	{
+		ICodexInteractionTarget::Execute_HandleInteractionPopupResult(TargetActor, CompletedResponse);
+	}
+
+	EndInteractionRequest(CompletedResponse.InteractionRequest);
+}
+
+void UCodexInteractionSubsystem::RequestCloseActivePopup(APlayerController* RequestingController)
+{
+	if (!HasActivePopup() || !bHasActivePopupRequest)
+	{
+		return;
+	}
+
+	if (IsValid(RequestingController) && IsValid(ActivePopupController) && RequestingController != ActivePopupController)
+	{
+		return;
+	}
+
+	FCodexInteractionPopupResponse Response;
+	Response.RequestId = ActivePopupRequest.RequestId;
+	Response.InteractionRequest = ActivePopupRequest.InteractionRequest;
+	Response.Result = ECodexPopupResult::Closed;
+	SubmitInteractionPopupResult(Response);
+}
+
+bool UCodexInteractionSubsystem::HasActivePopup() const
+{
+	return ActivePopupWidget != nullptr && bHasActivePopupRequest;
+}
+
+UCodexInteractionComponent* UCodexInteractionSubsystem::GetFocusedInteractionComponent() const
+{
+	return FocusedInteractionComponent;
+}
+
+void UCodexInteractionSubsystem::EndInteractionRequest(const FCodexInteractionRequest& Request)
+{
+	AddDebugMessage(
+		FString::Printf(
+			TEXT("Interaction Ended: %s"),
+			*DescribeInteractionComponent(Request.InteractionComponent)),
+		FColor::Orange);
+
+	AActor* TargetActor = Request.TargetActor;
 	if (IsValid(TargetActor) && TargetActor->GetClass()->ImplementsInterface(UCodexInteractionTarget::StaticClass()))
 	{
 		ICodexInteractionTarget::Execute_HandleInteractionEnded(TargetActor, Request);
 	}
 }
 
-UCodexInteractionComponent* UCodexInteractionSubsystem::GetFocusedInteractionComponent() const
+void UCodexInteractionSubsystem::CloseActivePopup()
 {
-	return FocusedInteractionComponent;
+	if (IsValid(ActivePopupWidget))
+	{
+		ActivePopupWidget->RemoveFromParent();
+	}
+
+	if (IsValid(ActivePopupController))
+	{
+		RestoreGameplayInputMode(*ActivePopupController);
+	}
+
+	ActivePopupWidget = nullptr;
+	ActivePopupController = nullptr;
+	ActivePopupRequest = FCodexInteractionPopupRequest();
+	bHasActivePopupRequest = false;
+}
+
+void UCodexInteractionSubsystem::ApplyPopupInputMode(APlayerController& PlayerController)
+{
+	if (ActivePopupWidget == nullptr)
+	{
+		return;
+	}
+
+	FInputModeGameAndUI InputMode;
+	InputMode.SetWidgetToFocus(ActivePopupWidget->TakeWidget());
+	InputMode.SetHideCursorDuringCapture(false);
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	PlayerController.SetInputMode(InputMode);
+	PlayerController.bShowMouseCursor = true;
+}
+
+void UCodexInteractionSubsystem::RestoreGameplayInputMode(APlayerController& PlayerController)
+{
+	FInputModeGameOnly InputMode;
+	PlayerController.SetInputMode(InputMode);
+	PlayerController.bShowMouseCursor = false;
 }
 
 void UCodexInteractionSubsystem::RefreshInteractionStates()

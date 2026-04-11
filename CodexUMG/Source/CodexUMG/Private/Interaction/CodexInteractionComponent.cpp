@@ -174,5 +174,5 @@ TSubclassOf<UUserWidget> UCodexInteractionComponent::ResolveIndicatorWidgetClass
 		return IndicatorWidgetClass;
 	}
 
-	return StaticLoadClass(UUserWidget::StaticClass(), nullptr, CodexInteractionAssetPaths::IndicatorWidgetClassObjectPath);
+	return LoadClass<UUserWidget>(nullptr, *CodexInteractionAssetPaths::MakeGeneratedClassObjectPath(CodexInteractionAssetPaths::IndicatorWidgetObjectPath));
 }

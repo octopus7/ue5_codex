@@ -25,6 +25,7 @@ void ACodexTopDownPlayerController::SetupInputComponent()
 	BindTopDownMoveAction();
 	BindTopDownFireAction();
 	BindTopDownInteractAction();
+	BindTopDownPopupCloseAction();
 }
 
 void ACodexTopDownPlayerController::ApplyTopDownInputMappingContext()
@@ -123,6 +124,27 @@ void ACodexTopDownPlayerController::BindTopDownInteractAction()
 	bHasBoundInteractAction = true;
 }
 
+void ACodexTopDownPlayerController::BindTopDownPopupCloseAction()
+{
+	if (bHasBoundPopupCloseAction || !InputComponent)
+	{
+		return;
+	}
+
+	const UCodexGameInstance* CodexGameInstance = GetGameInstance<UCodexGameInstance>();
+	const UCodexTopDownInputConfigDataAsset* InputConfig = CodexGameInstance ? CodexGameInstance->GetTopDownInputConfig() : nullptr;
+	const UInputAction* PopupCloseAction = InputConfig ? InputConfig->GetPopupCloseAction() : nullptr;
+
+	UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent);
+	if (!EnhancedInputComponent || !PopupCloseAction)
+	{
+		return;
+	}
+
+	EnhancedInputComponent->BindAction(PopupCloseAction, ETriggerEvent::Started, this, &ACodexTopDownPlayerController::HandlePopupCloseInput);
+	bHasBoundPopupCloseAction = true;
+}
+
 void ACodexTopDownPlayerController::HandleMoveInput(const FInputActionValue& InputValue)
 {
 	const FVector2D MoveAxis = InputValue.Get<FVector2D>();
@@ -161,5 +183,21 @@ void ACodexTopDownPlayerController::HandleInteractInput(const FInputActionValue&
 	if (UCodexInteractionSubsystem* InteractionSubsystem = World->GetSubsystem<UCodexInteractionSubsystem>())
 	{
 		InteractionSubsystem->RequestInteraction(this);
+	}
+}
+
+void ACodexTopDownPlayerController::HandlePopupCloseInput(const FInputActionValue& InputValue)
+{
+	(void)InputValue;
+
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	if (UCodexInteractionSubsystem* InteractionSubsystem = World->GetSubsystem<UCodexInteractionSubsystem>())
+	{
+		InteractionSubsystem->RequestCloseActivePopup(this);
 	}
 }
