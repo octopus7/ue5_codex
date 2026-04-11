@@ -32,6 +32,7 @@
 - If no firing-related flow is connected to the player, add a firing `IA_` to the existing `IMC_` that the player is already using.
 - Add the new input asset with the smallest possible change inside the current input system, and do not create a separate parallel input structure.
 - Follow project naming rules, but from the document's perspective `IA_Fire` or an equivalent name is recommended.
+- If a new firing action is added, fix its default mapping to `Left Mouse Button`.
 
 ### 3. No trace of an `IMC_` connection at all
 - If the player is not connected to any `IMC_`, do not start this task.
@@ -59,6 +60,7 @@
   - the base input mapping context that reuses the existing input structure
 - `IA_Fire` or an equivalent firing action asset
   - only becomes a candidate if no existing firing flow exists
+  - if created, its default input mapping uses `Left Mouse Button`
 
 ### 2. Reference flow
 1. A firing request occurs through an existing firing flow or input action.
@@ -94,6 +96,7 @@
   - reuse the existing firing flow
   - if none exists, add `IA_` to the existing `IMC_`
   - if no `IMC_` exists at all, forbid starting the task and ask the user to implement minimum `Enhanced Input` first
+- If no existing firing flow exists and `IA_Fire` must be added, it must be wired into the existing `IMC_` with a `Left Mouse Button` mapping.
 
 ## Proposed Scope
 
@@ -214,6 +217,7 @@
 - Player-related classes only pass the fact that "a firing request has occurred."
 - The input layer first decides whether the existing firing flow can be reused.
 - If no existing firing flow exists, only extend by adding a firing `IA_` to the existing `IMC_`.
+- If `IA_Fire` is added because no existing firing flow exists, map it to `Left Mouse Button`.
 - If there is no trace of an `IMC_` connection, stop implementation and first require the user to provide a minimum `Enhanced Input` base.
 - `GameInstance` must provide the currently valid `DA_` or an equivalent data access point.
 - The `DA_` must be able to return a real projectile Blueprint Class.
@@ -226,6 +230,7 @@
 - duplicating a separate input system when an existing firing path already exists
 - introducing a new `IMC_` in parallel when an existing `IMC_` already exists
 - starting arbitrary implementation when there is no trace of any `IMC_` connection
+- when a new firing action must be added because no existing firing path exists, assigning an arbitrary default key such as `Space Bar` instead of `Left Mouse Button`
 - spawning a projectile in a state the user cannot recognize
 - locking the projectile mesh in a way that makes BP-editor replacement difficult
 - letting the implementation agent also handle the final evaluation of its own artifacts
@@ -241,6 +246,7 @@
 - Do player-related classes avoid referencing the projectile Blueprint directly
 - Does the plan first decide whether to reuse the existing firing flow
 - If the existing firing flow is absent, does the plan reflect the rule of adding `IA_` to the existing `IMC_`
+- If the existing firing flow is absent, is the default `IA_Fire` mapping fixed to `Left Mouse Button`
 - If there is no trace of an `IMC_` connection, does the plan reflect the rule to stop work and request user action
 - Are firing requests and actual spawning responsibilities separated
 - Are items that can run in parallel actually split across agents
