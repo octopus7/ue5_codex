@@ -209,10 +209,30 @@ namespace CodexUMGBootstrap
 	{
 		MappingContext.UnmapAllKeysFromAction(&FireAction);
 
-		FEnhancedActionKeyMapping& SpaceBarMapping = MappingContext.MapKey(&FireAction, EKeys::SpaceBar);
-		SpaceBarMapping.Modifiers.Reset();
+		FEnhancedActionKeyMapping& LeftMouseButtonMapping = MappingContext.MapKey(&FireAction, EKeys::LeftMouseButton);
+		LeftMouseButtonMapping.Modifiers.Reset();
 
 		MappingContext.MarkPackageDirty();
+	}
+
+	bool HasExpectedFireMapping()
+	{
+		const UInputAction* FireAction = LoadAsset<UInputAction>(MakeObjectPath(InputActionsPath, FireActionName));
+		const UInputMappingContext* MappingContext = LoadAsset<UInputMappingContext>(MakeObjectPath(InputContextsPath, MappingContextName));
+		if (FireAction == nullptr || MappingContext == nullptr)
+		{
+			return false;
+		}
+
+		for (const FEnhancedActionKeyMapping& Mapping : MappingContext->GetMappings())
+		{
+			if (Mapping.Action == FireAction && Mapping.Key == EKeys::LeftMouseButton)
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	void ConfigureInputConfig(UCodexTopDownInputConfigDataAsset& InputConfig, UInputMappingContext& MappingContext, UInputAction& MoveAction, UInputAction& FireAction)
@@ -304,7 +324,8 @@ namespace CodexUMGBootstrap
 			|| !DoesAssetExist(BlueprintsGameModePath, GameModeBlueprintName)
 			|| !DoesAssetExist(BlueprintsPlayerPath, PlayerControllerBlueprintName)
 			|| !DoesAssetExist(BlueprintsPlayerPath, CharacterBlueprintName)
-			|| !DoesAssetExist(BlueprintsProjectilePath, ProjectileBlueprintName);
+			|| !DoesAssetExist(BlueprintsProjectilePath, ProjectileBlueprintName)
+			|| !HasExpectedFireMapping();
 	}
 }
 
