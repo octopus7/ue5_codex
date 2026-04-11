@@ -11,6 +11,15 @@
 - WBP 및 관련 UI 애셋 생성/갱신 로직은 에디터 모듈 코드에 둔다.
 - 실행 진입은 `Commandlet`로만 수행한다.
 - 현재 프로젝트의 `UnrealEditor.exe`가 실행 중이라 충돌이 나면 우회하지 말고 즉시 중단 후 사용자에게 알린다.
+- 이미 생성된 상호작용 BP, WBP, UI 텍스처가 있고 생성 레시피가 동일하다면 애셋을 새로 만들거나 다시 저장하지 않고 기존 파일을 그대로 유지한다.
+- 동일 내용인데 내부 식별자만 달라져 소스 관리 이력이 오염되지 않도록, 생성 로직은 반드시 idempotent하게 설계한다.
+
+## 현재 반영 메모
+- 2026-04-11 기준으로 런타임 팝업 클래스, 타일 엔트리 클래스, 드래그 오퍼레이션, 실제 WBP 애셋, 실제 타일 텍스처 애셋은 구현 완료 상태다.
+- 최초 계획 문서의 기본 범위는 팝업 UI와 내부 동작까지였지만, 현재 프로젝트 통합 검증을 위해 테스트용 상호작용 액터/BP 생성과 `BasicMap` 배치까지 후속 범위로 확장 반영한다.
+- 이 프로젝트의 상호작용 UI 생성 경로는 공용 `UCodexInteractionAssetBuildCommandlet`를 사용하므로, 듀얼 타일 팝업을 갱신할 때 기존 상호작용 테스트 애셋과 `BasicMap`도 함께 갱신될 수 있다.
+- 2026-04-12 기준으로 공용 interaction asset builder에는 `동일 레시피면 기존 애셋 유지` 정책을 반영한다. 같은 경로의 애셋이 이미 있고 생성 버전이 같으면 configure, compile, save를 건너뛴다.
+- 생성 레시피를 실제로 바꿔야 할 때만 빌더 내부 버전 문자열을 올려 의도적인 재생성을 수행한다.
 
 ## 목표 상태
 1. 화면 중앙에 모달 팝업이 열린다.
@@ -26,13 +35,14 @@
 - 어떤 액터, 상호작용 대상, 퀘스트 시스템, 인벤토리 시스템이 이 팝업을 여는지는 후속 문서나 호출 주체에서 결정한다.
 - 1차 구현 범위에서는 좌우 패널 간 이동과 선택/추가/삭제에 집중한다.
 - 1차 구현 범위에서는 같은 패널 내부에서의 순서 재배치까지는 필수 요구사항으로 두지 않는다.
+- 통합 검증을 위한 테스트용 상호작용 액터 1종과 `BasicMap` 배치는 현재 문서에 함께 기록한다.
 
 ## 사용자 기능 요구사항
 
 ### 1. 팝업 레이아웃
 - 상단에는 타이틀과 `닫기` 버튼이 있는 타이틀바가 있다.
 - 본문에는 좌측 패널과 우측 패널이 동일한 비중으로 배치된다.
-- 각 패널 상단에는 패널 제목과 `타일 추가`, `타일 지우기` 버튼이 있다.
+- 각 패널 상단에는 좌우 텍스트 제목 없이 `타일 추가`, `타일 지우기` 버튼만 있다.
 - 각 패널 본문에는 개별 스크롤이 가능한 `TileView`가 있다.
 
 ### 2. 타일 표시
@@ -48,6 +58,8 @@
 - 새 타일 번호는 전체 풀에서 아직 사용되지 않은 가장 작은 숫자를 우선 사용한다.
 - `좌 타일 지우기`는 현재 좌측에서 선택된 타일을 제거한다.
 - `우 타일 지우기`는 현재 우측에서 선택된 타일을 제거한다.
+- 타일을 지운 뒤 같은 패널에 남은 타일이 있으면 삭제된 위치의 다음 타일을 우선 자동 선택하고, 다음 타일이 없으면 직전 타일을 자동 선택한다.
+- 따라서 같은 패널에서는 다시 클릭하지 않아도 `타일 지우기` 버튼으로 연속 삭제가 가능해야 한다.
 - 선택된 타일이 없으면 해당 패널의 `타일 지우기` 버튼은 비활성화한다.
 
 ### 4. 드래그 앤 드롭
@@ -121,13 +133,11 @@
 - `HorizontalBox_Body`
   - `VerticalBox_LeftPanel`
     - `HorizontalBox_LeftHeader`
-      - `TXT_LeftTitle`
       - `BTN_LeftAdd`
       - `BTN_LeftRemove`
     - `TileView_Left`
   - `VerticalBox_RightPanel`
     - `HorizontalBox_RightHeader`
-      - `TXT_RightTitle`
       - `BTN_RightAdd`
       - `BTN_RightRemove`
     - `TileView_Right`
@@ -217,6 +227,30 @@
 - 목적
   - 어느 패널의 어떤 숫자가 드래그 중인지 명확히 전달한다.
 
+### 4. 테스트용 상호작용 액터
+- 권장 이름
+  - `ACodexDualTileTransferPopupInteractableActor`
+- 책임
+  - 듀얼 타일 팝업용 초기 좌우 숫자 배열을 보관한다.
+  - `UCodexInteractionSubsystem`가 여는 `FCodexInteractionPopupRequest`에 타이틀, 좌우 숫자 배열, 중복 허용 여부를 채운다.
+  - 1차 구현 기준으로 컨트롤러 `Space` 닫기 입력은 허용하지 않는다.
+
+### 5. 테스트용 BP / 레벨 배치
+- 실제 테스트 BP
+  - `/Game/Blueprints/Interaction/BP_Interactable_WoodenSignDualTileTransferPopup`
+- 기본 메시
+  - `/Game/Vox/Meshes/Props/SM_Vox_WoodenSignpost`
+- 기본 상호작용 프롬프트
+  - `이동하기`
+- 기본 타이틀
+  - `번호 이동 테스트`
+- 기본 초기 데이터
+  - 좌측 `1~5`
+  - 우측 `6~10`
+  - `bAllowDuplicateNumbers = false`
+- 테스트 레벨 배치
+  - `/Game/Maps/BasicMap` 안에 기존 상호작용 테스트 액터와 함께 배치한다.
+
 ## 동작 흐름 권장안
 1. 호출 주체가 팝업 요청 데이터를 만든다.
 2. 서브시스템 또는 팝업 호스트가 WBP 애셋 경로를 기준으로 팝업을 연다.
@@ -238,13 +272,21 @@
 - 에디터 모듈 코드가 실제 WBP와 텍스처 애셋을 생성/갱신한다.
 - 커맨드렛이 그 생성 로직의 유일한 실행 진입점이 된다.
 
-### 3. 텍스처 생성 방식
+### 3. 재생성 방지 규칙
+- 생성 대상 애셋은 경로 기준으로 먼저 로드하고, 이미 존재하면 재사용을 우선한다.
+- 애셋별 생성 레시피 버전 메타데이터를 두고 현재 빌더 버전과 같으면 실제 configure 작업을 수행하지 않는다.
+- 동일 버전에서는 `MarkPackageDirty`, 구조 변경 표시, 재컴파일, 재저장을 유발하지 않는다.
+- 위젯 트리 구조, 기본 텍스트, 브러시/스타일, 텍스처 픽셀 생성식, 테스트 BP 기본값, 맵 배치 규칙이 바뀌는 경우에만 해당 애셋 버전을 올린다.
+- 최초 1회 버전 메타데이터를 기록하는 실행에서는 애셋 변경이 발생할 수 있지만, 그 이후 동일 버전 반복 실행에서는 워크트리 변경이 없어야 한다.
+- `BasicMap` 테스트 배치도 동일 위치/회전/라벨/태그 상태라면 저장하지 않는다.
+
+### 4. 텍스처 생성 방식
 - `UTexture2D`를 코드로 직접 생성한다.
 - 투명 배경 위에 라운드 사각형 마스크를 만든다.
 - 상단이 조금 더 밝고 하단이 조금 더 진한 세로 그라데이션을 준다.
 - UI 용도에 맞게 `TextureGroup=UI` 계열 설정과 mip 최소화 설정을 적용한다.
 
-### 4. 충돌 처리
+### 5. 충돌 처리
 - 프로젝트 에디터가 실행 중이면 작업을 즉시 중단한다.
 - 띄워진 에디터를 유지한 채 다른 경로로 우회 실행하지 않는다.
 - 실패 사실과 원인을 사용자에게 그대로 알린다.
@@ -255,18 +297,21 @@
 - `UCodexInteractionDualTileTransferPopupWidget`
 - `UCodexInteractionDualTileTransferTileEntryWidget`
 - `UCodexTileTransferDragDropOperation`
+- `ACodexDualTileTransferPopupInteractableActor`
 - 팝업 요청/응답 구조체
 
 ### 2. 문서 기준 콘텐츠 산출물
 - `/Game/UI/Interaction/WBP_InteractionDualTileTransferPopup`
 - `/Game/UI/Interaction/WBP_InteractionDualTileTransferTileEntry`
 - `/Game/UI/Interaction/T_InteractionTileRoundedVerticalGradient`
+- `/Game/Blueprints/Interaction/BP_Interactable_WoodenSignDualTileTransferPopup`
+- `/Game/Maps/BasicMap` 내 테스트용 배치 갱신
 
 ## 비범위
 - 같은 패널 내부 순서 재정렬
 - 게임패드 전용 포커스 네비게이션 세부 튜닝
 - 사운드, 이펙트, 애니메이션 세부 연출
-- 외부 상호작용 대상이나 레벨 배치 규칙
+- 테스트용 BP 1종을 제외한 외부 상호작용 대상이나 일반 레벨 배치 규칙
 - 네트워크 동기화
 
 ## 완료 기준
@@ -279,6 +324,10 @@
 - 좌우 패널 간 드래그 앤 드롭 이동이 가능하다.
 - WBP 생성/갱신은 에디터 모듈 + 커맨드렛 경로로만 수행된다.
 - 에디터 실행 충돌 시 우회 없이 중단한다.
+- 테스트용 `ACodexDualTileTransferPopupInteractableActor` 기반 BP가 실제 애셋으로 존재한다.
+- 테스트용 BP가 `BasicMap`에 배치되어 실제 상호작용 진입점으로 사용할 수 있다.
+- 동일 빌더 버전으로 커맨드렛을 반복 실행해도 기존 상호작용 BP, WBP, UI 텍스처, `BasicMap`이 불필요하게 재저장되지 않는다.
+- `타일 지우기`를 한 번 누른 뒤에도 같은 패널에 항목이 남아 있으면 다음 삭제 대상이 자동 선택되어 연속 삭제가 가능하다.
 
 ## 검증 체크리스트
 1. `WBP_InteractionDualTileTransferPopup`가 실제 애셋으로 존재한다.
@@ -296,3 +345,10 @@
 13. 좌우 패널 간 드래그 앤 드롭 이동이 된다.
 14. WBP 참조가 `_C` 클래스 기준이 아니라 WBP 애셋 기준으로 설계되어 있다.
 15. 에디터가 실행 중이면 커맨드렛이 우회 없이 중단된다.
+16. `/Game/Blueprints/Interaction/BP_Interactable_WoodenSignDualTileTransferPopup`가 실제 애셋으로 존재한다.
+17. 테스트 BP가 `SM_Vox_WoodenSignpost`를 사용한다.
+18. 테스트 BP의 프롬프트가 `이동하기`로 보인다.
+19. 테스트 BP가 `BasicMap`에 실제 배치되어 있다.
+20. 테스트 BP를 상호작용하면 듀얼 타일 이동 팝업이 열린다.
+21. 같은 빌더 버전으로 commandlet을 두 번 연속 실행했을 때 두 번째 실행 후 워크트리에 불필요한 `.uasset` 변경이 남지 않는다.
+22. `타일 지우기` 후 같은 패널에 항목이 남아 있으면 인접 타일이 자동 선택되어 버튼을 다시 누를 수 있다.
