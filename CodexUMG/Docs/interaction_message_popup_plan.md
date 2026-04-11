@@ -84,6 +84,13 @@
 - `/Game/Data/Input/DA_TopDownInputConfig` 갱신
 - 필요 시 `/Game/Maps/BasicMap` 내 테스트용 나무 팻말 배치 갱신
 
+## BP 명시
+- 단순 메시지 팝업용 최종 상호작용 BP는 `BP_Interactable_WoodenSignPopup`으로 명시한다.
+- 이 BP는 레벨에 실제로 배치되는 최종 애셋이다.
+- 공용 부모 클래스나 공용 C++ 기반은 재사용할 수 있지만, 레벨에 올리는 최종 BP는 이 애셋으로 본다.
+- 스크롤 메시지 팝업용 `BP_Interactable_WoodenSignScrollPopup`과는 별도 애셋으로 구분한다.
+- 따라서 레벨에서는 단순 메시지 팝업용 액터와 스크롤 메시지 팝업용 액터가 서로 다른 인스턴스로 별도 배치될 수 있다.
+
 ## 권장 데이터 구조
 
 ### 1. `ECodexPopupButtonLayout`
@@ -180,6 +187,12 @@
   - `BP_Interactable_WoodenSignPopup`
 - 부모 클래스 권장
   - `ACodexPopupInteractableActor`
+- 문서 기준 역할
+  - 단순 메시지 팝업 전용 최종 상호작용 BP
+  - 레벨에 실제로 배치되는 최종 애셋
+  - 스크롤 메시지 팝업용 `BP_Interactable_WoodenSignScrollPopup`과는 별도 애셋
+- 레벨 배치 기준
+  - 단순 메시지 팝업이 필요하면 `BP_Interactable_WoodenSignPopup` 인스턴스를 별도 액터로 배치한다.
 - 기본값
   - Static Mesh: `/Game/Vox/Meshes/Props/SM_Vox_WoodenSignpost`
   - InteractionType: `Use`
@@ -258,7 +271,7 @@
 - `YesNo` 레이아웃일 때 `OK` 버튼은 숨기고, `Ok` 레이아웃일 때 `Yes/No` 버튼은 숨긴다.
 
 ## 입력 및 상호작용 흐름
-1. 플레이어가 나무 팻말에 가까워지면 기존 상호작용 표시 위젯에서 `보기`가 보인다.
+1. 플레이어가 레벨에 별도로 배치된 `BP_Interactable_WoodenSignPopup` 나무 팻말에 가까워지면 기존 상호작용 표시 위젯에서 `보기`가 보인다.
 2. 플레이어가 상호작용 입력을 누르면 `ACodexTopDownPlayerController`는 기존처럼 `UCodexInteractionSubsystem::RequestInteraction()`만 호출한다.
 3. `UCodexInteractionSubsystem`은 현재 포커스된 상호작용 대상이 팝업형 액터인지 판별한다.
 4. 팝업형 액터이면 `FCodexInteractionPopupRequest`를 구성해 팝업을 연다.
