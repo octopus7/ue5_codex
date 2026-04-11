@@ -172,7 +172,9 @@
 
 ## 권장 커맨드 예시
 ```powershell
-UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=CodexBasicMapFloorBuild -unattended -nop4 -nosplash
+$ProjectRoot = (Resolve-Path .).Path
+$ProjectPath = Join-Path $ProjectRoot 'CodexUMG.uproject'
+UnrealEditor-Cmd.exe $ProjectPath -run=CodexBasicMapFloorBuild -unattended -nop4 -nosplash
 ```
 
 ## 검증 체크리스트

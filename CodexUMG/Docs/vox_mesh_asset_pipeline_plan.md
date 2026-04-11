@@ -336,7 +336,10 @@ python .\Scripts\GenerateVoxPreviewPngs.py --manifest .\SourceArt\Vox\VoxAssetMa
 
 ### 실행 예시
 ```powershell
-UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=CodexUMGBootstrapEditor.CodexVoxAssetBuildCommandlet -Manifest="D:\github\ue5_codex\CodexUMG\SourceArt\Vox\VoxAssetManifest.json" -unattended -nop4 -nosplash
+$ProjectRoot = (Resolve-Path .).Path
+$ProjectPath = Join-Path $ProjectRoot 'CodexUMG.uproject'
+$ManifestPath = Join-Path $ProjectRoot 'SourceArt\Vox\VoxAssetManifest.json'
+UnrealEditor-Cmd.exe $ProjectPath -run=CodexUMGBootstrapEditor.CodexVoxAssetBuildCommandlet "-Manifest=$ManifestPath" -unattended -nop4 -nosplash
 ```
 
 ### 개별 추가 예외 실행 예시

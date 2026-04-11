@@ -20,9 +20,9 @@
 10. 관련 텍스처, 위젯 애셋, 테스트 Blueprint 애셋은 모두 에디터 모듈 + 커맨드렛 경로로 생성 가능해야 한다.
 
 ## 현재 프로젝트 기준 접점
-- 런타임 입력 접근은 이미 [Source/CodexUMG/Public/CodexTopDownInputConfigDataAsset.h](d:\github\ue5_codex\CodexUMG\Source\CodexUMG\Public\CodexTopDownInputConfigDataAsset.h), [Source/CodexUMG/Private/CodexTopDownPlayerController.cpp](d:\github\ue5_codex\CodexUMG\Source\CodexUMG\Private\CodexTopDownPlayerController.cpp), [Source/CodexUMG/Public/CodexGameInstance.h](d:\github\ue5_codex\CodexUMG\Source\CodexUMG\Public\CodexGameInstance.h) 경로를 통해 정리되어 있다.
-- 에디터 모듈 기반 애셋 생성 패턴은 [Source/CodexUMGBootstrapEditor/Private/CodexUMGBootstrapEditorModule.cpp](d:\github\ue5_codex\CodexUMG\Source\CodexUMGBootstrapEditor\Private\CodexUMGBootstrapEditorModule.cpp)에 이미 존재한다.
-- 커맨드렛 실행 패턴은 [Source/CodexUMGBootstrapEditor/Private/Commandlets/CodexVoxAssetBuildCommandlet.cpp](d:\github\ue5_codex\CodexUMG\Source\CodexUMGBootstrapEditor\Private\Commandlets\CodexVoxAssetBuildCommandlet.cpp) 구현을 기준으로 맞추면 된다.
+- 런타임 입력 접근은 이미 [Source/CodexUMG/Public/CodexTopDownInputConfigDataAsset.h](../Source/CodexUMG/Public/CodexTopDownInputConfigDataAsset.h), [Source/CodexUMG/Private/CodexTopDownPlayerController.cpp](../Source/CodexUMG/Private/CodexTopDownPlayerController.cpp), [Source/CodexUMG/Public/CodexGameInstance.h](../Source/CodexUMG/Public/CodexGameInstance.h) 경로를 통해 정리되어 있다.
+- 에디터 모듈 기반 애셋 생성 패턴은 [Source/CodexUMGBootstrapEditor/Private/CodexUMGBootstrapEditorModule.cpp](../Source/CodexUMGBootstrapEditor/Private/CodexUMGBootstrapEditorModule.cpp)에 이미 존재한다.
+- 커맨드렛 실행 패턴은 [Source/CodexUMGBootstrapEditor/Private/Commandlets/CodexVoxAssetBuildCommandlet.cpp](../Source/CodexUMGBootstrapEditor/Private/Commandlets/CodexVoxAssetBuildCommandlet.cpp) 구현을 기준으로 맞추면 된다.
 - 테스트용 음식 메시로는 이미 존재하는 `/Game/Vox/Meshes/Food/SM_Vox_Apple`, `/Game/Vox/Meshes/Food/SM_Vox_Strawberry`를 재사용할 수 있다.
 
 ## 핵심 원칙
@@ -239,7 +239,7 @@
 6. 에디터 모듈 + 커맨드렛으로 `IA_Interact`를 생성한다.
 7. 기존 `IMC_TopDown`에 `IA_Interact`를 추가한다.
 8. `IA_Interact`의 키 매핑은 `F` 키로 고정한다.
-9. [Source/CodexUMG/Private/CodexTopDownPlayerController.cpp](d:\github\ue5_codex\CodexUMG\Source\CodexUMG\Private\CodexTopDownPlayerController.cpp)에 기존 바인딩 패턴과 동일한 방식으로 상호작용 바인딩을 추가한다.
+9. [Source/CodexUMG/Private/CodexTopDownPlayerController.cpp](../Source/CodexUMG/Private/CodexTopDownPlayerController.cpp)에 기존 바인딩 패턴과 동일한 방식으로 상호작용 바인딩을 추가한다.
 10. 플레이어 컨트롤러는 직접 대상 액터를 찾지 않고 서브시스템에 "현재 상호작용 요청"만 보낸다.
 11. 서브시스템은 현재 `Interactable` 상태인 컴포넌트가 있으면 `FCodexInteractionRequest`를 만든다.
 12. 서브시스템은 상호작용 요청/종료와 후보 없음에 대해서만 스크린 디버그 스트링을 출력한다.
@@ -249,9 +249,9 @@
 ## 애셋 생성 계획
 
 ### 1. 빌드 의존성
-- [Source/CodexUMG/CodexUMG.Build.cs](d:\github\ue5_codex\CodexUMG\Source\CodexUMG\CodexUMG.Build.cs)
+- [Source/CodexUMG/CodexUMG.Build.cs](../Source/CodexUMG/CodexUMG.Build.cs)
   - `UMG`를 런타임 의존성에 추가한다.
-- [Source/CodexUMGBootstrapEditor/CodexUMGBootstrapEditor.Build.cs](d:\github\ue5_codex\CodexUMG\Source\CodexUMGBootstrapEditor\CodexUMGBootstrapEditor.Build.cs)
+- [Source/CodexUMGBootstrapEditor/CodexUMGBootstrapEditor.Build.cs](../Source/CodexUMGBootstrapEditor/CodexUMGBootstrapEditor.Build.cs)
   - `UMG`
   - `UMGEditor`
   - 필요 시 `Slate`, `SlateCore` 유지
@@ -321,7 +321,9 @@
 
 ### 6. 권장 커맨드 예시
 ```powershell
-UnrealEditor-Cmd.exe "D:\github\ue5_codex\CodexUMG\CodexUMG.uproject" -run=CodexUMGBootstrapEditor.CodexInteractionAssetBuildCommandlet -unattended -nop4 -nosplash
+$ProjectRoot = (Resolve-Path .).Path
+$ProjectPath = Join-Path $ProjectRoot 'CodexUMG.uproject'
+UnrealEditor-Cmd.exe $ProjectPath -run=CodexUMGBootstrapEditor.CodexInteractionAssetBuildCommandlet -unattended -nop4 -nosplash
 ```
 
 ## 테스트 대상 배치 계획
