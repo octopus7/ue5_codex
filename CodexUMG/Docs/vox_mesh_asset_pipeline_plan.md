@@ -69,6 +69,17 @@
   - `/Game/Vox/Meshes/Foliage/`
   - `/Game/Vox/Meshes/Ground/`
 
+## canonical 생성 애셋 이름 규칙
+- 생성 결과 비교는 raw filename이 아니라 manifest의 `targetPackagePath + targetAssetName`과 아래 canonical 규칙을 기준으로 수행한다.
+- legacy alias가 문서나 체크리스트에 남아 있어도, 검증 시에는 먼저 canonical path로 정규화한다.
+
+| 대상 | canonical asset path | 허용 alias / legacy ref | 비고 |
+| --- | --- | --- | --- |
+| 병우유 | `/Game/Vox/Meshes/Food/SM_Vox_MilkBottle` | `SM_Vox_BottleMilk` | food category 고정 |
+| 포도송이 | `/Game/Vox/Meshes/Food/SM_Vox_GrapeCluster` | `SM_Vox_Grapes` | food category 고정 |
+| 뼈가 있는 구운 고기 | `/Game/Vox/Meshes/Food/SM_Vox_BoneInRoast` | `SM_Vox_BoneInRoastedMeat` | food category 고정 |
+| 수련 | `/Game/Vox/Meshes/Foliage/SM_Vox_WaterLily` | `/Game/Vox/Meshes/Ground/SM_Vox_WaterLily`, `/Game/Vox/Meshes/Props/SM_Vox_WaterLily`, `Ground`/`Props` category ref | `SM_Vox_WaterLily`의 canonical category/path는 `Foliage`다. |
+
 ## UE 애셋 명세
 
 ### 색상 처리

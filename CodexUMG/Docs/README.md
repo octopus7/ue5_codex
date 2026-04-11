@@ -1,80 +1,69 @@
 # Docs README
 
-`Docs` 폴더에 있는 계획 문서들의 역할과 권장 읽기 순서를 정리한 안내 문서다.
+`Docs` 폴더 문서를 배치 범위와 용도 기준으로 찾기 위한 인덱스다.
 
-## 권장 읽기 순서
+## 배치 범위 요약
+- `Docs/multi_plan_batch_execution_plan.md`가 다루는 공식 배치 포함 구현 플랜은 아래 8개다.
+  - `topdown_fixed_camera_wasd_plan`
+  - `interaction_umg_component_plan`
+  - `interaction_message_popup_plan`
+  - `interaction_scroll_message_popup_plan`
+  - `interaction_dual_tile_transfer_popup_plan`
+  - `player_projectile_firing_plan`
+  - `vox_mesh_asset_pipeline_plan`
+  - `basicmap_floor_stylized_grass_dirt_material_plan`
+- `basicmap_floor_stylized_grass_dirt_material_plan`은 공식 배치 포함 플랜이다.
+- `UIPlayground`는 별도 트랙이며 현재 배치 제외다.
+- 배치 문서의 `완료`는 `batch scope 완료`를 뜻한다. `Docs` 전체 문서 완료와 같은 뜻이 아니다.
 
-1. [multi_plan_batch_execution_plan.md](./multi_plan_batch_execution_plan.md)
-   여러 구현 플랜을 한 번에 진행할 때의 상위 실행 계획이다. 어떤 플랜이 선행인지, 무엇을 병렬 처리할 수 있는지, 공용 파일과 Blueprint 충돌을 어떻게 피할지 먼저 설명한다.
+## 구현 플랜 인덱스
+| Plan ID | KR 문서 | EN 문서 | 분류 | 비고 |
+| --- | --- | --- | --- | --- |
+| `topdown_fixed_camera_wasd_plan` | [topdown_fixed_camera_wasd_plan.md](./topdown_fixed_camera_wasd_plan.md) | [topdown_fixed_camera_wasd_plan_EN.md](./topdown_fixed_camera_wasd_plan_EN.md) | batch 포함 | 선행 게이트 |
+| `interaction_umg_component_plan` | [interaction_umg_component_plan.md](./interaction_umg_component_plan.md) | [interaction_umg_component_plan_EN.md](./interaction_umg_component_plan_EN.md) | batch 포함 | `BasicMap` 저장 가능 |
+| `interaction_message_popup_plan` | [interaction_message_popup_plan.md](./interaction_message_popup_plan.md) | [interaction_message_popup_plan_EN.md](./interaction_message_popup_plan_EN.md) | batch 포함 | 후행 팝업 트랙 |
+| `interaction_scroll_message_popup_plan` | [interaction_scroll_message_popup_plan.md](./interaction_scroll_message_popup_plan.md) | - | batch 포함 | 한글 전용 문서, 후행 팝업 트랙 |
+| `interaction_dual_tile_transfer_popup_plan` | [interaction_dual_tile_transfer_popup_plan.md](./interaction_dual_tile_transfer_popup_plan.md) | - | batch 포함 | 한글 전용 문서, 후행 팝업 트랙 |
+| `player_projectile_firing_plan` | [player_projectile_firing_plan.md](./player_projectile_firing_plan.md) | [player_projectile_firing_plan_EN.md](./player_projectile_firing_plan_EN.md) | batch 포함 | 런타임 후속 트랙 |
+| `vox_mesh_asset_pipeline_plan` | [vox_mesh_asset_pipeline_plan.md](./vox_mesh_asset_pipeline_plan.md) | [vox_mesh_asset_pipeline_plan_EN.md](./vox_mesh_asset_pipeline_plan_EN.md) | batch 포함 | 독립 병렬 트랙 |
+| `basicmap_floor_stylized_grass_dirt_material_plan` | [basicmap_floor_stylized_grass_dirt_material_plan.md](./basicmap_floor_stylized_grass_dirt_material_plan.md) | [basicmap_floor_stylized_grass_dirt_material_plan_EN.md](./basicmap_floor_stylized_grass_dirt_material_plan_EN.md) | batch 포함 | 공식 floor 트랙, `BasicMap` 직접 저장 |
+| `interaction_ui_playground_popup_plan` | [interaction_ui_playground_popup_plan.md](./interaction_ui_playground_popup_plan.md) | - | batch 제외 | 별도 track, 현재 배치 제외 |
 
-2. [topdown_fixed_camera_wasd_plan.md](./topdown_fixed_camera_wasd_plan.md)
-   고정 탑다운 카메라와 `WASD` 이동 구조를 만드는 기반 계획이다. `Enhanced Input`, `DA_` 기반 입력 참조, `GameInstance` 경유 접근, commandlet 기반 애셋 생성과 테스트 가능 상태까지를 다룬다.
+## 보조 문서 인덱스
+| 문서 | 분류 | 비고 |
+| --- | --- | --- |
+| [multi_plan_batch_execution_plan.md](./multi_plan_batch_execution_plan.md) | 보조 문서 | 공식 배치 범위, 트랙, 충돌 규칙 |
+| [multi_plan_batch_execution_plan_EN.md](./multi_plan_batch_execution_plan_EN.md) | 보조 문서 | 영문 배치 계획 문서 |
+| [multi_plan_batch_execution_status.md](./multi_plan_batch_execution_status.md) | 보조 문서 | 공식 상태판 |
+| [multi_plan_batch_execution_status_EN.md](./multi_plan_batch_execution_status_EN.md) | 보조 문서 | 영문 상태판 |
+| [multi_plan_batch_execution_timeline.md](./multi_plan_batch_execution_timeline.md) | 보조 문서 | 공식 타임라인 |
+| [multi_plan_batch_execution_timeline_EN.md](./multi_plan_batch_execution_timeline_EN.md) | 보조 문서 | 영문 타임라인 |
+| [wbp_asset_work_guidelines.md](./wbp_asset_work_guidelines.md) | 보조 문서 | WBP 생성/참조 규칙 |
+| [wbp_asset_work_guidelines_EN.md](./wbp_asset_work_guidelines_EN.md) | 보조 문서 | 영문 WBP 규칙 |
+| [interaction_ui_playground_popup_implementation_checklist.md](./interaction_ui_playground_popup_implementation_checklist.md) | 보조 문서 | UIPlayground 구현 체크리스트, 현재 배치 제외 |
 
-3. [player_projectile_firing_plan.md](./player_projectile_firing_plan.md)
-   플레이어가 발사체를 쏘는 기능의 구현 계획이다. 발사 입력, 발사체 Blueprint, `DA_` 기반 참조 연결, `GameInstance` 연계, 구현 에이전트와 평가 에이전트 분리 원칙을 정의한다.
+## 학습 문서 인덱스
+| 문서 | 분류 | 비고 |
+| --- | --- | --- |
+| [Learning/dual_tile_transfer_umg_learning_guide.md](./Learning/dual_tile_transfer_umg_learning_guide.md) | 학습 문서 | 듀얼 타일 팝업 학습용 문서 |
+| [Learning/ui_playground_umg_learning_guide.md](./Learning/ui_playground_umg_learning_guide.md) | 학습 문서 | UIPlayground 학습용 문서, 현재 배치 제외 |
 
-4. [interaction_umg_component_plan.md](./interaction_umg_component_plan.md)
-   플레이어가 가까이 갔을 때 상호작용 가능 여부를 UMG로 표시하는 컴포넌트 구현 계획이다. 실제 위젯 애셋 생성, 전역 서브시스템 흐름, 단일 타겟 선택, 테스트용 상호작용 BP, 병렬 작업 지침을 포함한다.
+## canonical asset naming / alias 규칙
+아래 표는 생성 애셋 비교와 검증 시 기준이 되는 canonical 이름과 허용 alias를 정리한 것이다.
 
-5. [vox_mesh_asset_pipeline_plan.md](./vox_mesh_asset_pipeline_plan.md)
-   `.vox` 원본을 UE5 `StaticMesh` 애셋으로 변환하는 파이프라인 계획이다. 공용 VOX 머티리얼, 버텍스 컬러 사용, 매니페스트 구조, VOX 전용 commandlet과 출력 경로를 정리한다.
+| 영역 | canonical asset path | 허용 alias / legacy ref | 검증 규칙 |
+| --- | --- | --- | --- |
+| Projectile config | `/Game/Data/Projectile/DA_PlayerProjectileConfig` | `DA_Projectile_Default` | alias를 canonical path로 정규화한 뒤 비교한다. |
+| Projectile BP | `/Game/Blueprints/Projectile/BP_Projectile_PlayerBasic` | `BP_Projectile_Default` | raw filename만 보지 말고 asset path 기준으로 비교한다. |
+| Scroll popup smile icon | `/Game/UI/Interaction/T_InteractionSmileYellow` | `T_InteractionSmileIcon` | 노란 스마일 아이콘은 `T_InteractionSmileYellow`를 canonical로 본다. |
+| VOX milk bottle | `/Game/Vox/Meshes/Food/SM_Vox_MilkBottle` | `SM_Vox_BottleMilk` | VOX food는 manifest의 `targetPackagePath + targetAssetName`을 기준으로 정규화한다. |
+| VOX grape cluster | `/Game/Vox/Meshes/Food/SM_Vox_GrapeCluster` | `SM_Vox_Grapes` | alias만 다르면 누락으로 보지 않는다. |
+| VOX bone-in roast | `/Game/Vox/Meshes/Food/SM_Vox_BoneInRoast` | `SM_Vox_BoneInRoastedMeat` | canonical food path는 `/Game/Vox/Meshes/Food`다. |
+| VOX water lily | `/Game/Vox/Meshes/Foliage/SM_Vox_WaterLily` | `/Game/Vox/Meshes/Ground/SM_Vox_WaterLily`, `/Game/Vox/Meshes/Props/SM_Vox_WaterLily`, `Ground`/`Props` category ref | `SM_Vox_WaterLily`의 canonical category/path는 `Foliage`다. |
 
-6. [interaction_message_popup_plan.md](./interaction_message_popup_plan.md)
-   나무 팻말 상호작용으로 여는 중앙 메시지 팝업 구현 계획이다. 실제 `Widget Blueprint` 애셋, `Space` 닫기 입력, `OK` / `YesNo` 버튼 레이아웃, 상호작용 서브시스템을 통한 결과 전달 구조를 다룬다.
-
-7. [interaction_scroll_message_popup_plan.md](./interaction_scroll_message_popup_plan.md)
-   긴 텍스트를 스크롤해서 보여주는 중앙 팝업 구현 계획이다. 기존 단순 팝업과 거의 같은 레이아웃을 유지하면서, 노란 스마일 아이콘, 스크롤 영역, `OK` 단일 버튼, 노란 계열 틴트 차이만 추가한 변형 계획이다.
-
-8. [interaction_dual_tile_transfer_popup_plan.md](./interaction_dual_tile_transfer_popup_plan.md)
-   좌우로 나란한 2개의 스크롤 타일뷰 사이에서 숫자 타일을 드래그로 옮기는 팝업 구현 계획이다. `4 x 10` 가시 영역, `1~99` 숫자 정사각형 타일, 좌우 `타일추가` `타일지우기`, 닫기 버튼, 라운드 그라데이션 타일 텍스처 생성 계획을 포함한다.
-
-## 파일별 요약
-
-### [multi_plan_batch_execution_plan.md](./multi_plan_batch_execution_plan.md)
-
-- `topdown_fixed_camera_wasd_plan`, `interaction_umg_component_plan`, `interaction_message_popup_plan`, `interaction_scroll_message_popup_plan`, `interaction_dual_tile_transfer_popup_plan`, `player_projectile_firing_plan`, `vox_mesh_asset_pipeline_plan`을 묶는 상위 배치 실행 계획이다.
-- `topdown_fixed_camera_wasd_plan`을 선행 게이트로 두고, `vox_mesh_asset_pipeline_plan`은 별도 병렬 트랙으로 처리한다.
-- `interaction_message_popup_plan`, `interaction_scroll_message_popup_plan`, `interaction_dual_tile_transfer_popup_plan`은 모두 `interaction_umg_component_plan`과 `vox_mesh_asset_pipeline_plan` 완료 후 착수하는 후행 팝업 트랙이다.
-- 세 팝업 트랙은 가능한 시점부터 병렬 처리 가능한 독립 작업으로 본다.
-
-### [topdown_fixed_camera_wasd_plan.md](./topdown_fixed_camera_wasd_plan.md)
-
-- 정북 기준 고정 탑다운 카메라와 `WASD` 이동을 만드는 기반 문서다.
-- 입력 애셋 `IA_`, `IMC_`를 실제 애셋으로 만들고 참조를 `DA_`에 모아 `BP_GameInstance`를 통해 접근하는 구조를 제안한다.
-- commandlet로 애셋 생성과 기본 셋업을 마무리하고, 테스트 가능한 상태가 되면 에디터를 여는 지침을 포함한다.
-
-### [player_projectile_firing_plan.md](./player_projectile_firing_plan.md)
-
-- 플레이어 발사 기능을 확장 가능한 구조로 설계하는 문서다.
-- 발사체 Blueprint와 관련 설정을 `DA_` 계열 애셋에 두고, 플레이어가 직접 발사체 클래스를 들고 있지 않게 설계한다.
-- 기존 입력 체계를 우선 재사용하고, 필요 시 최소 범위만 확장하며, 구현과 평가 역할을 분리하는 원칙을 정리한다.
-
-### [interaction_umg_component_plan.md](./interaction_umg_component_plan.md)
-
-- 플레이어 접근에 따라 월드 상호작용 가능 상태를 UMG로 보여주는 컴포넌트 계획 문서다.
-- 실제 `Widget Blueprint`를 에디터 모듈 코드와 `Commandlet`로 생성하고, 전역 서브시스템이 가장 가까운 대상 하나만 `상호작용 가능` 상태로 선택하는 구조를 정의한다.
-- 테스트용 과일 BP, `먹기` 상호작용, 화면 디버그 기준, 병렬 에이전트 운영 지침까지 포함한다.
-
-### [vox_mesh_asset_pipeline_plan.md](./vox_mesh_asset_pipeline_plan.md)
-
-- 테스트용 VOX 메시를 만들고 UE5 `StaticMesh`로 자동 생성하는 파이프라인 문서다.
-- `32 x 32 x 32` 해상도, 버텍스 컬러 표현, 공용 머티리얼 1개 사용, editor UI 없는 commandlet 생성 조건을 고정한다.
-- 원본 아트 위치, 출력 메시 카테고리, UE 애셋 경로, 매니페스트, 자동화 범위를 설명한다.
-
-### [interaction_message_popup_plan.md](./interaction_message_popup_plan.md)
-
-- 나무 팻말 상호작용으로 여는 단순 메시지 팝업 계획 문서다.
-- 실제 `WBP_InteractionMessagePopup` 애셋을 에디터 모듈 코드와 `Commandlet`로 생성하고, 위젯 트리는 WBP 안에 실제로 존재해야 한다는 규칙을 따른다.
-- `OK` / `YesNo` 버튼 레이아웃, 닫기 버튼과 `Space` 닫기, 팝업 결과를 `UCodexInteractionSubsystem`으로 먼저 전달하는 구조를 정의한다.
-
-### [interaction_scroll_message_popup_plan.md](./interaction_scroll_message_popup_plan.md)
-
-- 긴 텍스트를 스크롤해서 보여주는 변형 팝업 계획 문서다.
-- 기존 `interaction_message_popup_plan.md`와 거의 같은 패널 구조를 유지하면서, 노란 스마일 아이콘, `ScrollBox` 기반 긴 본문, `OK` 단일 버튼, 노란 계열 저투명 틴트를 추가한다.
-- 상호작용 이름은 `읽기`로 고정하고, 결과는 기존 상호작용 서브시스템을 통해 먼저 전달되도록 설계한다.
-
-### [interaction_dual_tile_transfer_popup_plan.md](./interaction_dual_tile_transfer_popup_plan.md)
-
-- 좌우 2개의 스크롤 타일뷰 사이에서 숫자 타일을 드래그로 옮기는 팝업 계획 문서다.
-- `4 x 10` 가시 영역, `1~99` 숫자 정사각형 항목, 좌우별 `타일추가` `타일지우기`, 닫기 버튼, 선택/이동 흐름을 실제 WBP 애셋 기준으로 정리한다.
-- 약한 라운딩이 들어간 세로 그라데이션 텍스처를 에디터 모듈 코드와 `Commandlet`로 생성하고, 파스텔톤 단색 틴트를 입혀 타일 배경으로 재사용하는 구조를 정의한다.
+## 비교 / 검증 규칙
+- 생성 애셋 비교는 `package path + asset name`을 기준으로 한다.
+- 문서나 체크리스트에 legacy alias가 남아 있으면 canonical path로 변환한 뒤 비교한다.
+- raw filename, category 문자열, 축약 이름만으로 `누락` 또는 `오구현` 판정을 내리지 않는다.
+- batch 문서가 커버하는 범위는 공식 batch 포함 플랜 8개다.
+- batch 문서가 커버하지 않는 범위는 `UIPlayground`, 보조 문서, 학습 문서, 그리고 batch 밖 별도 트랙이다.

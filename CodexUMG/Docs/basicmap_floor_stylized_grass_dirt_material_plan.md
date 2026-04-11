@@ -5,6 +5,42 @@
 - 작업은 수동 에디터 클릭이 아니라, 현재 프로젝트에서 이미 사용하는 에디터 모듈 코드 + `Commandlet` 경로로 반복 실행 가능하게 만드는 것을 기본 원칙으로 둔다.
 - 같은 PNG를 다시 수정한 뒤 빌드를 재실행하면 텍스처와 머터리얼, `BasicMap` 적용 상태가 함께 갱신되도록 한다.
 
+## 다중 플랜 배치 연계
+- 공식 배치 포함 문서:
+  - [multi_plan_batch_execution_plan.md](./multi_plan_batch_execution_plan.md)
+  - [multi_plan_batch_execution_plan_EN.md](./multi_plan_batch_execution_plan_EN.md)
+- 소속 Track / Phase:
+  - Track H `basicmap_floor_stylized_grass_dirt_material_plan`
+  - 권장 배치 위치는 `Phase 3B. floor late map-write track`이다.
+- 선행 조건:
+  - `SourceArt/T_Stylized_Grass_Dirt_01.png`가 실제로 존재할 것
+  - `/Game/Maps/BasicMap`이 존재할 것
+  - 현재 프로젝트 에디터가 닫혀 있을 것
+  - `BasicMap` 잠금과 interaction asset build의 map-save window가 비어 있을 것
+- 공용 리소스 / 잠금 항목:
+  - `/Game/Maps/BasicMap`
+  - `/Game/Materials/T_Stylized_Grass_Dirt_01`
+  - `/Game/Materials/M_BasicMapFloor_StylizedGrassDirt01`
+  - `UCodexBasicMapFloorBuildCommandlet`
+  - interaction asset build의 `BasicMap` 저장 창구
+- 병렬 금지 규칙:
+  - floor 작업은 `BasicMap`을 직접 수정/저장한다.
+  - interaction asset build 계열도 `BasicMap`을 수정/저장할 수 있다.
+  - 따라서 `BasicMap`을 건드리는 Track C / E / F / G / H는 실제 맵 저장 구간에서 동시에 수행하지 않는다.
+- 담당 commandlet:
+  - `UCodexBasicMapFloorBuildCommandlet`
+  - 실행 토큰 `CodexBasicMapFloorBuild`
+- 최종 검증 항목:
+  - floor 텍스처 애셋 생성/갱신
+  - floor 머터리얼 애셋 생성/갱신
+  - `BasicMap` 재오픈 후 `Floor` 액터 오버라이드 유지
+  - 반복 실행 시 중복 생성과 불필요한 재저장이 없을 것
+- 다른 트랙과의 관계:
+  - `topdown_fixed_camera_wasd_plan`, `player_projectile_firing_plan`은 직접 선행 조건이 아니다.
+  - `vox_mesh_asset_pipeline_plan`과는 에디터 모듈 수준의 공용 파일만 조정하면 된다.
+  - `interaction_umg_component_plan`, `interaction_message_popup_plan`, `interaction_scroll_message_popup_plan`, `interaction_dual_tile_transfer_popup_plan`과는 `BasicMap` 저장 충돌을 조정해야 한다.
+  - `UIPlayground`는 현재 배치 제외이며 본 문서의 병렬 계획 대상이 아니다.
+
 ## 소스 파일
 - 원본 PNG: `SourceArt/T_Stylized_Grass_Dirt_01.png`
 - 본 문서 기준 원본 소스는 위 파일 하나만 사용한다.

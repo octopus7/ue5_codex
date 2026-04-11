@@ -28,6 +28,14 @@
 - 2026-04-12 드래그 불능 원인은 타일 엔트리 위젯이 상위 팝업을 자기 `Outer`에서 직접 찾는 잘못된 가정이었다. `TileView` 엔트리는 재생성되거나 래핑될 수 있으므로, 현재 구현은 `ListItemObject`의 `Outer`를 통해 팝업 owner를 찾고 같은 패턴을 재사용한다.
 - 2026-04-12 추가 원인으로, 슬롯 item의 내부 값만 바꾸고 `TileView` 엔트리를 재생성하지 않아 화면 갱신과 드롭 강조 해제가 누락되던 문제가 있었다. 현재 구현은 팝업이 드롭 대상 탐색과 강조를 중앙 관리하고, 상태 변경 뒤 엔트리를 재생성한다.
 
+## 현재 프로젝트 기준 접점
+- popup 자산 경로 상수와 공용 popup 타입은 [Source/CodexUMG/Public/Interaction/CodexInteractionAssetPaths.h](../Source/CodexUMG/Public/Interaction/CodexInteractionAssetPaths.h), [Source/CodexUMG/Public/Interaction/CodexInteractionTypes.h](../Source/CodexUMG/Public/Interaction/CodexInteractionTypes.h)를 기준으로 맞춘다.
+- 팝업 본체 클래스는 [Source/CodexUMG/Public/Interaction/CodexInteractionDualTileTransferPopupWidget.h](../Source/CodexUMG/Public/Interaction/CodexInteractionDualTileTransferPopupWidget.h)와 [Source/CodexUMG/Private/Interaction/CodexInteractionDualTileTransferPopupWidget.cpp](../Source/CodexUMG/Private/Interaction/CodexInteractionDualTileTransferPopupWidget.cpp)를 기준으로 확인한다.
+- 타일 엔트리 클래스는 [Source/CodexUMG/Public/Interaction/CodexInteractionDualTileTransferTileEntryWidget.h](../Source/CodexUMG/Public/Interaction/CodexInteractionDualTileTransferTileEntryWidget.h)와 [Source/CodexUMG/Private/Interaction/CodexInteractionDualTileTransferTileEntryWidget.cpp](../Source/CodexUMG/Private/Interaction/CodexInteractionDualTileTransferTileEntryWidget.cpp)를 기준으로 확인한다.
+- 드래그 앤 드롭 오퍼레이션은 [Source/CodexUMG/Public/Interaction/CodexTileTransferDragDropOperation.h](../Source/CodexUMG/Public/Interaction/CodexTileTransferDragDropOperation.h)를 기준으로 확인한다.
+- 테스트용 상호작용 액터는 [Source/CodexUMG/Public/Interaction/CodexDualTileTransferPopupInteractableActor.h](../Source/CodexUMG/Public/Interaction/CodexDualTileTransferPopupInteractableActor.h)와 [Source/CodexUMG/Private/Interaction/CodexDualTileTransferPopupInteractableActor.cpp](../Source/CodexUMG/Private/Interaction/CodexDualTileTransferPopupInteractableActor.cpp)를 기준으로 확인한다.
+- 에디터 모듈 생성/갱신 흐름은 [Source/CodexUMGBootstrapEditor/Private/Commandlets/CodexInteractionAssetBuildCommandlet.cpp](../Source/CodexUMGBootstrapEditor/Private/Commandlets/CodexInteractionAssetBuildCommandlet.cpp)와 [Source/CodexUMGBootstrapEditor/Private/Interaction/CodexInteractionAssetBuilder.cpp](../Source/CodexUMGBootstrapEditor/Private/Interaction/CodexInteractionAssetBuilder.cpp)를 기준으로 맞춘다.
+
 ## 목표 상태
 1. 화면 중앙에 모달 팝업이 열린다.
 2. 팝업 본문에는 좌우로 나란히 배치된 2개의 스크롤 가능한 슬롯형 타일 뷰가 있다.

@@ -22,6 +22,22 @@
 - Input handling should reuse the existing structure first, and only add the minimum scope of new input assets when reuse is impossible.
 - The structure should remain extensible for single shot, autofire, charge shots, elemental rounds, and different projectiles per weapon.
 
+## Current Project Touchpoints
+- Check the runtime projectile type against [Source/CodexUMG/Public/CodexProjectileActor.h](../Source/CodexUMG/Public/CodexProjectileActor.h) and [Source/CodexUMG/Private/CodexProjectileActor.cpp](../Source/CodexUMG/Private/CodexProjectileActor.cpp).
+- Use [Source/CodexUMG/Public/CodexProjectileConfigDataAsset.h](../Source/CodexUMG/Public/CodexProjectileConfigDataAsset.h) as the current projectile Data Asset touchpoint.
+- Verify the `GameInstance` access path against [Source/CodexUMG/Public/CodexGameInstance.h](../Source/CodexUMG/Public/CodexGameInstance.h) and [Source/CodexUMG/Private/CodexGameInstance.cpp](../Source/CodexUMG/Private/CodexGameInstance.cpp).
+- Align input expansion and player-controller binding with [Source/CodexUMG/Public/CodexTopDownInputConfigDataAsset.h](../Source/CodexUMG/Public/CodexTopDownInputConfigDataAsset.h), [Source/CodexUMG/Public/CodexTopDownPlayerController.h](../Source/CodexUMG/Public/CodexTopDownPlayerController.h), and [Source/CodexUMG/Private/CodexTopDownPlayerController.cpp](../Source/CodexUMG/Private/CodexTopDownPlayerController.cpp).
+- In the current repository, the canonical asset paths are:
+  - `/Game/Blueprints/Projectile/BP_Projectile_PlayerBasic`
+  - `/Game/Data/Projectile/DA_PlayerProjectileConfig`
+  - `/Game/Input/Actions/IA_Fire`
+
+## Canonical Asset Naming Rules
+- The canonical projectile Data Asset is `/Game/Data/Projectile/DA_PlayerProjectileConfig`.
+- The canonical projectile Blueprint is `/Game/Blueprints/Projectile/BP_Projectile_PlayerBasic`.
+- If older notes still use aliases such as `DA_Projectile_Default` or `BP_Projectile_Default`, normalize them to the canonical paths above before comparing outputs.
+- Verification uses `package path + asset name`, not raw filename alone.
+
 ## Input Handling Branch Rules
 
 ### 1. Reuse the existing firing flow first

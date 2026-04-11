@@ -22,6 +22,22 @@
 - 입력 처리 방식은 기존 구조를 우선 재사용하고, 불가할 때만 최소 범위의 입력 자산을 추가한다.
 - 이후 단일 발사, 연사, 차지샷, 속성 탄환, 무기별 다른 투사체 등으로 확장 가능해야 한다.
 
+## 현재 프로젝트 기준 접점
+- 런타임 투사체 타입은 [Source/CodexUMG/Public/CodexProjectileActor.h](../Source/CodexUMG/Public/CodexProjectileActor.h)와 [Source/CodexUMG/Private/CodexProjectileActor.cpp](../Source/CodexUMG/Private/CodexProjectileActor.cpp)를 기준으로 확인한다.
+- 투사체 Data Asset 타입은 [Source/CodexUMG/Public/CodexProjectileConfigDataAsset.h](../Source/CodexUMG/Public/CodexProjectileConfigDataAsset.h)를 기준으로 삼는다.
+- `GameInstance` 경유 접근 구조는 [Source/CodexUMG/Public/CodexGameInstance.h](../Source/CodexUMG/Public/CodexGameInstance.h)와 [Source/CodexUMG/Private/CodexGameInstance.cpp](../Source/CodexUMG/Private/CodexGameInstance.cpp)를 기준으로 확인한다.
+- 입력 확장과 플레이어 컨트롤러 바인딩은 [Source/CodexUMG/Public/CodexTopDownInputConfigDataAsset.h](../Source/CodexUMG/Public/CodexTopDownInputConfigDataAsset.h), [Source/CodexUMG/Public/CodexTopDownPlayerController.h](../Source/CodexUMG/Public/CodexTopDownPlayerController.h), [Source/CodexUMG/Private/CodexTopDownPlayerController.cpp](../Source/CodexUMG/Private/CodexTopDownPlayerController.cpp)를 기준으로 맞춘다.
+- 현재 실제 저장소 기준 canonical 애셋 경로는 아래와 같다.
+  - `/Game/Blueprints/Projectile/BP_Projectile_PlayerBasic`
+  - `/Game/Data/Projectile/DA_PlayerProjectileConfig`
+  - `/Game/Input/Actions/IA_Fire`
+
+## canonical 애셋 명명 규칙
+- canonical projectile Data Asset은 `/Game/Data/Projectile/DA_PlayerProjectileConfig`다.
+- canonical projectile Blueprint는 `/Game/Blueprints/Projectile/BP_Projectile_PlayerBasic`다.
+- 문서나 체크리스트에 `DA_Projectile_Default`, `BP_Projectile_Default` 같은 legacy alias가 남아 있어도 비교 시에는 위 canonical 경로로 정규화한다.
+- 검증 기준은 raw filename이 아니라 `package path + asset name`이다.
+
 ## 입력 처리 분기 원칙
 
 ### 1. 기존 발사 처리 재사용 우선

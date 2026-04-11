@@ -69,6 +69,17 @@ This is not just an idea note. It is a baseline document that includes coordinat
   - `/Game/Vox/Meshes/Foliage/`
   - `/Game/Vox/Meshes/Ground/`
 
+## Canonical Generated Asset Naming Rules
+- Compare generated outputs by the manifest's `targetPackagePath + targetAssetName` plus the canonical rules below, not by raw filename alone.
+- If a legacy alias still appears in a document or checklist, normalize it to the canonical path before verifying results.
+
+| Target | Canonical asset path | Accepted alias / legacy reference | Notes |
+| --- | --- | --- | --- |
+| Milk bottle | `/Game/Vox/Meshes/Food/SM_Vox_MilkBottle` | `SM_Vox_BottleMilk` | fixed food category |
+| Grape cluster | `/Game/Vox/Meshes/Food/SM_Vox_GrapeCluster` | `SM_Vox_Grapes` | fixed food category |
+| Bone-in roast | `/Game/Vox/Meshes/Food/SM_Vox_BoneInRoast` | `SM_Vox_BoneInRoastedMeat` | fixed food category |
+| Water lily | `/Game/Vox/Meshes/Foliage/SM_Vox_WaterLily` | `/Game/Vox/Meshes/Ground/SM_Vox_WaterLily`, `/Game/Vox/Meshes/Props/SM_Vox_WaterLily`, `Ground` / `Props` category refs | the canonical category and path for `SM_Vox_WaterLily` are `Foliage` |
+
 ## UE Asset Specification
 
 ### Color handling

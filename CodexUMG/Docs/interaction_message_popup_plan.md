@@ -27,7 +27,10 @@
 - 상호작용 중심 진입점은 이미 [Source/CodexUMG/Public/Interaction/CodexInteractionSubsystem.h](../Source/CodexUMG/Public/Interaction/CodexInteractionSubsystem.h)에 `UCodexInteractionSubsystem`으로 존재한다.
 - 월드 대상 상호작용 데이터는 [Source/CodexUMG/Public/Interaction/CodexInteractionComponent.h](../Source/CodexUMG/Public/Interaction/CodexInteractionComponent.h)의 `UCodexInteractionComponent`가 담당한다.
 - 현재 상호작용 요청 구조체는 [Source/CodexUMG/Public/Interaction/CodexInteractionTypes.h](../Source/CodexUMG/Public/Interaction/CodexInteractionTypes.h)의 `FCodexInteractionRequest`를 사용한다.
+- 현재 popup 자산 경로 상수는 [Source/CodexUMG/Public/Interaction/CodexInteractionAssetPaths.h](../Source/CodexUMG/Public/Interaction/CodexInteractionAssetPaths.h)를 기준으로 맞춘다.
 - 테스트용 상호작용 액터 기반 클래스는 [Source/CodexUMG/Public/Interaction/CodexInteractableActor.h](../Source/CodexUMG/Public/Interaction/CodexInteractableActor.h)의 `ACodexInteractableActor`를 재사용할 수 있다.
+- popup 위젯 C++ 베이스 클래스는 [Source/CodexUMG/Public/Interaction/CodexInteractionMessagePopupWidget.h](../Source/CodexUMG/Public/Interaction/CodexInteractionMessagePopupWidget.h)와 [Source/CodexUMG/Private/Interaction/CodexInteractionMessagePopupWidget.cpp](../Source/CodexUMG/Private/Interaction/CodexInteractionMessagePopupWidget.cpp)를 기준으로 확장한다.
+- popup형 상호작용 액터 기반 클래스는 [Source/CodexUMG/Public/Interaction/CodexPopupInteractableActor.h](../Source/CodexUMG/Public/Interaction/CodexPopupInteractableActor.h)와 [Source/CodexUMG/Private/Interaction/CodexPopupInteractableActor.cpp](../Source/CodexUMG/Private/Interaction/CodexPopupInteractableActor.cpp)를 기준으로 확인한다.
 - 기존 `Widget Blueprint` 생성 패턴은 [Source/CodexUMGBootstrapEditor/Private/Interaction/CodexInteractionAssetBuilder.cpp](../Source/CodexUMGBootstrapEditor/Private/Interaction/CodexInteractionAssetBuilder.cpp)의 `UWidgetBlueprintFactory` 사용 흐름을 기준으로 맞추면 된다.
 - 기존 입력 바인딩 확장 패턴은 [Source/CodexUMG/Private/CodexTopDownPlayerController.cpp](../Source/CodexUMG/Private/CodexTopDownPlayerController.cpp)와 [Source/CodexUMG/Public/CodexTopDownInputConfigDataAsset.h](../Source/CodexUMG/Public/CodexTopDownInputConfigDataAsset.h)를 기준으로 따른다.
 - 런타임/에디터 모듈 모두 이미 `UMG` 의존성을 가지고 있으므로, 1차 구현의 핵심은 새 UI 구조와 상호작용 흐름 추가다.

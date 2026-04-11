@@ -31,6 +31,10 @@
 
 ## 현재 프로젝트 기준 접점
 - 상호작용 진입점은 [Source/CodexUMG/Public/Interaction/CodexInteractionSubsystem.h](../Source/CodexUMG/Public/Interaction/CodexInteractionSubsystem.h)의 `UCodexInteractionSubsystem`을 기준으로 삼는다.
+- popup 자산 경로 상수는 [Source/CodexUMG/Public/Interaction/CodexInteractionAssetPaths.h](../Source/CodexUMG/Public/Interaction/CodexInteractionAssetPaths.h)를 기준으로 맞춘다.
+- popup 요청/응답 타입은 [Source/CodexUMG/Public/Interaction/CodexInteractionTypes.h](../Source/CodexUMG/Public/Interaction/CodexInteractionTypes.h)를 기준으로 확장한다.
+- 스크롤 팝업 위젯 클래스는 [Source/CodexUMG/Public/Interaction/CodexInteractionScrollMessagePopupWidget.h](../Source/CodexUMG/Public/Interaction/CodexInteractionScrollMessagePopupWidget.h)와 [Source/CodexUMG/Private/Interaction/CodexInteractionScrollMessagePopupWidget.cpp](../Source/CodexUMG/Private/Interaction/CodexInteractionScrollMessagePopupWidget.cpp)를 기준으로 확인한다.
+- 스크롤 팝업용 상호작용 액터는 [Source/CodexUMG/Public/Interaction/CodexScrollMessagePopupInteractableActor.h](../Source/CodexUMG/Public/Interaction/CodexScrollMessagePopupInteractableActor.h)와 [Source/CodexUMG/Private/Interaction/CodexScrollMessagePopupInteractableActor.cpp](../Source/CodexUMG/Private/Interaction/CodexScrollMessagePopupInteractableActor.cpp)를 기준으로 확인한다.
 - 기존 팝업형 상호작용 흐름과 입력 처리 확장 방식은 [interaction_message_popup_plan.md](./interaction_message_popup_plan.md)의 방향을 따른다.
 - 기존 `Widget Blueprint` 생성 패턴은 [Source/CodexUMGBootstrapEditor/Private/Interaction/CodexInteractionAssetBuilder.cpp](../Source/CodexUMGBootstrapEditor/Private/Interaction/CodexInteractionAssetBuilder.cpp)의 흐름을 기준으로 본다.
 - 플레이어 컨트롤러의 popup 입력 모드 전환, 마우스 커서 표시, 서브시스템 연결 방식은 기존 단순 팝업 구현을 재사용하는 것이 우선이다.
@@ -135,6 +139,8 @@
   - 단순 메시지 팝업용 `BP_Interactable_WoodenSignPopup`과 별도 애셋
 - 팝업에 사용되는 노란 스마일 아이콘 텍스처 애셋
   - 외부 파일 임포트가 아니라 에디터 모듈 코드 + commandlet로 생성
+  - canonical asset path는 `/Game/UI/Interaction/T_InteractionSmileYellow`로 고정한다.
+  - legacy alias `T_InteractionSmileIcon`이 문서에 남아 있더라도 비교 시에는 `T_InteractionSmileYellow`로 정규화한다.
 - 필요 시 `/Game/Maps/BasicMap` 또는 테스트 맵에 스크롤 팝업용 BP를 별도 배치
 
 ## WBP 구조 명세

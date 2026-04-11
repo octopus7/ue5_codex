@@ -5,6 +5,42 @@
 - The base rule is to make the work repeatable through the editor-module code and `Commandlet` path already used in the project, not through manual editor clicking.
 - If the same PNG is modified again and the build is rerun, the texture, material, and `BasicMap` assignment state must all update together.
 
+## Multi-Plan Batch Integration
+- Official batch documents:
+  - [multi_plan_batch_execution_plan.md](./multi_plan_batch_execution_plan.md)
+  - [multi_plan_batch_execution_plan_EN.md](./multi_plan_batch_execution_plan_EN.md)
+- Track / phase placement:
+  - Track H `basicmap_floor_stylized_grass_dirt_material_plan`
+  - the recommended position is `Phase 3B. floor late map-write track`
+- Prerequisites:
+  - `SourceArt/T_Stylized_Grass_Dirt_01.png` must exist
+  - `/Game/Maps/BasicMap` must exist
+  - the current project editor must be closed
+  - the `BasicMap` lock and the interaction-asset-build map-save window must both be free
+- Shared resources / lock items:
+  - `/Game/Maps/BasicMap`
+  - `/Game/Materials/T_Stylized_Grass_Dirt_01`
+  - `/Game/Materials/M_BasicMapFloor_StylizedGrassDirt01`
+  - `UCodexBasicMapFloorBuildCommandlet`
+  - the interaction asset build `BasicMap` save window
+- No-parallel rule:
+  - the floor task directly modifies and saves `BasicMap`
+  - the interaction asset build family can also modify and save `BasicMap`
+  - therefore Tracks C / E / F / G / H must not run their real map-save sections at the same time
+- Owned commandlet:
+  - `UCodexBasicMapFloorBuildCommandlet`
+  - runtime token `CodexBasicMapFloorBuild`
+- Final verification targets:
+  - floor texture asset created or updated
+  - floor material asset created or updated
+  - `Floor` override persists after reopening `BasicMap`
+  - repeat runs do not create duplicates or unnecessary resaves
+- Relationship to other tracks:
+  - `topdown_fixed_camera_wasd_plan` and `player_projectile_firing_plan` are not hard prerequisites
+  - `vox_mesh_asset_pipeline_plan` only needs shared editor-module coordination
+  - `interaction_umg_component_plan`, `interaction_message_popup_plan`, `interaction_scroll_message_popup_plan`, and `interaction_dual_tile_transfer_popup_plan` share `BasicMap` save-conflict risk
+  - `UIPlayground` is currently out of batch scope and is not part of this floor-track parallelization plan
+
 ## Source File
 - Original PNG: `SourceArt/T_Stylized_Grass_Dirt_01.png`
 - Under this document's rules, that single file is the only source input.
