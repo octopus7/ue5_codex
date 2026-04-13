@@ -25,6 +25,8 @@
 
 #### [NEW] [GeminiFlashSimplePopupWidget.h](file:///d:/github/ue5_codex/CodexUMG/Source/CodexUMG/Public/Simple/GeminiFlashSimplePopupWidget.h) / [.cpp](file:///d:/github/ue5_codex/CodexUMG/Source/CodexUMG/Private/Simple/GeminiFlashSimplePopupWidget.cpp)
 - 슬롯들을 담는 컨테이너.
+- **4x2 Grid Layout**: 총 8개의 슬롯을 `UniformGridPanel`에 배치.
+- **Initial Data**: 시작 시 3개의 슬롯에 숫자 1, 2, 3을 무작위 혹은 순차적으로 채우고 나머지는 빈 슬롯으로 설정.
 - 슬롯 간 데이터 스와프(`SwapValues`) 로직 담당.
 
 ### 2. Automation System (Editor Module)
