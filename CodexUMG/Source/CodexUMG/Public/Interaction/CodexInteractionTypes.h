@@ -38,7 +38,8 @@ enum class ECodexInteractionPopupStyle : uint8
 {
 	Message,
 	ScrollMessage,
-	DualTileTransfer
+	DualTileTransfer,
+	GeminiFlashSimple
 };
 
 UENUM(BlueprintType)

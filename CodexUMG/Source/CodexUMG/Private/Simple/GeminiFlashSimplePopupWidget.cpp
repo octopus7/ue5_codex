@@ -2,6 +2,7 @@
 
 #include "Simple/GeminiFlashSimplePopupWidget.h"
 #include "Simple/GeminiFlashSimpleSlotWidget.h"
+#include "Interaction/CodexInteractionTypes.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
 
@@ -50,4 +51,9 @@ void UGeminiFlashSimplePopupWidget::HandleSwap(UGeminiFlashSimpleSlotWidget* Fro
 	// Swap values
 	FromSlot->SetValue(ValueTo);
 	ToSlot->SetValue(ValueFrom);
+}
+
+void UGeminiFlashSimplePopupWidget::ApplyPopupRequest(const FCodexInteractionPopupRequest& Request, UCodexInteractionSubsystem& Subsystem)
+{
+	// Ensure the widget is ready to handle the request if needed in the future
 }

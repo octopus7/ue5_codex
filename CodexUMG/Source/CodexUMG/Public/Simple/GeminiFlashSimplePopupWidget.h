@@ -20,6 +20,9 @@ class CODEXUMG_API UGeminiFlashSimplePopupWidget : public UUserWidget
 public:
 	virtual void NativeConstruct() override;
 
+	/** Initializes the widget with request data */
+	void ApplyPopupRequest(const struct FCodexInteractionPopupRequest& Request, class UCodexInteractionSubsystem& Subsystem);
+
 	// Swaps values between two slots
 	void HandleSwap(UGeminiFlashSimpleSlotWidget* FromSlot, UGeminiFlashSimpleSlotWidget* ToSlot);
 

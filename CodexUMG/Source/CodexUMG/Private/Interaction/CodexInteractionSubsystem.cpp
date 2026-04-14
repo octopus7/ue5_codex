@@ -8,6 +8,7 @@
 #include "Interaction/CodexInteractionMessagePopupWidget.h"
 #include "Interaction/CodexInteractionScrollMessagePopupWidget.h"
 #include "Interaction/CodexPopupInteractableActor.h"
+#include "Simple/GeminiFlashSimplePopupWidget.h"
 #include "Interaction/CodexInteractionTarget.h"
 #include "Blueprint/UserWidget.h"
 #include "Engine/Engine.h"
@@ -49,13 +50,24 @@ namespace
 		case ECodexInteractionPopupStyle::DualTileTransfer:
 			AssetObjectPath = CodexInteractionAssetPaths::DualTileTransferPopupWidgetObjectPath;
 			break;
+		case ECodexInteractionPopupStyle::GeminiFlashSimple:
+			AssetObjectPath = CodexInteractionAssetPaths::GeminiFlashSimplePopupWidgetObjectPath;
+			break;
 
 		case ECodexInteractionPopupStyle::Message:
 		default:
 			break;
 		}
 
-		return LoadClass<UUserWidget>(nullptr, *CodexInteractionAssetPaths::MakeGeneratedClassObjectPath(AssetObjectPath));
+		FString ClassPath = CodexInteractionAssetPaths::MakeGeneratedClassObjectPath(AssetObjectPath);
+		TSubclassOf<UUserWidget> LoadedClass = LoadClass<UUserWidget>(nullptr, *ClassPath);
+		
+		if (!LoadedClass)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Failed to load widget class at path: %s"), *ClassPath);
+		}
+
+		return LoadedClass;
 	}
 }
 
@@ -194,6 +206,17 @@ bool UCodexInteractionSubsystem::OpenInteractionPopup(const FCodexInteractionPop
 
 		DualTilePopupWidget->ApplyPopupRequest(Request, *this);
 		PopupWidget = DualTilePopupWidget;
+	}
+	else if (Request.PopupStyle == ECodexInteractionPopupStyle::GeminiFlashSimple)
+	{
+		UGeminiFlashSimplePopupWidget* GeminiPopupWidget = CreateWidget<UGeminiFlashSimplePopupWidget>(RequestingController, PopupWidgetClass);
+		if (GeminiPopupWidget == nullptr)
+		{
+			return false;
+		}
+
+		GeminiPopupWidget->ApplyPopupRequest(Request, *this);
+		PopupWidget = GeminiPopupWidget;
 	}
 	else
 	{
