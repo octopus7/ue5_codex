@@ -127,15 +127,37 @@ namespace
 		RootBorder->SetPadding(FMargin(10.0f));
 		RootBorder->SetBrushColor(FLinearColor(1, 1, 1, 0.1f));
 
+		UOverlay* SlotOverlay = Tree->ConstructWidget<UOverlay>(UOverlay::StaticClass(), TEXT("SlotOverlay"));
+		RootBorder->SetContent(SlotOverlay);
+		EnsureWidgetGuid(WBP, SlotOverlay);
+
+		// Center Value
 		UTextBlock* ValueText = Tree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TXT_Value"));
-		RootBorder->SetContent(ValueText);
+		UOverlaySlot* ValueSlot = SlotOverlay->AddChildToOverlay(ValueText);
 		EnsureWidgetGuid(WBP, ValueText);
 		ValueText->bIsVariable = true;
 		ValueText->SetJustification(ETextJustify::Center);
+		ValueSlot->SetHorizontalAlignment(HAlign_Center);
+		ValueSlot->SetVerticalAlignment(VAlign_Center);
 		
-		FSlateFontInfo Font = ValueText->GetFont();
-		Font.Size = 32;
-		ValueText->SetFont(Font);
+		FSlateFontInfo ValueFont = ValueText->GetFont();
+		ValueFont.Size = 32;
+		ValueText->SetFont(ValueFont);
+
+		// Bottom GUID
+		UTextBlock* GuidText = Tree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("TXT_Guid"));
+		UOverlaySlot* GuidSlot = SlotOverlay->AddChildToOverlay(GuidText);
+		EnsureWidgetGuid(WBP, GuidText);
+		GuidText->bIsVariable = true;
+		GuidText->SetJustification(ETextJustify::Center);
+		GuidSlot->SetHorizontalAlignment(HAlign_Center);
+		GuidSlot->SetVerticalAlignment(VAlign_Bottom);
+		GuidSlot->SetPadding(FMargin(0, 0, 0, 5.0f));
+
+		FSlateFontInfo GuidFont = GuidText->GetFont();
+		GuidFont.Size = 18;
+		GuidText->SetFont(GuidFont);
+		GuidText->SetColorAndOpacity(FSlateColor(FLinearColor(1, 1, 1, 0.6f)));
 
 		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(WBP);
 		CompileBlueprint(WBP);

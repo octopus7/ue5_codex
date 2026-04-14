@@ -7,12 +7,19 @@
 #include "Components/TextBlock.h"
 #include "Components/Border.h"
 
-void UGeminiFlashSimpleSlotWidget::SetValue(int32 InValue)
+void UGeminiFlashSimpleSlotWidget::SetItemInstance(const FGeminiFlashItemInstance& InInstance)
 {
-	Value = InValue;
+	ItemInstance = InInstance;
+
 	if (TXT_Value)
 	{
-		TXT_Value->SetText(Value > 0 ? FText::AsNumber(Value) : FText::GetEmpty());
+		TXT_Value->SetText(ItemInstance.DisplayValue > 0 ? FText::AsNumber(ItemInstance.DisplayValue) : FText::GetEmpty());
+	}
+
+	if (TXT_Guid)
+	{
+		TXT_Guid->SetText(FText::FromString(ItemInstance.GetShortGuid()));
+		TXT_Guid->SetVisibility(ItemInstance.IsValid() ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
 	}
 }
 
@@ -27,7 +34,7 @@ void UGeminiFlashSimpleSlotWidget::SetHighlight(bool bHighlight)
 FReply UGeminiFlashSimpleSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	// Detect drag if clicking with Left Mouse Button on a non-empty slot
-	if (Value > 0 && InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))
+	if (ItemInstance.IsValid() && InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))
 	{
 		return UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton).NativeReply;
 	}
@@ -45,7 +52,7 @@ void UGeminiFlashSimpleSlotWidget::NativeOnDragDetected(const FGeometry& InGeome
 
 	if (Operation)
 	{
-		Operation->Value = Value;
+		Operation->DraggedItem = ItemInstance;
 		Operation->SourceWidget = this;
 		Operation->DefaultDragVisual = this; // Use itself as visual for simplicity
 		Operation->Pivot = EDragPivot::CenterCenter;

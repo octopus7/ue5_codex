@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Blueprint/DragDropOperation.h"
+#include "Simple/GeminiFlashSimpleTypes.h"
 #include "GeminiFlashSimpleDragDropOperation.generated.h"
 
 /**
@@ -14,9 +15,9 @@ class CODEXUMG_API UGeminiFlashSimpleDragDropOperation : public UDragDropOperati
 	GENERATED_BODY()
 
 public:
-	// The value being transferred
+	// The item instance being transferred
 	UPROPERTY(BlueprintReadOnly, Category = "GeminiFlash|Simple")
-	int32 Value = 0;
+	FGeminiFlashItemInstance DraggedItem;
 
 	// The slot widget where the drag started
 	UPROPERTY(BlueprintReadOnly, Category = "GeminiFlash|Simple")

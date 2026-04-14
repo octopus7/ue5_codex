@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Blueprint/UserWidget.h"
+#include "Simple/GeminiFlashSimpleTypes.h"
 #include "GeminiFlashSimpleSlotWidget.generated.h"
 
 class UTextBlock;
@@ -17,11 +18,11 @@ class CODEXUMG_API UGeminiFlashSimpleSlotWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	// Sets the value of the slot and updates visuals
-	void SetValue(int32 InValue);
+	// Sets the item instance of the slot and updates visuals
+	void SetItemInstance(const FGeminiFlashItemInstance& InInstance);
 
-	// Gets current value
-	int32 GetValue() const { return Value; }
+	// Gets current item instance
+	const FGeminiFlashItemInstance& GetItemInstance() const { return ItemInstance; }
 
 	// Toggles highlight border
 	void SetHighlight(bool bHighlight);
@@ -38,9 +39,13 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> TXT_Value;
 
+	UPROPERTY(meta = (BindWidget, OptionalWidget = true))
+	TObjectPtr<UTextBlock> TXT_Guid;
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UBorder> Border_Highlight;
 
 private:
-	int32 Value = 0;
+	UPROPERTY(Transient)
+	FGeminiFlashItemInstance ItemInstance;
 };

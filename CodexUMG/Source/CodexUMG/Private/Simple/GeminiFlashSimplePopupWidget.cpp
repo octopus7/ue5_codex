@@ -29,16 +29,23 @@ void UGeminiFlashSimplePopupWidget::NativeConstruct()
 			}
 		}
 
-		// Initialize with values 1, 2, 3 in the first three slots as requested
+		// Initialize with values 1, 2, 3 twice (total 6 unique items)
 		for (int32 i = 0; i < Slots.Num(); ++i)
 		{
 			if (i < 3)
 			{
-				Slots[i]->SetValue(i + 1);
+				// First set: 1, 2, 3
+				Slots[i]->SetItemInstance(FGeminiFlashItemInstance(i + 1));
+			}
+			else if (i < 6)
+			{
+				// Second set: 1, 2, 3 (but will have unique GUIDs)
+				Slots[i]->SetItemInstance(FGeminiFlashItemInstance(i - 3 + 1));
 			}
 			else
 			{
-				Slots[i]->SetValue(0); // Empty
+				// Empty slots
+				Slots[i]->SetItemInstance(FGeminiFlashItemInstance());
 			}
 			Slots[i]->SetHighlight(false);
 		}
@@ -52,12 +59,12 @@ void UGeminiFlashSimplePopupWidget::HandleSwap(UGeminiFlashSimpleSlotWidget* Fro
 		return;
 	}
 
-	const int32 ValueFrom = FromSlot->GetValue();
-	const int32 ValueTo = ToSlot->GetValue();
+	const FGeminiFlashItemInstance InstanceFrom = FromSlot->GetItemInstance();
+	const FGeminiFlashItemInstance InstanceTo = ToSlot->GetItemInstance();
 
-	// Swap values
-	FromSlot->SetValue(ValueTo);
-	ToSlot->SetValue(ValueFrom);
+	// Swap complete structs
+	FromSlot->SetItemInstance(InstanceTo);
+	ToSlot->SetItemInstance(InstanceFrom);
 }
 
 void UGeminiFlashSimplePopupWidget::ApplyPopupRequest(const FCodexInteractionPopupRequest& Request, UCodexInteractionSubsystem& Subsystem)
