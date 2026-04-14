@@ -126,6 +126,7 @@ namespace
 		RootBorder->bIsVariable = true;
 		RootBorder->SetPadding(FMargin(10.0f));
 		RootBorder->SetBrushColor(FLinearColor(1, 1, 1, 0.1f));
+		RootBorder->SetVisibility(ESlateVisibility::Visible); // Ensure it captures hits
 
 		UOverlay* SlotOverlay = Tree->ConstructWidget<UOverlay>(UOverlay::StaticClass(), TEXT("SlotOverlay"));
 		RootBorder->SetContent(SlotOverlay);
@@ -137,6 +138,7 @@ namespace
 		EnsureWidgetGuid(WBP, ValueText);
 		ValueText->bIsVariable = true;
 		ValueText->SetJustification(ETextJustify::Center);
+		ValueText->SetVisibility(ESlateVisibility::SelfHitTestInvisible); // Pass hits to parent
 		ValueSlot->SetHorizontalAlignment(HAlign_Center);
 		ValueSlot->SetVerticalAlignment(VAlign_Center);
 		
@@ -150,6 +152,7 @@ namespace
 		EnsureWidgetGuid(WBP, GuidText);
 		GuidText->bIsVariable = true;
 		GuidText->SetJustification(ETextJustify::Center);
+		GuidText->SetVisibility(ESlateVisibility::SelfHitTestInvisible); // Pass hits to parent
 		GuidSlot->SetHorizontalAlignment(HAlign_Center);
 		GuidSlot->SetVerticalAlignment(VAlign_Bottom);
 		GuidSlot->SetPadding(FMargin(0, 0, 0, 5.0f));
@@ -246,6 +249,9 @@ namespace
 				{
 					GridSlot->SetColumn(i % 4);
 					GridSlot->SetRow(i / 4);
+					// Force center alignment to prevent stretching into a rectangle
+					GridSlot->SetHorizontalAlignment(HAlign_Center);
+					GridSlot->SetVerticalAlignment(VAlign_Center);
 				}
 			}
 		}

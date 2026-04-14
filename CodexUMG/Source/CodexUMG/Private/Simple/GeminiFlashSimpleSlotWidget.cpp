@@ -54,7 +54,18 @@ void UGeminiFlashSimpleSlotWidget::NativeOnDragDetected(const FGeometry& InGeome
 	{
 		Operation->DraggedItem = ItemInstance;
 		Operation->SourceWidget = this;
-		Operation->DefaultDragVisual = this; // Use itself as visual for simplicity
+		
+		// Create a separate visual widget so it doesn't block hit testing
+		if (UUserWidget* VisualWidget = CreateWidget<UUserWidget>(this, GetClass()))
+		{
+			if (UGeminiFlashSimpleSlotWidget* CastVisual = Cast<UGeminiFlashSimpleSlotWidget>(VisualWidget))
+			{
+				CastVisual->SetItemInstance(ItemInstance);
+				CastVisual->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+			}
+			Operation->DefaultDragVisual = VisualWidget;
+		}
+		
 		Operation->Pivot = EDragPivot::CenterCenter;
 
 		OutOperation = Operation;
