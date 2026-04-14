@@ -5,10 +5,17 @@
 #include "Interaction/CodexInteractionTypes.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
+#include "Components/Button.h"
+#include "Interaction/CodexInteractionSubsystem.h"
 
 void UGeminiFlashSimplePopupWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
+
+	if (Button_Close)
+	{
+		Button_Close->OnClicked.AddDynamic(this, &UGeminiFlashSimplePopupWidget::OnCloseClicked);
+	}
 
 	if (Grid_Slots)
 	{
@@ -55,5 +62,23 @@ void UGeminiFlashSimplePopupWidget::HandleSwap(UGeminiFlashSimpleSlotWidget* Fro
 
 void UGeminiFlashSimplePopupWidget::ApplyPopupRequest(const FCodexInteractionPopupRequest& Request, UCodexInteractionSubsystem& Subsystem)
 {
-	// Ensure the widget is ready to handle the request if needed in the future
+	InteractionSubsystem = &Subsystem;
+	CurrentRequest = Request;
+}
+
+void UGeminiFlashSimplePopupWidget::OnCloseClicked()
+{
+	if (InteractionSubsystem)
+	{
+		FCodexInteractionPopupResponse Response;
+		Response.RequestId = CurrentRequest.RequestId;
+		Response.Result = ECodexPopupResult::Closed;
+		Response.InteractionRequest = CurrentRequest.InteractionRequest;
+		
+		InteractionSubsystem->SubmitInteractionPopupResult(Response);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GeminiFlashSimplePopup: Cannot close, InteractionSubsystem is null!"));
+	}
 }

@@ -14,6 +14,10 @@
 #include "Components/CanvasPanelSlot.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
+#include "Components/Button.h"
+#include "Components/ButtonSlot.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h"
 #include "Components/StaticMeshComponent.h"
@@ -161,11 +165,53 @@ namespace
 			CanvasSlot->SetAutoSize(true);
 		}
 
+		UOverlay* MainOverlay = Tree->ConstructWidget<UOverlay>(UOverlay::StaticClass(), TEXT("MainOverlay"));
+		BackgroundBorder->SetContent(MainOverlay);
+		EnsureWidgetGuid(WBP, MainOverlay);
+
 		UUniformGridPanel* Grid = Tree->ConstructWidget<UUniformGridPanel>(UUniformGridPanel::StaticClass(), TEXT("Grid_Slots"));
-		BackgroundBorder->SetContent(Grid);
+		MainOverlay->AddChild(Grid);
 		EnsureWidgetGuid(WBP, Grid);
 		Grid->bIsVariable = true;
 		Grid->SetSlotPadding(FMargin(8.0f));
+
+		if (UOverlaySlot* GridOverlaySlot = Cast<UOverlaySlot>(Grid->Slot))
+		{
+			// Give some padding at the top-right for the close button
+			GridOverlaySlot->SetPadding(FMargin(0.0f, 30.0f, 30.0f, 0.0f));
+		}
+
+		// Add Close Button (Red box with white X)
+		UButton* CloseButton = Tree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("Button_Close"));
+		MainOverlay->AddChild(CloseButton);
+		EnsureWidgetGuid(WBP, CloseButton);
+		CloseButton->bIsVariable = true;
+
+		if (UOverlaySlot* CloseOverlaySlot = Cast<UOverlaySlot>(CloseButton->Slot))
+		{
+			CloseOverlaySlot->SetHorizontalAlignment(HAlign_Right);
+			CloseOverlaySlot->SetVerticalAlignment(VAlign_Top);
+		}
+
+		// Button Appearance (Red)
+		FButtonStyle CloseButtonStyle = CloseButton->GetStyle();
+		CloseButtonStyle.Normal.TintColor = FSlateColor(FLinearColor(0.8f, 0.1f, 0.1f, 1.0f));
+		CloseButtonStyle.Hovered.TintColor = FSlateColor(FLinearColor(1.0f, 0.2f, 0.2f, 1.0f));
+		CloseButtonStyle.Pressed.TintColor = FSlateColor(FLinearColor(0.6f, 0.0f, 0.0f, 1.0f));
+		CloseButton->SetStyle(CloseButtonStyle);
+
+		// X Mark
+		UTextBlock* XText = Tree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("Text_X"));
+		CloseButton->SetContent(XText);
+		EnsureWidgetGuid(WBP, XText);
+		XText->SetText(FText::FromString(TEXT("X")));
+		XText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+		
+		if (UButtonSlot* XSlot = Cast<UButtonSlot>(XText->Slot))
+		{
+			XSlot->SetHorizontalAlignment(HAlign_Center);
+			XSlot->SetVerticalAlignment(VAlign_Center);
+		}
 
 		for (int32 i = 0; i < 8; ++i)
 		{

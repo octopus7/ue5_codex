@@ -3,10 +3,13 @@
 #pragma once
 
 #include "Blueprint/UserWidget.h"
+#include "Interaction/CodexInteractionTypes.h"
 #include "GeminiFlashSimplePopupWidget.generated.h"
 
 class UUniformGridPanel;
 class UGeminiFlashSimpleSlotWidget;
+class UButton;
+class UCodexInteractionSubsystem;
 
 /**
  * Main container for the simplified drag-and-drop demo.
@@ -31,8 +34,20 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UUniformGridPanel> Grid_Slots;
 
+	UPROPERTY(meta = (BindWidget, OptionalWidget = true))
+	TObjectPtr<UButton> Button_Close;
+
+	UFUNCTION()
+	void OnCloseClicked();
+
 private:
 	// All managed slots in order
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UGeminiFlashSimpleSlotWidget>> Slots;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UCodexInteractionSubsystem> InteractionSubsystem;
+
+	UPROPERTY(Transient)
+	FCodexInteractionPopupRequest CurrentRequest;
 };
