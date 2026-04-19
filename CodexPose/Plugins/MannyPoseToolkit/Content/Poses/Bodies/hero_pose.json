@@ -1,0 +1,152 @@
+{
+  "version": "1.1",
+  "skeleton": "UE5_Manny",
+  "referencePose": "A_Pose",
+  "name": "hero_pose",
+  "ikControls": {},
+  "fkBones": {
+    "pelvis": {
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    "spine_01": {
+      "rotation": [
+        0,
+        5,
+        0
+      ]
+    },
+    "spine_02": {
+      "rotation": [
+        0,
+        8,
+        0
+      ]
+    },
+    "spine_03": {
+      "rotation": [
+        0,
+        10,
+        0
+      ]
+    },
+    "clavicle_l": {
+      "rotation": [
+        0,
+        -12,
+        -4
+      ]
+    },
+    "clavicle_r": {
+      "rotation": [
+        0,
+        12,
+        4
+      ]
+    },
+    "upperarm_l": {
+      "rotation": [
+        4,
+        -28,
+        -10
+      ]
+    },
+    "upperarm_r": {
+      "rotation": [
+        4,
+        28,
+        10
+      ]
+    },
+    "lowerarm_l": {
+      "rotation": [
+        0,
+        -35,
+        0
+      ]
+    },
+    "lowerarm_r": {
+      "rotation": [
+        0,
+        35,
+        0
+      ]
+    },
+    "hand_l": {
+      "rotation": [
+        0,
+        8,
+        -10
+      ]
+    },
+    "hand_r": {
+      "rotation": [
+        0,
+        -8,
+        10
+      ]
+    },
+    "thigh_l": {
+      "rotation": [
+        0,
+        2,
+        0
+      ]
+    },
+    "thigh_r": {
+      "rotation": [
+        0,
+        -2,
+        0
+      ]
+    },
+    "calf_l": {
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    "calf_r": {
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    "foot_l": {
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    "foot_r": {
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    "neck_01": {
+      "rotation": [
+        0,
+        4,
+        0
+      ]
+    },
+    "head": {
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "leftHandPreset": "relaxed_open",
+  "rightHandPreset": "relaxed_open",
+  "fingerOffsets": {}
+}

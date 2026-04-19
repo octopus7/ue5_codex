@@ -1,0 +1,55 @@
+{
+  "Version": "1.0",
+  "Skeleton": "UE5_Manny",
+  "ReferencePose": "A_Pose",
+  "Name": "HeroIdle",
+  "IKControls": {
+    "ctrl_pelvis": {
+      "Location": {"X": 0.0, "Y": 0.0, "Z": 0.0},
+      "Rotation": {"Pitch": 0.0, "Yaw": 4.0, "Roll": 0.0},
+      "Scale": {"X": 1.0, "Y": 1.0, "Z": 1.0}
+    }
+  },
+  "FKBones": {
+    "pelvis": {"Rotation": {"Pitch": 0.0, "Yaw": 4.0, "Roll": 0.0}},
+    "spine_01": {"Rotation": {"Pitch": 0.0, "Yaw": 4.0, "Roll": 1.0}},
+    "spine_02": {"Rotation": {"Pitch": 0.0, "Yaw": 6.0, "Roll": 2.0}},
+    "spine_03": {"Rotation": {"Pitch": 0.0, "Yaw": 8.0, "Roll": 2.0}},
+    "clavicle_l": {"Rotation": {"Pitch": 0.0, "Yaw": -5.0, "Roll": -2.0}},
+    "upperarm_l": {"Rotation": {"Pitch": 8.0, "Yaw": -28.0, "Roll": -15.0}},
+    "lowerarm_l": {"Rotation": {"Pitch": 0.0, "Yaw": -26.0, "Roll": 0.0}},
+    "hand_l": {"Rotation": {"Pitch": 6.0, "Yaw": 6.0, "Roll": -10.0}},
+    "clavicle_r": {"Rotation": {"Pitch": 0.0, "Yaw": 4.0, "Roll": 1.0}},
+    "upperarm_r": {"Rotation": {"Pitch": 2.0, "Yaw": 12.0, "Roll": 7.0}},
+    "lowerarm_r": {"Rotation": {"Pitch": 0.0, "Yaw": 18.0, "Roll": 0.0}},
+    "hand_r": {"Rotation": {"Pitch": 2.0, "Yaw": -3.0, "Roll": 8.0}},
+    "thigh_l": {"Rotation": {"Pitch": -4.0, "Yaw": -4.0, "Roll": 0.0}},
+    "calf_l": {"Rotation": {"Pitch": 6.0, "Yaw": 0.0, "Roll": 0.0}},
+    "foot_l": {"Rotation": {"Pitch": -2.0, "Yaw": -3.0, "Roll": 0.0}},
+    "thigh_r": {"Rotation": {"Pitch": 3.0, "Yaw": 6.0, "Roll": 0.0}},
+    "calf_r": {"Rotation": {"Pitch": -2.0, "Yaw": 0.0, "Roll": 0.0}},
+    "foot_r": {"Rotation": {"Pitch": 1.0, "Yaw": 2.0, "Roll": 0.0}},
+    "neck_01": {"Rotation": {"Pitch": 0.0, "Yaw": 6.0, "Roll": 0.0}},
+    "head": {"Rotation": {"Pitch": 0.0, "Yaw": 10.0, "Roll": 0.0}}
+  },
+  "LeftHandPreset": "Relax",
+  "RightHandPreset": "Relax",
+  "FingerOffsets": {
+    "thumb_01_l": {"Pitch": 4.0, "Yaw": -8.0, "Roll": 0.0},
+    "thumb_02_l": {"Pitch": 2.0, "Yaw": -8.0, "Roll": 0.0},
+    "index_01_l": {"Pitch": 8.0, "Yaw": 0.0, "Roll": 0.0},
+    "index_02_l": {"Pitch": 12.0, "Yaw": 0.0, "Roll": 0.0},
+    "middle_01_l": {"Pitch": 10.0, "Yaw": 0.0, "Roll": 0.0},
+    "middle_02_l": {"Pitch": 14.0, "Yaw": 0.0, "Roll": 0.0},
+    "ring_01_l": {"Pitch": 12.0, "Yaw": 0.0, "Roll": 0.0},
+    "ring_02_l": {"Pitch": 18.0, "Yaw": 0.0, "Roll": 0.0},
+    "pinky_01_l": {"Pitch": 14.0, "Yaw": 0.0, "Roll": 0.0},
+    "pinky_02_l": {"Pitch": 20.0, "Yaw": 0.0, "Roll": 0.0},
+    "thumb_01_r": {"Pitch": 2.0, "Yaw": 6.0, "Roll": 0.0},
+    "thumb_02_r": {"Pitch": 2.0, "Yaw": 4.0, "Roll": 0.0},
+    "index_01_r": {"Pitch": 4.0, "Yaw": 0.0, "Roll": 0.0},
+    "middle_01_r": {"Pitch": 5.0, "Yaw": 0.0, "Roll": 0.0},
+    "ring_01_r": {"Pitch": 6.0, "Yaw": 0.0, "Roll": 0.0},
+    "pinky_01_r": {"Pitch": 8.0, "Yaw": 0.0, "Roll": 0.0}
+  }
+}

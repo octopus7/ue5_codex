@@ -1,0 +1,154 @@
+{
+  "version": "1.2",
+  "skeleton": "UE5_Manny",
+  "referencePose": "A_Pose",
+  "name": "wall_launch",
+  "category": "wall_interaction",
+  "notes": "Action-ready wall brace, as if launching away from surface.",
+  "ikControls": {},
+  "fkBones": {
+    "pelvis": {
+      "rotation": [
+        0,
+        8,
+        0
+      ]
+    },
+    "spine_01": {
+      "rotation": [
+        0,
+        4,
+        0
+      ]
+    },
+    "spine_02": {
+      "rotation": [
+        0,
+        6,
+        0
+      ]
+    },
+    "spine_03": {
+      "rotation": [
+        0,
+        8,
+        0
+      ]
+    },
+    "clavicle_l": {
+      "rotation": [
+        0,
+        18,
+        0
+      ]
+    },
+    "clavicle_r": {
+      "rotation": [
+        0,
+        -8,
+        0
+      ]
+    },
+    "upperarm_l": {
+      "rotation": [
+        24,
+        42,
+        -8
+      ]
+    },
+    "upperarm_r": {
+      "rotation": [
+        8,
+        -18,
+        10
+      ]
+    },
+    "lowerarm_l": {
+      "rotation": [
+        0,
+        -14,
+        0
+      ]
+    },
+    "lowerarm_r": {
+      "rotation": [
+        0,
+        12,
+        0
+      ]
+    },
+    "hand_l": {
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    "hand_r": {
+      "rotation": [
+        0,
+        -4,
+        0
+      ]
+    },
+    "thigh_l": {
+      "rotation": [
+        0,
+        20,
+        -4
+      ]
+    },
+    "thigh_r": {
+      "rotation": [
+        0,
+        -16,
+        4
+      ]
+    },
+    "calf_l": {
+      "rotation": [
+        0,
+        18,
+        0
+      ]
+    },
+    "calf_r": {
+      "rotation": [
+        0,
+        -6,
+        0
+      ]
+    },
+    "foot_l": {
+      "rotation": [
+        0,
+        -6,
+        0
+      ]
+    },
+    "foot_r": {
+      "rotation": [
+        0,
+        4,
+        0
+      ]
+    },
+    "neck_01": {
+      "rotation": [
+        0,
+        -18,
+        0
+      ]
+    },
+    "head": {
+      "rotation": [
+        0,
+        -20,
+        0
+      ]
+    }
+  },
+  "leftHandPreset": "open_spread",
+  "rightHandPreset": "relaxed_open",
+  "fingerOffsets": {}
+}

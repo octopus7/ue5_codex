@@ -1,0 +1,42 @@
+# Unreal Engine generated folders
+/Binaries/
+/DerivedDataCache/
+/Intermediate/
+/Saved/
+
+# Shared TPS template content restored by script
+/Content/Characters/
+/Content/Input/
+/Content/LevelPrototyping/
+
+# Plugin generated folders
+/Plugins/*/Binaries/
+/Plugins/*/Intermediate/
+
+# IDE and editor metadata
+/.vs/
+/.vscode/
+/.idea/
+*.VC.db
+*.VC.opendb
+*.opensdf
+*.opendb
+*.sdf
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Generated project files
+*.sln
+*.xcodeproj
+*.xcworkspace
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+Makefile
+compile_commands.json
+
+# OS-specific files
+.DS_Store
+Thumbs.db

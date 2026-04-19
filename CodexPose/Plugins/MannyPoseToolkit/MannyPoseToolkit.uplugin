@@ -1,0 +1,23 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "0.1.0",
+  "FriendlyName": "Manny Pose Toolkit",
+  "Description": "Editor plugin demo for loading Manny pose presets from JSON and applying them to a PoseableMesh preview actor.",
+  "Category": "Animation",
+  "CreatedBy": "OpenAI",
+  "CanContainContent": true,
+  "IsBetaVersion": true,
+  "Modules": [
+    {
+      "Name": "MannyPoseToolkit",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    },
+    {
+      "Name": "MannyPoseToolkitEditor",
+      "Type": "Editor",
+      "LoadingPhase": "Default"
+    }
+  ]
+}

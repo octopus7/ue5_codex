@@ -1,0 +1,48 @@
+{
+  "version": "1.0",
+  "setName": "wall_pose_preview_10",
+  "category": "wall_interaction",
+  "previewImage": "Plugins/MannyPoseToolkit/Content/Previews/wall_pose_preview_10.png",
+  "poses": [
+    {
+      "name": "wall_relaxed_lean",
+      "displayName": "Relaxed Lean"
+    },
+    {
+      "name": "wall_back_rest",
+      "displayName": "Back Rest"
+    },
+    {
+      "name": "wall_tired_lean",
+      "displayName": "Tired Lean"
+    },
+    {
+      "name": "wall_push_stretch",
+      "displayName": "Wall Push Stretch"
+    },
+    {
+      "name": "wall_look_around_corner",
+      "displayName": "Look Around Corner"
+    },
+    {
+      "name": "wall_sit_rest",
+      "displayName": "Sit & Rest"
+    },
+    {
+      "name": "wall_shoulder_lean",
+      "displayName": "Shoulder Lean"
+    },
+    {
+      "name": "wall_chill_pose",
+      "displayName": "Chill Pose"
+    },
+    {
+      "name": "wall_launch",
+      "displayName": "Wall Launch"
+    },
+    {
+      "name": "wall_thinking_lean",
+      "displayName": "Thinking Lean"
+    }
+  ]
+}

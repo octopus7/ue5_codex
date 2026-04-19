@@ -1,0 +1,154 @@
+{
+  "version": "1.2",
+  "skeleton": "UE5_Manny",
+  "referencePose": "A_Pose",
+  "name": "wall_back_rest",
+  "category": "wall_interaction",
+  "notes": "Back against wall, one leg planted on wall.",
+  "ikControls": {},
+  "fkBones": {
+    "pelvis": {
+      "rotation": [
+        0,
+        -2,
+        0
+      ]
+    },
+    "spine_01": {
+      "rotation": [
+        0,
+        -2,
+        0
+      ]
+    },
+    "spine_02": {
+      "rotation": [
+        0,
+        -4,
+        0
+      ]
+    },
+    "spine_03": {
+      "rotation": [
+        0,
+        -4,
+        0
+      ]
+    },
+    "clavicle_l": {
+      "rotation": [
+        0,
+        3,
+        0
+      ]
+    },
+    "clavicle_r": {
+      "rotation": [
+        0,
+        -6,
+        0
+      ]
+    },
+    "upperarm_l": {
+      "rotation": [
+        4,
+        10,
+        -6
+      ]
+    },
+    "upperarm_r": {
+      "rotation": [
+        10,
+        -14,
+        8
+      ]
+    },
+    "lowerarm_l": {
+      "rotation": [
+        0,
+        -12,
+        0
+      ]
+    },
+    "lowerarm_r": {
+      "rotation": [
+        0,
+        12,
+        0
+      ]
+    },
+    "hand_l": {
+      "rotation": [
+        0,
+        4,
+        0
+      ]
+    },
+    "hand_r": {
+      "rotation": [
+        0,
+        -4,
+        0
+      ]
+    },
+    "thigh_l": {
+      "rotation": [
+        0,
+        3,
+        0
+      ]
+    },
+    "thigh_r": {
+      "rotation": [
+        0,
+        -10,
+        8
+      ]
+    },
+    "calf_l": {
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    "calf_r": {
+      "rotation": [
+        0,
+        55,
+        0
+      ]
+    },
+    "foot_l": {
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    "foot_r": {
+      "rotation": [
+        0,
+        18,
+        0
+      ]
+    },
+    "neck_01": {
+      "rotation": [
+        0,
+        8,
+        0
+      ]
+    },
+    "head": {
+      "rotation": [
+        0,
+        10,
+        0
+      ]
+    }
+  },
+  "leftHandPreset": "relaxed_open",
+  "rightHandPreset": "relaxed_open",
+  "fingerOffsets": {}
+}
