@@ -92,6 +92,12 @@ struct FMannyPoseData
     FString Name = TEXT("Unnamed");
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Pose")
+    FString Category;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Pose")
+    FString Notes;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Pose")
     TMap<FName, FMannyPoseControlTransform> IKControls;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Pose")

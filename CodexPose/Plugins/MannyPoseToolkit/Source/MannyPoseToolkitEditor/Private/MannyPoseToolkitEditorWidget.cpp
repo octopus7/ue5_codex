@@ -1,7 +1,7 @@
-#include "Misc/MessageDialog.h"
-#include "Misc/Paths.h"
 #include "MannyPoseToolkitEditorWidget.h"
 
+#include "Misc/MessageDialog.h"
+#include "Misc/Paths.h"
 #include "Interfaces/IPluginManager.h"
 #include "Editor.h"
 #include "Engine/Selection.h"

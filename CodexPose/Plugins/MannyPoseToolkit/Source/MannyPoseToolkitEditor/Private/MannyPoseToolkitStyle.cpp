@@ -1,6 +1,6 @@
-#include "Framework/Application/SlateApplication.h"
 #include "MannyPoseToolkitStyle.h"
 
+#include "Framework/Application/SlateApplication.h"
 #include "Interfaces/IPluginManager.h"
 #include "Styling/SlateStyleRegistry.h"
 #include "Styling/SlateTypes.h"
