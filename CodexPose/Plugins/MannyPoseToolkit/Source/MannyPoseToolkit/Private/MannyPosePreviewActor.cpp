@@ -1,10 +1,45 @@
 #include "MannyPosePreviewActor.h"
 
 #include "Components/PoseableMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
 
 namespace
 {
-    void SetLocalBoneRotation(UPoseableMeshComponent* PoseableMesh, const FName BoneName, const FRotator& Rotation)
+    const FTransform* GetReferenceLocalBoneTransform(const UPoseableMeshComponent* PoseableMesh, const int32 BoneIndex)
+    {
+        if (!PoseableMesh)
+        {
+            return nullptr;
+        }
+
+        const USkeletalMesh* SkeletalMesh = Cast<USkeletalMesh>(PoseableMesh->GetSkinnedAsset());
+        if (!SkeletalMesh)
+        {
+            return nullptr;
+        }
+
+        const TArray<FTransform>& RefBonePose = SkeletalMesh->GetRefSkeleton().GetRefBonePose();
+        return RefBonePose.IsValidIndex(BoneIndex) ? &RefBonePose[BoneIndex] : nullptr;
+    }
+
+    void ResetToReferencePose(UPoseableMeshComponent* PoseableMesh)
+    {
+        if (!PoseableMesh)
+        {
+            return;
+        }
+
+        const USkeletalMesh* SkeletalMesh = Cast<USkeletalMesh>(PoseableMesh->GetSkinnedAsset());
+        if (!SkeletalMesh)
+        {
+            return;
+        }
+
+        PoseableMesh->BoneSpaceTransforms = SkeletalMesh->GetRefSkeleton().GetRefBonePose();
+        PoseableMesh->MarkRefreshTransformDirty();
+    }
+
+    void SetLocalBoneRotationFromReference(UPoseableMeshComponent* PoseableMesh, const FName BoneName, const FRotator& RotationOffset)
     {
         if (!PoseableMesh || !PoseableMesh->RequiredBones.IsValid())
         {
@@ -17,7 +52,32 @@ namespace
             return;
         }
 
-        PoseableMesh->BoneSpaceTransforms[BoneIndex].SetRotation(FQuat(Rotation));
+        const FTransform* ReferenceLocalBoneTransform = GetReferenceLocalBoneTransform(PoseableMesh, BoneIndex);
+        if (!ReferenceLocalBoneTransform)
+        {
+            return;
+        }
+
+        const FQuat NewRotation = (FQuat(RotationOffset) * ReferenceLocalBoneTransform->GetRotation()).GetNormalized();
+        PoseableMesh->BoneSpaceTransforms[BoneIndex].SetRotation(NewRotation);
+        PoseableMesh->MarkRefreshTransformDirty();
+    }
+
+    void AddLocalBoneRotationOffset(UPoseableMeshComponent* PoseableMesh, const FName BoneName, const FRotator& RotationOffset)
+    {
+        if (!PoseableMesh || !PoseableMesh->RequiredBones.IsValid())
+        {
+            return;
+        }
+
+        const int32 BoneIndex = PoseableMesh->GetBoneIndex(BoneName);
+        if (!PoseableMesh->BoneSpaceTransforms.IsValidIndex(BoneIndex))
+        {
+            return;
+        }
+
+        const FQuat NewRotation = (FQuat(RotationOffset) * PoseableMesh->BoneSpaceTransforms[BoneIndex].GetRotation()).GetNormalized();
+        PoseableMesh->BoneSpaceTransforms[BoneIndex].SetRotation(NewRotation);
         PoseableMesh->MarkRefreshTransformDirty();
     }
 }
@@ -49,6 +109,7 @@ void AMannyPosePreviewActor::ApplyPoseData(const FMannyPoseData& PoseData)
     }
 
     CurrentPose = PoseData;
+    ResetToReferencePose(PoseableMesh);
     ApplyFkBoneRotations(PoseData);
     ApplyFingerOffsets(PoseData);
 
@@ -91,7 +152,7 @@ void AMannyPosePreviewActor::ApplyFkBoneRotations(const FMannyPoseData& PoseData
 {
     for (const TPair<FName, FMannyPoseBoneRotation>& Pair : PoseData.FKBones)
     {
-        SetLocalBoneRotation(PoseableMesh, Pair.Key, Pair.Value.Rotation);
+        SetLocalBoneRotationFromReference(PoseableMesh, Pair.Key, Pair.Value.Rotation);
     }
 }
 
@@ -99,7 +160,7 @@ void AMannyPosePreviewActor::ApplyFingerOffsets(const FMannyPoseData& PoseData)
 {
     for (const TPair<FName, FRotator>& Pair : PoseData.FingerOffsets)
     {
-        SetLocalBoneRotation(PoseableMesh, Pair.Key, Pair.Value);
+        AddLocalBoneRotationOffset(PoseableMesh, Pair.Key, Pair.Value);
     }
 }
 
@@ -107,6 +168,6 @@ void AMannyPosePreviewActor::ApplyNamedRotations(const TMap<FName, FRotator>& Ro
 {
     for (const TPair<FName, FRotator>& Pair : Rotations)
     {
-        SetLocalBoneRotation(PoseableMesh, Pair.Key, Pair.Value);
+        SetLocalBoneRotationFromReference(PoseableMesh, Pair.Key, Pair.Value);
     }
 }
