@@ -17,12 +17,14 @@ private:
     using FStringItem = TSharedPtr<FString>;
 
     FReply OnApplyBodyPreset();
+    FReply OnSaveBodyPreset();
     FReply OnApplyLeftHandPreset();
     FReply OnApplyRightHandPreset();
     FReply OnApplyBothHandsPreset();
     FReply OnApplyHandPair();
 
     bool ApplyBodyPresetFile(const FString& AbsoluteJsonPath);
+    bool SaveBodyPresetFile(const FString& AbsoluteJsonPath);
     bool ApplyHandPresetFile(const FString& AbsoluteJsonPath, EMannyHandTargetSide TargetSide);
     class AMannyPosePreviewActor* FindSelectedPreviewActor() const;
     FString GetPluginPoseDir() const;
@@ -40,7 +42,5 @@ private:
     FStringItem SelectedRightHandPreset;
 
     TSharedPtr<SMannyPoseBodyPreview> BodyPreviewWidget;
-    FMannyPoseData BodyPreviewPose;
     FString BodyPreviewStatusText;
-    bool bHasBodyPreviewPose = false;
 };

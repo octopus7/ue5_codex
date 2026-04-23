@@ -5,7 +5,10 @@
 #include "Interfaces/IPluginManager.h"
 #include "Editor.h"
 #include "Engine/Selection.h"
+#include "Components/PoseableMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
 #include "HAL/FileManager.h"
+#include "Misc/FileHelper.h"
 #include "MannyPoseJsonLibrary.h"
 #include "MannyPosePreviewActor.h"
 #include "Rendering/DrawElements.h"
@@ -34,49 +37,293 @@ namespace
     struct FBodyPreviewBoneDefinition
     {
         FName Name;
-        FName Parent;
-        FVector ReferenceOffset;
         FLinearColor Color;
         float Thickness;
+    };
+
+    struct FBodyPreviewLineSegment
+    {
+        FVector Start = FVector::ZeroVector;
+        FVector End = FVector::ZeroVector;
+        FLinearColor Color = FLinearColor::White;
+        float Thickness = 1.f;
     };
 
     const TArray<FBodyPreviewBoneDefinition>& GetBodyPreviewBones()
     {
         static const TArray<FBodyPreviewBoneDefinition> Bones =
         {
-            { TEXT("pelvis"), NAME_None, FVector::ZeroVector, FLinearColor(0.80f, 0.84f, 0.90f), 2.5f },
+            { TEXT("pelvis"), FLinearColor(0.80f, 0.84f, 0.90f), 2.5f },
+            { TEXT("spine_01"), FLinearColor(0.80f, 0.84f, 0.90f), 2.5f },
+            { TEXT("spine_02"), FLinearColor(0.80f, 0.84f, 0.90f), 2.5f },
+            { TEXT("spine_03"), FLinearColor(0.80f, 0.84f, 0.90f), 2.5f },
+            { TEXT("spine_04"), FLinearColor(0.80f, 0.84f, 0.90f), 2.5f },
+            { TEXT("spine_05"), FLinearColor(0.80f, 0.84f, 0.90f), 2.5f },
+            { TEXT("neck_01"), FLinearColor(0.80f, 0.84f, 0.90f), 2.5f },
+            { TEXT("head"), FLinearColor(0.80f, 0.84f, 0.90f), 3.0f },
 
-            { TEXT("spine_01"), TEXT("pelvis"), FVector(0.f, 0.f, 15.f), FLinearColor(0.80f, 0.84f, 0.90f), 2.5f },
-            { TEXT("spine_02"), TEXT("spine_01"), FVector(0.f, 0.f, 15.f), FLinearColor(0.80f, 0.84f, 0.90f), 2.5f },
-            { TEXT("spine_03"), TEXT("spine_02"), FVector(0.f, 0.f, 15.f), FLinearColor(0.80f, 0.84f, 0.90f), 2.5f },
-            { TEXT("neck_01"), TEXT("spine_03"), FVector(0.f, 0.f, 10.f), FLinearColor(0.80f, 0.84f, 0.90f), 2.5f },
-            { TEXT("head"), TEXT("neck_01"), FVector(0.f, 0.f, 12.f), FLinearColor(0.80f, 0.84f, 0.90f), 3.0f },
+            { TEXT("clavicle_l"), FLinearColor(0.35f, 0.80f, 1.00f), 2.0f },
+            { TEXT("upperarm_l"), FLinearColor(0.35f, 0.80f, 1.00f), 2.0f },
+            { TEXT("lowerarm_l"), FLinearColor(0.35f, 0.80f, 1.00f), 2.0f },
+            { TEXT("hand_l"), FLinearColor(0.35f, 0.80f, 1.00f), 2.0f },
 
-            { TEXT("clavicle_l"), TEXT("spine_03"), FVector(0.f, -9.f, 3.f), FLinearColor(0.35f, 0.80f, 1.00f), 2.0f },
-            { TEXT("upperarm_l"), TEXT("clavicle_l"), FVector(0.f, -16.f, -5.f), FLinearColor(0.35f, 0.80f, 1.00f), 2.0f },
-            { TEXT("lowerarm_l"), TEXT("upperarm_l"), FVector(0.f, -18.f, -1.f), FLinearColor(0.35f, 0.80f, 1.00f), 2.0f },
-            { TEXT("hand_l"), TEXT("lowerarm_l"), FVector(0.f, -10.f, 0.f), FLinearColor(0.35f, 0.80f, 1.00f), 2.0f },
+            { TEXT("clavicle_r"), FLinearColor(1.00f, 0.72f, 0.35f), 2.0f },
+            { TEXT("upperarm_r"), FLinearColor(1.00f, 0.72f, 0.35f), 2.0f },
+            { TEXT("lowerarm_r"), FLinearColor(1.00f, 0.72f, 0.35f), 2.0f },
+            { TEXT("hand_r"), FLinearColor(1.00f, 0.72f, 0.35f), 2.0f },
 
-            { TEXT("clavicle_r"), TEXT("spine_03"), FVector(0.f, 9.f, 3.f), FLinearColor(1.00f, 0.72f, 0.35f), 2.0f },
-            { TEXT("upperarm_r"), TEXT("clavicle_r"), FVector(0.f, 16.f, -5.f), FLinearColor(1.00f, 0.72f, 0.35f), 2.0f },
-            { TEXT("lowerarm_r"), TEXT("upperarm_r"), FVector(0.f, 18.f, -1.f), FLinearColor(1.00f, 0.72f, 0.35f), 2.0f },
-            { TEXT("hand_r"), TEXT("lowerarm_r"), FVector(0.f, 10.f, 0.f), FLinearColor(1.00f, 0.72f, 0.35f), 2.0f },
+            { TEXT("thigh_l"), FLinearColor(0.35f, 0.80f, 1.00f), 2.5f },
+            { TEXT("calf_l"), FLinearColor(0.35f, 0.80f, 1.00f), 2.5f },
+            { TEXT("foot_l"), FLinearColor(0.35f, 0.80f, 1.00f), 2.5f },
+            { TEXT("ball_l"), FLinearColor(0.35f, 0.80f, 1.00f), 2.5f },
 
-            { TEXT("thigh_l"), TEXT("pelvis"), FVector(2.f, -8.f, -24.f), FLinearColor(0.35f, 0.80f, 1.00f), 2.5f },
-            { TEXT("calf_l"), TEXT("thigh_l"), FVector(0.f, 0.f, -25.f), FLinearColor(0.35f, 0.80f, 1.00f), 2.5f },
-            { TEXT("foot_l"), TEXT("calf_l"), FVector(12.f, 0.f, -3.f), FLinearColor(0.35f, 0.80f, 1.00f), 2.5f },
-
-            { TEXT("thigh_r"), TEXT("pelvis"), FVector(2.f, 8.f, -24.f), FLinearColor(1.00f, 0.72f, 0.35f), 2.5f },
-            { TEXT("calf_r"), TEXT("thigh_r"), FVector(0.f, 0.f, -25.f), FLinearColor(1.00f, 0.72f, 0.35f), 2.5f },
-            { TEXT("foot_r"), TEXT("calf_r"), FVector(12.f, 0.f, -3.f), FLinearColor(1.00f, 0.72f, 0.35f), 2.5f }
+            { TEXT("thigh_r"), FLinearColor(1.00f, 0.72f, 0.35f), 2.5f },
+            { TEXT("calf_r"), FLinearColor(1.00f, 0.72f, 0.35f), 2.5f },
+            { TEXT("foot_r"), FLinearColor(1.00f, 0.72f, 0.35f), 2.5f },
+            { TEXT("ball_r"), FLinearColor(1.00f, 0.72f, 0.35f), 2.5f }
         };
 
         return Bones;
     }
 
-    const FMannyPoseBoneRotation* FindPoseBone(const FMannyPoseData& PoseData, const FName BoneName)
+    const FBodyPreviewBoneDefinition* FindPreviewBoneDefinition(const FName BoneName)
     {
-        return PoseData.FKBones.Find(BoneName);
+        for (const FBodyPreviewBoneDefinition& Bone : GetBodyPreviewBones())
+        {
+            if (Bone.Name == BoneName)
+            {
+                return &Bone;
+            }
+        }
+
+        return nullptr;
+    }
+
+    const USkeletalMesh* GetPreviewSkeletalMesh(const AMannyPosePreviewActor* PreviewActor)
+    {
+        if (!PreviewActor || !PreviewActor->PoseableMesh)
+        {
+            return nullptr;
+        }
+
+        return Cast<USkeletalMesh>(PreviewActor->PoseableMesh->GetSkinnedAsset());
+    }
+
+    void BuildPoseLocalTransforms(const FReferenceSkeleton& RefSkeleton, const TArray<FTransform>& RefBonePose, const FMannyPoseData& PoseData, TArray<FTransform>& OutLocalTransforms)
+    {
+        OutLocalTransforms = RefBonePose;
+
+        for (const TPair<FName, FMannyPoseBoneRotation>& Pair : PoseData.FKBones)
+        {
+            const int32 BoneIndex = RefSkeleton.FindBoneIndex(Pair.Key);
+            if (!OutLocalTransforms.IsValidIndex(BoneIndex) || !RefBonePose.IsValidIndex(BoneIndex))
+            {
+                continue;
+            }
+
+            const FTransform& ReferenceLocalBoneTransform = RefBonePose[BoneIndex];
+            const FQuat NewRotation = (FQuat(Pair.Value.Rotation) * ReferenceLocalBoneTransform.GetRotation()).GetNormalized();
+            const FVector NewLocation = ReferenceLocalBoneTransform.GetLocation() + Pair.Value.Location;
+            OutLocalTransforms[BoneIndex].SetLocation(NewLocation);
+            OutLocalTransforms[BoneIndex].SetRotation(NewRotation);
+        }
+
+        for (const TPair<FName, FRotator>& Pair : PoseData.FingerOffsets)
+        {
+            const int32 BoneIndex = RefSkeleton.FindBoneIndex(Pair.Key);
+            if (!OutLocalTransforms.IsValidIndex(BoneIndex))
+            {
+                continue;
+            }
+
+            const FQuat NewRotation = (FQuat(Pair.Value) * OutLocalTransforms[BoneIndex].GetRotation()).GetNormalized();
+            OutLocalTransforms[BoneIndex].SetRotation(NewRotation);
+        }
+    }
+
+    void BuildComponentTransforms(const FReferenceSkeleton& RefSkeleton, const TArray<FTransform>& LocalTransforms, TArray<FTransform>& OutComponentTransforms)
+    {
+        OutComponentTransforms.SetNum(LocalTransforms.Num());
+
+        for (int32 BoneIndex = 0; BoneIndex < LocalTransforms.Num(); ++BoneIndex)
+        {
+            const int32 ParentIndex = RefSkeleton.GetParentIndex(BoneIndex);
+            if (!OutComponentTransforms.IsValidIndex(BoneIndex))
+            {
+                continue;
+            }
+
+            if (ParentIndex == INDEX_NONE)
+            {
+                OutComponentTransforms[BoneIndex] = LocalTransforms[BoneIndex];
+                continue;
+            }
+
+            const FTransform& ParentTransform = OutComponentTransforms[ParentIndex];
+            const FTransform& LocalTransform = LocalTransforms[BoneIndex];
+
+            FTransform ComponentTransform;
+            ComponentTransform.SetScale3D(ParentTransform.GetScale3D() * LocalTransform.GetScale3D());
+            ComponentTransform.SetRotation((ParentTransform.GetRotation() * LocalTransform.GetRotation()).GetNormalized());
+            ComponentTransform.SetLocation(ParentTransform.TransformPosition(LocalTransform.GetLocation()));
+            OutComponentTransforms[BoneIndex] = ComponentTransform;
+        }
+    }
+
+    bool BuildPreviewLineSegments(const AMannyPosePreviewActor* PreviewActor, const FMannyPoseData& PoseData, TArray<FBodyPreviewLineSegment>& OutSegments)
+    {
+        OutSegments.Reset();
+
+        const USkeletalMesh* SkeletalMesh = GetPreviewSkeletalMesh(PreviewActor);
+        if (!SkeletalMesh)
+        {
+            return false;
+        }
+
+        const FReferenceSkeleton& RefSkeleton = SkeletalMesh->GetRefSkeleton();
+        const TArray<FTransform>& RefBonePose = RefSkeleton.GetRefBonePose();
+        if (RefBonePose.IsEmpty())
+        {
+            return false;
+        }
+
+        TArray<FTransform> LocalTransforms;
+        BuildPoseLocalTransforms(RefSkeleton, RefBonePose, PoseData, LocalTransforms);
+
+        TArray<FTransform> ComponentTransforms;
+        BuildComponentTransforms(RefSkeleton, LocalTransforms, ComponentTransforms);
+
+        for (const FBodyPreviewBoneDefinition& Bone : GetBodyPreviewBones())
+        {
+            const int32 BoneIndex = RefSkeleton.FindBoneIndex(Bone.Name);
+            if (!ComponentTransforms.IsValidIndex(BoneIndex))
+            {
+                continue;
+            }
+
+            int32 ParentIndex = RefSkeleton.GetParentIndex(BoneIndex);
+            while (ParentIndex != INDEX_NONE && FindPreviewBoneDefinition(RefSkeleton.GetBoneName(ParentIndex)) == nullptr)
+            {
+                ParentIndex = RefSkeleton.GetParentIndex(ParentIndex);
+            }
+
+            if (!ComponentTransforms.IsValidIndex(ParentIndex))
+            {
+                continue;
+            }
+
+            FBodyPreviewLineSegment Segment;
+            Segment.Start = ComponentTransforms[ParentIndex].GetLocation();
+            Segment.End = ComponentTransforms[BoneIndex].GetLocation();
+            Segment.Color = Bone.Color;
+            Segment.Thickness = Bone.Thickness;
+            OutSegments.Add(Segment);
+        }
+
+        return !OutSegments.IsEmpty();
+    }
+
+    TArray<FName> GetDefaultBodyCaptureBoneNames()
+    {
+        return
+        {
+            TEXT("pelvis"),
+            TEXT("spine_01"),
+            TEXT("spine_02"),
+            TEXT("spine_03"),
+            TEXT("spine_04"),
+            TEXT("spine_05"),
+            TEXT("clavicle_l"),
+            TEXT("clavicle_r"),
+            TEXT("upperarm_l"),
+            TEXT("upperarm_r"),
+            TEXT("lowerarm_l"),
+            TEXT("lowerarm_r"),
+            TEXT("hand_l"),
+            TEXT("hand_r"),
+            TEXT("thigh_l"),
+            TEXT("thigh_r"),
+            TEXT("calf_l"),
+            TEXT("calf_r"),
+            TEXT("foot_l"),
+            TEXT("foot_r"),
+            TEXT("ball_l"),
+            TEXT("ball_r"),
+            TEXT("neck_01"),
+            TEXT("head")
+        };
+    }
+
+    bool CapturePoseFromPreviewActor(const AMannyPosePreviewActor* PreviewActor, FMannyPoseData& OutPose, FString& OutError)
+    {
+        if (!PreviewActor || !PreviewActor->PoseableMesh)
+        {
+            OutError = TEXT("Select an AMannyPosePreviewActor in the level first.");
+            return false;
+        }
+
+        const UPoseableMeshComponent* PoseableMesh = PreviewActor->PoseableMesh;
+        const USkeletalMesh* SkeletalMesh = GetPreviewSkeletalMesh(PreviewActor);
+        if (!SkeletalMesh)
+        {
+            OutError = TEXT("Selected preview actor does not have a valid skeletal mesh.");
+            return false;
+        }
+
+        const FReferenceSkeleton& RefSkeleton = SkeletalMesh->GetRefSkeleton();
+        const TArray<FTransform>& RefBonePose = RefSkeleton.GetRefBonePose();
+        if (RefBonePose.IsEmpty())
+        {
+            OutError = TEXT("Selected skeletal mesh has no reference pose data.");
+            return false;
+        }
+
+        const TArray<FTransform>& CurrentBoneSpaceTransforms = PoseableMesh->BoneSpaceTransforms;
+        FMannyPoseData CapturedPose;
+        CapturedPose.Version = TEXT("1.2");
+        CapturedPose.Skeleton = TEXT("UE5_Manny");
+        CapturedPose.ReferencePose = TEXT("A_Pose");
+        CapturedPose.Name = PreviewActor->CurrentPose.Name;
+        CapturedPose.Category = PreviewActor->CurrentPose.Category;
+        CapturedPose.Notes = PreviewActor->CurrentPose.Notes;
+        CapturedPose.LeftHandPreset = PreviewActor->CurrentPose.LeftHandPreset;
+        CapturedPose.RightHandPreset = PreviewActor->CurrentPose.RightHandPreset;
+        CapturedPose.IKControls = PreviewActor->CurrentPose.IKControls;
+        CapturedPose.FingerOffsets = PreviewActor->CurrentPose.FingerOffsets;
+
+        const auto IsNearlyZeroRotator = [](const FRotator& Rotator)
+        {
+            return FMath::Abs(Rotator.Pitch) < 0.01f
+                && FMath::Abs(Rotator.Yaw) < 0.01f
+                && FMath::Abs(Rotator.Roll) < 0.01f;
+        };
+
+        for (const FName BoneName : GetDefaultBodyCaptureBoneNames())
+        {
+            const int32 BoneIndex = RefSkeleton.FindBoneIndex(BoneName);
+            if (!RefBonePose.IsValidIndex(BoneIndex))
+            {
+                continue;
+            }
+
+            const FTransform& ReferenceLocalTransform = RefBonePose[BoneIndex];
+            const FTransform& CurrentLocalTransform = CurrentBoneSpaceTransforms.IsValidIndex(BoneIndex)
+                ? CurrentBoneSpaceTransforms[BoneIndex]
+                : ReferenceLocalTransform;
+
+            const FVector LocationOffset = CurrentLocalTransform.GetLocation() - ReferenceLocalTransform.GetLocation();
+            const FQuat RotationOffsetQuat = (CurrentLocalTransform.GetRotation() * ReferenceLocalTransform.GetRotation().Inverse()).GetNormalized();
+            FRotator RotationOffset = RotationOffsetQuat.Rotator();
+            RotationOffset.Normalize();
+
+            FMannyPoseBoneRotation BoneRotation;
+            BoneRotation.Location = LocationOffset.GetAbsMax() < 0.01f ? FVector::ZeroVector : LocationOffset;
+            BoneRotation.Rotation = IsNearlyZeroRotator(RotationOffset) ? FRotator::ZeroRotator : RotationOffset;
+            CapturedPose.FKBones.Add(BoneName, BoneRotation);
+        }
+
+        OutPose = MoveTemp(CapturedPose);
+        return true;
     }
 
     FVector2D ProjectPreviewPoint(const FVector& Point)
@@ -88,84 +335,6 @@ namespace
         return FVector2D(
             FVector::DotProduct(Point, ViewRight),
             FVector::DotProduct(Point, ViewUp));
-    }
-
-    bool BuildPreviewWorldTransforms(const FMannyPoseData& PoseData, TMap<FName, FTransform>& OutWorldTransforms)
-    {
-        OutWorldTransforms.Reset();
-
-        for (const FBodyPreviewBoneDefinition& Bone : GetBodyPreviewBones())
-        {
-            const FMannyPoseBoneRotation* PoseBone = FindPoseBone(PoseData, Bone.Name);
-            const FVector LocalLocation = Bone.ReferenceOffset + (PoseBone ? PoseBone->Location : FVector::ZeroVector);
-            const FQuat LocalRotation = FQuat(PoseBone ? PoseBone->Rotation : FRotator::ZeroRotator);
-
-            if (Bone.Parent == NAME_None)
-            {
-                OutWorldTransforms.Add(Bone.Name, FTransform(LocalRotation, LocalLocation));
-                continue;
-            }
-
-            const FTransform* ParentTransform = OutWorldTransforms.Find(Bone.Parent);
-            if (!ParentTransform)
-            {
-                continue;
-            }
-
-            const FVector WorldLocation = ParentTransform->GetLocation() + ParentTransform->GetRotation().RotateVector(LocalLocation);
-            const FQuat WorldRotation = (ParentTransform->GetRotation() * LocalRotation).GetNormalized();
-            OutWorldTransforms.Add(Bone.Name, FTransform(WorldRotation, WorldLocation));
-        }
-
-        return OutWorldTransforms.Num() > 1;
-    }
-
-    bool BuildPreviewScreenPoints(const FMannyPoseData& PoseData, const FVector2D& ViewportSize, TMap<FName, FVector2D>& OutScreenPoints)
-    {
-        TMap<FName, FTransform> WorldTransforms;
-        if (!BuildPreviewWorldTransforms(PoseData, WorldTransforms))
-        {
-            OutScreenPoints.Reset();
-            return false;
-        }
-
-        FVector2D MinPoint(FLT_MAX, FLT_MAX);
-        FVector2D MaxPoint(-FLT_MAX, -FLT_MAX);
-        TMap<FName, FVector2D> ProjectedPoints;
-
-        for (const TPair<FName, FTransform>& Pair : WorldTransforms)
-        {
-            const FVector2D Projected = ProjectPreviewPoint(Pair.Value.GetLocation());
-            ProjectedPoints.Add(Pair.Key, Projected);
-
-            MinPoint.X = FMath::Min(MinPoint.X, Projected.X);
-            MinPoint.Y = FMath::Min(MinPoint.Y, Projected.Y);
-            MaxPoint.X = FMath::Max(MaxPoint.X, Projected.X);
-            MaxPoint.Y = FMath::Max(MaxPoint.Y, Projected.Y);
-        }
-
-        const FMargin Padding(14.f);
-        const FVector2D AvailableSize(
-            FMath::Max(ViewportSize.X - Padding.GetTotalSpaceAlong<Orient_Horizontal>(), 1.f),
-            FMath::Max(ViewportSize.Y - Padding.GetTotalSpaceAlong<Orient_Vertical>(), 1.f));
-        const FVector2D BoundsSize = MaxPoint - MinPoint;
-        const float ScaleX = AvailableSize.X / FMath::Max(BoundsSize.X, 1.f);
-        const float ScaleY = AvailableSize.Y / FMath::Max(BoundsSize.Y, 1.f);
-        const float Scale = FMath::Min(ScaleX, ScaleY);
-        const float ExtraX = (AvailableSize.X - BoundsSize.X * Scale) * 0.5f;
-        const float BaselineY = ViewportSize.Y - Padding.Bottom;
-
-        OutScreenPoints.Reset();
-        for (const TPair<FName, FVector2D>& Pair : ProjectedPoints)
-        {
-            OutScreenPoints.Add(
-                Pair.Key,
-                FVector2D(
-                    Padding.Left + ExtraX + (Pair.Value.X - MinPoint.X) * Scale,
-                    BaselineY - (Pair.Value.Y - MinPoint.Y) * Scale));
-        }
-
-        return true;
     }
 
 }
@@ -180,10 +349,9 @@ public:
     {
     }
 
-    void SetPoseData(const FMannyPoseData* InPoseData)
+    void SetPreviewSegments(const TArray<FBodyPreviewLineSegment>* InPreviewSegments)
     {
-        bHasPoseData = InPoseData != nullptr;
-        PoseData = InPoseData ? *InPoseData : FMannyPoseData();
+        PreviewSegments = InPreviewSegments ? *InPreviewSegments : TArray<FBodyPreviewLineSegment>();
         Invalidate(EInvalidateWidget::Paint);
     }
 
@@ -221,35 +389,54 @@ public:
             true,
             1.0f);
 
-        if (!bHasPoseData)
+        if (PreviewSegments.IsEmpty())
         {
             return LayerId + 1;
         }
 
-        TMap<FName, FVector2D> ScreenPoints;
-        if (!BuildPreviewScreenPoints(PoseData, Size, ScreenPoints))
+        TArray<FBodyPreviewLineSegment> ProjectedSegments;
+        ProjectedSegments.Reserve(PreviewSegments.Num());
+
+        FVector2D MinPoint(FLT_MAX, FLT_MAX);
+        FVector2D MaxPoint(-FLT_MAX, -FLT_MAX);
+
+        for (const FBodyPreviewLineSegment& Segment : PreviewSegments)
         {
-            return LayerId + 1;
+            FBodyPreviewLineSegment ProjectedSegment = Segment;
+            ProjectedSegment.Start = FVector(ProjectPreviewPoint(Segment.Start), 0.f);
+            ProjectedSegment.End = FVector(ProjectPreviewPoint(Segment.End), 0.f);
+            ProjectedSegments.Add(ProjectedSegment);
+
+            MinPoint.X = FMath::Min(MinPoint.X, FMath::Min(static_cast<double>(ProjectedSegment.Start.X), static_cast<double>(ProjectedSegment.End.X)));
+            MinPoint.Y = FMath::Min(MinPoint.Y, FMath::Min(static_cast<double>(ProjectedSegment.Start.Y), static_cast<double>(ProjectedSegment.End.Y)));
+            MaxPoint.X = FMath::Max(MaxPoint.X, FMath::Max(static_cast<double>(ProjectedSegment.Start.X), static_cast<double>(ProjectedSegment.End.X)));
+            MaxPoint.Y = FMath::Max(MaxPoint.Y, FMath::Max(static_cast<double>(ProjectedSegment.Start.Y), static_cast<double>(ProjectedSegment.End.Y)));
         }
 
-        for (const FBodyPreviewBoneDefinition& Bone : GetBodyPreviewBones())
-        {
-            if (Bone.Parent == NAME_None)
-            {
-                continue;
-            }
+        const FMargin Padding(14.f);
+        const FVector2D AvailableSize(
+            FMath::Max(Size.X - Padding.GetTotalSpaceAlong<Orient_Horizontal>(), 1.f),
+            FMath::Max(Size.Y - Padding.GetTotalSpaceAlong<Orient_Vertical>(), 1.f));
+        const FVector2D BoundsSize = MaxPoint - MinPoint;
+        const float ScaleX = AvailableSize.X / FMath::Max(BoundsSize.X, 1.f);
+        const float ScaleY = AvailableSize.Y / FMath::Max(BoundsSize.Y, 1.f);
+        const float Scale = FMath::Min(ScaleX, ScaleY);
+        const float ExtraX = (AvailableSize.X - BoundsSize.X * Scale) * 0.5f;
+        const float BaselineY = Size.Y - Padding.Bottom;
 
-            const FVector2D* StartPoint = ScreenPoints.Find(Bone.Parent);
-            const FVector2D* EndPoint = ScreenPoints.Find(Bone.Name);
-            if (!StartPoint || !EndPoint)
-            {
-                continue;
-            }
+        for (const FBodyPreviewLineSegment& Segment : ProjectedSegments)
+        {
+            const FVector2D StartPoint(
+                Padding.Left + ExtraX + (Segment.Start.X - MinPoint.X) * Scale,
+                BaselineY - (Segment.Start.Y - MinPoint.Y) * Scale);
+            const FVector2D EndPoint(
+                Padding.Left + ExtraX + (Segment.End.X - MinPoint.X) * Scale,
+                BaselineY - (Segment.End.Y - MinPoint.Y) * Scale);
 
             const TArray<FVector2f> LinePoints =
             {
-                FVector2f(static_cast<float>(StartPoint->X), static_cast<float>(StartPoint->Y)),
-                FVector2f(static_cast<float>(EndPoint->X), static_cast<float>(EndPoint->Y))
+                FVector2f(static_cast<float>(StartPoint.X), static_cast<float>(StartPoint.Y)),
+                FVector2f(static_cast<float>(EndPoint.X), static_cast<float>(EndPoint.Y))
             };
 
             FSlateDrawElement::MakeLines(
@@ -258,17 +445,16 @@ public:
                 AllottedGeometry.ToPaintGeometry(),
                 LinePoints,
                 ESlateDrawEffect::None,
-                Bone.Color,
+                Segment.Color,
                 true,
-                Bone.Thickness);
+                Segment.Thickness);
         }
 
         return LayerId + 2;
     }
 
 private:
-    FMannyPoseData PoseData;
-    bool bHasPoseData = false;
+    TArray<FBodyPreviewLineSegment> PreviewSegments;
 };
 
 void SMannyPoseToolkitEditorWidget::Construct(const FArguments& InArgs)
@@ -346,9 +532,19 @@ void SMannyPoseToolkitEditorWidget::Construct(const FArguments& InArgs)
             ]
             + SVerticalBox::Slot().AutoHeight().Padding(0.f, 4.f, 0.f, 10.f)
             [
-                SNew(SButton)
-                .Text(LOCTEXT("ApplyBodyPreset", "Apply Body Preset"))
-                .OnClicked(this, &SMannyPoseToolkitEditorWidget::OnApplyBodyPreset)
+                SNew(SHorizontalBox)
+                + SHorizontalBox::Slot().FillWidth(1.f).Padding(0.f, 0.f, 4.f, 0.f)
+                [
+                    SNew(SButton)
+                    .Text(LOCTEXT("ApplyBodyPreset", "Apply Body Preset"))
+                    .OnClicked(this, &SMannyPoseToolkitEditorWidget::OnApplyBodyPreset)
+                ]
+                + SHorizontalBox::Slot().FillWidth(1.f).Padding(4.f, 0.f, 0.f, 0.f)
+                [
+                    SNew(SButton)
+                    .Text(LOCTEXT("SaveBodyPreset", "Overwrite From Actor"))
+                    .OnClicked(this, &SMannyPoseToolkitEditorWidget::OnSaveBodyPreset)
+                ]
             ]
 
             + SVerticalBox::Slot().AutoHeight().Padding(0.f, 0.f, 0.f, 10.f)
@@ -445,6 +641,16 @@ FReply SMannyPoseToolkitEditorWidget::OnApplyBodyPreset()
     return FReply::Handled();
 }
 
+FReply SMannyPoseToolkitEditorWidget::OnSaveBodyPreset()
+{
+    if (SelectedBodyPreset.IsValid())
+    {
+        SaveBodyPresetFile(GetPluginPoseDir() / *SelectedBodyPreset + TEXT(".json"));
+    }
+
+    return FReply::Handled();
+}
+
 FReply SMannyPoseToolkitEditorWidget::OnApplyLeftHandPreset()
 {
     if (SelectedLeftHandPreset.IsValid())
@@ -504,6 +710,51 @@ bool SMannyPoseToolkitEditorWidget::ApplyBodyPresetFile(const FString& AbsoluteJ
 
     PreviewActor->Modify();
     PreviewActor->ApplyPoseData(PoseData);
+    return true;
+}
+
+bool SMannyPoseToolkitEditorWidget::SaveBodyPresetFile(const FString& AbsoluteJsonPath)
+{
+    AMannyPosePreviewActor* PreviewActor = FindSelectedPreviewActor();
+    if (!PreviewActor)
+    {
+        FMessageDialog::Open(EAppMsgType::Ok, LOCTEXT("NoPreviewActorSave", "Select an AMannyPosePreviewActor in the level first."));
+        return false;
+    }
+
+    FMannyPoseData CapturedPose;
+    FString Error;
+    if (!CapturePoseFromPreviewActor(PreviewActor, CapturedPose, Error))
+    {
+        FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(FString::Printf(TEXT("Failed to capture body preset: %s"), *Error)));
+        return false;
+    }
+
+    FMannyPoseData ExistingPose;
+    FString LoadError;
+    if (UMannyPoseJsonLibrary::LoadPoseFromJsonFile(AbsoluteJsonPath, ExistingPose, LoadError))
+    {
+        CapturedPose.Name = ExistingPose.Name;
+        CapturedPose.Category = ExistingPose.Category;
+        CapturedPose.Notes = ExistingPose.Notes;
+        CapturedPose.LeftHandPreset = ExistingPose.LeftHandPreset;
+        CapturedPose.RightHandPreset = ExistingPose.RightHandPreset;
+        CapturedPose.IKControls = ExistingPose.IKControls;
+        CapturedPose.FingerOffsets = ExistingPose.FingerOffsets;
+    }
+    else if (SelectedBodyPreset.IsValid())
+    {
+        CapturedPose.Name = *SelectedBodyPreset;
+    }
+
+    const FString JsonText = UMannyPoseJsonLibrary::ToPrettyJson(CapturedPose);
+    if (!FFileHelper::SaveStringToFile(JsonText, *AbsoluteJsonPath))
+    {
+        FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(FString::Printf(TEXT("Failed to save body preset: %s"), *AbsoluteJsonPath)));
+        return false;
+    }
+
+    RefreshBodyPreview();
     return true;
 }
 
@@ -595,8 +846,8 @@ void SMannyPoseToolkitEditorWidget::SetDefaultSelections()
 
 void SMannyPoseToolkitEditorWidget::RefreshBodyPreview()
 {
-    bHasBodyPreviewPose = false;
-    BodyPreviewStatusText = TEXT("Approximate body-only line preview.");
+    TArray<FBodyPreviewLineSegment> PreviewSegments;
+    BodyPreviewStatusText = TEXT("Select a preview actor with a Manny skeletal mesh for an accurate line preview.");
 
     if (!SelectedBodyPreset.IsValid())
     {
@@ -609,12 +860,23 @@ void SMannyPoseToolkitEditorWidget::RefreshBodyPreview()
         FString Error;
         if (UMannyPoseJsonLibrary::LoadPoseFromJsonFile(AbsoluteJsonPath, LoadedPose, Error))
         {
-            BodyPreviewPose = MoveTemp(LoadedPose);
-            bHasBodyPreviewPose = true;
-
-            BodyPreviewStatusText = BodyPreviewPose.Notes.IsEmpty()
-                ? TEXT("Approximate body-only line preview. Apply to the actor for the exact Manny pose.")
-                : FString::Printf(TEXT("Approximate body-only line preview. %s"), *BodyPreviewPose.Notes);
+            if (AMannyPosePreviewActor* PreviewActor = FindSelectedPreviewActor())
+            {
+                if (BuildPreviewLineSegments(PreviewActor, LoadedPose, PreviewSegments))
+                {
+                    BodyPreviewStatusText = LoadedPose.Notes.IsEmpty()
+                        ? TEXT("Uses the selected preview actor's actual skeleton. Apply to the actor for the final mesh result.")
+                        : FString::Printf(TEXT("Uses the selected preview actor's actual skeleton. %s"), *LoadedPose.Notes);
+                }
+                else
+                {
+                    BodyPreviewStatusText = TEXT("Selected preview actor does not have a usable skeletal mesh for line preview.");
+                }
+            }
+            else
+            {
+                BodyPreviewStatusText = TEXT("Select an AMannyPosePreviewActor for an accurate line preview.");
+            }
         }
         else
         {
@@ -624,7 +886,7 @@ void SMannyPoseToolkitEditorWidget::RefreshBodyPreview()
 
     if (BodyPreviewWidget.IsValid())
     {
-        BodyPreviewWidget->SetPoseData(bHasBodyPreviewPose ? &BodyPreviewPose : nullptr);
+        BodyPreviewWidget->SetPreviewSegments(PreviewSegments.IsEmpty() ? nullptr : &PreviewSegments);
     }
 }
 
