@@ -1,0 +1,186 @@
+﻿{
+    "version":  "2.0",
+    "skeleton":  "UE5_Manny",
+    "referencePose":  "A_Pose",
+    "name":  "sit_casual",
+    "category":  "seated",
+    "notes":  "One hip dropped to the side with the right knee opened outward.",
+    "ikControls":  {
+
+                   },
+    "fkBones":  {
+                    "pelvis":  {
+                                   "rotation":  [
+                                                    0,
+                                                    -18,
+                                                    0
+                                                ]
+                               },
+                    "spine_01":  {
+                                     "rotation":  [
+                                                      0,
+                                                      -8,
+                                                      0
+                                                  ]
+                                 },
+                    "spine_02":  {
+                                     "rotation":  [
+                                                      0,
+                                                      -6,
+                                                      0
+                                                  ]
+                                 },
+                    "spine_03":  {
+                                     "rotation":  [
+                                                      0,
+                                                      -4,
+                                                      0
+                                                  ]
+                                 },
+                    "spine_04":  {
+                                     "rotation":  [
+                                                      0,
+                                                      -2,
+                                                      0
+                                                  ]
+                                 },
+                    "spine_05":  {
+                                     "rotation":  [
+                                                      0,
+                                                      1,
+                                                      0
+                                                  ]
+                                 },
+                    "clavicle_l":  {
+                                       "rotation":  [
+                                                        0,
+                                                        4,
+                                                        -2
+                                                    ]
+                                   },
+                    "clavicle_r":  {
+                                       "rotation":  [
+                                                        0,
+                                                        -6,
+                                                        2
+                                                    ]
+                                   },
+                    "upperarm_l":  {
+                                       "rotation":  [
+                                                        4,
+                                                        10,
+                                                        -8
+                                                    ]
+                                   },
+                    "upperarm_r":  {
+                                       "rotation":  [
+                                                        8,
+                                                        -12,
+                                                        8
+                                                    ]
+                                   },
+                    "lowerarm_l":  {
+                                       "rotation":  [
+                                                        0,
+                                                        -18,
+                                                        0
+                                                    ]
+                                   },
+                    "lowerarm_r":  {
+                                       "rotation":  [
+                                                        0,
+                                                        24,
+                                                        0
+                                                    ]
+                                   },
+                    "hand_l":  {
+                                   "rotation":  [
+                                                    0,
+                                                    4,
+                                                    0
+                                                ]
+                               },
+                    "hand_r":  {
+                                   "rotation":  [
+                                                    0,
+                                                    -6,
+                                                    0
+                                                ]
+                               },
+                    "thigh_l":  {
+                                    "rotation":  [
+                                                     0,
+                                                     78,
+                                                     6
+                                                 ]
+                                },
+                    "thigh_r":  {
+                                    "rotation":  [
+                                                     0,
+                                                     46,
+                                                     -22
+                                                 ]
+                                },
+                    "calf_l":  {
+                                   "rotation":  [
+                                                    0,
+                                                    -72,
+                                                    0
+                                                ]
+                               },
+                    "calf_r":  {
+                                   "rotation":  [
+                                                    0,
+                                                    -55,
+                                                    0
+                                                ]
+                               },
+                    "foot_l":  {
+                                   "rotation":  [
+                                                    0,
+                                                    8,
+                                                    0
+                                                ]
+                               },
+                    "foot_r":  {
+                                   "rotation":  [
+                                                    0,
+                                                    -4,
+                                                    0
+                                                ]
+                               },
+                    "ball_l":  {
+                                   "rotation":  [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ]
+                               },
+                    "ball_r":  {
+                                   "rotation":  [
+                                                    0,
+                                                    0,
+                                                    0
+                                                ]
+                               },
+                    "neck_01":  {
+                                    "rotation":  [
+                                                     0,
+                                                     4,
+                                                     0
+                                                 ]
+                                },
+                    "head":  {
+                                 "rotation":  [
+                                                  0,
+                                                  4,
+                                                  0
+                                              ]
+                             }
+                },
+    "leftHandPreset":  "relaxed_open",
+    "rightHandPreset":  "point",
+    "fingerOffsets":  {
+
+                      }
+}

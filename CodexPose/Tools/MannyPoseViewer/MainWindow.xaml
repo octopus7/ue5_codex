@@ -1,0 +1,242 @@
+<Window x:Class="MannyPoseViewer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:render="clr-namespace:MannyPoseViewer.Rendering"
+        mc:Ignorable="d"
+        Title="Manny Pose Viewer"
+        Width="1380"
+        Height="860"
+        MinWidth="1100"
+        MinHeight="720"
+        Background="#F4EEE4"
+        FontFamily="Bahnschrift">
+  <Window.Resources>
+    <SolidColorBrush x:Key="PanelBrush" Color="#FFF9F4EC" />
+    <SolidColorBrush x:Key="InkBrush" Color="#1C2428" />
+    <Style TargetType="Button">
+      <Setter Property="Margin" Value="0,0,10,0" />
+      <Setter Property="Padding" Value="14,8" />
+      <Setter Property="Background" Value="#1C2428" />
+      <Setter Property="Foreground" Value="#FFF8F1E5" />
+      <Setter Property="BorderBrush" Value="#1C2428" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style TargetType="TextBox">
+      <Setter Property="Padding" Value="10,8" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="#D4C9BA" />
+      <Setter Property="Background" Value="#FFFFFBF6" />
+      <Setter Property="Foreground" Value="#1C2428" />
+    </Style>
+  </Window.Resources>
+
+  <Grid Margin="18">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <Border Grid.Row="0"
+            Padding="20"
+            CornerRadius="18"
+            Background="#FFF6EFE4"
+            BorderBrush="#E2D4C4"
+            BorderThickness="1">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="360" />
+        </Grid.ColumnDefinitions>
+
+        <StackPanel>
+          <TextBlock FontSize="34"
+                     FontWeight="Bold"
+                     Foreground="{StaticResource InkBrush}"
+                     Text="Manny Pose Viewer" />
+          <TextBlock Margin="0,8,0,0"
+                     FontSize="15"
+                     Foreground="#4A5A60"
+                     Text="Loads the UE editor export, watches the JSON for changes, and draws a Manny line preview using the actual exported reference skeleton." />
+        </StackPanel>
+
+        <Border Grid.Column="1"
+                Padding="14"
+                CornerRadius="14"
+                Background="#FFFDF8F1"
+                BorderBrush="#E2D4C4"
+                BorderThickness="1">
+          <TextBlock x:Name="StatusText"
+                     FontSize="14"
+                     Foreground="#4A5A60"
+                     TextWrapping="Wrap"
+                     Text="Export a dataset from the UE editor, then open it here." />
+        </Border>
+      </Grid>
+    </Border>
+
+    <Grid Grid.Row="1" Margin="0,16,0,0">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="360" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <Border Grid.Column="0"
+              Padding="18"
+              CornerRadius="18"
+              Background="{StaticResource PanelBrush}"
+              BorderBrush="#E2D4C4"
+              BorderThickness="1">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+          </Grid.RowDefinitions>
+
+          <StackPanel>
+            <TextBlock FontSize="20"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource InkBrush}"
+                       Text="Dataset" />
+            <TextBlock x:Name="DatasetSummaryText"
+                       Margin="0,6,0,0"
+                       Foreground="#4A5A60"
+                       Text="No dataset loaded" />
+            <TextBlock x:Name="DatasetPathText"
+                       Margin="0,8,0,0"
+                       Foreground="#6A777B"
+                       TextWrapping="Wrap"
+                       Text="Saved/MannyPoseToolkit/Exports/manny_pose_viewer_dataset.json" />
+          </StackPanel>
+
+          <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,18,0,0">
+            <Button Content="Open JSON" Click="OpenJsonButton_OnClick" />
+            <Button x:Name="ReloadButton" Content="Reload" Click="ReloadButton_OnClick" IsEnabled="False" />
+          </StackPanel>
+
+          <StackPanel Grid.Row="2" Margin="0,22,0,0">
+            <TextBlock FontSize="18"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource InkBrush}"
+                       Text="Poses" />
+            <TextBlock Margin="0,6,0,8"
+                       Foreground="#4A5A60"
+                       Text="Filter by pose name, category, or notes." />
+            <TextBox x:Name="SearchBox" TextChanged="SearchBox_OnTextChanged" />
+          </StackPanel>
+
+          <ListBox x:Name="PoseListBox"
+                   Grid.Row="3"
+                   Margin="0,16,0,0"
+                   Background="#FFFFFBF6"
+                   BorderBrush="#E2D4C4"
+                   BorderThickness="1"
+                   SelectionChanged="PoseListBox_OnSelectionChanged">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <Border Margin="0,0,0,8"
+                        Padding="12"
+                        CornerRadius="10"
+                        Background="#FFF7F0E5"
+                        BorderBrush="#E9DCCA"
+                        BorderThickness="1">
+                  <StackPanel>
+                    <TextBlock FontSize="15"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource InkBrush}"
+                               Text="{Binding Name}" />
+                    <TextBlock Margin="0,4,0,0"
+                               Foreground="#B15E24"
+                               Text="{Binding Category}" />
+                    <TextBlock Margin="0,6,0,0"
+                               Foreground="#56666B"
+                               Text="{Binding Notes}"
+                               TextWrapping="Wrap"
+                               MaxHeight="38" />
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Grid>
+      </Border>
+
+      <Border Grid.Column="1"
+              Margin="16,0,0,0"
+              Padding="18"
+              CornerRadius="18"
+              Background="#FFF7F1E7"
+              BorderBrush="#E2D4C4"
+              BorderThickness="1">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+
+          <render:PosePreviewControl x:Name="PreviewControl"
+                                     Margin="0,0,0,18"
+                                     SnapsToDevicePixels="True" />
+
+          <Border Grid.Row="1"
+                  Padding="18"
+                  CornerRadius="16"
+                  Background="#FFFFFBF6"
+                  BorderBrush="#E2D4C4"
+                  BorderThickness="1">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+
+              <StackPanel>
+                <TextBlock x:Name="PoseNameText"
+                           FontSize="26"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource InkBrush}"
+                           Text="No pose selected" />
+                <TextBlock x:Name="PoseMetaText"
+                           Margin="0,8,0,0"
+                           Foreground="#B15E24"
+                           Text="Category" />
+                <TextBlock x:Name="PoseNotesText"
+                           Margin="0,10,0,0"
+                           Foreground="#56666B"
+                           TextWrapping="Wrap"
+                           Text="Select a pose from the list to inspect its line preview." />
+              </StackPanel>
+
+              <StackPanel Grid.Column="1">
+                <TextBlock FontSize="16"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource InkBrush}"
+                           Text="Source" />
+                <TextBlock x:Name="PoseSourceText"
+                           Margin="0,8,0,0"
+                           Foreground="#56666B"
+                           TextWrapping="Wrap"
+                           Text="-" />
+                <TextBlock Margin="0,16,0,0"
+                           FontSize="16"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource InkBrush}"
+                           Text="Hand Presets" />
+                <TextBlock x:Name="PoseHandsText"
+                           Margin="0,8,0,0"
+                           Foreground="#56666B"
+                           TextWrapping="Wrap"
+                           Text="-" />
+              </StackPanel>
+            </Grid>
+          </Border>
+        </Grid>
+      </Border>
+    </Grid>
+  </Grid>
+</Window>
