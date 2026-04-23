@@ -8,6 +8,7 @@
 #include "Components/PoseableMeshComponent.h"
 #include "Engine/SkeletalMesh.h"
 #include "HAL/FileManager.h"
+#include "MannyPoseViewerExport.h"
 #include "Misc/FileHelper.h"
 #include "MannyPoseJsonLibrary.h"
 #include "MannyPosePreviewActor.h"
@@ -461,6 +462,10 @@ void SMannyPoseToolkitEditorWidget::Construct(const FArguments& InArgs)
 {
     RebuildPresetOptions();
     SetDefaultSelections();
+    ViewerExportStatusText = FString::Printf(
+        TEXT("Exports the selected preview actor's Manny skeleton and %d body presets to %s."),
+        BodyPresetItems.Num(),
+        *GetDefaultViewerDatasetPath());
 
     ChildSlot
     [
@@ -544,6 +549,42 @@ void SMannyPoseToolkitEditorWidget::Construct(const FArguments& InArgs)
                     SNew(SButton)
                     .Text(LOCTEXT("SaveBodyPreset", "Overwrite From Actor"))
                     .OnClicked(this, &SMannyPoseToolkitEditorWidget::OnSaveBodyPreset)
+                ]
+            ]
+            + SVerticalBox::Slot().AutoHeight().Padding(0.f, 0.f, 0.f, 10.f)
+            [
+                SNew(SBorder)
+                .Padding(8.f)
+                .BorderImage(FAppStyle::GetBrush("ToolPanel.GroupBorder"))
+                [
+                    SNew(SVerticalBox)
+                    + SVerticalBox::Slot().AutoHeight().Padding(0.f, 0.f, 0.f, 6.f)
+                    [
+                        SNew(STextBlock)
+                        .Text(LOCTEXT("ViewerDatasetTitle", "WPF Viewer Dataset"))
+                    ]
+                    + SVerticalBox::Slot().AutoHeight().Padding(0.f, 0.f, 0.f, 6.f)
+                    [
+                        SNew(STextBlock)
+                        .Text(LOCTEXT("ViewerDatasetDescription", "Exports the selected preview actor's Manny reference skeleton plus every bundled body pose as one JSON dataset for the external WPF line viewer."))
+                        .AutoWrapText(true)
+                    ]
+                    + SVerticalBox::Slot().AutoHeight()
+                    [
+                        SNew(SButton)
+                        .Text(LOCTEXT("ExportViewerDataset", "Export Viewer Dataset"))
+                        .OnClicked(this, &SMannyPoseToolkitEditorWidget::OnExportViewerDataset)
+                    ]
+                    + SVerticalBox::Slot().AutoHeight().Padding(0.f, 6.f, 0.f, 0.f)
+                    [
+                        SNew(STextBlock)
+                        .Text_Lambda([this]()
+                        {
+                            return FText::FromString(ViewerExportStatusText);
+                        })
+                        .ColorAndOpacity(FSlateColor::UseSubduedForeground())
+                        .AutoWrapText(true)
+                    ]
                 ]
             ]
 
@@ -648,6 +689,12 @@ FReply SMannyPoseToolkitEditorWidget::OnSaveBodyPreset()
         SaveBodyPresetFile(GetPluginPoseDir() / *SelectedBodyPreset + TEXT(".json"));
     }
 
+    return FReply::Handled();
+}
+
+FReply SMannyPoseToolkitEditorWidget::OnExportViewerDataset()
+{
+    ExportViewerDatasetFile();
     return FReply::Handled();
 }
 
@@ -758,6 +805,44 @@ bool SMannyPoseToolkitEditorWidget::SaveBodyPresetFile(const FString& AbsoluteJs
     return true;
 }
 
+bool SMannyPoseToolkitEditorWidget::ExportViewerDatasetFile()
+{
+    AMannyPosePreviewActor* PreviewActor = FindSelectedPreviewActor();
+    if (!PreviewActor)
+    {
+        ViewerExportStatusText = TEXT("Dataset export failed: select an AMannyPosePreviewActor with a Manny skeletal mesh first.");
+        FMessageDialog::Open(EAppMsgType::Ok, LOCTEXT("NoPreviewActorExport", "Select an AMannyPosePreviewActor in the level first."));
+        return false;
+    }
+
+    const USkeletalMesh* SkeletalMesh = GetPreviewSkeletalMesh(PreviewActor);
+    if (!SkeletalMesh)
+    {
+        ViewerExportStatusText = TEXT("Dataset export failed: the selected preview actor does not have a valid skeletal mesh.");
+        FMessageDialog::Open(EAppMsgType::Ok, LOCTEXT("NoSkeletalMeshExport", "The selected preview actor does not have a valid skeletal mesh."));
+        return false;
+    }
+
+    MannyPoseViewerExport::FExportSummary ExportSummary;
+    FString Error;
+    const FString OutputPath = GetDefaultViewerDatasetPath();
+    if (!MannyPoseViewerExport::ExportViewerDataset(*SkeletalMesh, GetPluginPoseDir(), OutputPath, ExportSummary, Error))
+    {
+        ViewerExportStatusText = FString::Printf(TEXT("Dataset export failed: %s"), *Error);
+        FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(ViewerExportStatusText));
+        return false;
+    }
+
+    ViewerExportStatusText = FString::Printf(
+        TEXT("Exported %d bones and %d poses to %s"),
+        ExportSummary.BoneCount,
+        ExportSummary.PoseCount,
+        *OutputPath);
+
+    FMessageDialog::Open(EAppMsgType::Ok, FText::FromString(ViewerExportStatusText));
+    return true;
+}
+
 bool SMannyPoseToolkitEditorWidget::ApplyHandPresetFile(const FString& AbsoluteJsonPath, EMannyHandTargetSide TargetSide)
 {
     AMannyPosePreviewActor* PreviewActor = FindSelectedPreviewActor();
@@ -807,6 +892,11 @@ FString SMannyPoseToolkitEditorWidget::GetPluginPoseDir() const
 FString SMannyPoseToolkitEditorWidget::GetPluginHandDir() const
 {
     return IPluginManager::Get().FindPlugin(TEXT("MannyPoseToolkit"))->GetBaseDir() / TEXT("Content/Poses/Hands");
+}
+
+FString SMannyPoseToolkitEditorWidget::GetDefaultViewerDatasetPath() const
+{
+    return FPaths::ProjectSavedDir() / TEXT("MannyPoseToolkit/Exports/manny_pose_viewer_dataset.json");
 }
 
 void SMannyPoseToolkitEditorWidget::RebuildPresetOptions()

@@ -12,6 +12,8 @@
 # Plugin generated folders
 /Plugins/*/Binaries/
 /Plugins/*/Intermediate/
+/Tools/*/bin/
+/Tools/*/obj/
 
 # IDE and editor metadata
 /.vs/

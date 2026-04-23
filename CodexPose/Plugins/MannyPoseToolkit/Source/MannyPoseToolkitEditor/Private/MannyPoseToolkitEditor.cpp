@@ -14,6 +14,11 @@ static const FName MannyPoseToolkitTabName("MannyPoseToolkit");
 
 void FMannyPoseToolkitEditorModule::StartupModule()
 {
+    if (IsRunningCommandlet())
+    {
+        return;
+    }
+
     FMannyPoseToolkitStyle::Initialize();
     FMannyPoseToolkitStyle::ReloadTextures();
     FMannyPoseToolkitCommands::Register();
@@ -33,6 +38,11 @@ void FMannyPoseToolkitEditorModule::StartupModule()
 
 void FMannyPoseToolkitEditorModule::ShutdownModule()
 {
+    if (IsRunningCommandlet())
+    {
+        return;
+    }
+
     UToolMenus::UnRegisterStartupCallback(this);
     UToolMenus::UnregisterOwner(this);
 

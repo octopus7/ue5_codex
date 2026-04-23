@@ -18,6 +18,7 @@ private:
 
     FReply OnApplyBodyPreset();
     FReply OnSaveBodyPreset();
+    FReply OnExportViewerDataset();
     FReply OnApplyLeftHandPreset();
     FReply OnApplyRightHandPreset();
     FReply OnApplyBothHandsPreset();
@@ -25,10 +26,12 @@ private:
 
     bool ApplyBodyPresetFile(const FString& AbsoluteJsonPath);
     bool SaveBodyPresetFile(const FString& AbsoluteJsonPath);
+    bool ExportViewerDatasetFile();
     bool ApplyHandPresetFile(const FString& AbsoluteJsonPath, EMannyHandTargetSide TargetSide);
     class AMannyPosePreviewActor* FindSelectedPreviewActor() const;
     FString GetPluginPoseDir() const;
     FString GetPluginHandDir() const;
+    FString GetDefaultViewerDatasetPath() const;
     void RebuildPresetOptions();
     TSharedRef<class SWidget> GenerateComboItem(FStringItem Item) const;
     void SetDefaultSelections();
@@ -43,4 +46,5 @@ private:
 
     TSharedPtr<SMannyPoseBodyPreview> BodyPreviewWidget;
     FString BodyPreviewStatusText;
+    FString ViewerExportStatusText;
 };
