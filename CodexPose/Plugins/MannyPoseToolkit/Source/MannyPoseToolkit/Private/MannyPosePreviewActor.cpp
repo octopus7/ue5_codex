@@ -39,7 +39,7 @@ namespace
         PoseableMesh->MarkRefreshTransformDirty();
     }
 
-    void SetLocalBoneRotationFromReference(UPoseableMeshComponent* PoseableMesh, const FName BoneName, const FRotator& RotationOffset)
+    void SetLocalBoneTransformFromReference(UPoseableMeshComponent* PoseableMesh, const FName BoneName, const FVector& LocationOffset, const FRotator& RotationOffset)
     {
         if (!PoseableMesh || !PoseableMesh->RequiredBones.IsValid())
         {
@@ -59,6 +59,8 @@ namespace
         }
 
         const FQuat NewRotation = (FQuat(RotationOffset) * ReferenceLocalBoneTransform->GetRotation()).GetNormalized();
+        const FVector NewLocation = ReferenceLocalBoneTransform->GetLocation() + LocationOffset;
+        PoseableMesh->BoneSpaceTransforms[BoneIndex].SetLocation(NewLocation);
         PoseableMesh->BoneSpaceTransforms[BoneIndex].SetRotation(NewRotation);
         PoseableMesh->MarkRefreshTransformDirty();
     }
@@ -152,7 +154,7 @@ void AMannyPosePreviewActor::ApplyFkBoneRotations(const FMannyPoseData& PoseData
 {
     for (const TPair<FName, FMannyPoseBoneRotation>& Pair : PoseData.FKBones)
     {
-        SetLocalBoneRotationFromReference(PoseableMesh, Pair.Key, Pair.Value.Rotation);
+        SetLocalBoneTransformFromReference(PoseableMesh, Pair.Key, Pair.Value.Location, Pair.Value.Rotation);
     }
 }
 
@@ -168,6 +170,6 @@ void AMannyPosePreviewActor::ApplyNamedRotations(const TMap<FName, FRotator>& Ro
 {
     for (const TPair<FName, FRotator>& Pair : Rotations)
     {
-        SetLocalBoneRotationFromReference(PoseableMesh, Pair.Key, Pair.Value);
+        SetLocalBoneTransformFromReference(PoseableMesh, Pair.Key, FVector::ZeroVector, Pair.Value);
     }
 }

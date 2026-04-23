@@ -3,6 +3,8 @@
 #include "Widgets/SCompoundWidget.h"
 #include "MannyPoseTypes.h"
 
+class SMannyPoseBodyPreview;
+
 class SMannyPoseToolkitEditorWidget : public SCompoundWidget
 {
 public:
@@ -28,6 +30,7 @@ private:
     void RebuildPresetOptions();
     TSharedRef<class SWidget> GenerateComboItem(FStringItem Item) const;
     void SetDefaultSelections();
+    void RefreshBodyPreview();
 
     TArray<FStringItem> BodyPresetItems;
     TArray<FStringItem> HandPresetItems;
@@ -35,4 +38,9 @@ private:
     FStringItem SelectedBodyPreset;
     FStringItem SelectedLeftHandPreset;
     FStringItem SelectedRightHandPreset;
+
+    TSharedPtr<SMannyPoseBodyPreview> BodyPreviewWidget;
+    FMannyPoseData BodyPreviewPose;
+    FString BodyPreviewStatusText;
+    bool bHasBodyPreviewPose = false;
 };

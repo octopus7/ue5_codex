@@ -192,6 +192,14 @@ namespace MannyPoseJsonLibrary
             if (Pair.Value.IsValid() && Pair.Value->Type == EJson::Object)
             {
                 const TSharedPtr<FJsonObject> BoneObject = Pair.Value->AsObject();
+                if (const TSharedPtr<FJsonValue> LocationValue = FindFieldValueCaseInsensitive(BoneObject, TEXT("Location")))
+                {
+                    if (!ParseVectorValue(LocationValue, BoneRotation.Location, OutError, FString::Printf(TEXT("%s.%s.Location"), *Context, *Pair.Key)))
+                    {
+                        return false;
+                    }
+                }
+
                 if (const TSharedPtr<FJsonValue> NestedRotation = FindFieldValueCaseInsensitive(BoneObject, TEXT("Rotation")))
                 {
                     RotationValue = NestedRotation;

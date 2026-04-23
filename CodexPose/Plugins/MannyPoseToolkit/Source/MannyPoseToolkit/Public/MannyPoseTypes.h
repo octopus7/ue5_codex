@@ -41,6 +41,9 @@ struct FMannyPoseBoneRotation
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Pose")
+    FVector Location = FVector::ZeroVector;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Pose")
     FRotator Rotation = FRotator::ZeroRotator;
 };
 
