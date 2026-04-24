@@ -19,6 +19,8 @@
 /.vs/
 /.vscode/
 /.idea/
+/.chrome-test*/
+/imagegen/previews/
 *.VC.db
 *.VC.opendb
 *.opensdf
