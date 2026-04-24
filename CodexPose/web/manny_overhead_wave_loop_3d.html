@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manny Overhead Wave Loop 3D</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f9fb;
+      --panel: rgba(255, 255, 255, 0.9);
+      --text: #172033;
+      --muted: #5f6b7b;
+      --line: #d8e0e8;
+      --left: #23aeea;
+      --right: #f4a12d;
+      --center: #414a57;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+    }
+
+    #view {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    #view.dragging {
+      cursor: grabbing;
+    }
+
+    .toolbar {
+      position: fixed;
+      left: 20px;
+      right: 20px;
+      top: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 12px 30px rgba(18, 28, 43, 0.08);
+      z-index: 10;
+    }
+
+    .title {
+      min-width: 0;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      white-space: nowrap;
+    }
+
+    .title strong {
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .title span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+    }
+
+    button {
+      min-height: 34px;
+      padding: 0 14px;
+      border: 1px solid #bcc8d4;
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--text);
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #f0f5f8;
+    }
+
+    .metric {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(247, 249, 251, 0.8);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .strip {
+      position: fixed;
+      left: 20px;
+      right: 20px;
+      bottom: 18px;
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .tick {
+      height: 8px;
+      border-radius: 4px;
+      background: rgba(120, 135, 152, 0.26);
+      overflow: hidden;
+    }
+
+    .tick.active {
+      background: linear-gradient(90deg, var(--right), var(--left));
+    }
+
+    .legend {
+      position: fixed;
+      left: 20px;
+      bottom: 42px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--muted);
+      font-size: 12px;
+      z-index: 10;
+    }
+
+    .view-gizmo {
+      position: fixed;
+      right: 20px;
+      top: 96px;
+      width: 132px;
+      height: 132px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 12px 30px rgba(18, 28, 43, 0.08);
+      z-index: 11;
+    }
+
+    .gizmo-core {
+      position: absolute;
+      left: 60px;
+      top: 60px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #3f4856;
+      box-shadow: 0 0 0 3px rgba(63, 72, 86, 0.12);
+    }
+
+    .gizmo-line {
+      position: absolute;
+      left: 30px;
+      top: 65px;
+      width: 72px;
+      height: 2px;
+      border-radius: 1px;
+      transform-origin: 50% 50%;
+      opacity: 0.42;
+    }
+
+    .gizmo-line.x {
+      background: #dd5555;
+      transform: rotate(35deg);
+    }
+
+    .gizmo-line.y {
+      background: #35a853;
+      transform: rotate(-35deg);
+    }
+
+    .gizmo-line.z {
+      background: #3b82f6;
+      transform: rotate(90deg);
+    }
+
+    .gizmo-axis {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      min-height: 0;
+      padding: 0;
+      border: 2px solid rgba(255, 255, 255, 0.95);
+      border-radius: 50%;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1;
+      box-shadow: 0 6px 14px rgba(18, 28, 43, 0.14);
+    }
+
+    .gizmo-axis:hover,
+    .gizmo-axis.active {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+
+    .gizmo-axis.x {
+      background: #dd5555;
+    }
+
+    .gizmo-axis.y {
+      background: #35a853;
+    }
+
+    .gizmo-axis.z {
+      background: #3b82f6;
+    }
+
+    .gizmo-axis.negative {
+      opacity: 0.72;
+    }
+
+    .gizmo-z-plus {
+      left: 50px;
+      top: 6px;
+    }
+
+    .gizmo-y-plus {
+      left: 88px;
+      top: 28px;
+    }
+
+    .gizmo-x-plus {
+      left: 88px;
+      top: 72px;
+    }
+
+    .gizmo-z-minus {
+      left: 50px;
+      top: 94px;
+    }
+
+    .gizmo-y-minus {
+      left: 12px;
+      top: 72px;
+    }
+
+    .gizmo-x-minus {
+      left: 12px;
+      top: 28px;
+    }
+
+    .swatch {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      margin-right: 6px;
+      border-radius: 50%;
+      vertical-align: -1px;
+    }
+
+    .left {
+      background: var(--left);
+    }
+
+    .right {
+      background: var(--right);
+    }
+
+    .center {
+      background: var(--center);
+    }
+
+    .fallback {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 28px;
+      background: #f7f9fb;
+      color: #172033;
+      text-align: center;
+      z-index: 20;
+    }
+
+    @media (max-width: 720px) {
+      .toolbar {
+        align-items: stretch;
+        flex-direction: column;
+        left: 12px;
+        right: 12px;
+        width: auto;
+        overflow: hidden;
+      }
+
+      .title {
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .controls {
+        display: block;
+        width: 100%;
+      }
+
+      .controls .metric {
+        display: none;
+      }
+
+      .legend {
+        left: 12px;
+        bottom: 44px;
+        max-width: calc(100vw - 24px);
+        flex-wrap: wrap;
+      }
+
+      .view-gizmo {
+        left: min(252px, calc(100vw - 124px));
+        right: auto;
+        top: 142px;
+        transform: scale(0.88);
+        transform-origin: top left;
+      }
+
+      .strip {
+        left: 12px;
+        right: 12px;
+      }
+
+      .controls button,
+      .metric {
+        justify-content: center;
+        min-width: 0;
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+
+      .controls button {
+        display: block;
+        width: min(100%, 280px);
+        margin: 0 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="view" aria-label="Rotatable 3D Manny overhead hand wave loop"></canvas>
+
+  <div class="toolbar">
+    <div class="title">
+      <strong>Manny Overhead Wave Loop</strong>
+      <span>8 frames at 8 fps</span>
+    </div>
+    <div class="controls">
+      <button id="playButton" type="button">Pause</button>
+      <span class="metric" id="frameReadout">Frame 1 / 8</span>
+      <span class="metric">125 ms</span>
+    </div>
+  </div>
+
+  <div class="view-gizmo" aria-label="View shortcuts">
+    <span class="gizmo-line x" aria-hidden="true"></span>
+    <span class="gizmo-line y" aria-hidden="true"></span>
+    <span class="gizmo-line z" aria-hidden="true"></span>
+    <span class="gizmo-core" aria-hidden="true"></span>
+    <button class="gizmo-axis z gizmo-z-plus" type="button" data-view="zPlus" title="Top view">Z</button>
+    <button class="gizmo-axis y gizmo-y-plus" type="button" data-view="yPlus" title="Front view">Y</button>
+    <button class="gizmo-axis x gizmo-x-plus" type="button" data-view="xPlus" title="Right view">X</button>
+    <button class="gizmo-axis z negative gizmo-z-minus" type="button" data-view="zMinus" title="Bottom view">-Z</button>
+    <button class="gizmo-axis y negative gizmo-y-minus" type="button" data-view="yMinus" title="Back view">-Y</button>
+    <button class="gizmo-axis x negative gizmo-x-minus" type="button" data-view="xMinus" title="Left view">-X</button>
+  </div>
+
+  <div class="legend">
+    <span><i class="swatch right"></i>right side</span>
+    <span><i class="swatch left"></i>left side</span>
+    <span><i class="swatch center"></i>center chain</span>
+  </div>
+
+  <div class="strip" id="frameStrip" aria-hidden="true"></div>
+  <div class="fallback" id="fallback">
+    <div>
+      <h1>Three.js did not load.</h1>
+      <p>Connect to the internet or place a local Three.js build next to this HTML file.</p>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    (() => {
+      const canvas = document.getElementById("view");
+      const fallback = document.getElementById("fallback");
+      const playButton = document.getElementById("playButton");
+      const frameReadout = document.getElementById("frameReadout");
+      const frameStrip = document.getElementById("frameStrip");
+      const gizmoButtons = Array.from(document.querySelectorAll("[data-view]"));
+      const fps = 8;
+      const frameDurationMs = 1000 / fps;
+      const rootNames = ["pelvis", "spine_01", "spine_02", "spine_03", "spine_04", "spine_05", "neck_01", "head"];
+
+      if (!window.THREE) {
+        fallback.style.display = "grid";
+        return;
+      }
+
+      const frameParams = [
+        { name: "overhead_wave_01", sway: -0.45, reach: -0.62, lift: 0.40, depth: -0.15 },
+        { name: "overhead_wave_02", sway: -0.78, reach: -1.00, lift: 1.00, depth: 0.25 },
+        { name: "overhead_wave_03", sway: -0.28, reach: -0.35, lift: 0.20, depth: -0.35 },
+        { name: "overhead_wave_04", sway: 0.42, reach: 0.55, lift: 0.55, depth: 0.15 },
+        { name: "overhead_wave_05", sway: 0.82, reach: 1.00, lift: 1.00, depth: -0.25 },
+        { name: "overhead_wave_06", sway: 0.30, reach: 0.35, lift: 0.15, depth: 0.35 },
+        { name: "overhead_wave_07", sway: -0.62, reach: -0.82, lift: 0.75, depth: 0.10 },
+        { name: "overhead_wave_08", sway: 0.08, reach: 0.10, lift: 0.00, depth: -0.10 }
+      ];
+
+      const colors = {
+        left: 0x23aeea,
+        right: 0xf4a12d,
+        center: 0x414a57,
+        joint: 0x1e2633,
+        ghost: 0x9aa8b5
+      };
+
+      const segments = [
+        ["pelvis", "spine_01", "center"],
+        ["spine_01", "spine_02", "center"],
+        ["spine_02", "spine_03", "center"],
+        ["spine_03", "spine_04", "center"],
+        ["spine_04", "spine_05", "center"],
+        ["spine_05", "neck_01", "center"],
+        ["neck_01", "head", "center"],
+        ["spine_05", "clavicle_l", "left"],
+        ["clavicle_l", "upperarm_l", "left"],
+        ["upperarm_l", "lowerarm_l", "left"],
+        ["lowerarm_l", "hand_l", "left"],
+        ["spine_05", "clavicle_r", "right"],
+        ["clavicle_r", "upperarm_r", "right"],
+        ["upperarm_r", "lowerarm_r", "right"],
+        ["lowerarm_r", "hand_r", "right"],
+        ["pelvis", "thigh_l", "left"],
+        ["thigh_l", "calf_l", "left"],
+        ["calf_l", "foot_l", "left"],
+        ["foot_l", "ball_l", "left"],
+        ["pelvis", "thigh_r", "right"],
+        ["thigh_r", "calf_r", "right"],
+        ["calf_r", "foot_r", "right"],
+        ["foot_r", "ball_r", "right"]
+      ];
+
+      function v(x, y, z = 0) {
+        return new THREE.Vector3(x, y, z);
+      }
+
+      function lerp(a, b, t) {
+        return a + (b - a) * t;
+      }
+
+      function buildFrame(param) {
+        const sway = param.sway;
+        const reach = param.reach;
+        const lift = param.lift;
+        const depth = param.depth;
+        const pelvisX = sway * 7;
+        const chestX = sway * -8;
+        const handCenterX = reach * 44 + chestX * 0.45;
+        const handY = 202 + lift * 9;
+        const chestZ = depth * 8;
+        const armDepth = depth * 16;
+        const points = {};
+
+        points.pelvis = v(pelvisX, 96 + lift * 1.2, -chestZ * 0.15);
+        points.spine_01 = v(lerp(pelvisX, chestX, 0.18), 110, chestZ * 0.12);
+        points.spine_02 = v(lerp(pelvisX, chestX, 0.38), 123, chestZ * 0.24);
+        points.spine_03 = v(lerp(pelvisX, chestX, 0.60), 136, chestZ * 0.36);
+        points.spine_04 = v(lerp(pelvisX, chestX, 0.78), 146, chestZ * 0.48);
+        points.spine_05 = v(chestX, 155, chestZ * 0.60);
+        points.neck_01 = v(chestX + reach * 2, 168, chestZ * 0.38);
+        points.head = v(chestX + reach * 6, 184, chestZ * 0.20);
+
+        points.clavicle_l = v(chestX + 15, 158, chestZ * 0.65);
+        points.clavicle_r = v(chestX - 15, 158, chestZ * 0.65);
+        points.upperarm_l = v(lerp(points.clavicle_l.x, handCenterX + 22, 0.38) + 16, 183 + lift * 3, armDepth + 5);
+        points.upperarm_r = v(lerp(points.clavicle_r.x, handCenterX - 22, 0.38) - 16, 183 + lift * 4, -armDepth - 5);
+        points.lowerarm_l = v(lerp(points.upperarm_l.x, handCenterX + 19, 0.62) + reach * 6, 201 + lift * 4, armDepth * 0.45 + 8);
+        points.lowerarm_r = v(lerp(points.upperarm_r.x, handCenterX - 19, 0.62) + reach * 6, 201 + lift * 4, -armDepth * 0.45 - 8);
+        points.hand_l = v(handCenterX + 22, handY + 2, armDepth * 0.20 + 10);
+        points.hand_r = v(handCenterX - 22, handY - 1, -armDepth * 0.20 - 10);
+
+        points.thigh_l = v(pelvisX + 12 + sway * 3, 91, 4);
+        points.calf_l = v(pelvisX + 17 + sway * 5, 50, 3);
+        points.foot_l = v(pelvisX + 20 + sway * 6, 10, 10);
+        points.ball_l = v(pelvisX + 24 + sway * 7, 2, 25);
+        points.thigh_r = v(pelvisX - 12 + sway * 3, 91, -4);
+        points.calf_r = v(pelvisX - 17 + sway * 5, 50, -3);
+        points.foot_r = v(pelvisX - 20 + sway * 6, 10, 10);
+        points.ball_r = v(pelvisX - 24 + sway * 7, 2, 25);
+
+        return {
+          name: param.name,
+          points
+        };
+      }
+
+      const frames = frameParams.map(buildFrame);
+      const ticks = frameParams.map(() => {
+        const tick = document.createElement("div");
+        tick.className = "tick";
+        frameStrip.appendChild(tick);
+        return tick;
+      });
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xf7f9fb);
+
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.outputEncoding = THREE.sRGBEncoding;
+
+      const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1200);
+      const target = new THREE.Vector3(0, 105, 0);
+      const orbit = { theta: 0.42, phi: 1.28, radius: 410 };
+      const viewDirections = {
+        xPlus: new THREE.Vector3(1, 0, 0),
+        xMinus: new THREE.Vector3(-1, 0, 0),
+        yPlus: new THREE.Vector3(0, 0, 1),
+        yMinus: new THREE.Vector3(0, 0, -1),
+        zPlus: new THREE.Vector3(0, 1, 0),
+        zMinus: new THREE.Vector3(0, -1, 0)
+      };
+
+      const hemi = new THREE.HemisphereLight(0xffffff, 0xd9e0e5, 1.35);
+      scene.add(hemi);
+      const key = new THREE.DirectionalLight(0xffffff, 1.6);
+      key.position.set(90, 180, 130);
+      scene.add(key);
+
+      const grid = new THREE.GridHelper(180, 18, 0xc9d3dc, 0xe1e7ec);
+      grid.position.y = 0;
+      scene.add(grid);
+
+      const centerLineGeometry = new THREE.BufferGeometry().setFromPoints([v(0, 0, 0), v(0, 212, 0)]);
+      const centerLine = new THREE.Line(centerLineGeometry, new THREE.LineBasicMaterial({
+        color: 0xb8c4cf,
+        transparent: true,
+        opacity: 0.42
+      }));
+      scene.add(centerLine);
+
+      const figure = new THREE.Group();
+      scene.add(figure);
+
+      const ghost = new THREE.Group();
+      scene.add(ghost);
+
+      const segmentMeshes = segments.map((segment) => {
+        const material = new THREE.MeshStandardMaterial({
+          color: colors[segment[2]],
+          roughness: 0.55,
+          metalness: 0.05
+        });
+        const mesh = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.7, 1, 16), material);
+        figure.add(mesh);
+        return { segment, mesh };
+      });
+
+      const ghostMeshes = segments
+        .filter((segment) => segment[2] === "left" || segment[2] === "right")
+        .map((segment) => {
+          const mesh = new THREE.Mesh(
+            new THREE.CylinderGeometry(1.0, 1.0, 1, 10),
+            new THREE.MeshBasicMaterial({ color: colors.ghost, transparent: true, opacity: 0.18 })
+          );
+          ghost.add(mesh);
+          return { segment, mesh };
+        });
+
+      const jointGeometry = new THREE.SphereGeometry(3.2, 18, 12);
+      const jointMeshes = Object.keys(frames[0].points).map((name) => {
+        const material = new THREE.MeshStandardMaterial({
+          color: rootNames.includes(name) ? colors.center : colors.joint,
+          roughness: 0.48
+        });
+        const mesh = new THREE.Mesh(jointGeometry, material);
+        figure.add(mesh);
+        return { name, mesh };
+      });
+
+      const handGlowGeometry = new THREE.SphereGeometry(5.5, 24, 16);
+      const handGlowMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.32 });
+      const handGlowL = new THREE.Mesh(handGlowGeometry, handGlowMaterial);
+      const handGlowR = new THREE.Mesh(handGlowGeometry, handGlowMaterial.clone());
+      figure.add(handGlowL, handGlowR);
+
+      function updateCylinder(mesh, a, b) {
+        const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
+        const diff = new THREE.Vector3().subVectors(b, a);
+        const length = Math.max(diff.length(), 0.001);
+        mesh.position.copy(mid);
+        mesh.scale.set(1, length, 1);
+        mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), diff.normalize());
+      }
+
+      function applyFrame(index) {
+        const frame = frames[index];
+        const previous = frames[(index + frames.length - 1) % frames.length];
+
+        for (const item of segmentMeshes) {
+          const [from, to] = item.segment;
+          updateCylinder(item.mesh, frame.points[from], frame.points[to]);
+        }
+
+        for (const item of ghostMeshes) {
+          const [from, to] = item.segment;
+          updateCylinder(item.mesh, previous.points[from], previous.points[to]);
+        }
+
+        for (const item of jointMeshes) {
+          item.mesh.position.copy(frame.points[item.name]);
+        }
+
+        handGlowL.position.copy(frame.points.hand_l);
+        handGlowR.position.copy(frame.points.hand_r);
+        frameReadout.textContent = `Frame ${index + 1} / ${frames.length}`;
+        ticks.forEach((tick, tickIndex) => tick.classList.toggle("active", tickIndex === index));
+      }
+
+      function updateCamera() {
+        const sinPhi = Math.sin(orbit.phi);
+        camera.position.set(
+          target.x + orbit.radius * sinPhi * Math.sin(orbit.theta),
+          target.y + orbit.radius * Math.cos(orbit.phi),
+          target.z + orbit.radius * sinPhi * Math.cos(orbit.theta)
+        );
+        camera.lookAt(target);
+      }
+
+      function clearGizmoActive() {
+        gizmoButtons.forEach((button) => button.classList.remove("active"));
+      }
+
+      function snapCameraToView(viewKey) {
+        const direction = viewDirections[viewKey];
+        if (!direction) {
+          return;
+        }
+
+        const normalized = direction.clone().normalize();
+        orbit.theta = Math.atan2(normalized.x, normalized.z);
+        orbit.phi = Math.acos(THREE.MathUtils.clamp(normalized.y, -0.995, 0.995));
+        updateCamera();
+        gizmoButtons.forEach((button) => {
+          button.classList.toggle("active", button.dataset.view === viewKey);
+        });
+      }
+
+      function resize() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        renderer.setSize(width, height, false);
+        camera.aspect = width / Math.max(height, 1);
+        camera.updateProjectionMatrix();
+      }
+
+      let playing = true;
+      let frameIndex = 0;
+      let lastFrameTime = performance.now();
+      let dragging = false;
+      let lastPointer = { x: 0, y: 0 };
+
+      playButton.addEventListener("click", () => {
+        playing = !playing;
+        playButton.textContent = playing ? "Pause" : "Play";
+        lastFrameTime = performance.now();
+      });
+
+      canvas.addEventListener("pointerdown", (event) => {
+        dragging = true;
+        canvas.classList.add("dragging");
+        canvas.setPointerCapture(event.pointerId);
+        lastPointer = { x: event.clientX, y: event.clientY };
+      });
+
+      canvas.addEventListener("pointermove", (event) => {
+        if (!dragging) {
+          return;
+        }
+        const dx = event.clientX - lastPointer.x;
+        const dy = event.clientY - lastPointer.y;
+        orbit.theta -= dx * 0.008;
+        orbit.phi = Math.min(Math.PI - 0.18, Math.max(0.22, orbit.phi + dy * 0.006));
+        lastPointer = { x: event.clientX, y: event.clientY };
+        clearGizmoActive();
+        updateCamera();
+      });
+
+      canvas.addEventListener("pointerup", (event) => {
+        dragging = false;
+        canvas.classList.remove("dragging");
+        if (canvas.hasPointerCapture(event.pointerId)) {
+          canvas.releasePointerCapture(event.pointerId);
+        }
+      });
+
+      canvas.addEventListener("wheel", (event) => {
+        event.preventDefault();
+        orbit.radius = Math.min(540, Math.max(190, orbit.radius + event.deltaY * 0.28));
+        updateCamera();
+      }, { passive: false });
+
+      gizmoButtons.forEach((button) => {
+        button.addEventListener("click", () => snapCameraToView(button.dataset.view));
+      });
+
+      function animate(now) {
+        if (playing && now - lastFrameTime >= frameDurationMs) {
+          const elapsedFrames = Math.floor((now - lastFrameTime) / frameDurationMs);
+          frameIndex = (frameIndex + elapsedFrames) % frames.length;
+          lastFrameTime += elapsedFrames * frameDurationMs;
+          applyFrame(frameIndex);
+        }
+
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+      }
+
+      window.addEventListener("resize", resize);
+      resize();
+      updateCamera();
+      applyFrame(frameIndex);
+      requestAnimationFrame(animate);
+    })();
+  </script>
+</body>
+</html>
