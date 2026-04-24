@@ -564,9 +564,15 @@
             <option value="basic" data-i18n="basicWalk">Basic Walk</option>
             <option value="feminine" data-i18n="feminineWalk">Feminine Walk</option>
             <option value="running" data-i18n="running">Run</option>
+            <option value="naturalRun" data-i18n="naturalRunMode">Natural Run</option>
             <option value="overheadWave" data-i18n="overheadWaveMode">Overhead Wave</option>
             <option value="idleShift" data-i18n="idleShiftMode">Idle Shift</option>
             <option value="wallPeek" data-i18n="wallPeekMode">Wall Peek</option>
+            <option value="wallClimb" data-i18n="wallClimbMode">Wall Climb</option>
+            <option value="proneCrawl" data-i18n="proneCrawlMode">Prone Crawl</option>
+            <option value="swordSlash" data-i18n="swordSlashMode">Sword Slash</option>
+            <option value="crouchTwerk" data-i18n="crouchTwerkMode">Crouch Twerk</option>
+            <option value="shuffleDance" data-i18n="shuffleDanceMode">Shuffle Dance</option>
           </select>
           <button id="walkPlayButton" type="button">Pause</button>
         </div>
@@ -610,6 +616,11 @@
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="manny_natural_run_keyposes.js"></script>
+  <script src="manny_wall_climb_keyposes.js"></script>
+  <script src="manny_prone_crawl_keyposes.js"></script>
+  <script src="manny_shuffle_dance_keyposes.js"></script>
+  <script src="manny_sword_slash_keyposes.js"></script>
   <script>
     (() => {
       const canvas = document.getElementById("walkCanvas");
@@ -621,13 +632,94 @@
       const frameReadout = document.getElementById("walkFrameReadout");
       const strip = document.getElementById("walkStrip");
       const gizmoButtons = Array.from(document.querySelectorAll("[data-view]"));
+      const naturalRunSource = window.mannyNaturalRunKeyposes || {};
+      const naturalRunRawKeys = selectNaturalRunKeys(naturalRunSource);
+      const naturalRunFallbackFrameCount = naturalRunRawKeys.length
+        ? naturalRunRawKeys.reduce((maxFrame, key, index) => Math.max(maxFrame, readNaturalKeyFrame(key, index)), 0) + 1
+        : 24;
+      const naturalRunFrameCount = Math.max(2, Math.round(readNumberOption(
+        naturalRunSource,
+        ["frameCount", "frame_count", "totalFrames", "durationFrames", "numFrames", "config.frameCount", "meta.frameCount"],
+        naturalRunFallbackFrameCount
+      )));
+      const naturalRunFps = Math.max(1, readNumberOption(
+        naturalRunSource,
+        ["fps", "frameRate", "frame_rate", "config.fps", "config.frameRate", "meta.fps", "meta.frameRate"],
+        30
+      ));
+      const wallClimbSource = window.mannyWallClimbKeyposes || {};
+      const wallClimbRawKeys = selectWallClimbKeys(wallClimbSource);
+      const wallClimbFallbackFrameCount = wallClimbRawKeys.length
+        ? wallClimbRawKeys.reduce((maxFrame, key, index) => Math.max(maxFrame, readNaturalKeyFrame(key, index)), 0) + 1
+        : 24;
+      const wallClimbFrameCount = Math.max(2, Math.round(readNumberOption(
+        wallClimbSource,
+        ["frameCount", "frame_count", "totalFrames", "durationFrames", "numFrames", "config.frameCount", "meta.frameCount"],
+        wallClimbFallbackFrameCount
+      )));
+      const wallClimbFps = Math.max(1, readNumberOption(
+        wallClimbSource,
+        ["fps", "frameRate", "frame_rate", "config.fps", "config.frameRate", "meta.fps", "meta.frameRate"],
+        24
+      ));
+      const proneCrawlSource = window.mannyProneCrawlKeyposes || {};
+      const proneCrawlRawKeys = selectProneCrawlKeys(proneCrawlSource);
+      const proneCrawlFallbackFrameCount = proneCrawlRawKeys.length
+        ? proneCrawlRawKeys.reduce((maxFrame, key, index) => Math.max(maxFrame, readNaturalKeyFrame(key, index)), 0) + 1
+        : 24;
+      const proneCrawlFrameCount = Math.max(2, Math.round(readNumberOption(
+        proneCrawlSource,
+        ["frameCount", "frame_count", "totalFrames", "durationFrames", "numFrames", "config.frameCount", "meta.frameCount"],
+        proneCrawlFallbackFrameCount
+      )));
+      const proneCrawlFps = Math.max(1, readNumberOption(
+        proneCrawlSource,
+        ["fps", "frameRate", "frame_rate", "config.fps", "config.frameRate", "meta.fps", "meta.frameRate"],
+        24
+      ));
+      const shuffleDanceSource = window.mannyShuffleDanceKeyposes || {};
+      const shuffleDanceRawKeys = selectShuffleDanceKeys(shuffleDanceSource);
+      const shuffleDanceFallbackFrameCount = shuffleDanceRawKeys.length
+        ? shuffleDanceRawKeys.reduce((maxFrame, key, index) => Math.max(maxFrame, readNaturalKeyFrame(key, index)), 0) + 1
+        : 24;
+      const shuffleDanceFrameCount = Math.max(2, Math.round(readNumberOption(
+        shuffleDanceSource,
+        ["frameCount", "frame_count", "totalFrames", "durationFrames", "numFrames", "config.frameCount", "meta.frameCount"],
+        shuffleDanceFallbackFrameCount
+      )));
+      const shuffleDanceFps = Math.max(1, readNumberOption(
+        shuffleDanceSource,
+        ["fps", "frameRate", "frame_rate", "config.fps", "config.frameRate", "meta.fps", "meta.frameRate"],
+        24
+      ));
+      const swordSlashSource = window.mannySwordSlashKeyposes || {};
+      const swordSlashRawKeys = selectSwordSlashKeys(swordSlashSource);
+      const swordSlashFallbackFrameCount = swordSlashRawKeys.length
+        ? swordSlashRawKeys.reduce((maxFrame, key, index) => Math.max(maxFrame, readNaturalKeyFrame(key, index)), 0) + 1
+        : 16;
+      const swordSlashFrameCount = Math.max(2, Math.round(readNumberOption(
+        swordSlashSource,
+        ["frameCount", "frame_count", "totalFrames", "durationFrames", "numFrames", "config.frameCount", "meta.frameCount"],
+        swordSlashFallbackFrameCount
+      )));
+      const swordSlashFps = Math.max(1, readNumberOption(
+        swordSlashSource,
+        ["fps", "frameRate", "frame_rate", "config.fps", "config.frameRate", "meta.fps", "meta.frameRate"],
+        24
+      ));
       const walkModes = {
         basic: { frameCount: 24, fps: 24, descriptionKey: "basicWalkDescription" },
         feminine: { frameCount: 24, fps: 24, descriptionKey: "feminineWalkDescription" },
         running: { frameCount: 16, fps: 32, descriptionKey: "runningDescription" },
+        naturalRun: { frameCount: naturalRunFrameCount, fps: naturalRunFps, descriptionKey: "naturalRunDescription" },
         overheadWave: { frameCount: 24, fps: 24, descriptionKey: "overheadWaveDescription" },
         idleShift: { frameCount: 24, fps: 24, descriptionKey: "idleShiftDescription" },
-        wallPeek: { frameCount: 24, fps: 24, descriptionKey: "wallPeekDescription" }
+        wallPeek: { frameCount: 24, fps: 24, descriptionKey: "wallPeekDescription" },
+        wallClimb: { frameCount: wallClimbFrameCount, fps: wallClimbFps, descriptionKey: "wallClimbDescription" },
+        proneCrawl: { frameCount: proneCrawlFrameCount, fps: proneCrawlFps, descriptionKey: "proneCrawlDescription" },
+        swordSlash: { frameCount: swordSlashFrameCount, fps: swordSlashFps, descriptionKey: "swordSlashDescription" },
+        crouchTwerk: { frameCount: 16, fps: 24, descriptionKey: "crouchTwerkDescription" },
+        shuffleDance: { frameCount: shuffleDanceFrameCount, fps: shuffleDanceFps, descriptionKey: "shuffleDanceDescription" }
       };
       let playing = true;
       let frameIndex = 0;
@@ -651,12 +743,18 @@
           overheadWaveMode: "Overhead Wave",
           idleShiftMode: "Idle Shift",
           wallPeekMode: "Wall Peek",
+          swordSlashMode: "Sword Slash",
+          crouchTwerkMode: "Crouch Twerk",
           basicWalkDescription: "24 frames at 24 fps, Manny-proportioned skeleton, forward-axis walk.",
           feminineWalkDescription: "24 frames at 24 fps, graceful pelvis yaw and roll with lighter steps.",
           runningDescription: "16 frames at 32 fps, fast forward-axis run with clear airborne phases, heavier landings, and aggressive fist pumps.",
           overheadWaveDescription: "24 frames at 24 fps, overhead hand wave loop in the same 3D view.",
           idleShiftDescription: "24 frames at 24 fps, calm alternating weight shift with no walking translation.",
           wallPeekDescription: "24 frames at 24 fps, leaning against a fixed-width wall before peeking around its right edge.",
+          swordSlashDescription: "16 key-pose frames at 24 fps, heavy right-hand sword downward slash with planted feet.",
+          crouchTwerkDescription: "16 frames at 24 fps, non-explicit crouched dance loop with planted feet, hip bounce, pelvis roll, and torso counter-motion.",
+          shuffleDanceMode: "Shuffle Dance",
+          shuffleDanceDescription: "External key-pose data driven shuffle dance with heel-toe footwork, crossing steps, lateral weight shifts, and balancing arms.",
           pause: "Pause",
           play: "Play",
           frame: "Frame",
@@ -684,12 +782,14 @@
           overheadWaveMode: "손 크게흔들기",
           idleShiftMode: "짝다리 대기",
           wallPeekMode: "벽 옆 빼꼼",
+          swordSlashMode: "오른손 검 내려베기",
           basicWalkDescription: "24fps 기준 24프레임, Manny 비율의 스켈레톤과 전방축 보행입니다.",
           feminineWalkDescription: "24fps 기준 24프레임, 우아한 골반 yaw/roll과 사뿐한 보행입니다.",
           runningDescription: "32fps 기준 16프레임, 확실한 체공구간과 묵직한 착지, 큰 주먹 펌프를 가진 빠른 전방축 뛰기입니다.",
           overheadWaveDescription: "24fps 기준 24프레임, 같은 3D 뷰에서 보는 손 크게흔들기 루프입니다.",
           idleShiftDescription: "24fps 기준 24프레임, 걷기 이동 없이 짝다리 체중이 번갈아 이동하는 차분한 대기 자세입니다.",
           wallPeekDescription: "24fps 기준 24프레임, 고정 폭 벽에 등을 기대고 있다가 벽 오른쪽으로 빼꼼 내미는 루프입니다.",
+          swordSlashDescription: "24fps 기준 16개 키포즈 프레임, 발을 고정한 묵직한 오른손 검 내려베기입니다.",
           pause: "일시정지",
           play: "재생",
           frame: "프레임",
@@ -703,6 +803,22 @@
           open: "열기"
         }
       };
+      copy.en.naturalRunMode = "Natural Run";
+      copy.en.naturalRunDescription = "External key-pose data driven run loop with planted stance, flight, torso lean, and counter-rotation.";
+      copy.en.wallClimbMode = "Wall Climb";
+      copy.en.wallClimbDescription = "External key-pose data driven wall run, hand catch, pull-over, and stand-up motion.";
+      copy.ko.wallClimbMode = "벽 타고 오르기";
+      copy.ko.wallClimbDescription = "외부 키포즈 데이터 기반으로 벽을 뛰어오르고 손으로 붙잡아 올라선 뒤 서는 모션입니다.";
+      copy.ko.naturalRunMode = "자연스러운 뛰기";
+      copy.ko.naturalRunDescription = "외부 키포즈 데이터 기반으로 접지, 체공, 상체 전경사와 카운터 회전을 표현한 자연스러운 뛰기 루프입니다.";
+      copy.ko.crouchTwerkMode = "쪼그려 트월킹";
+      copy.ko.crouchTwerkDescription = "24fps 기준 16프레임, 발을 고정한 깊은 쪼그림 자세에서 골반 바운스와 롤, 상체 카운터 모션이 반복되는 비노골적 댄스 루프입니다.";
+      copy.en.proneCrawlMode = "Prone Crawl";
+      copy.en.proneCrawlDescription = "External key-pose data driven low tactical crawl loop with contact-aware hands, knees, and feet.";
+      copy.ko.proneCrawlMode = "포복 기어가기";
+      copy.ko.proneCrawlDescription = "외부 키포즈 데이터 기반으로 낮게 엎드려 손, 무릎, 발 접지를 고려해 기어가는 포복 루프입니다.";
+      copy.ko.shuffleDanceMode = "셔플댄스";
+      copy.ko.shuffleDanceDescription = "외부 키포즈 데이터 기반으로 힐토 발동작, 교차 스텝, 좌우 체중 이동과 균형 잡는 팔동작을 표현한 셔플댄스 루프입니다.";
       const colors = {
         left: 0x23aeea,
         right: 0xf4a12d,
@@ -827,6 +943,105 @@
       wallGroup.visible = false;
       scene.add(wallGroup);
 
+      const wallClimbWallOptions = wallClimbSource.wall || {};
+      const wallClimbWall = {
+        centerX: readNumberOption(wallClimbWallOptions, ["centerX", "x"], 0),
+        y: readNumberOption(wallClimbWallOptions, ["y", "centerY"], 56),
+        z: readNumberOption(wallClimbWallOptions, ["z", "centerZ"], 48),
+        width: readNumberOption(wallClimbWallOptions, ["width"], 100),
+        height: readNumberOption(wallClimbWallOptions, ["height"], 112),
+        thickness: readNumberOption(wallClimbWallOptions, ["thickness", "depth"], 7)
+      };
+      wallClimbWall.topY = wallClimbWall.y + wallClimbWall.height * 0.5;
+      wallClimbWall.frontZ = readNumberOption(
+        wallClimbWallOptions,
+        ["frontZ", "faceZ"],
+        wallClimbWall.z - wallClimbWall.thickness * 0.5
+      );
+      const wallClimbGroup = new THREE.Group();
+      const wallClimbMaterial = new THREE.MeshStandardMaterial({
+        color: 0x4f93c5,
+        transparent: true,
+        opacity: 0.82,
+        roughness: 0.74,
+        metalness: 0.02
+      });
+      const wallClimbFace = new THREE.Mesh(
+        new THREE.BoxGeometry(wallClimbWall.width, wallClimbWall.height, wallClimbWall.thickness),
+        wallClimbMaterial
+      );
+      wallClimbFace.position.set(wallClimbWall.centerX, wallClimbWall.y, wallClimbWall.z);
+      wallClimbGroup.add(wallClimbFace);
+      const wallClimbTop = new THREE.Mesh(
+        new THREE.BoxGeometry(wallClimbWall.width, 3, 34),
+        new THREE.MeshStandardMaterial({
+          color: 0x2f6f9e,
+          transparent: true,
+          opacity: 0.88,
+          roughness: 0.76,
+          metalness: 0.02
+        })
+      );
+      wallClimbTop.position.set(wallClimbWall.centerX, wallClimbWall.topY + 1.5, wallClimbWall.z + 14);
+      wallClimbGroup.add(wallClimbTop);
+      const wallClimbTopEdge = new THREE.Mesh(
+        new THREE.BoxGeometry(wallClimbWall.width, 3.2, 4.2),
+        new THREE.MeshStandardMaterial({
+          color: 0x255a82,
+          transparent: true,
+          opacity: 0.94,
+          roughness: 0.78,
+          metalness: 0.02
+        })
+      );
+      wallClimbTopEdge.position.set(wallClimbWall.centerX, wallClimbWall.topY + 1.8, wallClimbWall.frontZ - 0.4);
+      wallClimbGroup.add(wallClimbTopEdge);
+      wallClimbGroup.visible = false;
+      scene.add(wallClimbGroup);
+
+      const swordGroup = new THREE.Group();
+      const swordMetalMaterial = new THREE.MeshStandardMaterial({
+        color: 0xb8c2cc,
+        roughness: 0.34,
+        metalness: 0.52
+      });
+      const swordGripMaterial = new THREE.MeshStandardMaterial({
+        color: 0x364152,
+        roughness: 0.62,
+        metalness: 0.14
+      });
+      const swordGuardMaterial = new THREE.MeshStandardMaterial({
+        color: 0xd9a441,
+        roughness: 0.42,
+        metalness: 0.28
+      });
+      const swordBlade = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.85, 1, 12), swordMetalMaterial);
+      const swordHandle = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.05, 1, 12), swordGripMaterial);
+      const swordGuard = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.65, 1, 12), swordGuardMaterial);
+      const swordArcCurve = new THREE.CatmullRomCurve3([
+        v(-34, 178, -26),
+        v(-29, 168, -8),
+        v(-16, 142, 15),
+        v(0, 106, 33),
+        v(18, 66, 40),
+        v(26, 42, 31)
+      ]);
+      const swordArc = new THREE.Mesh(
+        new THREE.TubeGeometry(swordArcCurve, 48, 0.72, 8, false),
+        new THREE.MeshBasicMaterial({
+          color: 0xe3ad3a,
+          transparent: true,
+          opacity: 0.45,
+          depthWrite: false
+        })
+      );
+      [swordBlade, swordHandle, swordGuard, swordArc].forEach((mesh) => {
+        mesh.renderOrder = 2;
+        swordGroup.add(mesh);
+      });
+      swordGroup.visible = false;
+      scene.add(swordGroup);
+
       const segments = [
         ["pelvis", "spine_01", "center"],
         ["spine_01", "spine_02", "center"],
@@ -882,6 +1097,115 @@
         return value * value * (3 - value * 2);
       }
 
+      function readNumberOption(source, names, fallback) {
+        for (const name of names) {
+          const rawValue = source ? (name.includes(".") ? naturalRunPath(source, name) : source[name]) : undefined;
+          const value = Number(rawValue);
+          if (Number.isFinite(value)) {
+            return value;
+          }
+        }
+        return fallback;
+      }
+
+      function readNaturalKeyFrame(key, fallback) {
+        const value = key ? Number(key.frame ?? key.index ?? key.frameIndex ?? key.time) : NaN;
+        return Number.isFinite(value) ? value : fallback;
+      }
+
+      function naturalRunKeyHasPose(key) {
+        return Boolean(key && (
+          key.points || key.joints || key.pose || key.root || key.pelvis ||
+          key.chest || key.spine || key.leftLeg || key.rightLeg ||
+          key.leftArm || key.rightArm || key.leftFoot?.ankle || key.rightFoot?.ankle
+        ));
+      }
+
+      function selectNaturalRunKeys(source) {
+        const candidates = [source?.frames, source?.keyposes, source?.keys];
+        const firstDetailed = candidates.find((keys) => (
+          Array.isArray(keys) && keys.some((key) => naturalRunKeyHasPose(key))
+        ));
+        if (firstDetailed) {
+          return firstDetailed;
+        }
+        return candidates.find((keys) => Array.isArray(keys)) || [];
+      }
+
+      function wallClimbKeyHasPose(key) {
+        return Boolean(key && (
+          naturalRunKeyHasPose(key) || key.contacts || key.contactTargets ||
+          key.leftFoot || key.rightFoot || key.lHand || key.rHand ||
+          key.hand_l || key.hand_r || key.foot_l || key.foot_r
+        ));
+      }
+
+      function selectWallClimbKeys(source) {
+        const candidates = [source?.frames, source?.keyposes, source?.keys, source?.keyFrames, source?.sequence];
+        const firstDetailed = candidates.find((keys) => (
+          Array.isArray(keys) && keys.some((key) => wallClimbKeyHasPose(key))
+        ));
+        if (firstDetailed) {
+          return firstDetailed;
+        }
+        return candidates.find((keys) => Array.isArray(keys)) || [];
+      }
+
+      function proneCrawlKeyHasPose(key) {
+        return Boolean(key && (
+          naturalRunKeyHasPose(key) || key.leftHand || key.rightHand ||
+          key.leftKnee || key.rightKnee || key.leftElbow || key.rightElbow ||
+          key.contacts || key.contact
+        ));
+      }
+
+      function selectProneCrawlKeys(source) {
+        const candidates = [source?.frames, source?.keyposes, source?.keys];
+        const firstDetailed = candidates.find((keys) => (
+          Array.isArray(keys) && keys.some((key) => proneCrawlKeyHasPose(key))
+        ));
+        if (firstDetailed) {
+          return firstDetailed;
+        }
+        return candidates.find((keys) => Array.isArray(keys)) || [];
+      }
+
+      function shuffleDanceKeyHasPose(key) {
+        return Boolean(key && (
+          naturalRunKeyHasPose(key) || key.leftHeel || key.rightHeel ||
+          key.leftToe || key.rightToe || key.heelToe || key.step ||
+          key.contacts || key.contact || key.footwork
+        ));
+      }
+
+      function selectShuffleDanceKeys(source) {
+        const candidates = [source?.frames, source?.keyposes, source?.keys];
+        const firstDetailed = candidates.find((keys) => (
+          Array.isArray(keys) && keys.some((key) => shuffleDanceKeyHasPose(key))
+        ));
+        if (firstDetailed) {
+          return firstDetailed;
+        }
+        return candidates.find((keys) => Array.isArray(keys)) || [];
+      }
+
+      function swordSlashKeyHasPose(key) {
+        return Boolean(key && Array.isArray(key.pelvis) && Array.isArray(key.chest) &&
+          Array.isArray(key.rUpper) && Array.isArray(key.rLower) &&
+          Array.isArray(key.rHand) && Array.isArray(key.swordTip));
+      }
+
+      function selectSwordSlashKeys(source) {
+        const candidates = [source?.keys, source?.frames, source?.keyposes];
+        const firstDetailed = candidates.find((keys) => (
+          Array.isArray(keys) && keys.some((key) => swordSlashKeyHasPose(key))
+        ));
+        if (firstDetailed) {
+          return firstDetailed;
+        }
+        return candidates.find((keys) => Array.isArray(keys)) || [];
+      }
+
       function rotateYawRoll(offset, yaw, roll) {
         const cosRoll = Math.cos(roll);
         const sinRoll = Math.sin(roll);
@@ -894,6 +1218,10 @@
           rollY,
           -rollX * sinYaw + offset.z * cosYaw
         );
+      }
+
+      function rotateYawPitchRoll(offset, yaw, pitch, roll) {
+        return offset.clone().applyEuler(new THREE.Euler(pitch, yaw, roll, "YXZ"));
       }
 
       const walkPoseModes = {
@@ -940,7 +1268,7 @@
           armDrop: 1.2
         },
         running: {
-          bob: 0.35,
+          bob: 0.08,
           sideSway: 0.58,
           chestTwist: -8.0,
           pelvisYaw: 0.25,
@@ -955,23 +1283,75 @@
           hipX: 9.8,
           hipZ: 1.2,
           upperArmSwing: 29,
-          lowerArmSwing: 18,
-          handSwing: 15,
-          fistLift: 5.6,
-          fistDrop: 4.4,
-          elbowPump: 3.1,
+          lowerArmSwing: 10.5,
+          handSwing: 24,
+          fistLift: 7.0,
+          fistDrop: 5.0,
+          elbowPump: 1.7,
+          elbowDriveScale: 0.58,
+          fistSwingScale: 1.18,
+          fistLiftScale: 1.12,
           armOut: 0.78,
           armDrop: -5.2,
           stanceRatio: 0.22,
           torsoLean: 12.2,
-          contactDrop: 3.8,
+          contactDrop: 1.4,
           footContactDrop: 0.55,
-          reboundLift: 1.8,
-          flightRise: 8.4,
+          reboundLift: 0.6,
+          flightRise: 3.8,
           flightFootClearance: 10.5,
           kneeCompression: 3.0
         }
       };
+
+      const swordSlashFallbackKey = {
+        frame: 0,
+        name: "fallback_guard",
+        pelvis: [0, 0, 0, 0, -5, 1],
+        chest: [1, -6, 1],
+        neck: [0, -2, 0],
+        head: [-1, -3, 0],
+        lUpper: [15, -15, 2],
+        lLower: [11, -24, 6],
+        lHand: [5, -18, 5],
+        rUpper: [-14, -15, -3],
+        rLower: [-12, -24, 0],
+        rHand: [-5, -19, 4],
+        swordTip: [-8, 38, -12],
+        swordPommel: [3, -8, 2],
+        knee: [0, 0, 0, 0, 0, 0]
+      };
+      const swordSlashKeys = swordSlashRawKeys.length ? swordSlashRawKeys : [swordSlashFallbackKey];
+      function interpolateArray(a, b, t) {
+        return a.map((value, index) => lerp(value, b[index], t));
+      }
+
+      function sampleSwordSlashKey(index) {
+        for (let i = 0; i < swordSlashKeys.length - 1; i += 1) {
+          const from = swordSlashKeys[i];
+          const to = swordSlashKeys[i + 1];
+          if (index >= from.frame && index <= to.frame) {
+            const raw = (index - from.frame) / Math.max(1, to.frame - from.frame);
+            const t = smoothstep(raw);
+            return {
+              pelvis: interpolateArray(from.pelvis, to.pelvis, t),
+              chest: interpolateArray(from.chest, to.chest, t),
+              neck: interpolateArray(from.neck, to.neck, t),
+              head: interpolateArray(from.head, to.head, t),
+              lUpper: interpolateArray(from.lUpper, to.lUpper, t),
+              lLower: interpolateArray(from.lLower, to.lLower, t),
+              lHand: interpolateArray(from.lHand, to.lHand, t),
+              rUpper: interpolateArray(from.rUpper, to.rUpper, t),
+              rLower: interpolateArray(from.rLower, to.rLower, t),
+              rHand: interpolateArray(from.rHand, to.rHand, t),
+              swordTip: interpolateArray(from.swordTip, to.swordTip, t),
+              swordPommel: interpolateArray(from.swordPommel, to.swordPommel, t),
+              knee: interpolateArray(from.knee, to.knee, t)
+            };
+          }
+        }
+        return swordSlashKeys[swordSlashKeys.length - 1];
+      }
 
       function overheadWaveParam(index, count) {
         const phase = (index / count) * Math.PI * 2;
@@ -1006,7 +1386,7 @@
           const t = smoothstep(raw);
           const z = lerp(config.stepLength * 0.82, -config.stepLength * 0.74, t);
           const impact = Math.pow(1 - raw, 2.3);
-          const push = Math.pow(Math.sin(raw * Math.PI), 0.72);
+          const push = Math.pow(clamp((raw - 0.52) / 0.48, 0, 1), 0.85);
           return {
             ankle: v(side * config.footSpacing, 8.15 - impact * config.footContactDrop, z),
             ball: v(side * config.ballSpacing, 1.05, z + config.ballForward),
@@ -1030,6 +1410,589 @@
         };
       }
 
+      function naturalRunPath(source, path) {
+        return path.split(".").reduce((value, key) => (value == null ? undefined : value[key]), source);
+      }
+
+      function naturalRunArray(value, length, fallback = null) {
+        if (Array.isArray(value)) {
+          return Array.from({ length }, (_, index) => Number(value[index] ?? fallback?.[index] ?? 0));
+        }
+        if (value && typeof value === "object" && ("x" in value || "y" in value || "z" in value)) {
+          return [
+            Number(value.x ?? fallback?.[0] ?? 0),
+            Number(value.y ?? fallback?.[1] ?? 0),
+            Number(value.z ?? fallback?.[2] ?? 0)
+          ].slice(0, length);
+        }
+        return fallback ? fallback.slice(0, length) : null;
+      }
+
+      function readNaturalRunArray(source, paths, length, fallback) {
+        for (const path of paths) {
+          const value = path.includes(".") ? naturalRunPath(source, path) : source?.[path];
+          const result = naturalRunArray(value, length, null);
+          if (result) {
+            return result;
+          }
+        }
+        return fallback.slice(0, length);
+      }
+
+      function readNaturalRunTransform(source, paths, fallback) {
+        for (const path of paths) {
+          const value = path.includes(".") ? naturalRunPath(source, path) : source?.[path];
+          if (Array.isArray(value)) {
+            return naturalRunArray(value, 6, fallback);
+          }
+          if (value && typeof value === "object") {
+            const position = naturalRunArray(
+              value.position || value.location || value.translation || value,
+              3,
+              fallback.slice(0, 3)
+            );
+            const explicitRotation = naturalRunArray(value.rotation || value.rot || value.euler, 3, null);
+            const namedRotation = ["pitch", "yaw", "roll"].some((name) => name in value)
+              ? [
+                Number(value.pitch ?? fallback[3] ?? 0),
+                Number(value.yaw ?? fallback[4] ?? 0),
+                Number(value.roll ?? fallback[5] ?? 0)
+              ]
+              : null;
+            const rotation = explicitRotation || namedRotation || fallback.slice(3, 6);
+            return position.concat(rotation);
+          }
+        }
+        return fallback.slice(0, 6);
+      }
+
+      function readNaturalRunRotation(source, paths, fallback) {
+        for (const path of paths) {
+          const value = path.includes(".") ? naturalRunPath(source, path) : source?.[path];
+          const direct = naturalRunArray(value, 3, null);
+          if (direct) {
+            return direct;
+          }
+          if (value && typeof value === "object") {
+            const rotation = naturalRunArray(value.rotation || value.rot || value.euler, 3, null);
+            if (rotation) {
+              return rotation;
+            }
+            if (["pitch", "yaw", "roll"].some((name) => name in value)) {
+              return [
+                Number(value.pitch ?? fallback[0] ?? 0),
+                Number(value.yaw ?? fallback[1] ?? 0),
+                Number(value.roll ?? fallback[2] ?? 0)
+              ];
+            }
+          }
+        }
+        return fallback.slice(0, 3);
+      }
+
+      function vecArray(vector) {
+        return [vector.x, vector.y, vector.z];
+      }
+
+      function makeNaturalRunFallbackKey(index) {
+        const fallbackConfig = {
+          stepLength: 39,
+          footLift: 31,
+          footSpacing: 8.8,
+          ballSpacing: 9.8,
+          ballForward: 18.2,
+          stanceRatio: 0.24,
+          footContactDrop: 0.55
+        };
+        const phase = (index % frameCount) / frameCount;
+        const leftFoot = runFootAt((phase + 0.5) % 1, 1, fallbackConfig);
+        const rightFoot = runFootAt(phase, -1, fallbackConfig);
+        const support = leftFoot.planted || rightFoot.planted;
+        const impact = Math.max(leftFoot.impact, rightFoot.impact);
+        const push = Math.max(leftFoot.push, rightFoot.push);
+        const stridePhase = (phase * 2) % 1;
+        const stanceSpan = fallbackConfig.stanceRatio * 2;
+        const flightProgress = clamp((stridePhase - stanceSpan) / Math.max(0.001, 1 - stanceSpan), 0, 1);
+        const flightArc = support ? 0 : Math.sin(flightProgress * Math.PI);
+        const sideSway = wave(phase + 0.25) * 0.72;
+        const armSwing = wave(phase);
+        const lean = 12.5 + flightArc * 3.0 - impact * 2.4;
+        const leftDrive = -armSwing;
+        const rightDrive = armSwing;
+        const leftElbowDrive = leftDrive * 0.56;
+        const rightElbowDrive = rightDrive * 0.56;
+        const leftLift = Math.max(0, leftDrive) * 7.0 - Math.max(0, -leftDrive) * 4.8;
+        const rightLift = Math.max(0, rightDrive) * 7.0 - Math.max(0, -rightDrive) * 4.8;
+        const pelvisHeight = -impact * 4.2 + push * 2.0 + flightArc * 8.0;
+        const airborneLift = support ? 0 : flightArc * 5.8;
+        return {
+          frame: index,
+          pelvis: [sideSway, pelvisHeight, 1.8 + push * 0.7, lean, armSwing * 8.8, wave(phase + 0.2) * 4.1],
+          chest: [lean * 0.58, -armSwing * 9.8, -wave(phase + 0.2) * 2.7],
+          neck: [-lean * 0.20, -armSwing * 2.2, wave(phase + 0.1) * 0.9],
+          head: [-lean * 0.16, -armSwing * 1.5, wave(phase + 0.1) * 0.6],
+          lUpper: [12.0, -11.4 + Math.max(0, leftDrive) * 0.8, leftElbowDrive * 30 + lean * 0.34],
+          lLower: [7.4, -17.0 - Math.abs(leftDrive) * 1.7, leftElbowDrive * 18 + lean * 0.08],
+          lHand: [3.1, -12.6 + leftLift * 1.12, leftDrive * 28 - 1.0],
+          rUpper: [-12.0, -11.4 + Math.max(0, rightDrive) * 0.8, rightElbowDrive * 30 + lean * 0.34],
+          rLower: [-7.4, -17.0 - Math.abs(rightDrive) * 1.7, rightElbowDrive * 18 + lean * 0.08],
+          rHand: [-3.1, -12.6 + rightLift * 1.12, rightDrive * 28 - 1.0],
+          leftFoot: {
+            ankle: vecArray(leftFoot.ankle.clone().add(v(0, airborneLift, 0))),
+            ball: vecArray(leftFoot.ball.clone().add(v(0, airborneLift * 0.65, 0))),
+            planted: leftFoot.planted,
+            impact: leftFoot.impact,
+            push: leftFoot.push
+          },
+          rightFoot: {
+            ankle: vecArray(rightFoot.ankle.clone().add(v(0, airborneLift, 0))),
+            ball: vecArray(rightFoot.ball.clone().add(v(0, airborneLift * 0.65, 0))),
+            planted: rightFoot.planted,
+            impact: rightFoot.impact,
+            push: rightFoot.push
+          },
+          leftKneeBias: [0.5, -leftFoot.impact * 3.2, leftFoot.push * 2.2],
+          rightKneeBias: [-0.5, -rightFoot.impact * 3.2, rightFoot.push * 2.2]
+        };
+      }
+
+      function readNaturalRunFoot(source, sideName, fallback) {
+        const shortName = sideName === "left" ? "l" : "r";
+        const foot = source?.[`${sideName}Foot`] || source?.[`${shortName}Foot`] || source?.feet?.[sideName] || {};
+        const ankleFallback = readNaturalRunArray(source, [`foot_${shortName}`, `${shortName}Foot`, `${sideName}Ankle`], 3, fallback.ankle);
+        const ballFallback = readNaturalRunArray(source, [`ball_${shortName}`, `${shortName}Ball`, `${sideName}Ball`], 3, fallback.ball);
+        const plantedValue = foot.planted ?? source?.[`${sideName}Planted`] ?? source?.[`_${sideName}Planted`] ?? fallback.planted;
+        return {
+          ankle: readNaturalRunArray(foot, ["ankle", "foot", "position"], 3, ankleFallback),
+          ball: readNaturalRunArray(foot, ["ball", "toe"], 3, ballFallback),
+          planted: Boolean(plantedValue),
+          impact: Number(foot.impact ?? source?.[`${sideName}Impact`] ?? fallback.impact ?? 0),
+          push: Number(foot.push ?? source?.[`${sideName}Push`] ?? fallback.push ?? 0)
+        };
+      }
+
+      function normalizeNaturalRunKey(source, fallbackIndex) {
+        const fallback = makeNaturalRunFallbackKey(fallbackIndex);
+        return {
+          frame: readNaturalKeyFrame(source, fallback.frame),
+          pelvis: readNaturalRunTransform(source, ["pelvis", "root"], fallback.pelvis),
+          chest: readNaturalRunRotation(source, ["chest", "spine", "spine_05", "bones.spine_05"], fallback.chest),
+          neck: readNaturalRunRotation(source, ["neck", "neck_01", "bones.neck_01"], fallback.neck),
+          head: readNaturalRunRotation(source, ["head", "bones.head"], fallback.head),
+          lUpper: readNaturalRunArray(source, ["lUpper", "leftUpper", "leftUpperArm", "upperarm_l"], 3, fallback.lUpper),
+          lLower: readNaturalRunArray(source, ["lLower", "leftLower", "leftLowerArm", "lowerarm_l"], 3, fallback.lLower),
+          lHand: readNaturalRunArray(source, ["lHand", "leftHand", "hand_l"], 3, fallback.lHand),
+          rUpper: readNaturalRunArray(source, ["rUpper", "rightUpper", "rightUpperArm", "upperarm_r"], 3, fallback.rUpper),
+          rLower: readNaturalRunArray(source, ["rLower", "rightLower", "rightLowerArm", "lowerarm_r"], 3, fallback.rLower),
+          rHand: readNaturalRunArray(source, ["rHand", "rightHand", "hand_r"], 3, fallback.rHand),
+          leftFoot: readNaturalRunFoot(source, "left", fallback.leftFoot),
+          rightFoot: readNaturalRunFoot(source, "right", fallback.rightFoot),
+          leftKneeBias: readNaturalRunArray(source, ["leftKneeBias", "knee_l", "calfBias_l", "leftLeg.knee.bias"], 3, fallback.leftKneeBias),
+          rightKneeBias: readNaturalRunArray(source, ["rightKneeBias", "knee_r", "calfBias_r", "rightLeg.knee.bias"], 3, fallback.rightKneeBias)
+        };
+      }
+
+      function naturalRunPair(index) {
+        if (naturalRunRawKeys.length < 2) {
+          return null;
+        }
+        const entries = naturalRunRawKeys
+          .map((key, order) => ({ key, frame: readNaturalKeyFrame(key, order) }))
+          .sort((a, b) => a.frame - b.frame);
+        const sampleFrame = ((index % frameCount) + frameCount) % frameCount;
+        for (let i = 0; i < entries.length - 1; i += 1) {
+          const from = entries[i];
+          const to = entries[i + 1];
+          if (sampleFrame >= from.frame && sampleFrame <= to.frame) {
+            const raw = (sampleFrame - from.frame) / Math.max(0.001, to.frame - from.frame);
+            return { from, to, t: smoothstep(raw) };
+          }
+        }
+        const first = entries[0];
+        const last = entries[entries.length - 1];
+        if (sampleFrame < first.frame) {
+          const raw = (sampleFrame + frameCount - last.frame) / Math.max(0.001, first.frame + frameCount - last.frame);
+          return { from: last, to: first, t: smoothstep(raw) };
+        }
+        const raw = (sampleFrame - last.frame) / Math.max(0.001, first.frame + frameCount - last.frame);
+        return { from: last, to: first, t: smoothstep(raw) };
+      }
+
+      function interpolateNaturalRunArray(a, b, t) {
+        const length = Math.max(a.length, b.length);
+        return Array.from({ length }, (_, index) => lerp(Number(a[index] ?? 0), Number(b[index] ?? 0), t));
+      }
+
+      function interpolateNaturalRunFoot(a, b, t) {
+        const bothPlanted = a.planted && b.planted;
+        return {
+          ankle: bothPlanted ? a.ankle.slice(0, 3) : interpolateNaturalRunArray(a.ankle, b.ankle, t),
+          ball: bothPlanted ? a.ball.slice(0, 3) : interpolateNaturalRunArray(a.ball, b.ball, t),
+          planted: t < 0.5 ? a.planted : b.planted,
+          impact: lerp(a.impact || 0, b.impact || 0, t),
+          push: lerp(a.push || 0, b.push || 0, t)
+        };
+      }
+
+      function interpolateNaturalRunKey(fromSource, toSource, t) {
+        const from = normalizeNaturalRunKey(fromSource, readNaturalKeyFrame(fromSource, 0));
+        const to = normalizeNaturalRunKey(toSource, readNaturalKeyFrame(toSource, 0));
+        return {
+          pelvis: interpolateNaturalRunArray(from.pelvis, to.pelvis, t),
+          chest: interpolateNaturalRunArray(from.chest, to.chest, t),
+          neck: interpolateNaturalRunArray(from.neck, to.neck, t),
+          head: interpolateNaturalRunArray(from.head, to.head, t),
+          lUpper: interpolateNaturalRunArray(from.lUpper, to.lUpper, t),
+          lLower: interpolateNaturalRunArray(from.lLower, to.lLower, t),
+          lHand: interpolateNaturalRunArray(from.lHand, to.lHand, t),
+          rUpper: interpolateNaturalRunArray(from.rUpper, to.rUpper, t),
+          rLower: interpolateNaturalRunArray(from.rLower, to.rLower, t),
+          rHand: interpolateNaturalRunArray(from.rHand, to.rHand, t),
+          leftFoot: interpolateNaturalRunFoot(from.leftFoot, to.leftFoot, t),
+          rightFoot: interpolateNaturalRunFoot(from.rightFoot, to.rightFoot, t),
+          leftKneeBias: interpolateNaturalRunArray(from.leftKneeBias, to.leftKneeBias, t),
+          rightKneeBias: interpolateNaturalRunArray(from.rightKneeBias, to.rightKneeBias, t)
+        };
+      }
+
+      function sampleNaturalRunKey(index) {
+        const pair = naturalRunPair(index);
+        if (!pair) {
+          return makeNaturalRunFallbackKey(index);
+        }
+        return interpolateNaturalRunKey(pair.from.key, pair.to.key, pair.t);
+      }
+
+      function naturalRunPointSource(key) {
+        return key && (key.points || key.joints || key.pose);
+      }
+
+      function buildNaturalRunPointPose(index) {
+        const pair = naturalRunPair(index);
+        if (!pair) {
+          return null;
+        }
+        const fromPoints = naturalRunPointSource(pair.from.key);
+        const toPoints = naturalRunPointSource(pair.to.key);
+        if (!fromPoints || !toPoints) {
+          return null;
+        }
+        const points = {};
+        for (const name of jointNames) {
+          const a = naturalRunArray(fromPoints[name], 3, null);
+          const b = naturalRunArray(toPoints[name], 3, null);
+          if (!a || !b) {
+            return null;
+          }
+          const plantedFoot = (name === "foot_l" || name === "ball_l")
+            ? Boolean(pair.from.key.leftPlanted ?? pair.from.key._leftPlanted) && Boolean(pair.to.key.leftPlanted ?? pair.to.key._leftPlanted)
+            : (name === "foot_r" || name === "ball_r")
+              ? Boolean(pair.from.key.rightPlanted ?? pair.from.key._rightPlanted) && Boolean(pair.to.key.rightPlanted ?? pair.to.key._rightPlanted)
+              : false;
+          const vector = plantedFoot ? a : interpolateNaturalRunArray(a, b, pair.t);
+          points[name] = v(vector[0], vector[1], vector[2]);
+        }
+        points._leftPlanted = pair.t < 0.5 ? Boolean(pair.from.key.leftPlanted ?? pair.from.key._leftPlanted) : Boolean(pair.to.key.leftPlanted ?? pair.to.key._leftPlanted);
+        points._rightPlanted = pair.t < 0.5 ? Boolean(pair.from.key.rightPlanted ?? pair.from.key._rightPlanted) : Boolean(pair.to.key.rightPlanted ?? pair.to.key._rightPlanted);
+        return points;
+      }
+
+      function keyposePair(rawKeys, index, count) {
+        if (!Array.isArray(rawKeys) || rawKeys.length < 2) {
+          return null;
+        }
+        const total = Math.max(2, Math.round(count || frameCount || 24));
+        const entries = rawKeys
+          .map((key, order) => ({ key, frame: readNaturalKeyFrame(key, order) }))
+          .sort((a, b) => a.frame - b.frame);
+        const sampleFrame = ((index % total) + total) % total;
+        for (let i = 0; i < entries.length - 1; i += 1) {
+          const from = entries[i];
+          const to = entries[i + 1];
+          if (sampleFrame >= from.frame && sampleFrame <= to.frame) {
+            const raw = (sampleFrame - from.frame) / Math.max(0.001, to.frame - from.frame);
+            return { from, to, t: smoothstep(raw) };
+          }
+        }
+        const first = entries[0];
+        const last = entries[entries.length - 1];
+        const raw = sampleFrame < first.frame
+          ? (sampleFrame + total - last.frame) / Math.max(0.001, first.frame + total - last.frame)
+          : (sampleFrame - last.frame) / Math.max(0.001, first.frame + total - last.frame);
+        return { from: last, to: first, t: smoothstep(raw) };
+      }
+
+      function numberOption(value, fallback) {
+        const number = Number(value);
+        return Number.isFinite(number) ? number : fallback;
+      }
+
+      function makeShuffleDanceFallbackKey(index) {
+        const count = Math.max(2, frameCount || 24);
+        const phase = (((index % count) + count) % count) / count;
+        const theta = phase * Math.PI * 2;
+        const beat = theta * 2;
+        const fastBeat = theta * 4;
+        const lateral = Math.sin(beat + 0.32) * 3.6;
+        const cross = Math.sin(beat);
+        const weight = Math.sin(beat + 0.45);
+        const bounce = (1 - Math.cos(fastBeat)) * 0.72;
+
+        function footForSide(side) {
+          const sideBeat = beat + (side > 0 ? 0 : Math.PI);
+          const liftPulse = Math.max(0, Math.sin(sideBeat));
+          const heelToe = Math.sin(fastBeat + side * Math.PI * 0.55);
+          const crossIn = Math.max(0, side > 0 ? cross : -cross);
+          const release = Math.max(0, side > 0 ? -cross : cross);
+          const slidePulse = Math.cos(sideBeat);
+          const lift = Math.pow(liftPulse, 1.65) * 4.6;
+          const x = side * 10.8 + lateral - side * crossIn * 13.8 + side * release * 3.2;
+          const z = 8.0 + Math.cos(sideBeat) * 6.8 + Math.sin(fastBeat + side * 0.65) * 1.8;
+          const contactWeight = clamp(1 - liftPulse * 0.84, 0.16, 1);
+          return {
+            ankle: [
+              x,
+              8.25 + lift + Math.max(0, heelToe) * 2.4,
+              z
+            ],
+            ball: [
+              x + side * heelToe * 2.9,
+              1.2 + lift * 0.22 + Math.max(0, -heelToe) * 1.1,
+              z + 14.8 + Math.cos(fastBeat + side * 0.8) * 2.8
+            ],
+            planted: contactWeight > 0.42,
+            sliding: contactWeight > 0.55 && Math.abs(slidePulse) > 0.35,
+            contactWeight
+          };
+        }
+
+        const leftFoot = footForSide(1);
+        const rightFoot = footForSide(-1);
+        const armCounter = Math.sin(beat + Math.PI * 0.5);
+        return {
+          frame: index,
+          pelvis: [lateral + weight * 0.6, -0.4 + bounce, -0.6, 1.0 + bounce * 0.55, Math.sin(beat) * 10.0, -weight * 5.4],
+          chest: [-1.2 - bounce * 0.35, -Math.sin(beat) * 8.0, weight * 3.5],
+          neck: [0.4, -Math.sin(beat) * 1.6, -weight * 0.9],
+          head: [0.2, -Math.sin(beat) * 1.2, -weight * 0.7],
+          lUpper: [15.8, -11.2 + Math.max(0, armCounter) * 1.8, -7.0 - armCounter * 9.8],
+          lLower: [11.4, -21.5 - Math.abs(armCounter) * 2.2, 5.4 - armCounter * 4.4],
+          lHand: [4.8, -16.8 + Math.max(0, armCounter) * 3.0, 4.4 - armCounter * 5.8],
+          rUpper: [-15.8, -11.2 + Math.max(0, -armCounter) * 1.8, 7.0 - armCounter * 9.8],
+          rLower: [-11.4, -21.5 - Math.abs(armCounter) * 2.2, -5.4 - armCounter * 4.4],
+          rHand: [-4.8, -16.8 + Math.max(0, -armCounter) * 3.0, -4.4 - armCounter * 5.8],
+          leftFoot,
+          rightFoot,
+          leftKneeBias: [cross * -2.2, -Math.max(0, cross) * 1.4, Math.sin(fastBeat) * 2.0],
+          rightKneeBias: [cross * -2.2, -Math.max(0, -cross) * 1.4, -Math.sin(fastBeat) * 2.0]
+        };
+      }
+
+      function readShuffleDanceArm(source, sideName, segment, fallback) {
+        const shortName = sideName === "left" ? "l" : "r";
+        const sidePrefix = sideName === "left" ? "left" : "right";
+        const directPrefix = sideName === "left" ? "l" : "r";
+        const paths = segment === "upper"
+          ? [`${directPrefix}Upper`, `${sidePrefix}Upper`, `${sidePrefix}UpperArm`, `upperarm_${shortName}`, `${sidePrefix}Arm.upper`, `${sidePrefix}Arm.upperArm`, `arms.${sidePrefix}.upper`]
+          : segment === "lower"
+            ? [`${directPrefix}Lower`, `${sidePrefix}Lower`, `${sidePrefix}LowerArm`, `lowerarm_${shortName}`, `${sidePrefix}Arm.lower`, `${sidePrefix}Arm.forearm`, `arms.${sidePrefix}.lower`]
+            : [`${directPrefix}Hand`, `${sidePrefix}Hand`, `hand_${shortName}`, `${sidePrefix}Arm.hand`, `arms.${sidePrefix}.hand`];
+        return readNaturalRunArray(source, paths, 3, fallback);
+      }
+
+      function readShuffleDanceOptionalArray(source, paths, length) {
+        for (const path of paths) {
+          const value = path.includes(".") ? naturalRunPath(source, path) : source?.[path];
+          const result = naturalRunArray(value, length, null);
+          if (result) {
+            return result;
+          }
+        }
+        return null;
+      }
+
+      function readShuffleDanceFoot(source, sideName, fallback) {
+        const shortName = sideName === "left" ? "l" : "r";
+        const footValue = source?.[`${sideName}Foot`] || source?.[`${shortName}Foot`] || source?.feet?.[sideName];
+        const foot = footValue && typeof footValue === "object" && !Array.isArray(footValue) ? footValue : {};
+        const contacts = source?.contacts || source?.contact || {};
+        const contactValue = contacts?.[`${sideName}Foot`] ?? contacts?.[sideName] ?? contacts?.[shortName];
+        const contact = contactValue && typeof contactValue === "object" ? contactValue : {};
+        const contactFlag = typeof contactValue === "boolean" ? contactValue : undefined;
+        const contactWeight = numberOption(
+          foot.contactWeight ?? foot.weight ?? contact.contactWeight ?? contact.weight ?? source?.[`${sideName}ContactWeight`],
+          fallback.contactWeight ?? (fallback.planted ? 1 : 0)
+        );
+        const slideWeightValue = foot.slideWeight ?? foot.slide_weight ?? contact.slideWeight ?? contact.slide_weight;
+        const weightedSlide = slideWeightValue == null ? undefined : Number(slideWeightValue) > 0.45;
+        const sliding = Boolean(foot.sliding ?? foot.slide ?? weightedSlide ?? contact.sliding ?? contact.slide ?? source?.[`${sideName}Sliding`] ?? fallback.sliding);
+        const locked = Boolean(foot.locked ?? foot.anchor ?? foot.anchored ?? contact.locked ?? contact.anchor ?? contact.anchored);
+        const plantedValue = foot.planted ?? foot.contact ?? contact.planted ?? contact.contact ?? contactFlag ?? source?.[`${sideName}Planted`] ?? source?.[`_${sideName}Planted`];
+        return {
+          ankle: readNaturalRunArray(source, [`${sideName}Foot.worldAnkle`, `${sideName}Foot.ankle`, `${sideName}Foot.foot`, `${sideName}Foot.position`, `${sideName}Ankle`, `foot_${shortName}`, `${shortName}Foot`], 3, fallback.ankle),
+          ball: readNaturalRunArray(source, [`${sideName}Foot.worldBall`, `${sideName}Foot.ball`, `${sideName}Foot.toe`, `${sideName}Ball`, `ball_${shortName}`, `${sideName}Toe`], 3, fallback.ball),
+          planted: plantedValue == null ? contactWeight > 0.42 || sliding : Boolean(plantedValue),
+          sliding,
+          locked,
+          contactWeight
+        };
+      }
+
+      function readShuffleDanceNamedRotation(value, fallback) {
+        if (value && typeof value === "object" && ["pitch", "yaw", "roll"].some((name) => name in value)) {
+          return [
+            Number(value.pitch ?? fallback[0] ?? 0),
+            Number(value.yaw ?? fallback[1] ?? 0),
+            Number(value.roll ?? fallback[2] ?? 0)
+          ];
+        }
+        return null;
+      }
+
+      function readShuffleDanceTransform(source, paths, fallback) {
+        for (const path of paths) {
+          const value = path.includes(".") ? naturalRunPath(source, path) : source?.[path];
+          if (Array.isArray(value)) {
+            return naturalRunArray(value, 6, fallback);
+          }
+          if (value && typeof value === "object") {
+            const position = naturalRunArray(
+              value.position || value.location || value.translation || value.pos || value,
+              3,
+              fallback.slice(0, 3)
+            );
+            const rotationValue = value.rotation || value.rot || value.euler || value.angle || value;
+            const rotation = naturalRunArray(rotationValue, 3, null)
+              || readShuffleDanceNamedRotation(rotationValue, fallback.slice(3, 6))
+              || fallback.slice(3, 6);
+            return position.concat(rotation);
+          }
+        }
+        return fallback.slice(0, 6);
+      }
+
+      function readShuffleDanceRotation(source, paths, fallback) {
+        for (const path of paths) {
+          const value = path.includes(".") ? naturalRunPath(source, path) : source?.[path];
+          const direct = naturalRunArray(value, 3, null) || readShuffleDanceNamedRotation(value, fallback);
+          if (direct) {
+            return direct;
+          }
+          if (value && typeof value === "object") {
+            const rotationValue = value.rotation || value.rot || value.euler || value.angle;
+            const nested = naturalRunArray(rotationValue, 3, null) || readShuffleDanceNamedRotation(rotationValue, fallback);
+            if (nested) {
+              return nested;
+            }
+          }
+        }
+        return fallback.slice(0, 3);
+      }
+
+      function normalizeShuffleDanceKey(source, fallbackIndex) {
+        const fallback = makeShuffleDanceFallbackKey(fallbackIndex);
+        return {
+          frame: readNaturalKeyFrame(source, fallback.frame),
+          pelvis: readShuffleDanceTransform(source, ["pelvis", "root", "body.root"], fallback.pelvis),
+          chest: readShuffleDanceRotation(source, ["chest", "spine", "spine_05", "spine.chest", "bones.spine_05"], fallback.chest),
+          neck: readShuffleDanceRotation(source, ["neck", "neck_01", "bones.neck_01"], fallback.neck),
+          head: readShuffleDanceRotation(source, ["head", "bones.head"], fallback.head),
+          lUpper: readShuffleDanceArm(source, "left", "upper", fallback.lUpper),
+          lLower: readShuffleDanceArm(source, "left", "lower", fallback.lLower),
+          lHand: readShuffleDanceArm(source, "left", "hand", fallback.lHand),
+          rUpper: readShuffleDanceArm(source, "right", "upper", fallback.rUpper),
+          rLower: readShuffleDanceArm(source, "right", "lower", fallback.rLower),
+          rHand: readShuffleDanceArm(source, "right", "hand", fallback.rHand),
+          leftHandTarget: readShuffleDanceOptionalArray(source, ["leftArm.handTarget", "leftArm.hand", "leftHandTarget"], 3),
+          rightHandTarget: readShuffleDanceOptionalArray(source, ["rightArm.handTarget", "rightArm.hand", "rightHandTarget"], 3),
+          leftFoot: readShuffleDanceFoot(source, "left", fallback.leftFoot),
+          rightFoot: readShuffleDanceFoot(source, "right", fallback.rightFoot),
+          leftKneeBias: readNaturalRunArray(source, ["leftKneeBias", "knee_l", "leftLeg.kneeBias", "leftLeg.kneeOffset"], 3, fallback.leftKneeBias),
+          rightKneeBias: readNaturalRunArray(source, ["rightKneeBias", "knee_r", "rightLeg.kneeBias", "rightLeg.kneeOffset"], 3, fallback.rightKneeBias)
+        };
+      }
+
+      function interpolateShuffleDanceFoot(a, b, t) {
+        const contactWeight = lerp(a.contactWeight || 0, b.contactWeight || 0, t);
+        const locked = Boolean(a.locked && b.locked && a.planted && b.planted);
+        return {
+          ankle: locked ? a.ankle.slice(0, 3) : interpolateNaturalRunArray(a.ankle, b.ankle, t),
+          ball: locked ? a.ball.slice(0, 3) : interpolateNaturalRunArray(a.ball, b.ball, t),
+          planted: contactWeight > 0.42 || (t < 0.5 ? a.planted : b.planted),
+          sliding: t < 0.5 ? a.sliding : b.sliding,
+          locked,
+          contactWeight
+        };
+      }
+
+      function interpolateShuffleDanceKey(fromSource, toSource, t) {
+        const from = normalizeShuffleDanceKey(fromSource, readNaturalKeyFrame(fromSource, 0));
+        const to = normalizeShuffleDanceKey(toSource, readNaturalKeyFrame(toSource, 0));
+        return {
+          pelvis: interpolateNaturalRunArray(from.pelvis, to.pelvis, t),
+          chest: interpolateNaturalRunArray(from.chest, to.chest, t),
+          neck: interpolateNaturalRunArray(from.neck, to.neck, t),
+          head: interpolateNaturalRunArray(from.head, to.head, t),
+          lUpper: interpolateNaturalRunArray(from.lUpper, to.lUpper, t),
+          lLower: interpolateNaturalRunArray(from.lLower, to.lLower, t),
+          lHand: interpolateNaturalRunArray(from.lHand, to.lHand, t),
+          rUpper: interpolateNaturalRunArray(from.rUpper, to.rUpper, t),
+          rLower: interpolateNaturalRunArray(from.rLower, to.rLower, t),
+          rHand: interpolateNaturalRunArray(from.rHand, to.rHand, t),
+          leftHandTarget: from.leftHandTarget && to.leftHandTarget ? interpolateNaturalRunArray(from.leftHandTarget, to.leftHandTarget, t) : null,
+          rightHandTarget: from.rightHandTarget && to.rightHandTarget ? interpolateNaturalRunArray(from.rightHandTarget, to.rightHandTarget, t) : null,
+          leftFoot: interpolateShuffleDanceFoot(from.leftFoot, to.leftFoot, t),
+          rightFoot: interpolateShuffleDanceFoot(from.rightFoot, to.rightFoot, t),
+          leftKneeBias: interpolateNaturalRunArray(from.leftKneeBias, to.leftKneeBias, t),
+          rightKneeBias: interpolateNaturalRunArray(from.rightKneeBias, to.rightKneeBias, t)
+        };
+      }
+
+      function sampleShuffleDanceKey(index) {
+        const pair = keyposePair(shuffleDanceRawKeys, index, frameCount);
+        if (!pair) {
+          return makeShuffleDanceFallbackKey(index);
+        }
+        return interpolateShuffleDanceKey(pair.from.key, pair.to.key, pair.t);
+      }
+
+      function buildShuffleDancePointPose(index) {
+        const pair = keyposePair(shuffleDanceRawKeys, index, frameCount);
+        if (!pair) {
+          return null;
+        }
+        const fromPoints = naturalRunPointSource(pair.from.key);
+        const toPoints = naturalRunPointSource(pair.to.key);
+        if (!fromPoints || !toPoints) {
+          return null;
+        }
+        const leftFoot = interpolateShuffleDanceFoot(
+          readShuffleDanceFoot(pair.from.key, "left", makeShuffleDanceFallbackKey(pair.from.frame).leftFoot),
+          readShuffleDanceFoot(pair.to.key, "left", makeShuffleDanceFallbackKey(pair.to.frame).leftFoot),
+          pair.t
+        );
+        const rightFoot = interpolateShuffleDanceFoot(
+          readShuffleDanceFoot(pair.from.key, "right", makeShuffleDanceFallbackKey(pair.from.frame).rightFoot),
+          readShuffleDanceFoot(pair.to.key, "right", makeShuffleDanceFallbackKey(pair.to.frame).rightFoot),
+          pair.t
+        );
+        const points = {};
+        for (const name of jointNames) {
+          const a = naturalRunArray(fromPoints[name], 3, null);
+          const b = naturalRunArray(toPoints[name], 3, null);
+          if (!a || !b) {
+            return null;
+          }
+          const locked = ((name === "foot_l" || name === "ball_l") && leftFoot.locked)
+            || ((name === "foot_r" || name === "ball_r") && rightFoot.locked);
+          const vector = locked ? a : interpolateNaturalRunArray(a, b, pair.t);
+          points[name] = v(vector[0], vector[1], vector[2]);
+        }
+        points._leftPlanted = leftFoot.planted;
+        points._rightPlanted = rightFoot.planted;
+        return points;
+      }
+
       function solveKnee(hip, ankle, side) {
         const l1 = 43.3;
         const l2 = 42.2;
@@ -1048,6 +2011,378 @@
           .add(new THREE.Vector3(side * 0.8, 0, 0));
       }
 
+      function solveElbow(shoulder, hand, side, bias = v(0, 0, 0)) {
+        const upper = 31.5;
+        const lower = 29.5;
+        const delta = hand.clone().sub(shoulder);
+        const distance = clamp(delta.length(), 1, upper + lower - 0.25);
+        const direction = delta.clone().normalize();
+        const along = (upper * upper - lower * lower + distance * distance) / (2 * distance);
+        const height = Math.sqrt(Math.max(0, upper * upper - along * along));
+        const bend = new THREE.Vector3(side * 0.82, -0.35, -direction.z * 0.45).normalize();
+        return shoulder.clone()
+          .add(direction.multiplyScalar(along))
+          .add(bend.multiplyScalar(height * 0.62))
+          .add(bias);
+      }
+
+      function wallClimbEntries() {
+        return wallClimbRawKeys
+          .map((key, order) => ({ key, frame: readNaturalKeyFrame(key, order) }))
+          .sort((a, b) => a.frame - b.frame);
+      }
+
+      function wallClimbPair(index) {
+        const entries = wallClimbEntries();
+        if (entries.length < 2) {
+          return null;
+        }
+        const sampleFrame = clamp(index % frameCount, 0, frameCount - 1);
+        if (sampleFrame <= entries[0].frame) {
+          return { from: entries[0], to: entries[0], t: 0 };
+        }
+        for (let i = 0; i < entries.length - 1; i += 1) {
+          const from = entries[i];
+          const to = entries[i + 1];
+          if (sampleFrame >= from.frame && sampleFrame <= to.frame) {
+            const raw = (sampleFrame - from.frame) / Math.max(0.001, to.frame - from.frame);
+            return { from, to, t: smoothstep(raw) };
+          }
+        }
+        const last = entries[entries.length - 1];
+        return { from: last, to: last, t: 0 };
+      }
+
+      function wallClimbVec(value, fallback) {
+        if (Array.isArray(value)) {
+          return naturalRunArray(value, 3, fallback);
+        }
+        if (value && typeof value === "object") {
+          return naturalRunArray(value.position || value.location || value.translation || value.target || value, 3, fallback);
+        }
+        return fallback ? fallback.slice(0, 3) : null;
+      }
+
+      function wallClimbContactValue(source, name, fallback = null) {
+        const compact = name.replace("_", "");
+        const camel = name.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+        const candidates = [
+          source?.contacts?.[name],
+          source?.contacts?.[compact],
+          source?.contacts?.[camel],
+          source?.contactTargets?.[name],
+          source?.contactTargets?.[compact],
+          source?.plants?.[name],
+          source?.planted?.[name],
+          source?.[`${camel}Contact`],
+          source?.[`${camel}Planted`],
+          source?.[`_${camel}Planted`]
+        ];
+        for (const candidate of candidates) {
+          if (candidate === true) {
+            const direct = wallClimbVec(source?.[name] ?? source?.[compact] ?? source?.[camel], null);
+            return direct || (fallback ? fallback.slice(0, 3) : true);
+          }
+          const vector = wallClimbVec(candidate, null);
+          if (vector) {
+            return vector;
+          }
+        }
+        return fallback ? fallback.slice(0, 3) : null;
+      }
+
+      function wallClimbContactsFrom(source, fallback) {
+        const contacts = {};
+        ["hand_l", "hand_r", "foot_l", "foot_r", "ball_l", "ball_r"].forEach((name) => {
+          const value = wallClimbContactValue(source, name, fallback?.[name] || null);
+          if (value && value !== true) {
+            contacts[name] = value.slice(0, 3);
+          }
+        });
+        return contacts;
+      }
+
+      function makeWallClimbFallbackKey(index) {
+        const progress = frameCount <= 1 ? 0 : index / (frameCount - 1);
+        const wallRun = smoothstep(clamp((progress - 0.16) / 0.24, 0, 1));
+        const catchHands = smoothstep(clamp((progress - 0.30) / 0.16, 0, 1));
+        const pullUp = smoothstep(clamp((progress - 0.42) / 0.24, 0, 1));
+        const standUp = smoothstep(clamp((progress - 0.70) / 0.22, 0, 1));
+        const wallZ = wallClimbWall.frontZ - 1.2;
+        const topY = wallClimbWall.topY;
+        const topZ = wallClimbWall.z + 17;
+        const pelvisZ = lerp(lerp(-52, wallZ - 9, wallRun), topZ, standUp);
+        const climbY = lerp(94.5, topY - 3, pullUp);
+        const pelvisY = lerp(climbY, topY + 94.5, standUp);
+        const forwardLean = lerp(10, 27, wallRun * (1 - standUp)) - standUp * 18;
+        const twist = Math.sin(progress * Math.PI * 2) * (1 - standUp);
+        const leftWallFoot = [10.8, lerp(8.3, topY * 0.48, wallRun), wallZ];
+        const rightWallFoot = [-10.8, lerp(8.3, topY * 0.30, wallRun), wallZ];
+        const leftTopFoot = [10.8, topY + 8.3, topZ + 2];
+        const rightTopFoot = [-10.8, topY + 8.3, topZ - 8];
+        const leftFoot = interpolateNaturalRunArray(leftWallFoot, leftTopFoot, standUp);
+        const rightFoot = interpolateNaturalRunArray(rightWallFoot, rightTopFoot, standUp);
+        const leftBall = [leftFoot[0] + 1.2, Math.max(1.2, leftFoot[1] - 7.1), leftFoot[2] + 13.6];
+        const rightBall = [rightFoot[0] - 1.2, Math.max(1.2, rightFoot[1] - 7.1), rightFoot[2] + 13.6];
+        const leftHand = interpolateNaturalRunArray([15.0, 98, wallZ - 4], [16.0, topY + 4.5, wallZ - 2.2], catchHands);
+        const rightHand = interpolateNaturalRunArray([-15.0, 100, wallZ - 4], [-16.0, topY + 4.5, wallZ - 2.2], catchHands);
+        const release = standUp > 0.58;
+        const contacts = {};
+        if (catchHands > 0.55 && !release) {
+          contacts.hand_l = [16.0, topY + 4.5, wallZ - 2.2];
+          contacts.hand_r = [-16.0, topY + 4.5, wallZ - 2.2];
+        }
+        if (wallRun > 0.52 && standUp < 0.35) {
+          contacts.foot_l = leftWallFoot;
+          contacts.foot_r = rightWallFoot;
+        }
+        if (standUp > 0.82) {
+          contacts.foot_l = leftTopFoot;
+          contacts.foot_r = rightTopFoot;
+          contacts.ball_l = [leftTopFoot[0] + 1.2, topY + 1.2, leftTopFoot[2] + 13.6];
+          contacts.ball_r = [rightTopFoot[0] - 1.2, topY + 1.2, rightTopFoot[2] + 13.6];
+        }
+        return {
+          frame: index,
+          pelvis: [Math.sin(progress * Math.PI * 2) * 0.8, pelvisY - 94.5, pelvisZ, forwardLean, twist * 10, -twist * 5],
+          chest: [forwardLean * 0.64 - standUp * 6, -twist * 8, twist * 4],
+          neck: [-forwardLean * 0.18, -twist * 2.2, 0],
+          head: [-forwardLean * 0.14, -twist * 2.0, 0],
+          lUpper: interpolateNaturalRunArray([14, -13, 13], [14, 23, 18], catchHands * (1 - standUp * 0.7)),
+          lLower: interpolateNaturalRunArray([11, -22, 7], [2, 18, 6], catchHands * (1 - standUp * 0.55)),
+          lHand: [leftHand[0] - 18, leftHand[1] - Math.min(pelvisY + 48, topY + 20), leftHand[2] - pelvisZ],
+          rUpper: interpolateNaturalRunArray([-14, -13, 13], [-14, 23, 18], catchHands * (1 - standUp * 0.7)),
+          rLower: interpolateNaturalRunArray([-11, -22, 7], [-2, 18, 6], catchHands * (1 - standUp * 0.55)),
+          rHand: [rightHand[0] + 18, rightHand[1] - Math.min(pelvisY + 48, topY + 20), rightHand[2] - pelvisZ],
+          leftFoot: { ankle: leftFoot, ball: leftBall, planted: Boolean(contacts.foot_l || contacts.ball_l) },
+          rightFoot: { ankle: rightFoot, ball: rightBall, planted: Boolean(contacts.foot_r || contacts.ball_r) },
+          leftKneeBias: [3.0, -2.8, wallRun * 7.0 - standUp * 3.0],
+          rightKneeBias: [-3.0, -2.8, wallRun * 7.0 - standUp * 3.0],
+          contacts
+        };
+      }
+
+      function readWallClimbFoot(source, sideName, fallback) {
+        const shortName = sideName === "left" ? "l" : "r";
+        const foot = source?.[`${sideName}Foot`] || source?.[`${shortName}Foot`] || source?.feet?.[sideName] || {};
+        const ankleFallback = readNaturalRunArray(source, [`foot_${shortName}`, `${shortName}Foot`, `${sideName}Ankle`], 3, fallback.ankle);
+        const ballFallback = readNaturalRunArray(source, [`ball_${shortName}`, `${shortName}Ball`, `${sideName}Ball`], 3, fallback.ball);
+        const plantedValue = foot.planted ?? source?.[`${sideName}Planted`] ?? source?.[`_${sideName}Planted`] ?? fallback.planted;
+        return {
+          ankle: wallClimbVec(foot.ankle || foot.foot || foot.position, ankleFallback),
+          ball: wallClimbVec(foot.ball || foot.toe, ballFallback),
+          planted: Boolean(plantedValue),
+          impact: Number(foot.impact ?? source?.[`${sideName}Impact`] ?? fallback.impact ?? 0),
+          push: Number(foot.push ?? source?.[`${sideName}Push`] ?? fallback.push ?? 0)
+        };
+      }
+
+      function normalizeWallClimbKey(source, fallbackIndex) {
+        const fallback = makeWallClimbFallbackKey(fallbackIndex);
+        const contacts = wallClimbContactsFrom(source, fallback.contacts);
+        return {
+          frame: readNaturalKeyFrame(source, fallback.frame),
+          pelvis: readNaturalRunTransform(source, ["pelvis", "root", "hips"], fallback.pelvis),
+          chest: readNaturalRunRotation(source, ["chest", "spine", "spine_05", "bones.spine_05"], fallback.chest),
+          neck: readNaturalRunRotation(source, ["neck", "neck_01", "bones.neck_01"], fallback.neck),
+          head: readNaturalRunRotation(source, ["head", "bones.head"], fallback.head),
+          lUpper: readNaturalRunArray(source, ["lUpper", "leftUpper", "leftUpperArm", "upperarm_l"], 3, fallback.lUpper),
+          lLower: readNaturalRunArray(source, ["lLower", "leftLower", "leftLowerArm", "lowerarm_l"], 3, fallback.lLower),
+          lHand: readNaturalRunArray(source, ["lHand", "leftHand", "hand_l"], 3, fallback.lHand),
+          rUpper: readNaturalRunArray(source, ["rUpper", "rightUpper", "rightUpperArm", "upperarm_r"], 3, fallback.rUpper),
+          rLower: readNaturalRunArray(source, ["rLower", "rightLower", "rightLowerArm", "lowerarm_r"], 3, fallback.rLower),
+          rHand: readNaturalRunArray(source, ["rHand", "rightHand", "hand_r"], 3, fallback.rHand),
+          leftFoot: readWallClimbFoot(source, "left", fallback.leftFoot),
+          rightFoot: readWallClimbFoot(source, "right", fallback.rightFoot),
+          leftKneeBias: readNaturalRunArray(source, ["leftKneeBias", "knee_l", "calfBias_l", "leftLeg.knee.bias"], 3, fallback.leftKneeBias),
+          rightKneeBias: readNaturalRunArray(source, ["rightKneeBias", "knee_r", "calfBias_r", "rightLeg.knee.bias"], 3, fallback.rightKneeBias),
+          contacts
+        };
+      }
+
+      function interpolateWallClimbContact(fromContacts, toContacts, name, t) {
+        const from = fromContacts[name];
+        const to = toContacts[name];
+        if (from && to) {
+          return from.slice(0, 3);
+        }
+        if (from || to) {
+          return (t < 0.5 ? from : to)?.slice(0, 3) || null;
+        }
+        return null;
+      }
+
+      function interpolateWallClimbKey(fromSource, toSource, t) {
+        const from = normalizeWallClimbKey(fromSource, readNaturalKeyFrame(fromSource, 0));
+        const to = normalizeWallClimbKey(toSource, readNaturalKeyFrame(toSource, 0));
+        const contacts = {};
+        ["hand_l", "hand_r", "foot_l", "foot_r", "ball_l", "ball_r"].forEach((name) => {
+          const value = interpolateWallClimbContact(from.contacts, to.contacts, name, t);
+          if (value) {
+            contacts[name] = value;
+          }
+        });
+        return {
+          pelvis: interpolateNaturalRunArray(from.pelvis, to.pelvis, t),
+          chest: interpolateNaturalRunArray(from.chest, to.chest, t),
+          neck: interpolateNaturalRunArray(from.neck, to.neck, t),
+          head: interpolateNaturalRunArray(from.head, to.head, t),
+          lUpper: interpolateNaturalRunArray(from.lUpper, to.lUpper, t),
+          lLower: interpolateNaturalRunArray(from.lLower, to.lLower, t),
+          lHand: interpolateNaturalRunArray(from.lHand, to.lHand, t),
+          rUpper: interpolateNaturalRunArray(from.rUpper, to.rUpper, t),
+          rLower: interpolateNaturalRunArray(from.rLower, to.rLower, t),
+          rHand: interpolateNaturalRunArray(from.rHand, to.rHand, t),
+          leftFoot: interpolateNaturalRunFoot(from.leftFoot, to.leftFoot, t),
+          rightFoot: interpolateNaturalRunFoot(from.rightFoot, to.rightFoot, t),
+          leftKneeBias: interpolateNaturalRunArray(from.leftKneeBias, to.leftKneeBias, t),
+          rightKneeBias: interpolateNaturalRunArray(from.rightKneeBias, to.rightKneeBias, t),
+          contacts
+        };
+      }
+
+      function sampleWallClimbKey(index) {
+        const pair = wallClimbPair(index);
+        if (!pair) {
+          return makeWallClimbFallbackKey(index);
+        }
+        return interpolateWallClimbKey(pair.from.key, pair.to.key, pair.t);
+      }
+
+      function wallClimbPointSource(key) {
+        return key && (key.points || key.joints || key.pose);
+      }
+
+      function buildWallClimbPointPose(index) {
+        const pair = wallClimbPair(index);
+        if (!pair) {
+          return null;
+        }
+        const fromPoints = wallClimbPointSource(pair.from.key);
+        const toPoints = wallClimbPointSource(pair.to.key);
+        if (!fromPoints || !toPoints) {
+          return null;
+        }
+        const points = {};
+        for (const name of jointNames) {
+          const a = wallClimbVec(fromPoints[name], null);
+          const b = wallClimbVec(toPoints[name], null);
+          if (!a || !b) {
+            return null;
+          }
+          const fixed = ["hand_l", "hand_r", "foot_l", "foot_r", "ball_l", "ball_r"].includes(name)
+            && wallClimbContactValue(pair.from.key, name, null)
+            && wallClimbContactValue(pair.to.key, name, null);
+          const value = fixed ? a : interpolateNaturalRunArray(a, b, pair.t);
+          points[name] = v(...value);
+        }
+        const contacts = wallClimbContactsFrom(pair.from.key, null);
+        applyWallClimbContacts(points, contacts);
+        points._leftPlanted = Boolean(contacts.foot_l || contacts.ball_l);
+        points._rightPlanted = Boolean(contacts.foot_r || contacts.ball_r);
+        return points;
+      }
+
+      function applyWallClimbContacts(points, contacts) {
+        if (contacts.hand_l) {
+          points.hand_l = v(...contacts.hand_l);
+          points.lowerarm_l = solveElbow(points.upperarm_l, points.hand_l, 1, v(3.0, -1.2, -2.4));
+        }
+        if (contacts.hand_r) {
+          points.hand_r = v(...contacts.hand_r);
+          points.lowerarm_r = solveElbow(points.upperarm_r, points.hand_r, -1, v(-3.0, -1.2, -2.4));
+        }
+        if (contacts.foot_l) {
+          points.foot_l = v(...contacts.foot_l);
+        }
+        if (contacts.foot_r) {
+          points.foot_r = v(...contacts.foot_r);
+        }
+        if (contacts.ball_l) {
+          points.ball_l = v(...contacts.ball_l);
+        } else if (contacts.foot_l) {
+          points.ball_l = points.foot_l.clone().add(v(1.2, -7.1, 12.5));
+        }
+        if (contacts.ball_r) {
+          points.ball_r = v(...contacts.ball_r);
+        } else if (contacts.foot_r) {
+          points.ball_r = points.foot_r.clone().add(v(-1.2, -7.1, 12.5));
+        }
+        if (contacts.foot_l || contacts.ball_l) {
+          points.calf_l = solveKnee(points.thigh_l, points.foot_l, 1);
+        }
+        if (contacts.foot_r || contacts.ball_r) {
+          points.calf_r = solveKnee(points.thigh_r, points.foot_r, -1);
+        }
+      }
+
+      function buildWallClimbPose(index) {
+        const pointPose = buildWallClimbPointPose(index);
+        if (pointPose) {
+          return pointPose;
+        }
+
+        const key = sampleWallClimbKey(index);
+        const deg = THREE.MathUtils.degToRad;
+        const points = {};
+        const pelvisYaw = deg(key.pelvis[4] || 0);
+        const pelvisPitch = deg(key.pelvis[3] || 0);
+        const pelvisRoll = deg(key.pelvis[5] || 0);
+        const chestYaw = deg(key.chest[1] || 0);
+        const chestPitch = deg(key.chest[0] || 0);
+        const chestRoll = deg(key.chest[2] || 0);
+        const neckYaw = deg(key.neck[1] || 0);
+        const neckPitch = deg(key.neck[0] || 0);
+        const neckRoll = deg(key.neck[2] || 0);
+        const headYaw = deg(key.head[1] || 0);
+        const headPitch = deg(key.head[0] || 0);
+        const headRoll = deg(key.head[2] || 0);
+        const pelvisLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), pelvisYaw, pelvisPitch, pelvisRoll);
+        const chestLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), chestYaw, chestPitch, chestRoll);
+        const neckLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), neckYaw, neckPitch, neckRoll);
+        const headLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), headYaw, headPitch, headRoll);
+
+        const pelvisY = Math.abs(key.pelvis[1]) > 40 ? key.pelvis[1] : 94.5 + key.pelvis[1];
+        const pelvis = v(key.pelvis[0], pelvisY, key.pelvis[2]);
+        points.pelvis = pelvis;
+        points.spine_01 = pelvis.clone().add(pelvisLocal(0, 12.4, 1.2));
+        points.spine_02 = points.spine_01.clone().add(pelvisLocal(0.1, 12.8, 1.4));
+        points.spine_03 = points.spine_02.clone().add(chestLocal(0.2, 12.8, 1.5));
+        points.spine_04 = points.spine_03.clone().add(chestLocal(0.4, 10.0, 1.2));
+        points.spine_05 = points.spine_04.clone().add(chestLocal(0.5, 9.7, 0.9));
+        points.neck_01 = points.spine_05.clone().add(chestLocal(0.2, 12.2, 0.4)).add(neckLocal(0, 0.5, 0.1));
+        points.head = points.neck_01.clone().add(headLocal(0.1, 16.2, 0.3));
+        points.clavicle_l = points.spine_05.clone().add(chestLocal(17.4, 2.8, 1.1));
+        points.clavicle_r = points.spine_05.clone().add(chestLocal(-17.4, 2.8, -1.1));
+
+        points.upperarm_l = points.clavicle_l.clone().add(chestLocal(...key.lUpper));
+        points.lowerarm_l = points.upperarm_l.clone().add(chestLocal(...key.lLower));
+        points.hand_l = points.lowerarm_l.clone().add(chestLocal(...key.lHand));
+        points.upperarm_r = points.clavicle_r.clone().add(chestLocal(...key.rUpper));
+        points.lowerarm_r = points.upperarm_r.clone().add(chestLocal(...key.rLower));
+        points.hand_r = points.lowerarm_r.clone().add(chestLocal(...key.rHand));
+
+        points.thigh_l = pelvis.clone().add(pelvisLocal(10.1, -3.8, 1.2));
+        points.thigh_r = pelvis.clone().add(pelvisLocal(-10.1, -3.8, -1.2));
+        points.foot_l = v(...key.leftFoot.ankle);
+        points.ball_l = v(...key.leftFoot.ball);
+        points.foot_r = v(...key.rightFoot.ankle);
+        points.ball_r = v(...key.rightFoot.ball);
+        points.calf_l = solveKnee(points.thigh_l, points.foot_l, 1).add(v(...key.leftKneeBias));
+        points.calf_r = solveKnee(points.thigh_r, points.foot_r, -1).add(v(...key.rightKneeBias));
+        applyWallClimbContacts(points, key.contacts || {});
+
+        const faceYaw = chestYaw * 0.45 + neckYaw * 0.5 + headYaw;
+        const facePitch = chestPitch * 0.25 + neckPitch * 0.45 + headPitch;
+        const faceRoll = chestRoll * 0.25 + neckRoll * 0.45 + headRoll;
+        points._faceRight = rotateYawPitchRoll(v(1, 0, 0), faceYaw, facePitch, faceRoll).normalize();
+        points._faceUp = rotateYawPitchRoll(v(0, 1, 0), faceYaw, facePitch, faceRoll).normalize();
+        points._faceForward = new THREE.Vector3().crossVectors(points._faceRight, points._faceUp).normalize();
+        points._leftPlanted = Boolean(key.leftFoot.planted || key.contacts?.foot_l || key.contacts?.ball_l);
+        points._rightPlanted = Boolean(key.rightFoot.planted || key.contacts?.foot_r || key.contacts?.ball_r);
+        return points;
+      }
+
       function buildPose(index) {
         if (currentMode === "overheadWave") {
           return buildOverheadPose(index);
@@ -1055,11 +2390,29 @@
         if (currentMode === "running") {
           return buildRunPose(index, walkPoseModes.running);
         }
+        if (currentMode === "naturalRun") {
+          return buildNaturalRunPose(index);
+        }
+        if (currentMode === "shuffleDance") {
+          return buildShuffleDancePose(index);
+        }
         if (currentMode === "idleShift") {
           return buildIdleShiftPose(index);
         }
         if (currentMode === "wallPeek") {
           return buildWallPeekPose(index);
+        }
+        if (currentMode === "wallClimb") {
+          return buildWallClimbPose(index);
+        }
+        if (currentMode === "proneCrawl") {
+          return buildProneCrawlPose(index);
+        }
+        if (currentMode === "swordSlash") {
+          return buildSwordSlashPose(index);
+        }
+        if (currentMode === "crouchTwerk") {
+          return buildCrouchTwerkPose(index);
         }
         return buildWalkPose(index, walkPoseModes[currentMode] || walkPoseModes.basic);
       }
@@ -1118,9 +2471,15 @@
         const support = leftFoot.planted || rightFoot.planted;
         const impact = Math.max(leftFoot.impact, rightFoot.impact);
         const push = Math.max(leftFoot.push, rightFoot.push);
-        const flightArc = support ? 0 : Math.pow(Math.abs(Math.sin(phase * Math.PI * 4)), 0.82);
+        const stepStanceRatio = config.stanceRatio * 2;
+        const stridePhase = (phase * 2) % 1;
+        const stanceProgress = clamp(stridePhase / stepStanceRatio, 0, 1);
+        const flightProgress = clamp((stridePhase - stepStanceRatio) / (1 - stepStanceRatio), 0, 1);
+        const lateFlightDrop = smoothstep(clamp((flightProgress - 0.62) / 0.28, 0, 1));
+        const flightArc = support ? 0 : Math.pow(Math.sin(flightProgress * Math.PI), 0.9) * (1 - lateFlightDrop * 0.82);
+        const stanceSettle = support ? Math.sin(stanceProgress * Math.PI) * config.bob : 0;
         const pelvisHeight = 94.8
-          + Math.sin(phase * Math.PI * 4 + 0.35) * config.bob
+          + stanceSettle
           - impact * config.contactDrop
           + push * config.reboundLift
           + flightArc * config.flightRise;
@@ -1150,38 +2509,43 @@
         const armSwing = wave(phase);
         const leftDrive = -armSwing;
         const rightDrive = armSwing;
-        const elbowPump = Math.abs(armSwing) * config.elbowPump + push * 1.1;
+        const elbowDriveScale = config.elbowDriveScale ?? 0.58;
+        const fistSwingScale = config.fistSwingScale ?? 1;
+        const fistLiftScale = config.fistLiftScale ?? 1;
+        const leftElbowDrive = leftDrive * elbowDriveScale;
+        const rightElbowDrive = rightDrive * elbowDriveScale;
+        const elbowPump = Math.abs(armSwing) * config.elbowPump + push * 0.75;
         const leftFistLift = Math.max(0, leftDrive) * config.fistLift - Math.max(0, -leftDrive) * config.fistDrop;
         const rightFistLift = Math.max(0, rightDrive) * config.fistLift - Math.max(0, -rightDrive) * config.fistDrop;
         points.upperarm_l = points.clavicle_l.clone().add(chestLocal(
           12.4 * config.armOut,
-          -12.8 - config.armDrop + Math.max(0, leftDrive) * 0.8,
-          leftDrive * config.upperArmSwing + lean * 0.36
+          -12.8 - config.armDrop + Math.max(0, leftDrive) * 0.55,
+          leftElbowDrive * config.upperArmSwing + lean * 0.34
         ));
         points.lowerarm_l = points.upperarm_l.clone().add(chestLocal(
           8.6 * config.armOut,
-          -17.4 - elbowPump + leftFistLift * 0.10,
-          leftDrive * config.lowerArmSwing + lean * 0.12
+          -17.2 - elbowPump + leftFistLift * 0.02,
+          leftElbowDrive * config.lowerArmSwing + lean * 0.09
         ));
         points.hand_l = points.lowerarm_l.clone().add(chestLocal(
           3.8 * config.armOut,
-          -13.2 + leftFistLift,
-          leftDrive * config.handSwing - 1.4
+          -12.9 + leftFistLift * fistLiftScale,
+          leftDrive * config.handSwing * fistSwingScale - 1.4
         ));
         points.upperarm_r = points.clavicle_r.clone().add(chestLocal(
           -12.4 * config.armOut,
-          -12.8 - config.armDrop + Math.max(0, rightDrive) * 0.8,
-          rightDrive * config.upperArmSwing + lean * 0.36
+          -12.8 - config.armDrop + Math.max(0, rightDrive) * 0.55,
+          rightElbowDrive * config.upperArmSwing + lean * 0.34
         ));
         points.lowerarm_r = points.upperarm_r.clone().add(chestLocal(
           -8.6 * config.armOut,
-          -17.4 - elbowPump + rightFistLift * 0.10,
-          rightDrive * config.lowerArmSwing + lean * 0.12
+          -17.2 - elbowPump + rightFistLift * 0.02,
+          rightElbowDrive * config.lowerArmSwing + lean * 0.09
         ));
         points.hand_r = points.lowerarm_r.clone().add(chestLocal(
           -3.8 * config.armOut,
-          -13.2 + rightFistLift,
-          rightDrive * config.handSwing - 1.4
+          -12.9 + rightFistLift * fistLiftScale,
+          rightDrive * config.handSwing * fistSwingScale - 1.4
         ));
 
         points.thigh_l = pelvis.clone().add(pelvisLocal(config.hipX + sideSway * 0.08, -3.7, config.hipZ));
@@ -1198,6 +2562,535 @@
           .add(v(0, -rightFoot.impact * config.kneeCompression, rightFoot.push * 1.4));
         points._leftPlanted = leftFoot.planted;
         points._rightPlanted = rightFoot.planted;
+        return points;
+      }
+
+      function buildNaturalRunPose(index) {
+        const pointPose = buildNaturalRunPointPose(index);
+        if (pointPose) {
+          return pointPose;
+        }
+
+        const key = sampleNaturalRunKey(index);
+        const deg = THREE.MathUtils.degToRad;
+        const points = {};
+        const pelvisYaw = deg(key.pelvis[4] || 0);
+        const pelvisPitch = deg(key.pelvis[3] || 0);
+        const pelvisRoll = deg(key.pelvis[5] || 0);
+        const chestYaw = deg(key.chest[1] || 0);
+        const chestPitch = deg(key.chest[0] || 0);
+        const chestRoll = deg(key.chest[2] || 0);
+        const neckYaw = deg(key.neck[1] || 0);
+        const neckPitch = deg(key.neck[0] || 0);
+        const neckRoll = deg(key.neck[2] || 0);
+        const headYaw = deg(key.head[1] || 0);
+        const headPitch = deg(key.head[0] || 0);
+        const headRoll = deg(key.head[2] || 0);
+        const pelvisLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), pelvisYaw, pelvisPitch, pelvisRoll);
+        const chestLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), chestYaw, chestPitch, chestRoll);
+        const neckLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), neckYaw, neckPitch, neckRoll);
+        const headLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), headYaw, headPitch, headRoll);
+
+        const pelvisY = Math.abs(key.pelvis[1]) > 40 ? key.pelvis[1] : 94.5 + key.pelvis[1];
+        const pelvis = v(key.pelvis[0], pelvisY, key.pelvis[2]);
+        points.pelvis = pelvis;
+        points.spine_01 = pelvis.clone().add(pelvisLocal(0, 12.4, 1.0));
+        points.spine_02 = points.spine_01.clone().add(pelvisLocal(0.1, 12.9, 1.0));
+        points.spine_03 = points.spine_02.clone().add(chestLocal(0.2, 12.8, 1.2));
+        points.spine_04 = points.spine_03.clone().add(chestLocal(0.4, 10.0, 1.0));
+        points.spine_05 = points.spine_04.clone().add(chestLocal(0.5, 9.7, 0.8));
+        points.neck_01 = points.spine_05.clone().add(chestLocal(0.2, 12.2, 0.4)).add(neckLocal(0, 0.5, 0.1));
+        points.head = points.neck_01.clone().add(headLocal(0.1, 16.2, 0.3));
+        points.clavicle_l = points.spine_05.clone().add(chestLocal(17.4, 2.8, 1.1));
+        points.clavicle_r = points.spine_05.clone().add(chestLocal(-17.4, 2.8, -1.1));
+
+        points.upperarm_l = points.clavicle_l.clone().add(chestLocal(...key.lUpper));
+        points.lowerarm_l = points.upperarm_l.clone().add(chestLocal(...key.lLower));
+        points.hand_l = points.lowerarm_l.clone().add(chestLocal(...key.lHand));
+        points.upperarm_r = points.clavicle_r.clone().add(chestLocal(...key.rUpper));
+        points.lowerarm_r = points.upperarm_r.clone().add(chestLocal(...key.rLower));
+        points.hand_r = points.lowerarm_r.clone().add(chestLocal(...key.rHand));
+
+        points.thigh_l = pelvis.clone().add(pelvisLocal(9.9, -3.8, 1.15));
+        points.thigh_r = pelvis.clone().add(pelvisLocal(-9.9, -3.8, -1.15));
+        points.foot_l = v(...key.leftFoot.ankle);
+        points.ball_l = v(...key.leftFoot.ball);
+        points.foot_r = v(...key.rightFoot.ankle);
+        points.ball_r = v(...key.rightFoot.ball);
+        points.calf_l = solveKnee(points.thigh_l, points.foot_l, 1).add(v(...key.leftKneeBias));
+        points.calf_r = solveKnee(points.thigh_r, points.foot_r, -1).add(v(...key.rightKneeBias));
+
+        const faceYaw = chestYaw * 0.45 + neckYaw * 0.5 + headYaw;
+        const facePitch = chestPitch * 0.25 + neckPitch * 0.45 + headPitch;
+        const faceRoll = chestRoll * 0.25 + neckRoll * 0.45 + headRoll;
+        points._faceRight = rotateYawPitchRoll(v(1, 0, 0), faceYaw, facePitch, faceRoll).normalize();
+        points._faceUp = rotateYawPitchRoll(v(0, 1, 0), faceYaw, facePitch, faceRoll).normalize();
+        points._faceForward = new THREE.Vector3().crossVectors(points._faceRight, points._faceUp).normalize();
+        points._leftPlanted = key.leftFoot.planted;
+        points._rightPlanted = key.rightFoot.planted;
+        return points;
+      }
+
+      function contactActive(value) {
+        if (value == null) {
+          return false;
+        }
+        if (typeof value === "boolean") {
+          return value;
+        }
+        if (typeof value === "number") {
+          return value > 0.35;
+        }
+        if (typeof value === "object") {
+          return contactActive(value.active ?? value.ground ?? value.planted ?? value.contact ?? value.type ?? value.name ?? value.weight);
+        }
+        const text = String(value).toLowerCase();
+        return text.includes("ground") || text.includes("floor") || text.includes("plant") ||
+          text.includes("contact") || text.includes("locked") || text.includes("brace") ||
+          text.includes("crawl");
+      }
+
+      function readProneCrawlContact(source, names, fallback = false) {
+        for (const name of names) {
+          const value = name.includes(".") ? naturalRunPath(source, name) : source?.[name];
+          if (value != null) {
+            return contactActive(value);
+          }
+        }
+        return fallback;
+      }
+
+      function readProneCrawlVector(source, paths, fallback) {
+        for (const path of paths) {
+          const value = path.includes(".") ? naturalRunPath(source, path) : source?.[path];
+          const direct = naturalRunArray(value, 3, null);
+          if (direct) {
+            return direct;
+          }
+          if (value && typeof value === "object") {
+            for (const key of ["pos", "position", "location", "translation", "target", "world", "worldPos", "worldPosition"]) {
+              const nested = naturalRunArray(value[key], 3, null);
+              if (nested) {
+                return nested;
+              }
+            }
+          }
+        }
+        return fallback.slice(0, 3);
+      }
+
+      function readProneCrawlRotation(source, paths, fallback) {
+        if (source && typeof source === "object" && ["pitch", "yaw", "roll"].some((name) => name in source)) {
+          return [
+            Number(source.pitch ?? fallback[0] ?? 0),
+            Number(source.yaw ?? fallback[1] ?? 0),
+            Number(source.roll ?? fallback[2] ?? 0)
+          ];
+        }
+        for (const path of paths) {
+          const value = path.includes(".") ? naturalRunPath(source, path) : source?.[path];
+          const direct = naturalRunArray(value, 3, null);
+          if (direct) {
+            return direct;
+          }
+          if (value && typeof value === "object") {
+            const nested = naturalRunArray(value.rot || value.rotation || value.euler || value.angle, 3, null);
+            if (nested) {
+              return nested;
+            }
+            if (["pitch", "yaw", "roll"].some((name) => name in value)) {
+              return [
+                Number(value.pitch ?? fallback[0] ?? 0),
+                Number(value.yaw ?? fallback[1] ?? 0),
+                Number(value.roll ?? fallback[2] ?? 0)
+              ];
+            }
+          }
+        }
+        return fallback.slice(0, 3);
+      }
+
+      function readProneCrawlTransform(source, paths, fallback) {
+        for (const path of paths) {
+          const value = path.includes(".") ? naturalRunPath(source, path) : source?.[path];
+          if (Array.isArray(value)) {
+            return naturalRunArray(value, 6, fallback);
+          }
+          if (value && typeof value === "object") {
+            const position = naturalRunArray(
+              value.pos || value.position || value.location || value.translation || value,
+              3,
+              fallback.slice(0, 3)
+            );
+            const rotation = readProneCrawlRotation(
+              value,
+              ["rot", "rotation", "euler", ""].filter(Boolean),
+              fallback.slice(3, 6)
+            );
+            return position.concat(rotation);
+          }
+        }
+        return fallback.slice(0, 6);
+      }
+
+      function makeProneCrawlFallbackKey(index) {
+        const phase = (index % frameCount) / frameCount;
+        const cycle = phase * Math.PI * 2;
+        const leftDrive = Math.max(0, Math.sin(cycle));
+        const rightDrive = Math.max(0, -Math.sin(cycle));
+        const torsoSway = Math.sin(cycle) * 1.5;
+        const shoulderCounter = Math.sin(cycle) * 5.0;
+        const hipCounter = -Math.sin(cycle) * 4.0;
+        const crawlBob = Math.sin(cycle * 2 + 0.3) * 0.7;
+        const leftReach = Math.cos(cycle) * 10.0;
+        const rightReach = -Math.cos(cycle) * 10.0;
+        const leftHandContact = leftDrive < 0.52;
+        const rightHandContact = rightDrive < 0.52;
+        const leftKneeContact = rightDrive < 0.58;
+        const rightKneeContact = leftDrive < 0.58;
+        return {
+          frame: index,
+          pelvis: [torsoSway * 0.25, 26.0 + crawlBob, -6.0, 81.5, hipCounter, torsoSway * 0.7],
+          chest: [84.0, shoulderCounter, -torsoSway * 0.9],
+          neck: [-5.0, shoulderCounter * 0.16, torsoSway * 0.10],
+          head: [-11.0, shoulderCounter * 0.12, torsoSway * 0.08],
+          leftElbow: [18.0, 6.2 + leftDrive * 2.0, 18.0 + leftReach * 0.46],
+          leftHand: [20.5, 2.2 + leftDrive * 2.3, 37.0 + leftReach],
+          rightElbow: [-18.0, 6.2 + rightDrive * 2.0, 18.0 + rightReach * 0.46],
+          rightHand: [-20.5, 2.2 + rightDrive * 2.3, 37.0 + rightReach],
+          leftKnee: [9.8, 5.6 + rightDrive * 2.2, -15.0 - rightReach * 0.30],
+          rightKnee: [-9.8, 5.6 + leftDrive * 2.2, -15.0 - leftReach * 0.30],
+          leftFoot: {
+            ankle: [11.2, 5.0 + rightDrive * 2.4, -35.0 - rightReach * 0.26],
+            ball: [12.0, 1.2 + rightDrive * 1.1, -22.0 - rightReach * 0.20],
+            planted: true
+          },
+          rightFoot: {
+            ankle: [-11.2, 5.0 + leftDrive * 2.4, -35.0 - leftReach * 0.26],
+            ball: [-12.0, 1.2 + leftDrive * 1.1, -22.0 - leftReach * 0.20],
+            planted: true
+          },
+          contacts: {
+            leftHand: leftHandContact,
+            rightHand: rightHandContact,
+            leftKnee: leftKneeContact,
+            rightKnee: rightKneeContact,
+            leftFoot: true,
+            rightFoot: true
+          }
+        };
+      }
+
+      function readProneCrawlFoot(source, sideName, fallback) {
+        const shortName = sideName === "left" ? "l" : "r";
+        const foot = source?.[`${sideName}Foot`] || source?.[`${shortName}Foot`] || source?.feet?.[sideName] || {};
+        const ankleFallback = readProneCrawlVector(source, [`foot_${shortName}`, `${shortName}Foot`, `${sideName}Ankle`], fallback.ankle);
+        const ballFallback = readProneCrawlVector(source, [`ball_${shortName}`, `${shortName}Ball`, `${sideName}Ball`], fallback.ball);
+        const planted = readProneCrawlContact(source, [
+          `contacts.${sideName}Foot`,
+          `${sideName}Foot.contact`,
+          `${sideName}Foot.planted`,
+          `${sideName}Foot.weight`,
+          `${sideName}Planted`,
+          `_${sideName}Planted`
+        ], fallback.planted);
+        return {
+          ankle: readProneCrawlVector(foot, ["ankle", "foot", "pos", "position", "location"], ankleFallback),
+          ball: readProneCrawlVector(foot, ["ball", "toe"], ballFallback),
+          planted
+        };
+      }
+
+      function normalizeProneCrawlKey(source, fallbackIndex) {
+        const fallback = makeProneCrawlFallbackKey(fallbackIndex);
+        return {
+          frame: readNaturalKeyFrame(source, fallback.frame),
+          pelvis: readProneCrawlTransform(source, ["pelvis", "root"], fallback.pelvis),
+          chest: readProneCrawlRotation(source, ["chest", "spine", "spine.upper", "spine_05", "bones.spine_05"], fallback.chest),
+          neck: readProneCrawlRotation(source, ["neck", "neck_01", "bones.neck_01"], fallback.neck),
+          head: readProneCrawlRotation(source, ["head", "bones.head"], fallback.head),
+          leftElbow: readProneCrawlVector(source, ["leftElbow", "leftArm.elbow", "elbow_l", "lowerarm_l"], fallback.leftElbow),
+          leftHand: readProneCrawlVector(source, ["leftHand", "leftArm.hand", "hand_l"], fallback.leftHand),
+          rightElbow: readProneCrawlVector(source, ["rightElbow", "rightArm.elbow", "elbow_r", "lowerarm_r"], fallback.rightElbow),
+          rightHand: readProneCrawlVector(source, ["rightHand", "rightArm.hand", "hand_r"], fallback.rightHand),
+          leftKnee: readProneCrawlVector(source, ["leftKnee", "leftLeg.knee", "knee_l", "calf_l"], fallback.leftKnee),
+          rightKnee: readProneCrawlVector(source, ["rightKnee", "rightLeg.knee", "knee_r", "calf_r"], fallback.rightKnee),
+          leftFoot: readProneCrawlFoot(source, "left", fallback.leftFoot),
+          rightFoot: readProneCrawlFoot(source, "right", fallback.rightFoot),
+          contacts: {
+            leftHand: readProneCrawlContact(source, ["contacts.leftHand", "leftHand.contact", "leftHand.weight"], fallback.contacts.leftHand),
+            rightHand: readProneCrawlContact(source, ["contacts.rightHand", "rightHand.contact", "rightHand.weight"], fallback.contacts.rightHand),
+            leftKnee: readProneCrawlContact(source, ["contacts.leftKnee", "leftKnee.contact", "leftKnee.weight"], fallback.contacts.leftKnee),
+            rightKnee: readProneCrawlContact(source, ["contacts.rightKnee", "rightKnee.contact", "rightKnee.weight"], fallback.contacts.rightKnee)
+          }
+        };
+      }
+
+      function proneCrawlPair(index) {
+        if (proneCrawlRawKeys.length < 2) {
+          return null;
+        }
+        const entries = proneCrawlRawKeys
+          .map((key, order) => ({ key, frame: readNaturalKeyFrame(key, order) }))
+          .sort((a, b) => a.frame - b.frame);
+        const sampleFrame = ((index % frameCount) + frameCount) % frameCount;
+        for (let i = 0; i < entries.length - 1; i += 1) {
+          const from = entries[i];
+          const to = entries[i + 1];
+          if (sampleFrame >= from.frame && sampleFrame <= to.frame) {
+            const raw = (sampleFrame - from.frame) / Math.max(0.001, to.frame - from.frame);
+            return { from, to, t: smoothstep(raw) };
+          }
+        }
+        const first = entries[0];
+        const last = entries[entries.length - 1];
+        if (sampleFrame < first.frame) {
+          const raw = (sampleFrame + frameCount - last.frame) / Math.max(0.001, first.frame + frameCount - last.frame);
+          return { from: last, to: first, t: smoothstep(raw) };
+        }
+        const raw = (sampleFrame - last.frame) / Math.max(0.001, first.frame + frameCount - last.frame);
+        return { from: last, to: first, t: smoothstep(raw) };
+      }
+
+      function interpolateProneCrawlVector(a, b, t, lock) {
+        return lock ? a.slice(0, 3) : interpolateNaturalRunArray(a, b, t).slice(0, 3);
+      }
+
+      function interpolateProneCrawlFoot(a, b, t) {
+        const locked = a.planted && b.planted;
+        return {
+          ankle: interpolateProneCrawlVector(a.ankle, b.ankle, t, locked),
+          ball: interpolateProneCrawlVector(a.ball, b.ball, t, locked),
+          planted: t < 0.5 ? a.planted : b.planted
+        };
+      }
+
+      function interpolateProneCrawlKey(fromSource, toSource, t) {
+        const from = normalizeProneCrawlKey(fromSource, readNaturalKeyFrame(fromSource, 0));
+        const to = normalizeProneCrawlKey(toSource, readNaturalKeyFrame(toSource, 0));
+        const leftHandLocked = from.contacts.leftHand && to.contacts.leftHand;
+        const rightHandLocked = from.contacts.rightHand && to.contacts.rightHand;
+        const leftKneeLocked = from.contacts.leftKnee && to.contacts.leftKnee;
+        const rightKneeLocked = from.contacts.rightKnee && to.contacts.rightKnee;
+        return {
+          pelvis: interpolateNaturalRunArray(from.pelvis, to.pelvis, t),
+          chest: interpolateNaturalRunArray(from.chest, to.chest, t),
+          neck: interpolateNaturalRunArray(from.neck, to.neck, t),
+          head: interpolateNaturalRunArray(from.head, to.head, t),
+          leftElbow: interpolateProneCrawlVector(from.leftElbow, to.leftElbow, t, leftHandLocked),
+          leftHand: interpolateProneCrawlVector(from.leftHand, to.leftHand, t, leftHandLocked),
+          rightElbow: interpolateProneCrawlVector(from.rightElbow, to.rightElbow, t, rightHandLocked),
+          rightHand: interpolateProneCrawlVector(from.rightHand, to.rightHand, t, rightHandLocked),
+          leftKnee: interpolateProneCrawlVector(from.leftKnee, to.leftKnee, t, leftKneeLocked),
+          rightKnee: interpolateProneCrawlVector(from.rightKnee, to.rightKnee, t, rightKneeLocked),
+          leftFoot: interpolateProneCrawlFoot(from.leftFoot, to.leftFoot, t),
+          rightFoot: interpolateProneCrawlFoot(from.rightFoot, to.rightFoot, t),
+          contacts: {
+            leftHand: t < 0.5 ? from.contacts.leftHand : to.contacts.leftHand,
+            rightHand: t < 0.5 ? from.contacts.rightHand : to.contacts.rightHand,
+            leftKnee: t < 0.5 ? from.contacts.leftKnee : to.contacts.leftKnee,
+            rightKnee: t < 0.5 ? from.contacts.rightKnee : to.contacts.rightKnee
+          }
+        };
+      }
+
+      function sampleProneCrawlKey(index) {
+        const pair = proneCrawlPair(index);
+        if (!pair) {
+          return makeProneCrawlFallbackKey(index);
+        }
+        return interpolateProneCrawlKey(pair.from.key, pair.to.key, pair.t);
+      }
+
+      function proneCrawlContactForJoint(key, jointName) {
+        const map = {
+          lowerarm_l: "leftHand",
+          hand_l: "leftHand",
+          lowerarm_r: "rightHand",
+          hand_r: "rightHand",
+          calf_l: "leftKnee",
+          calf_r: "rightKnee",
+          foot_l: "leftFoot",
+          ball_l: "leftFoot",
+          foot_r: "rightFoot",
+          ball_r: "rightFoot"
+        };
+        const contactName = map[jointName];
+        return contactName ? readProneCrawlContact(key, [`contacts.${contactName}`, contactName, `${contactName}.contact`, `${contactName}.planted`], false) : false;
+      }
+
+      function buildProneCrawlPointPose(index) {
+        const pair = proneCrawlPair(index);
+        if (!pair) {
+          return null;
+        }
+        const fromPoints = naturalRunPointSource(pair.from.key);
+        const toPoints = naturalRunPointSource(pair.to.key);
+        if (!fromPoints || !toPoints) {
+          return null;
+        }
+        const points = {};
+        for (const name of jointNames) {
+          const a = naturalRunArray(fromPoints[name], 3, null);
+          const b = naturalRunArray(toPoints[name], 3, null);
+          if (!a || !b) {
+            return null;
+          }
+          const locked = proneCrawlContactForJoint(pair.from.key, name) && proneCrawlContactForJoint(pair.to.key, name);
+          const vector = interpolateProneCrawlVector(a, b, pair.t, locked);
+          points[name] = v(vector[0], vector[1], vector[2]);
+        }
+        points._leftPlanted = pair.t < 0.5
+          ? proneCrawlContactForJoint(pair.from.key, "foot_l")
+          : proneCrawlContactForJoint(pair.to.key, "foot_l");
+        points._rightPlanted = pair.t < 0.5
+          ? proneCrawlContactForJoint(pair.from.key, "foot_r")
+          : proneCrawlContactForJoint(pair.to.key, "foot_r");
+        return points;
+      }
+
+      function buildProneCrawlPose(index) {
+        const pointPose = buildProneCrawlPointPose(index);
+        if (pointPose) {
+          return pointPose;
+        }
+
+        const key = sampleProneCrawlKey(index);
+        const deg = THREE.MathUtils.degToRad;
+        const points = {};
+        const pelvisYaw = deg(key.pelvis[4] || 0);
+        const pelvisPitch = deg(key.pelvis[3] || 82);
+        const pelvisRoll = deg(key.pelvis[5] || 0);
+        const chestYaw = deg(key.chest[1] || 0);
+        const chestPitch = deg(key.chest[0] || 84);
+        const chestRoll = deg(key.chest[2] || 0);
+        const neckYaw = deg(key.neck[1] || 0);
+        const neckPitch = deg(key.neck[0] || 0);
+        const neckRoll = deg(key.neck[2] || 0);
+        const headYaw = deg(key.head[1] || 0);
+        const headPitch = deg(key.head[0] || 0);
+        const headRoll = deg(key.head[2] || 0);
+        const pelvisLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), pelvisYaw, pelvisPitch, pelvisRoll);
+        const chestLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), pelvisYaw + chestYaw, chestPitch, pelvisRoll + chestRoll);
+
+        const pelvis = v(key.pelvis[0], key.pelvis[1], key.pelvis[2]);
+        points.pelvis = pelvis;
+        points.spine_01 = pelvis.clone().add(pelvisLocal(0, 11.8, 0.9));
+        points.spine_02 = points.spine_01.clone().add(pelvisLocal(0.1, 12.5, 1.0));
+        points.spine_03 = points.spine_02.clone().add(chestLocal(0.2, 12.4, 1.1));
+        points.spine_04 = points.spine_03.clone().add(chestLocal(0.3, 9.6, 1.0));
+        points.spine_05 = points.spine_04.clone().add(chestLocal(0.4, 9.2, 0.8));
+        points.neck_01 = points.spine_05.clone().add(chestLocal(0.1, 9.8, 1.2));
+        points.head = points.neck_01.clone().add(chestLocal(headYaw * 1.2, 11.6, 2.1 + headPitch * -0.06));
+        points.clavicle_l = points.spine_05.clone().add(chestLocal(17.0, 2.4, 1.0));
+        points.clavicle_r = points.spine_05.clone().add(chestLocal(-17.0, 2.4, -1.0));
+
+        const leftElbow = v(...key.leftElbow);
+        const leftHand = v(...key.leftHand);
+        const rightElbow = v(...key.rightElbow);
+        const rightHand = v(...key.rightHand);
+        points.upperarm_l = points.clavicle_l.clone().lerp(leftElbow, 0.52).add(v(0, 2.5, -1.0));
+        points.lowerarm_l = leftElbow;
+        points.hand_l = leftHand;
+        points.upperarm_r = points.clavicle_r.clone().lerp(rightElbow, 0.52).add(v(0, 2.5, -1.0));
+        points.lowerarm_r = rightElbow;
+        points.hand_r = rightHand;
+
+        points.thigh_l = pelvis.clone().add(pelvisLocal(9.8, -2.2, -0.8));
+        points.thigh_r = pelvis.clone().add(pelvisLocal(-9.8, -2.2, -0.8));
+        points.calf_l = v(...key.leftKnee);
+        points.calf_r = v(...key.rightKnee);
+        points.foot_l = v(...key.leftFoot.ankle);
+        points.ball_l = v(...key.leftFoot.ball);
+        points.foot_r = v(...key.rightFoot.ankle);
+        points.ball_r = v(...key.rightFoot.ball);
+
+        const faceYaw = pelvisYaw + chestYaw * 0.65 + neckYaw * 0.45 + headYaw;
+        const facePitch = chestPitch + neckPitch * 0.45 + headPitch;
+        const faceRoll = pelvisRoll + chestRoll * 0.35 + neckRoll * 0.35 + headRoll;
+        points._faceRight = rotateYawPitchRoll(v(1, 0, 0), faceYaw, facePitch, faceRoll).normalize();
+        points._faceUp = rotateYawPitchRoll(v(0, 1, 0), faceYaw, facePitch, faceRoll).normalize();
+        points._faceForward = new THREE.Vector3().crossVectors(points._faceRight, points._faceUp).normalize();
+        points._leftPlanted = key.leftFoot.planted;
+        points._rightPlanted = key.rightFoot.planted;
+        return points;
+      }
+
+      function buildShuffleDancePose(index) {
+        const pointPose = buildShuffleDancePointPose(index);
+        if (pointPose) {
+          return pointPose;
+        }
+
+        const key = sampleShuffleDanceKey(index);
+        const deg = THREE.MathUtils.degToRad;
+        const points = {};
+        const pelvisYaw = deg(key.pelvis[4] || 0);
+        const pelvisPitch = deg(key.pelvis[3] || 0);
+        const pelvisRoll = deg(key.pelvis[5] || 0);
+        const chestYaw = deg(key.chest[1] || 0);
+        const chestPitch = deg(key.chest[0] || 0);
+        const chestRoll = deg(key.chest[2] || 0);
+        const neckYaw = deg(key.neck[1] || 0);
+        const neckPitch = deg(key.neck[0] || 0);
+        const neckRoll = deg(key.neck[2] || 0);
+        const headYaw = deg(key.head[1] || 0);
+        const headPitch = deg(key.head[0] || 0);
+        const headRoll = deg(key.head[2] || 0);
+        const pelvisLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), pelvisYaw, pelvisPitch, pelvisRoll);
+        const chestLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), chestYaw, chestPitch, chestRoll);
+        const neckLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), neckYaw, neckPitch, neckRoll);
+        const headLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), headYaw, headPitch, headRoll);
+
+        const pelvisY = Math.abs(key.pelvis[1]) > 40 ? key.pelvis[1] : 94.0 + key.pelvis[1];
+        const pelvis = v(key.pelvis[0], pelvisY, key.pelvis[2]);
+        points.pelvis = pelvis;
+        points.spine_01 = pelvis.clone().add(pelvisLocal(0.0, 12.4, 0.7));
+        points.spine_02 = points.spine_01.clone().add(pelvisLocal(0.1, 12.9, 0.5));
+        points.spine_03 = points.spine_02.clone().add(chestLocal(0.3, 12.8, 0.3));
+        points.spine_04 = points.spine_03.clone().add(chestLocal(0.4, 10.0, 0.1));
+        points.spine_05 = points.spine_04.clone().add(chestLocal(0.5, 9.7, -0.1));
+        points.neck_01 = points.spine_05.clone().add(chestLocal(0.1, 12.2, 0.0)).add(neckLocal(0, 0.5, 0));
+        points.head = points.neck_01.clone().add(headLocal(0.1, 16.3, 0.1));
+        points.clavicle_l = points.spine_05.clone().add(chestLocal(17.5, 2.8, 1.0));
+        points.clavicle_r = points.spine_05.clone().add(chestLocal(-17.5, 2.8, -1.0));
+
+        function placeShuffleArm(side, clavicleName, upperName, lowerName, handName, targetArray, upperOffset, lowerOffset, handOffset) {
+          const clavicle = points[clavicleName];
+          if (targetArray) {
+            const handTarget = Math.abs(targetArray[1]) > 35
+              ? v(targetArray[0], targetArray[1], targetArray[2])
+              : points.spine_05.clone().add(chestLocal(targetArray[0], targetArray[1], targetArray[2]));
+            points[upperName] = clavicle.clone().lerp(handTarget, 0.34).add(chestLocal(side * 4.2, -1.4, -3.0));
+            points[lowerName] = clavicle.clone().lerp(handTarget, 0.68).add(chestLocal(side * 2.6, -2.2, 2.2));
+            points[handName] = handTarget;
+            return;
+          }
+          points[upperName] = clavicle.clone().add(chestLocal(...upperOffset));
+          points[lowerName] = points[upperName].clone().add(chestLocal(...lowerOffset));
+          points[handName] = points[lowerName].clone().add(chestLocal(...handOffset));
+        }
+
+        placeShuffleArm(1, "clavicle_l", "upperarm_l", "lowerarm_l", "hand_l", key.leftHandTarget, key.lUpper, key.lLower, key.lHand);
+        placeShuffleArm(-1, "clavicle_r", "upperarm_r", "lowerarm_r", "hand_r", key.rightHandTarget, key.rUpper, key.rLower, key.rHand);
+
+        points.thigh_l = pelvis.clone().add(pelvisLocal(10.2, -3.8, 1.25));
+        points.thigh_r = pelvis.clone().add(pelvisLocal(-10.2, -3.8, -1.25));
+        points.foot_l = v(...key.leftFoot.ankle);
+        points.ball_l = v(...key.leftFoot.ball);
+        points.foot_r = v(...key.rightFoot.ankle);
+        points.ball_r = v(...key.rightFoot.ball);
+        points.calf_l = solveKnee(points.thigh_l, points.foot_l, 1).add(v(...key.leftKneeBias));
+        points.calf_r = solveKnee(points.thigh_r, points.foot_r, -1).add(v(...key.rightKneeBias));
+
+        const faceYaw = chestYaw * 0.38 + neckYaw * 0.45 + headYaw;
+        const facePitch = chestPitch * 0.18 + neckPitch * 0.38 + headPitch;
+        const faceRoll = chestRoll * 0.22 + neckRoll * 0.40 + headRoll;
+        points._faceRight = rotateYawPitchRoll(v(1, 0, 0), faceYaw, facePitch, faceRoll).normalize();
+        points._faceUp = rotateYawPitchRoll(v(0, 1, 0), faceYaw, facePitch, faceRoll).normalize();
+        points._faceForward = new THREE.Vector3().crossVectors(points._faceRight, points._faceUp).normalize();
+        points._leftPlanted = key.leftFoot.planted || key.leftFoot.contactWeight > 0.42;
+        points._rightPlanted = key.rightFoot.planted || key.rightFoot.contactWeight > 0.42;
         return points;
       }
 
@@ -1249,6 +3142,120 @@
         return points;
       }
 
+      function buildCrouchTwerkPose(index) {
+        const phase = index / frameCount;
+        const bounce = Math.sin(phase * Math.PI * 4);
+        const rollPulse = Math.sin(phase * Math.PI * 8);
+        const rollCounter = Math.cos(phase * Math.PI * 8);
+        const sway = Math.sin(phase * Math.PI * 2 + 0.35);
+        const points = {};
+        const pelvisYaw = rollPulse * 0.095 + sway * 0.035;
+        const pelvisPitch = 0.13 + bounce * 0.025;
+        const pelvisRoll = rollCounter * 0.13 + sway * 0.035;
+        const chestYaw = -pelvisYaw * 0.55 + sway * 0.035;
+        const chestPitch = 0.36 - bounce * 0.030;
+        const chestRoll = -pelvisRoll * 0.48;
+        const pelvisLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), pelvisYaw, pelvisPitch, pelvisRoll);
+        const chestLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), chestYaw, chestPitch, chestRoll);
+
+        const pelvis = v(sway * 1.4, 66.5 + bounce * 2.2 + rollCounter * 0.55, -5.2 + rollPulse * 2.6);
+        points.pelvis = pelvis;
+        points.spine_01 = pelvis.clone().add(pelvisLocal(sway * 0.25, 11.8, 3.4));
+        points.spine_02 = points.spine_01.clone().add(pelvisLocal(sway * 0.12, 12.5, 4.2));
+        points.spine_03 = points.spine_02.clone().add(chestLocal(-sway * 0.35, 12.5, 3.9));
+        points.spine_04 = points.spine_03.clone().add(chestLocal(-sway * 0.22, 9.8, 2.6));
+        points.spine_05 = points.spine_04.clone().add(chestLocal(-sway * 0.18, 9.6, 1.9));
+        points.neck_01 = points.spine_05.clone().add(chestLocal(-sway * 0.18, 12.4, -0.5));
+        points.head = points.neck_01.clone().add(chestLocal(-sway * 0.30, 16.4, -1.3));
+        points.clavicle_l = points.spine_05.clone().add(chestLocal(17.2, 2.6, 1.4));
+        points.clavicle_r = points.spine_05.clone().add(chestLocal(-17.2, 2.6, -1.4));
+
+        const armCounter = Math.sin(phase * Math.PI * 4 + 1.1);
+        points.upperarm_l = points.clavicle_l.clone().add(chestLocal(17.0, -11.8, 8.8 + armCounter * 1.3));
+        points.lowerarm_l = points.upperarm_l.clone().add(chestLocal(12.4, -20.2, 8.5 - armCounter * 0.8));
+        points.hand_l = points.lowerarm_l.clone().add(chestLocal(4.2, -16.0, 6.4));
+        points.upperarm_r = points.clavicle_r.clone().add(chestLocal(-17.0, -11.8, 8.8 - armCounter * 1.3));
+        points.lowerarm_r = points.upperarm_r.clone().add(chestLocal(-12.4, -20.2, 8.5 + armCounter * 0.8));
+        points.hand_r = points.lowerarm_r.clone().add(chestLocal(-4.2, -16.0, 6.4));
+
+        points.thigh_l = pelvis.clone().add(pelvisLocal(11.8 + sway * 0.25, -3.8, 2.7));
+        points.thigh_r = pelvis.clone().add(pelvisLocal(-11.8 + sway * 0.25, -3.8, -2.7));
+        points.foot_l = v(18.6, 8.3, 5.8);
+        points.ball_l = v(21.4, 1.2, 21.8);
+        points.foot_r = v(-18.6, 8.3, 5.8);
+        points.ball_r = v(-21.4, 1.2, 21.8);
+        points.calf_l = solveKnee(points.thigh_l, points.foot_l, 1).add(v(3.4, -2.8, 8.2 + Math.max(0, bounce) * 1.8));
+        points.calf_r = solveKnee(points.thigh_r, points.foot_r, -1).add(v(-3.4, -2.8, 8.2 + Math.max(0, bounce) * 1.8));
+        points._leftPlanted = true;
+        points._rightPlanted = true;
+        return points;
+      }
+
+      function buildSwordSlashPose(index) {
+        const key = sampleSwordSlashKey(index);
+        const deg = THREE.MathUtils.degToRad;
+        const points = {};
+        const pelvisYaw = deg(key.pelvis[4]);
+        const pelvisPitch = deg(key.pelvis[3]);
+        const pelvisRoll = deg(key.pelvis[5]);
+        const chestYaw = deg(key.chest[1]);
+        const chestPitch = deg(key.chest[0]);
+        const chestRoll = deg(key.chest[2]);
+        const neckYaw = deg(key.neck[1]);
+        const neckPitch = deg(key.neck[0]);
+        const neckRoll = deg(key.neck[2]);
+        const headYaw = deg(key.head[1]);
+        const headPitch = deg(key.head[0]);
+        const headRoll = deg(key.head[2]);
+        const pelvisLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), pelvisYaw, pelvisPitch, pelvisRoll);
+        const chestLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), chestYaw, chestPitch, chestRoll);
+        const neckLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), neckYaw, neckPitch, neckRoll);
+        const headLocal = (x, y, z) => rotateYawPitchRoll(v(x, y, z), headYaw, headPitch, headRoll);
+
+        const pelvis = v(key.pelvis[0], 94.5 + key.pelvis[1], key.pelvis[2]);
+        points.pelvis = pelvis;
+        points.spine_01 = pelvis.clone().add(pelvisLocal(0, 12.9, 0.6));
+        points.spine_02 = points.spine_01.clone().add(pelvisLocal(0, 13.1, 0.4));
+        points.spine_03 = points.spine_02.clone().add(chestLocal(0.4, 12.8, 0.3));
+        points.spine_04 = points.spine_03.clone().add(chestLocal(0.6, 10.2, 0.1));
+        points.spine_05 = points.spine_04.clone().add(chestLocal(0.8, 10.0, -0.1));
+        points.neck_01 = points.spine_05.clone().add(neckLocal(0.4, 12.7, 0.0));
+        points.head = points.neck_01.clone().add(headLocal(0.2, 16.7, 0.2));
+        points.clavicle_l = points.spine_05.clone().add(chestLocal(17.8, 3.0, 0.8));
+        points.clavicle_r = points.spine_05.clone().add(chestLocal(-17.8, 3.0, -0.8));
+
+        points.upperarm_l = points.clavicle_l.clone().add(chestLocal(...key.lUpper));
+        points.lowerarm_l = points.upperarm_l.clone().add(chestLocal(...key.lLower));
+        points.hand_l = points.lowerarm_l.clone().add(chestLocal(...key.lHand));
+        points.upperarm_r = points.clavicle_r.clone().add(chestLocal(...key.rUpper));
+        points.lowerarm_r = points.upperarm_r.clone().add(chestLocal(...key.rLower));
+        points.hand_r = points.lowerarm_r.clone().add(chestLocal(...key.rHand));
+
+        points.thigh_l = pelvis.clone().add(pelvisLocal(10.4, -3.8, 2.2));
+        points.thigh_r = pelvis.clone().add(pelvisLocal(-10.4, -3.8, -2.2));
+        points.foot_l = v(13.2, 8.3, 22.0);
+        points.ball_l = v(14.8, 1.2, 36.5);
+        points.foot_r = v(-13.8, 8.3, -7.0);
+        points.ball_r = v(-15.2, 1.2, 7.0);
+        points.calf_l = solveKnee(points.thigh_l, points.foot_l, 1).add(v(key.knee[0], key.knee[1], key.knee[2]));
+        points.calf_r = solveKnee(points.thigh_r, points.foot_r, -1).add(v(key.knee[3], key.knee[4], key.knee[5]));
+
+        const swordGrip = points.hand_r.clone();
+        points._swordGrip = swordGrip;
+        points._swordTip = swordGrip.clone().add(chestLocal(...key.swordTip));
+        points._swordPommel = swordGrip.clone().add(chestLocal(...key.swordPommel));
+        points._swordRight = chestLocal(1, 0, 0).normalize();
+        const faceYaw = chestYaw * 0.65 + neckYaw + headYaw;
+        const facePitch = chestPitch * 0.25 + neckPitch * 0.45 + headPitch;
+        const faceRoll = chestRoll * 0.35 + neckRoll + headRoll;
+        points._faceRight = rotateYawPitchRoll(v(1, 0, 0), faceYaw, facePitch, faceRoll).normalize();
+        points._faceUp = rotateYawPitchRoll(v(0, 1, 0), faceYaw, facePitch, faceRoll).normalize();
+        points._faceForward = new THREE.Vector3().crossVectors(points._faceRight, points._faceUp).normalize();
+        points._leftPlanted = true;
+        points._rightPlanted = true;
+        return points;
+      }
+
       function buildWallPeekPose(index) {
         const phase = index / frameCount;
         const basePeek = smoothstep(Math.max(0, Math.sin(phase * Math.PI)));
@@ -1264,14 +3271,15 @@
         const points = {};
         const pelvisYaw = pelvisPeek * 0.08;
         const pelvisRoll = -pelvisPeek * 0.08 + settle * 0.010 * (1 - basePeek);
-        const chestYaw = chestPeek * 0.23;
-        const chestRoll = -chestPeek * 0.18 + settle * 0.008 * (1 - basePeek);
-        const neckYaw = neckPeek * 0.34;
-        const neckRoll = -neckPeek * 0.11;
-        const headYaw = headPeek * 0.50;
-        const headRoll = -headPeek * 0.13;
+        const chestYaw = chestPeek * 0.36;
+        const chestRoll = -chestPeek * 0.20 + settle * 0.008 * (1 - basePeek);
+        const neckYaw = neckPeek * 0.58;
+        const neckRoll = -neckPeek * 0.14;
+        const headYaw = headPeek * 0.92;
+        const headRoll = -headPeek * 0.18;
         const pelvisLocal = (x, y, z) => rotateYawRoll(v(x, y, z), pelvisYaw, pelvisRoll);
         const chestLocal = (x, y, z) => rotateYawRoll(v(x, y, z), chestYaw, chestRoll);
+        const neckLocal = (x, y, z) => rotateYawRoll(v(x, y, z), neckYaw, neckRoll);
         const headLocal = (x, y, z) => rotateYawRoll(v(x, y, z), headYaw, headRoll);
 
         const pelvis = v(
@@ -1285,8 +3293,11 @@
         points.spine_03 = points.spine_02.clone().add(chestLocal(chestPeek * 1.25, 13.0, -0.35));
         points.spine_04 = points.spine_03.clone().add(chestLocal(chestPeek * 1.75, 10.2, -0.12));
         points.spine_05 = points.spine_04.clone().add(chestLocal(chestPeek * 2.05, 10.0, 0.15));
-        points.neck_01 = points.spine_05.clone().add(chestLocal(neckPeek * 2.8, 12.8, 0.35));
-        points.head = points.neck_01.clone().add(headLocal(headPeek * 8.9, 16.8, 0.9));
+        points.neck_01 = points.spine_05.clone().add(chestLocal(neckPeek * 4.4, 12.8, 0.35));
+        points.head = points.neck_01.clone()
+          .add(neckLocal(headPeek * 7.0, 8.4, 0.4))
+          .add(headLocal(headPeek * 8.8, 8.4, 1.0))
+          .add(v(headPeek * 6.5, 0, 0));
         points.clavicle_l = points.spine_05.clone().add(chestLocal(17.8 + chestPeek * 1.6, 3.0, 0.8 + chestPeek * 1.1));
         points.clavicle_r = points.spine_05.clone().add(chestLocal(-17.8 + chestPeek * 0.7, 3.0, -0.8 - chestPeek * 0.9));
 
@@ -1313,8 +3324,8 @@
         points.ball_r = v(-12.7, 1.2, 21.2);
         points.calf_l = solveKnee(points.thigh_l, points.foot_l, 1).add(v(pelvisPeek * 1.0, 0, pelvisPeek * 0.7));
         points.calf_r = solveKnee(points.thigh_r, points.foot_r, -1).add(v(pelvisPeek * 0.4, 0, -pelvisPeek * 0.3));
-        const faceYaw = chestYaw + headYaw;
-        const faceRoll = chestRoll + headRoll;
+        const faceYaw = chestYaw + neckYaw * 0.45 + headYaw;
+        const faceRoll = chestRoll + neckRoll * 0.35 + headRoll;
         points._faceRight = rotateYawRoll(v(1, 0, 0), faceYaw, faceRoll).normalize();
         points._faceUp = rotateYawRoll(v(0, 1, 0), faceYaw, faceRoll).normalize();
         points._faceForward = new THREE.Vector3().crossVectors(points._faceRight, points._faceUp).normalize();
@@ -1541,6 +3552,25 @@
         mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), diff.normalize());
       }
 
+      function updateSwordProp(pose) {
+        const visible = currentMode === "swordSlash" && pose._swordGrip && pose._swordTip;
+        swordGroup.visible = visible;
+        if (!visible) {
+          return;
+        }
+        const grip = pose._swordGrip;
+        const tip = pose._swordTip;
+        const pommel = pose._swordPommel || grip.clone().add(v(0, -7, 0));
+        const right = (pose._swordRight || new THREE.Vector3().subVectors(pose.clavicle_l, pose.clavicle_r)).clone().normalize();
+        updateCylinder(swordBlade, grip, tip);
+        updateCylinder(swordHandle, pommel, grip);
+        updateCylinder(
+          swordGuard,
+          grip.clone().add(right.clone().multiplyScalar(5.8)),
+          grip.clone().add(right.clone().multiplyScalar(-5.8))
+        );
+      }
+
       function updateFaceMarkers(pose) {
         const up = pose._faceUp || new THREE.Vector3().subVectors(pose.head, pose.neck_01).normalize();
         const right = pose._faceRight || new THREE.Vector3().subVectors(pose.clavicle_l, pose.clavicle_r).normalize();
@@ -1569,7 +3599,9 @@
       function applyFrame(index) {
         const pose = buildPose(index);
         wallGroup.visible = currentMode === "wallPeek";
-        travelLine.visible = currentMode !== "wallPeek";
+        wallClimbGroup.visible = currentMode === "wallClimb";
+        travelLine.visible = currentMode !== "wallPeek" && currentMode !== "wallClimb" && currentMode !== "proneCrawl" && currentMode !== "swordSlash" && currentMode !== "crouchTwerk" && currentMode !== "shuffleDance";
+        updateSwordProp(pose);
         for (const item of envelopeMeshes) {
           updateEnvelopeCylinder(item.mesh, pose[item.from], pose[item.to], item.radius);
         }
@@ -1586,9 +3618,9 @@
         updateFaceMarkers(pose);
 
         plantedMarkers[0].position.set(pose.foot_l.x, 0.45, pose.foot_l.z);
-        plantedMarkers[0].visible = pose._leftPlanted;
+        plantedMarkers[0].visible = currentMode !== "wallClimb" && pose._leftPlanted;
         plantedMarkers[1].position.set(pose.foot_r.x, 0.45, pose.foot_r.z);
-        plantedMarkers[1].visible = pose._rightPlanted;
+        plantedMarkers[1].visible = currentMode !== "wallClimb" && pose._rightPlanted;
         updateFrameReadout(index);
         ticks.forEach((tick, tickIndex) => tick.classList.toggle("active", tickIndex === index));
       }
