@@ -442,7 +442,7 @@
         right: 0xf4a12d,
         center: 0x414a57,
         joint: 0x1e2633,
-        envelope: 0xb6c9d8
+        envelope: 0x526878
       };
 
       const segments = [
@@ -589,19 +589,20 @@
       const figure = new THREE.Group();
       scene.add(figure);
 
-      const envelopeMaterial = new THREE.MeshStandardMaterial({
+      const envelopeRenderOrder = 1;
+      const boneRenderOrder = 2;
+      const envelopeMaterial = new THREE.MeshBasicMaterial({
         color: colors.envelope,
         transparent: true,
-        opacity: 0.24,
-        depthWrite: false,
-        roughness: 0.82,
-        metalness: 0.0
+        opacity: 0.38,
+        depthTest: true,
+        depthWrite: false
       });
       const envelopeSegments = [
-        ["pelvis", "spine_01", 7.4],
-        ["spine_01", "spine_03", 8.2],
-        ["spine_03", "spine_05", 7.8],
-        ["spine_05", "neck_01", 5.1],
+        ["pelvis", "spine_01", 8.1],
+        ["spine_01", "spine_03", 9.0],
+        ["spine_03", "spine_05", 8.6],
+        ["spine_05", "neck_01", 5.5],
         ["clavicle_l", "upperarm_l", 4.1],
         ["upperarm_l", "lowerarm_l", 3.3],
         ["lowerarm_l", "hand_l", 2.5],
@@ -617,20 +618,22 @@
       ];
       const envelopeMeshes = envelopeSegments.map(([from, to, radius]) => {
         const mesh = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 20), envelopeMaterial);
+        mesh.renderOrder = envelopeRenderOrder;
         figure.add(mesh);
         return { from, to, radius, mesh };
       });
       const envelopeJointGeometry = new THREE.SphereGeometry(1, 24, 16);
       const envelopeJoints = [
-        ["head", v(6.6, 8.6, 6.6)],
-        ["pelvis", v(8.8, 5.5, 7.2)],
-        ["spine_04", v(9.3, 10.6, 6.4)],
+        ["head", v(7.3, 9.4, 7.3)],
+        ["pelvis", v(9.7, 6.1, 7.9)],
+        ["spine_04", v(10.2, 11.5, 7.1)],
         ["hand_l", v(3.2, 3.4, 3.2)],
         ["hand_r", v(3.2, 3.4, 3.2)],
         ["foot_l", v(4.4, 2.2, 7.8)],
         ["foot_r", v(4.4, 2.2, 7.8)]
       ].map(([name, scale]) => {
         const mesh = new THREE.Mesh(envelopeJointGeometry, envelopeMaterial);
+        mesh.renderOrder = envelopeRenderOrder;
         figure.add(mesh);
         return { name, scale, mesh };
       });
@@ -638,10 +641,15 @@
       const segmentMeshes = segments.map((segment) => {
         const material = new THREE.MeshStandardMaterial({
           color: colors[segment[2]],
+          transparent: true,
+          opacity: 1.0,
+          depthTest: true,
+          depthWrite: true,
           roughness: 0.55,
           metalness: 0.05
         });
         const mesh = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 1.7, 1, 16), material);
+        mesh.renderOrder = boneRenderOrder;
         figure.add(mesh);
         return { segment, mesh };
       });
@@ -650,9 +658,14 @@
       const jointMeshes = Object.keys(frames[0].points).map((name) => {
         const material = new THREE.MeshStandardMaterial({
           color: rootNames.includes(name) ? colors.center : colors.joint,
+          transparent: true,
+          opacity: 1.0,
+          depthTest: true,
+          depthWrite: true,
           roughness: 0.48
         });
         const mesh = new THREE.Mesh(jointGeometry, material);
+        mesh.renderOrder = boneRenderOrder;
         figure.add(mesh);
         return { name, mesh };
       });
