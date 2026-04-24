@@ -9,6 +9,7 @@
     const playButton = options.playButton;
     const stopButton = options.stopButton;
     const timelineInput = options.timelineInput;
+    const loopInput = options.loopInput;
     const frameReadout = options.frameReadout;
     const strip = options.strip;
     const getText = options.getText;
@@ -90,12 +91,18 @@
       }
     }
 
-    function setConfig(frameCount, fps, preferredFrameIndex, loop = true) {
+    function setConfig(frameCount, fps, preferredFrameIndex) {
       state.frameCount = Math.max(1, Math.round(Number(frameCount) || 1));
       state.frameDurationMs = 1000 / Math.max(1, Number(fps) || 24);
-      state.loop = loop !== false;
       rebuildTicks();
       setFrame(preferredFrameIndex ?? state.frameIndex);
+    }
+
+    function setLoop(loop) {
+      state.loop = Boolean(loop);
+      state.ended = false;
+      updateUi(state.frameIndex);
+      resetClock();
     }
 
     function setPlaying(playing) {
@@ -146,6 +153,9 @@
 
     function refreshLabels() {
       stopButton.textContent = label("stop");
+      if (loopInput) {
+        loopInput.setAttribute("aria-label", label("loop"));
+      }
       updateUi(state.frameIndex);
       ticks.forEach((tick, index) => {
         tick.setAttribute("aria-label", `${label("frame")} ${index + 1}`);
@@ -166,6 +176,13 @@
       setFrame(timelineInput.value);
     });
 
+    if (loopInput) {
+      loopInput.checked = true;
+      loopInput.addEventListener("change", () => {
+        setLoop(loopInput.checked);
+      });
+    }
+
     refreshLabels();
 
     return {
@@ -173,6 +190,7 @@
       refreshLabels,
       setConfig,
       setFrame,
+      setLoop,
       setPlaying,
       stop,
       get playing() {
@@ -189,6 +207,9 @@
       },
       get ended() {
         return state.ended;
+      },
+      get loop() {
+        return state.loop;
       }
     };
   }

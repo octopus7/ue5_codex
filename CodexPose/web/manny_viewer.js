@@ -275,15 +275,15 @@
         shuffleDance: { frameCount: shuffleDanceFrameCount, fps: shuffleDanceFps, descriptionKey: "shuffleDanceDescription" },
         longDance: { frameCount: longDanceFrameCount, fps: longDanceFps, descriptionKey: "longDanceDescription" },
         playfulGirlWalk: { frameCount: playfulGirlWalkFrameCount, fps: playfulGirlWalkFps, descriptionKey: "playfulGirlWalkDescription" },
-        boxOverheadLift: { frameCount: boxOverheadLiftFrameCount, fps: boxOverheadLiftFps, loop: boxOverheadLiftSource.loop !== false, descriptionKey: "boxOverheadLiftDescription" },
-        hadoken: { frameCount: hadokenFrameCount, fps: hadokenFps, loop: hadokenSource.loop !== false, descriptionKey: "hadokenDescription" },
-        heroLandingPose: { frameCount: heroLandingPoseFrameCount, fps: heroLandingPoseFps, loop: false, descriptionKey: "heroLandingPoseDescription" },
-        baseballBatSwing: { frameCount: baseballBatSwingFrameCount, fps: baseballBatSwingFps, loop: baseballBatSwingSource.loop !== false, descriptionKey: "baseballBatSwingDescription" },
-        seatedBottleDrink: { frameCount: seatedBottleDrinkFrameCount, fps: seatedBottleDrinkFps, loop: seatedBottleDrinkSource.loop !== false, descriptionKey: "seatedBottleDrinkDescription" },
-        archeryFullDraw: { frameCount: archeryFullDrawFrameCount, fps: archeryFullDrawFps, loop: archeryFullDrawSource.loop !== false, descriptionKey: "archeryFullDrawDescription" },
-        sideKick: { frameCount: sideKickFrameCount, fps: sideKickFps, loop: sideKickSource.loop !== false, descriptionKey: "sideKickDescription" },
-        roundhouseKick: { frameCount: roundhouseKickFrameCount, fps: roundhouseKickFps, loop: roundhouseKickSource.loop !== false, descriptionKey: "roundhouseKickDescription" },
-        jumpingRoundhouseKick: { frameCount: jumpingRoundhouseKickFrameCount, fps: jumpingRoundhouseKickFps, loop: jumpingRoundhouseKickSource.loop !== false, descriptionKey: "jumpingRoundhouseKickDescription" }
+        boxOverheadLift: { frameCount: boxOverheadLiftFrameCount, fps: boxOverheadLiftFps, descriptionKey: "boxOverheadLiftDescription" },
+        hadoken: { frameCount: hadokenFrameCount, fps: hadokenFps, descriptionKey: "hadokenDescription" },
+        heroLandingPose: { frameCount: heroLandingPoseFrameCount, fps: heroLandingPoseFps, descriptionKey: "heroLandingPoseDescription" },
+        baseballBatSwing: { frameCount: baseballBatSwingFrameCount, fps: baseballBatSwingFps, descriptionKey: "baseballBatSwingDescription" },
+        seatedBottleDrink: { frameCount: seatedBottleDrinkFrameCount, fps: seatedBottleDrinkFps, descriptionKey: "seatedBottleDrinkDescription" },
+        archeryFullDraw: { frameCount: archeryFullDrawFrameCount, fps: archeryFullDrawFps, descriptionKey: "archeryFullDrawDescription" },
+        sideKick: { frameCount: sideKickFrameCount, fps: sideKickFps, descriptionKey: "sideKickDescription" },
+        roundhouseKick: { frameCount: roundhouseKickFrameCount, fps: roundhouseKickFps, descriptionKey: "roundhouseKickDescription" },
+        jumpingRoundhouseKick: { frameCount: jumpingRoundhouseKickFrameCount, fps: jumpingRoundhouseKickFps, descriptionKey: "jumpingRoundhouseKickDescription" }
       };
       let frameIndex = 0;
       let currentMode = "basic";
@@ -348,6 +348,7 @@
           pause: "Pause",
           play: "Play",
           stop: "Stop",
+          loop: "Loop",
           frame: "Frame",
           rightSide: "right side",
           leftSide: "left side",
@@ -416,6 +417,7 @@
           pause: "일시정지",
           play: "재생",
           stop: "정지",
+          loop: "루프",
           frame: "프레임",
           rightSide: "오른쪽",
           leftSide: "왼쪽",
@@ -443,6 +445,7 @@
         playButton: document.getElementById("walkPlayButton"),
         stopButton: document.getElementById("walkStopButton"),
         timelineInput: document.getElementById("walkTimeline"),
+        loopInput: document.getElementById("walkLoopToggle"),
         frameReadout: document.getElementById("walkFrameReadout"),
         strip: document.getElementById("walkStrip"),
         getText: t,
@@ -4125,7 +4128,7 @@
         updateModeDescription();
         target.y = currentMode === "heroLandingPose" || currentMode === "seatedBottleDrink" ? lowPoseTargetY : defaultTargetY;
         updateCamera();
-        timelineControls.setConfig(frameCount, modeConfig.fps, frameIndex, modeConfig.loop !== false);
+        timelineControls.setConfig(frameCount, modeConfig.fps, frameIndex);
         timelineControls.setPlaying(shouldPlayAfterSwitch);
       }
 
