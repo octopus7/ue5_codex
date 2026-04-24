@@ -110,6 +110,51 @@
         ["fps", "frameRate", "frame_rate", "config.fps", "config.frameRate", "meta.fps", "meta.frameRate"],
         24
       ));
+      const boxOverheadLiftSource = window.mannyBoxOverheadLiftKeyposes || {};
+      const boxOverheadLiftRawKeys = selectShuffleDanceKeys(boxOverheadLiftSource);
+      const boxOverheadLiftFallbackFrameCount = boxOverheadLiftRawKeys.length
+        ? boxOverheadLiftRawKeys.reduce((maxFrame, key, index) => Math.max(maxFrame, readNaturalKeyFrame(key, index)), 0) + 1
+        : 40;
+      const boxOverheadLiftFrameCount = Math.max(2, Math.round(readNumberOption(
+        boxOverheadLiftSource,
+        ["frameCount", "frame_count", "totalFrames", "durationFrames", "numFrames", "config.frameCount", "meta.frameCount"],
+        boxOverheadLiftFallbackFrameCount
+      )));
+      const boxOverheadLiftFps = Math.max(1, readNumberOption(
+        boxOverheadLiftSource,
+        ["fps", "frameRate", "frame_rate", "config.fps", "config.frameRate", "meta.fps", "meta.frameRate"],
+        24
+      ));
+      const hadokenSource = window.mannyHadokenKeyposes || {};
+      const hadokenRawKeys = selectShuffleDanceKeys(hadokenSource);
+      const hadokenFallbackFrameCount = hadokenRawKeys.length
+        ? hadokenRawKeys.reduce((maxFrame, key, index) => Math.max(maxFrame, readNaturalKeyFrame(key, index)), 0) + 1
+        : 40;
+      const hadokenFrameCount = Math.max(2, Math.round(readNumberOption(
+        hadokenSource,
+        ["frameCount", "frame_count", "totalFrames", "durationFrames", "numFrames", "config.frameCount", "meta.frameCount"],
+        hadokenFallbackFrameCount
+      )));
+      const hadokenFps = Math.max(1, readNumberOption(
+        hadokenSource,
+        ["fps", "frameRate", "frame_rate", "config.fps", "config.frameRate", "meta.fps", "meta.frameRate"],
+        24
+      ));
+      const heroLandingPoseSource = window.mannyHeroLandingPoseKeyposes || {};
+      const heroLandingPoseRawKeys = selectShuffleDanceKeys(heroLandingPoseSource);
+      const heroLandingPoseFallbackFrameCount = heroLandingPoseRawKeys.length
+        ? heroLandingPoseRawKeys.reduce((maxFrame, key, index) => Math.max(maxFrame, readNaturalKeyFrame(key, index)), 0) + 1
+        : 1;
+      const heroLandingPoseFrameCount = Math.max(1, Math.round(readNumberOption(
+        heroLandingPoseSource,
+        ["frameCount", "frame_count", "totalFrames", "durationFrames", "numFrames", "config.frameCount", "meta.frameCount"],
+        heroLandingPoseFallbackFrameCount
+      )));
+      const heroLandingPoseFps = Math.max(1, readNumberOption(
+        heroLandingPoseSource,
+        ["fps", "frameRate", "frame_rate", "config.fps", "config.frameRate", "meta.fps", "meta.frameRate"],
+        1
+      ));
       const sideKickSource = window.mannySideKickKeyposes || {};
       const sideKickRawKeys = selectShuffleDanceKeys(sideKickSource);
       const sideKickFallbackFrameCount = sideKickRawKeys.length
@@ -185,6 +230,9 @@
         shuffleDance: { frameCount: shuffleDanceFrameCount, fps: shuffleDanceFps, descriptionKey: "shuffleDanceDescription" },
         longDance: { frameCount: longDanceFrameCount, fps: longDanceFps, descriptionKey: "longDanceDescription" },
         playfulGirlWalk: { frameCount: playfulGirlWalkFrameCount, fps: playfulGirlWalkFps, descriptionKey: "playfulGirlWalkDescription" },
+        boxOverheadLift: { frameCount: boxOverheadLiftFrameCount, fps: boxOverheadLiftFps, loop: boxOverheadLiftSource.loop !== false, descriptionKey: "boxOverheadLiftDescription" },
+        hadoken: { frameCount: hadokenFrameCount, fps: hadokenFps, loop: hadokenSource.loop !== false, descriptionKey: "hadokenDescription" },
+        heroLandingPose: { frameCount: heroLandingPoseFrameCount, fps: heroLandingPoseFps, loop: false, descriptionKey: "heroLandingPoseDescription" },
         sideKick: { frameCount: sideKickFrameCount, fps: sideKickFps, loop: sideKickSource.loop !== false, descriptionKey: "sideKickDescription" },
         roundhouseKick: { frameCount: roundhouseKickFrameCount, fps: roundhouseKickFps, loop: roundhouseKickSource.loop !== false, descriptionKey: "roundhouseKickDescription" },
         jumpingRoundhouseKick: { frameCount: jumpingRoundhouseKickFrameCount, fps: jumpingRoundhouseKickFps, loop: jumpingRoundhouseKickSource.loop !== false, descriptionKey: "jumpingRoundhouseKickDescription" }
@@ -217,6 +265,9 @@
           shuffleDanceMode: "Shuffle Dance",
           longDanceMode: "Long Dance",
           playfulGirlWalkMode: "Playful Girl Walk",
+          boxOverheadLiftMode: "Box Overhead Lift",
+          hadokenMode: "Hadoken",
+          heroLandingPoseMode: "◆ Pose: Hero Landing",
           basicWalkDescription: "24 frames at 24 fps, Manny-proportioned skeleton, forward-axis walk.",
           feminineWalkDescription: "24 frames at 24 fps, graceful pelvis yaw and roll with lighter steps.",
           runningDescription: "16 frames at 32 fps, fast forward-axis run with clear airborne phases, heavier landings, and aggressive fist pumps.",
@@ -231,6 +282,9 @@
           shuffleDanceDescription: "External key-pose data driven shuffle dance with heel-toe footwork, crossing steps, lateral weight shifts, and balancing arms.",
           longDanceDescription: "10-second external key-pose dance loop with multiple groove phrases, footwork, hip sway, arm sweeps, and recovery accents.",
           playfulGirlWalkDescription: "1.6-second external key-pose loop with a bouncy, youthful feminine walk, emphasized pelvis yaw/roll, and lively elbow/wrist swing.",
+          boxOverheadLiftDescription: "Key-pose action where Manny squats to grip a floor box, lifts it close to the body, and presses it overhead with both hands.",
+          hadokenDescription: "Key-pose energy projectile action: grounded charge, both-palms thrust, blue projectile release, recoil, and guard recovery.",
+          heroLandingPoseDescription: "Single-frame static pose derived from the imagegen hero landing reference.",
           sideKickMode: "Side Kick",
           sideKickDescription: "32 key-pose frames at 24 fps, heavy realistic right-leg side kick with planted support foot, chamber, impact hold, recoil, and recovery.",
           roundhouseKickMode: "Roundhouse Kick",
@@ -273,6 +327,9 @@
           shuffleDanceMode: "셔플댄스",
           longDanceMode: "긴 춤",
           playfulGirlWalkMode: "발랄한 소녀 걸음",
+          boxOverheadLiftMode: "상자 머리위로 들기",
+          hadokenMode: "파동권",
+          heroLandingPoseMode: "◆ 포즈: 히어로 랜딩",
           basicWalkDescription: "24fps 기준 24프레임, Manny 비율의 전방축 보행입니다.",
           feminineWalkDescription: "24fps 기준 24프레임, 우아한 골반 yaw/roll과 가벼운 보행입니다.",
           runningDescription: "32fps 기준 16프레임, 체공 구간과 묵직한 착지, 강한 주먹 스윙을 가진 빠른 전방축 뛰기입니다.",
@@ -287,6 +344,9 @@
           shuffleDanceDescription: "외부 키포즈 데이터 기반으로 힐토 발동작, 교차 스텝, 좌우 체중 이동과 균형 잡는 팔동작을 표현한 셔플댄스 루프입니다.",
           longDanceDescription: "외부 키포즈 데이터 기반 10초 루프로, 여러 그루브 구간과 발동작, 골반 스웨이, 팔 스윕, 회복 액센트를 포함한 긴 춤 모션입니다.",
           playfulGirlWalkDescription: "외부 키포즈 데이터 기반 1.6초 루프로, 통통 튀는 리듬과 강조된 골반 yaw/roll, 활기 있는 팔꿈치/손목 스윙을 가진 소녀 걸음입니다.",
+          boxOverheadLiftDescription: "키포즈 기반 액션입니다. Manny가 바닥에 놓인 어깨 폭 정도의 상자를 숙여 잡고 몸 가까이 들어 올린 뒤 머리 위로 고정합니다.",
+          hadokenDescription: "키포즈 기반 에너지 발사 액션입니다. 지면을 딛고 기를 모은 뒤 양손을 뻗어 푸른 투사체를 발사하고 회복합니다.",
+          heroLandingPoseDescription: "이미지젠 히어로 랜딩 참고 이미지에서 추출한 1프레임 정적 포즈입니다.",
           sideKickMode: "옆차기",
           sideKickDescription: "24fps 기준 32개 키포즈 프레임, 지지발 고정과 챔버, 타격 홀드, 회수, 회복이 있는 묵직하고 사실적인 오른발 옆차기입니다.",
           roundhouseKickMode: "돌려차기",
@@ -543,6 +603,64 @@
       });
       swordGroup.visible = false;
       scene.add(swordGroup);
+
+      const liftBoxGroup = new THREE.Group();
+      const liftBoxMesh = new THREE.Mesh(
+        new THREE.BoxGeometry(1, 1, 1),
+        new THREE.MeshStandardMaterial({
+          color: 0xa86f3f,
+          roughness: 0.72,
+          metalness: 0.02
+        })
+      );
+      const liftBoxEdges = new THREE.LineSegments(
+        new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)),
+        new THREE.LineBasicMaterial({
+          color: 0x6b4428,
+          transparent: true,
+          opacity: 0.72
+        })
+      );
+      liftBoxMesh.renderOrder = 2;
+      liftBoxEdges.renderOrder = 3;
+      liftBoxGroup.add(liftBoxMesh, liftBoxEdges);
+      liftBoxGroup.visible = false;
+      scene.add(liftBoxGroup);
+
+      const hadokenGroup = new THREE.Group();
+      const hadokenCore = new THREE.Mesh(
+        new THREE.SphereGeometry(1, 32, 18),
+        new THREE.MeshBasicMaterial({
+          color: 0x49d9ff,
+          transparent: true,
+          opacity: 0.82,
+          depthWrite: false
+        })
+      );
+      const hadokenGlow = new THREE.Mesh(
+        new THREE.SphereGeometry(1, 32, 18),
+        new THREE.MeshBasicMaterial({
+          color: 0x1f77ff,
+          transparent: true,
+          opacity: 0.28,
+          depthWrite: false
+        })
+      );
+      const hadokenRings = [0, 1, 2].map(() => new THREE.Mesh(
+        new THREE.TorusGeometry(1, 0.08, 8, 36),
+        new THREE.MeshBasicMaterial({
+          color: 0xb9f5ff,
+          transparent: true,
+          opacity: 0.58,
+          depthWrite: false
+        })
+      ));
+      [hadokenGlow, hadokenCore, ...hadokenRings].forEach((mesh) => {
+        mesh.renderOrder = 4;
+        hadokenGroup.add(mesh);
+      });
+      hadokenGroup.visible = false;
+      scene.add(hadokenGroup);
 
       const segments = [
         ["pelvis", "spine_01", "center"],
@@ -1959,6 +2077,15 @@
         if (currentMode === "playfulGirlWalk") {
           return buildGenericDancePose(index, playfulGirlWalkRawKeys);
         }
+        if (currentMode === "boxOverheadLift") {
+          return buildGenericDancePose(index, boxOverheadLiftRawKeys);
+        }
+        if (currentMode === "hadoken") {
+          return buildGenericDancePose(index, hadokenRawKeys);
+        }
+        if (currentMode === "heroLandingPose") {
+          return buildGenericDancePose(index, heroLandingPoseRawKeys);
+        }
         if (currentMode === "sideKick") {
           return buildGenericDancePose(index, sideKickRawKeys);
         }
@@ -2701,6 +2828,9 @@
       }
 
       function sampleGenericDanceKey(rawKeys, index) {
+        if (Array.isArray(rawKeys) && rawKeys.length === 1) {
+          return normalizeShuffleDanceKey(rawKeys[0], readNaturalKeyFrame(rawKeys[0], index));
+        }
         const pair = keyposePair(rawKeys, index, frameCount);
         if (!pair) {
           return normalizeShuffleDanceKey(makeShuffleDanceFallbackKey(index), index);
@@ -2745,7 +2875,8 @@
         function placeArm(side, clavicleName, upperName, lowerName, handName, targetArray, upperOffset, lowerOffset, handOffset) {
           const clavicle = points[clavicleName];
           if (targetArray) {
-            const rawTarget = Math.abs(targetArray[1]) > 35
+            const useWorldTarget = currentMode === "heroLandingPose" || Math.abs(targetArray[1]) > 35;
+            const rawTarget = useWorldTarget
               ? v(targetArray[0], targetArray[1], targetArray[2])
               : points.spine_05.clone().add(chestLocal(targetArray[0], targetArray[1], targetArray[2]));
             const handTarget = clampLimbTarget(clavicle, rawTarget, 58.0);
@@ -3316,6 +3447,119 @@
         );
       }
 
+      function readBoxVector(source, paths, fallback = null) {
+        for (const path of paths) {
+          const value = path.includes(".") ? naturalRunPath(source, path) : source?.[path];
+          const result = naturalRunArray(value, 3, null);
+          if (result) {
+            return result;
+          }
+        }
+        return fallback ? fallback.slice(0, 3) : null;
+      }
+
+      function boxFrameDataFromKey(key, fallback = null) {
+        const frameBox = key?.box || key?.prop?.box || key?.props?.box || {};
+        const globalBox = boxOverheadLiftSource.box || boxOverheadLiftSource.prop || {};
+        const center = readBoxVector(frameBox, ["center", "position", "pos"], fallback?.center || null);
+        const size = readBoxVector(frameBox, ["size", "dimensions"], null)
+          || readBoxVector(globalBox, ["size", "dimensions"], fallback?.size || [42, 24, 24]);
+        return center || size ? { center, size } : fallback;
+      }
+
+      function sampleBoxOverheadLiftBox(index) {
+        if (!Array.isArray(boxOverheadLiftRawKeys) || boxOverheadLiftRawKeys.length === 0) {
+          return null;
+        }
+        if (boxOverheadLiftRawKeys.length === 1) {
+          return boxFrameDataFromKey(boxOverheadLiftRawKeys[0], null);
+        }
+        const pair = keyposePair(boxOverheadLiftRawKeys, index, frameCount);
+        if (!pair) {
+          return boxFrameDataFromKey(boxOverheadLiftRawKeys[0], null);
+        }
+        const from = boxFrameDataFromKey(pair.from.key, null);
+        const to = boxFrameDataFromKey(pair.to.key, from);
+        const fallback = from || to;
+        if (!fallback) {
+          return null;
+        }
+        return {
+          center: from?.center && to?.center ? interpolateNaturalRunArray(from.center, to.center, pair.t) : fallback.center,
+          size: from?.size && to?.size ? interpolateNaturalRunArray(from.size, to.size, pair.t) : fallback.size
+        };
+      }
+
+      function updateLiftBoxProp(pose, index) {
+        const visible = currentMode === "boxOverheadLift";
+        liftBoxGroup.visible = visible;
+        if (!visible) {
+          return;
+        }
+        const boxOptions = boxOverheadLiftSource.box || {};
+        const sampledBox = sampleBoxOverheadLiftBox(index);
+        const handCenter = new THREE.Vector3().addVectors(pose.hand_l, pose.hand_r).multiplyScalar(0.5);
+        const across = new THREE.Vector3().subVectors(pose.hand_l, pose.hand_r);
+        const fallbackAcross = new THREE.Vector3().subVectors(pose.clavicle_l, pose.clavicle_r);
+        const right = (across.lengthSq() > 0.001 ? across : fallbackAcross).normalize();
+        const bodyUp = (pose._faceUp || new THREE.Vector3().subVectors(pose.head, pose.neck_01)).clone().normalize();
+        let forward = new THREE.Vector3().crossVectors(right, bodyUp);
+        if (forward.lengthSq() < 0.001) {
+          forward = (pose._faceForward || v(0, 0, 1)).clone();
+        }
+        forward.normalize();
+        const up = new THREE.Vector3().crossVectors(forward, right).normalize();
+        const configuredWidth = readNumberOption(boxOptions, ["width", "size.width"], 42);
+        const configuredHeight = readNumberOption(boxOptions, ["height", "size.height"], 24);
+        const configuredDepth = readNumberOption(boxOptions, ["depth", "thickness", "size.depth", "size.thickness"], 24);
+        const width = sampledBox?.size ? sampledBox.size[0] : Math.max(configuredWidth, Math.min(52, across.length() + 6));
+        const height = sampledBox?.size ? sampledBox.size[1] : configuredHeight;
+        const depth = sampledBox?.size ? sampledBox.size[2] : configuredDepth;
+        const center = sampledBox?.center
+          ? v(sampledBox.center[0], sampledBox.center[1], sampledBox.center[2])
+          : handCenter.clone().add(up.clone().multiplyScalar(1.5));
+        const basis = new THREE.Matrix4().makeBasis(right, up, forward);
+        liftBoxGroup.position.copy(center);
+        liftBoxGroup.quaternion.setFromRotationMatrix(basis);
+        liftBoxGroup.scale.set(width, height, depth);
+      }
+
+      function updateHadokenEffect(pose, index) {
+        const releaseFrame = readNumberOption(hadokenSource, ["releaseFrame", "projectileFrame", "effect.releaseFrame", "effectTiming.releaseFrame", "effectTiming.projectileFrame"], 18);
+        const visible = currentMode === "hadoken" && index >= releaseFrame - 2;
+        hadokenGroup.visible = visible;
+        if (!visible) {
+          return;
+        }
+        const maxFrame = Math.max(1, frameCount - 1);
+        const travel = clamp((index - releaseFrame) / Math.max(1, maxFrame - releaseFrame - 4), 0, 1);
+        const charge = clamp((index - (releaseFrame - 2)) / 2, 0, 1);
+        const handCenter = new THREE.Vector3().addVectors(pose.hand_l, pose.hand_r).multiplyScalar(0.5);
+        const right = new THREE.Vector3().subVectors(pose.clavicle_l, pose.clavicle_r).normalize();
+        const up = (pose._faceUp || new THREE.Vector3().subVectors(pose.head, pose.neck_01)).clone().normalize();
+        let forward = pose._faceForward ? pose._faceForward.clone() : new THREE.Vector3().crossVectors(right, up);
+        if (forward.lengthSq() < 0.001) {
+          forward = v(0, 0, 1);
+        }
+        forward.normalize();
+        const center = handCenter
+          .clone()
+          .add(forward.clone().multiplyScalar(14 + travel * 92))
+          .add(up.clone().multiplyScalar(1.5 + Math.sin(travel * Math.PI) * 3));
+        const scale = (7 + charge * 6 + Math.sin(travel * Math.PI) * 4) * (1 - travel * 0.18);
+        const basis = new THREE.Matrix4().makeBasis(right, up, forward);
+        hadokenGroup.position.copy(center);
+        hadokenGroup.quaternion.setFromRotationMatrix(basis);
+        hadokenCore.scale.setScalar(scale);
+        hadokenGlow.scale.setScalar(scale * 1.9);
+        hadokenRings.forEach((ring, ringIndex) => {
+          const ringScale = scale * (1.18 + ringIndex * 0.26 + travel * 0.35);
+          ring.scale.set(ringScale, ringScale, ringScale);
+          ring.rotation.z = index * 0.12 + ringIndex * Math.PI / 3;
+          ring.material.opacity = Math.max(0.16, 0.58 - travel * 0.28 - ringIndex * 0.08);
+        });
+      }
+
       function updateFaceMarkers(pose) {
         const up = pose._faceUp || new THREE.Vector3().subVectors(pose.head, pose.neck_01).normalize();
         const right = pose._faceRight || new THREE.Vector3().subVectors(pose.clavicle_l, pose.clavicle_r).normalize();
@@ -3345,8 +3589,10 @@
         const pose = buildPose(index);
         wallGroup.visible = currentMode === "wallPeek";
         wallClimbGroup.visible = currentMode === "wallClimb";
-        travelLine.visible = currentMode !== "wallPeek" && currentMode !== "wallClimb" && currentMode !== "proneCrawl" && currentMode !== "swordSlash" && currentMode !== "crouchTwerk" && currentMode !== "shuffleDance" && currentMode !== "longDance" && currentMode !== "playfulGirlWalk" && currentMode !== "sideKick" && currentMode !== "roundhouseKick" && currentMode !== "jumpingRoundhouseKick";
+        travelLine.visible = currentMode !== "wallPeek" && currentMode !== "wallClimb" && currentMode !== "proneCrawl" && currentMode !== "swordSlash" && currentMode !== "crouchTwerk" && currentMode !== "shuffleDance" && currentMode !== "longDance" && currentMode !== "playfulGirlWalk" && currentMode !== "boxOverheadLift" && currentMode !== "hadoken" && currentMode !== "heroLandingPose" && currentMode !== "sideKick" && currentMode !== "roundhouseKick" && currentMode !== "jumpingRoundhouseKick";
         updateSwordProp(pose);
+        updateLiftBoxProp(pose, index);
+        updateHadokenEffect(pose, index);
         for (const item of envelopeMeshes) {
           updateEnvelopeCylinder(item.mesh, pose[item.from], pose[item.to], item.radius);
         }
@@ -3409,7 +3655,7 @@
       let lastPointer = { x: 0, y: 0 };
 
       function setWalkMode(mode) {
-        const wasPlaying = timelineControls.playing;
+        const shouldPlayAfterSwitch = timelineControls.playing || timelineControls.ended;
         currentMode = walkModes[mode] ? mode : "basic";
         const modeConfig = walkModes[currentMode];
         frameCount = modeConfig.frameCount;
@@ -3417,7 +3663,7 @@
         modeSelect.value = currentMode;
         updateModeDescription();
         timelineControls.setConfig(frameCount, modeConfig.fps, frameIndex, modeConfig.loop !== false);
-        timelineControls.setPlaying(wasPlaying);
+        timelineControls.setPlaying(shouldPlayAfterSwitch);
       }
 
       modeSelect.addEventListener("change", () => {

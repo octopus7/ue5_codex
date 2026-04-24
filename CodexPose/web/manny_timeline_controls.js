@@ -20,6 +20,7 @@
       frameCount: 24,
       frameDurationMs: 1000 / 24,
       loop: true,
+      ended: false,
       lastFrameTime: performance.now()
     };
 
@@ -63,6 +64,7 @@
 
     function setFrame(index, render = true) {
       const maxFrame = Math.max(0, state.frameCount - 1);
+      state.ended = false;
       state.frameIndex = clamp(Math.round(Number(index) || 0), 0, maxFrame);
       updateUi(state.frameIndex);
       if (render && typeof onFrameChange === "function") {
@@ -100,16 +102,21 @@
       state.playing = Boolean(playing);
       if (state.playing && !state.loop && state.frameIndex >= state.frameCount - 1) {
         state.frameIndex = 0;
+        state.ended = false;
         updateUi(state.frameIndex);
         if (typeof onFrameChange === "function") {
           onFrameChange(state.frameIndex);
         }
+      }
+      if (state.playing) {
+        state.ended = false;
       }
       updatePlayButtonText();
       resetClock();
     }
 
     function stop() {
+      state.ended = false;
       state.playing = false;
       setFrame(0);
     }
@@ -126,6 +133,7 @@
         state.frameIndex = Math.min(nextFrame, state.frameCount - 1);
         if (state.frameIndex >= state.frameCount - 1) {
           state.playing = false;
+          state.ended = true;
         }
       }
       state.lastFrameTime += elapsedFrames * state.frameDurationMs;
@@ -178,6 +186,9 @@
       },
       get frameDurationMs() {
         return state.frameDurationMs;
+      },
+      get ended() {
+        return state.ended;
       }
     };
   }
