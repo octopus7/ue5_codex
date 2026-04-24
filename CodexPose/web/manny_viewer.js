@@ -245,6 +245,22 @@
         ["fps", "frameRate", "frame_rate", "config.fps", "config.frameRate", "meta.fps", "meta.frameRate"],
         24
       ));
+      const lowVaultSource = window.mannyLowVaultKeyposes || {};
+      const lowVaultMotion = readGenericExternalMotion(lowVaultSource, 44, 24);
+      const forwardRollSource = window.mannyForwardRollKeyposes || {};
+      const forwardRollMotion = readGenericExternalMotion(forwardRollSource, 48, 24);
+      const stumbleRecoverySource = window.mannyStumbleRecoveryKeyposes || {};
+      const stumbleRecoveryMotion = readGenericExternalMotion(stumbleRecoverySource, 44, 24);
+      const boxingComboSource = window.mannyBoxingComboKeyposes || {};
+      const boxingComboMotion = readGenericExternalMotion(boxingComboSource, 42, 24);
+      const doorPushSource = window.mannyDoorPushKeyposes || {};
+      const doorPushMotion = readGenericExternalMotion(doorPushSource, 56, 24);
+      const floorPickupSource = window.mannyFloorPickupKeyposes || {};
+      const floorPickupMotion = readGenericExternalMotion(floorPickupSource, 52, 24);
+      const ladderClimbSource = window.mannyLadderClimbKeyposes || {};
+      const ladderClimbMotion = readGenericExternalMotion(ladderClimbSource, 48, 24);
+      const kneeSlideSource = window.mannyKneeSlideKeyposes || {};
+      const kneeSlideMotion = readGenericExternalMotion(kneeSlideSource, 56, 24);
       const swordSlashSource = window.mannySwordSlashKeyposes || {};
       const swordSlashRawKeys = selectSwordSlashKeys(swordSlashSource);
       const swordSlashFallbackFrameCount = swordSlashRawKeys.length
@@ -283,8 +299,25 @@
         archeryFullDraw: { frameCount: archeryFullDrawFrameCount, fps: archeryFullDrawFps, descriptionKey: "archeryFullDrawDescription" },
         sideKick: { frameCount: sideKickFrameCount, fps: sideKickFps, descriptionKey: "sideKickDescription" },
         roundhouseKick: { frameCount: roundhouseKickFrameCount, fps: roundhouseKickFps, descriptionKey: "roundhouseKickDescription" },
-        jumpingRoundhouseKick: { frameCount: jumpingRoundhouseKickFrameCount, fps: jumpingRoundhouseKickFps, descriptionKey: "jumpingRoundhouseKickDescription" }
+        jumpingRoundhouseKick: { frameCount: jumpingRoundhouseKickFrameCount, fps: jumpingRoundhouseKickFps, descriptionKey: "jumpingRoundhouseKickDescription" },
+        lowVault: { frameCount: lowVaultMotion.frameCount, fps: lowVaultMotion.fps, descriptionKey: "lowVaultDescription" },
+        forwardRoll: { frameCount: forwardRollMotion.frameCount, fps: forwardRollMotion.fps, descriptionKey: "forwardRollDescription" },
+        stumbleRecovery: { frameCount: stumbleRecoveryMotion.frameCount, fps: stumbleRecoveryMotion.fps, descriptionKey: "stumbleRecoveryDescription" },
+        boxingCombo: { frameCount: boxingComboMotion.frameCount, fps: boxingComboMotion.fps, descriptionKey: "boxingComboDescription" },
+        doorPush: { frameCount: doorPushMotion.frameCount, fps: doorPushMotion.fps, descriptionKey: "doorPushDescription" },
+        floorPickup: { frameCount: floorPickupMotion.frameCount, fps: floorPickupMotion.fps, descriptionKey: "floorPickupDescription" },
+        ladderClimb: { frameCount: ladderClimbMotion.frameCount, fps: ladderClimbMotion.fps, descriptionKey: "ladderClimbDescription" },
+        kneeSlide: { frameCount: kneeSlideMotion.frameCount, fps: kneeSlideMotion.fps, descriptionKey: "kneeSlideDescription" }
       };
+      const travelLineHiddenModes = new Set([
+        "wallPeek", "wallClimb", "proneCrawl", "swordSlash", "crouchTwerk",
+        "shuffleDance", "longDance", "playfulGirlWalk", "boxOverheadLift",
+        "hadoken", "heroLandingPose", "baseballBatSwing", "seatedBottleDrink",
+        "archeryFullDraw", "sideKick", "roundhouseKick", "jumpingRoundhouseKick",
+        "lowVault", "forwardRoll", "stumbleRecovery", "boxingCombo", "doorPush",
+        "floorPickup", "ladderClimb", "kneeSlide"
+      ]);
+      const lowTargetModes = new Set(["heroLandingPose", "seatedBottleDrink", "forwardRoll", "floorPickup", "kneeSlide"]);
       let frameIndex = 0;
       let currentMode = "basic";
       let frameCount = walkModes.basic.frameCount;
@@ -345,6 +378,22 @@
           roundhouseKickDescription: "28 key-pose frames at 24 fps, heavy planted-pivot roundhouse kick with hip rotation, impact hold, recoil, and recovery.",
           jumpingRoundhouseKickMode: "Jumping Roundhouse Kick",
           jumpingRoundhouseKickDescription: "36 key-pose frames at 24 fps, crouch load, airborne hip turn, roundhouse impact, and heavy absorbed landing.",
+          lowVaultMode: "Low Vault",
+          lowVaultDescription: "Key-pose parkour vault over a low obstacle with hand plants, tucked legs, release, and staggered landing.",
+          forwardRollMode: "Forward Roll",
+          forwardRollDescription: "Key-pose breakfall roll with crouch drop, shoulder contact, curled spine, feet-under recovery, and stand-up.",
+          stumbleRecoveryMode: "Stumble Recovery",
+          stumbleRecoveryDescription: "Key-pose stumble test with a misstep, torso lurch, counterbalancing arms, recovery step, and stable finish.",
+          boxingComboMode: "Boxing Combo",
+          boxingComboDescription: "Key-pose guard, jab, cross, hook, and guarded recovery with rear-foot pivot and torso rotation.",
+          doorPushMode: "Door Push",
+          doorPushDescription: "Key-pose heavy door interaction with brace, one-hand push, body lean, step-through, release, and recovery.",
+          floorPickupMode: "Floor Pickup",
+          floorPickupDescription: "Key-pose squat-and-hinge pickup with floor reach, object grasp, close-body lift, stand, and settle.",
+          ladderClimbMode: "Ladder Climb",
+          ladderClimbDescription: "Key-pose ladder climb rhythm with alternating hand and foot rung contacts and vertical root travel.",
+          kneeSlideMode: "Knee Slide",
+          kneeSlideDescription: "Key-pose slide test with run-in, drop to knees, forward skid, friction slowdown, plant, and rise.",
           pause: "Pause",
           play: "Play",
           stop: "Stop",
@@ -360,6 +409,22 @@
           open: "Open"
         },
         ko: {
+          lowVaultMode: "낮은 장애물 볼트",
+          lowVaultDescription: "손 짚기, 다리 접기, 장애물 통과, 릴리즈, 엇박 착지가 있는 낮은 장애물 볼트 키포즈입니다.",
+          forwardRollMode: "앞구르기 낙법",
+          forwardRollDescription: "웅크린 드롭, 어깨 접촉, 말린 척추, 발 회수, 일어서기 회복을 가진 앞구르기 낙법입니다.",
+          stumbleRecoveryMode: "비틀거림 회복",
+          stumbleRecoveryDescription: "헛디딤, 상체 쏠림, 팔 균형, 회복 스텝, 안정 자세 복귀를 확인하는 키포즈입니다.",
+          boxingComboMode: "복싱 3연타",
+          boxingComboDescription: "가드, 잽, 크로스, 훅, 가드 복귀를 후족 피벗과 상체 회전으로 보여주는 키포즈입니다.",
+          doorPushMode: "문 밀고 들어가기",
+          doorPushDescription: "무거운 문에 기대 한 손으로 밀고, 몸을 통과시킨 뒤 손을 떼고 회복하는 키포즈입니다.",
+          floorPickupMode: "바닥 물건 줍기",
+          floorPickupDescription: "무릎과 골반을 함께 쓰는 스쿼트/힌지, 바닥 물건 그립, 가까운 리프트, 기립 회복 키포즈입니다.",
+          ladderClimbMode: "사다리 오르기",
+          ladderClimbDescription: "손과 발이 번갈아 가로대를 잡고 밟으며 수직으로 이동하는 사다리 오르기 키포즈입니다.",
+          kneeSlideMode: "무릎 슬라이드",
+          kneeSlideDescription: "달려와 무릎으로 떨어지고 앞으로 미끄러진 뒤 감속, 지지, 일어서기를 보여주는 키포즈입니다.",
           documentTitle: "CodexPose Web",
           languageButton: "English",
           pageTitle: "CodexPose Web",
@@ -851,6 +916,68 @@
       archeryGroup.visible = false;
       scene.add(archeryGroup);
 
+      const propBlueMaterial = new THREE.MeshStandardMaterial({
+        color: 0x4f93c5,
+        roughness: 0.72,
+        metalness: 0.02
+      });
+      const propDarkMaterial = new THREE.MeshStandardMaterial({
+        color: 0x334155,
+        roughness: 0.62,
+        metalness: 0.05
+      });
+      const propWoodMaterial = new THREE.MeshStandardMaterial({
+        color: 0x9a6b3d,
+        roughness: 0.68,
+        metalness: 0.02
+      });
+      const propMatMaterial = new THREE.MeshStandardMaterial({
+        color: 0x5c7c8f,
+        transparent: true,
+        opacity: 0.34,
+        roughness: 0.84,
+        metalness: 0.01
+      });
+
+      const lowVaultPropGroup = new THREE.Group();
+      addSceneBox(lowVaultPropGroup, [0, 20, 30], [78, 40, 12], propBlueMaterial);
+      addSceneBox(lowVaultPropGroup, [0, 42, 30], [84, 4, 16], propDarkMaterial);
+      lowVaultPropGroup.visible = false;
+      scene.add(lowVaultPropGroup);
+
+      const doorPushPropGroup = new THREE.Group();
+      addSceneBox(doorPushPropGroup, [-32, 52, 34], [4, 104, 8], propDarkMaterial);
+      addSceneBox(doorPushPropGroup, [0, 104, 34], [66, 4, 8], propDarkMaterial);
+      const doorLeafPivot = new THREE.Group();
+      doorLeafPivot.position.set(-30, 52, 34);
+      const doorLeaf = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), propWoodMaterial);
+      doorLeaf.position.set(30, 0, 0);
+      doorLeaf.scale.set(60, 96, 4);
+      doorLeaf.renderOrder = 1;
+      doorLeafPivot.add(doorLeaf);
+      doorPushPropGroup.add(doorLeafPivot);
+      doorPushPropGroup.visible = false;
+      scene.add(doorPushPropGroup);
+
+      const floorPickupPropGroup = new THREE.Group();
+      addSceneBox(floorPickupPropGroup, [24, 4, 32], [12, 8, 12], propWoodMaterial);
+      floorPickupPropGroup.visible = false;
+      scene.add(floorPickupPropGroup);
+
+      const ladderPropGroup = new THREE.Group();
+      addSceneBox(ladderPropGroup, [-18, 78, 28], [4, 152, 4], propDarkMaterial);
+      addSceneBox(ladderPropGroup, [18, 78, 28], [4, 152, 4], propDarkMaterial);
+      [18, 38, 58, 78, 98, 118, 138].forEach((y) => {
+        addSceneBox(ladderPropGroup, [0, y, 28], [42, 3.5, 4], propBlueMaterial);
+      });
+      ladderPropGroup.visible = false;
+      scene.add(ladderPropGroup);
+
+      const slideMatPropGroup = new THREE.Group();
+      addSceneBox(slideMatPropGroup, [0, 0.35, 18], [44, 0.7, 124], propMatMaterial);
+      slideMatPropGroup.visible = false;
+      scene.add(slideMatPropGroup);
+
       const segments = [
         ["pelvis", "spine_01", "center"],
         ["spine_01", "spine_02", "center"],
@@ -1015,6 +1142,26 @@
           return firstDetailed;
         }
         return candidates.find((keys) => Array.isArray(keys)) || [];
+      }
+
+      function readGenericExternalMotion(source, fallbackFrameCount, fallbackFps) {
+        const rawKeys = selectShuffleDanceKeys(source);
+        const fallbackCount = rawKeys.length
+          ? rawKeys.reduce((maxFrame, key, index) => Math.max(maxFrame, readNaturalKeyFrame(key, index)), 0) + 1
+          : fallbackFrameCount;
+        return {
+          rawKeys,
+          frameCount: Math.max(2, Math.round(readNumberOption(
+            source,
+            ["frameCount", "frame_count", "totalFrames", "durationFrames", "numFrames", "config.frameCount", "meta.frameCount"],
+            fallbackCount
+          ))),
+          fps: Math.max(1, readNumberOption(
+            source,
+            ["fps", "frameRate", "frame_rate", "config.fps", "config.frameRate", "meta.fps", "meta.frameRate"],
+            fallbackFps
+          ))
+        };
       }
 
       function swordSlashKeyHasPose(key) {
@@ -2292,6 +2439,30 @@
         }
         if (currentMode === "jumpingRoundhouseKick") {
           return buildGenericDancePose(index, jumpingRoundhouseKickRawKeys);
+        }
+        if (currentMode === "lowVault") {
+          return buildGenericDancePose(index, lowVaultMotion.rawKeys);
+        }
+        if (currentMode === "forwardRoll") {
+          return buildGenericDancePose(index, forwardRollMotion.rawKeys);
+        }
+        if (currentMode === "stumbleRecovery") {
+          return buildGenericDancePose(index, stumbleRecoveryMotion.rawKeys);
+        }
+        if (currentMode === "boxingCombo") {
+          return buildGenericDancePose(index, boxingComboMotion.rawKeys);
+        }
+        if (currentMode === "doorPush") {
+          return buildGenericDancePose(index, doorPushMotion.rawKeys);
+        }
+        if (currentMode === "floorPickup") {
+          return buildGenericDancePose(index, floorPickupMotion.rawKeys);
+        }
+        if (currentMode === "ladderClimb") {
+          return buildGenericDancePose(index, ladderClimbMotion.rawKeys);
+        }
+        if (currentMode === "kneeSlide") {
+          return buildGenericDancePose(index, kneeSlideMotion.rawKeys);
         }
         if (currentMode === "idleShift") {
           return buildIdleShiftPose(index);
@@ -3985,6 +4156,29 @@
         );
       }
 
+      function updateTestMotionProps(index) {
+        const phase = frameCount > 1 ? index / Math.max(1, frameCount - 1) : 0;
+        lowVaultPropGroup.visible = currentMode === "lowVault";
+        doorPushPropGroup.visible = currentMode === "doorPush";
+        floorPickupPropGroup.visible = currentMode === "floorPickup";
+        ladderPropGroup.visible = currentMode === "ladderClimb";
+        slideMatPropGroup.visible = currentMode === "forwardRoll" || currentMode === "kneeSlide";
+
+        if (doorPushPropGroup.visible) {
+          const open = smoothstep(clamp((phase - 0.28) / 0.46, 0, 1));
+          doorLeafPivot.rotation.y = -open * 1.18;
+        } else {
+          doorLeafPivot.rotation.y = 0;
+        }
+
+        if (floorPickupPropGroup.visible) {
+          const lift = smoothstep(clamp((phase - 0.42) / 0.32, 0, 1));
+          floorPickupPropGroup.position.set(0, lift * 66, -lift * 12);
+        } else {
+          floorPickupPropGroup.position.set(0, 0, 0);
+        }
+      }
+
       function updateHadokenEffect(pose, index) {
         const releaseFrame = readNumberOption(hadokenSource, ["releaseFrame", "projectileFrame", "effect.releaseFrame", "effectTiming.releaseFrame", "effectTiming.projectileFrame"], 18);
         const visible = currentMode === "hadoken" && index >= releaseFrame - 2;
@@ -4050,13 +4244,14 @@
         const pose = buildPose(index);
         wallGroup.visible = currentMode === "wallPeek";
         wallClimbGroup.visible = currentMode === "wallClimb";
-        travelLine.visible = currentMode !== "wallPeek" && currentMode !== "wallClimb" && currentMode !== "proneCrawl" && currentMode !== "swordSlash" && currentMode !== "crouchTwerk" && currentMode !== "shuffleDance" && currentMode !== "longDance" && currentMode !== "playfulGirlWalk" && currentMode !== "boxOverheadLift" && currentMode !== "hadoken" && currentMode !== "heroLandingPose" && currentMode !== "baseballBatSwing" && currentMode !== "seatedBottleDrink" && currentMode !== "archeryFullDraw" && currentMode !== "sideKick" && currentMode !== "roundhouseKick" && currentMode !== "jumpingRoundhouseKick";
+        travelLine.visible = !travelLineHiddenModes.has(currentMode);
         updateSwordProp(pose);
         updateLiftBoxProp(pose, index);
         updateHadokenEffect(pose, index);
         updateBaseballBatProp(pose, index);
         updateSeatedBottleDrinkProps(index);
         updateArcheryProp(pose, index);
+        updateTestMotionProps(index);
         for (const item of envelopeMeshes) {
           updateEnvelopeCylinder(item.mesh, pose[item.from], pose[item.to], item.radius);
         }
@@ -4126,7 +4321,7 @@
         frameIndex = 0;
         modeSelect.value = currentMode;
         updateModeDescription();
-        target.y = currentMode === "heroLandingPose" || currentMode === "seatedBottleDrink" ? lowPoseTargetY : defaultTargetY;
+        target.y = lowTargetModes.has(currentMode) ? lowPoseTargetY : defaultTargetY;
         updateCamera();
         timelineControls.setConfig(frameCount, modeConfig.fps, frameIndex);
         timelineControls.setPlaying(shouldPlayAfterSwitch);
