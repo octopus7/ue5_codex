@@ -4,10 +4,10 @@
 - Type: single-frame static pose.
 - UI label: show it as a pose with an icon-style prefix, e.g. `◆ Pose: Hero Landing` / `◆ 포즈: 히어로 랜딩`.
 - Source assets:
-  - `imagegen/hero_landing_imagegen_reference.png`
-  - `imagegen/hero_landing_pose_extracted.png`
-  - `imagegen/hero_landing_pose_overlay.png`
-  - `imagegen/hero_landing_pose_points.json`
+  - `imagegen/generated/hero_landing_imagegen_reference.png`
+  - `imagegen/generated/hero_landing_pose_extracted.png`
+  - `imagegen/generated/hero_landing_pose_overlay.png`
+  - `imagegen/generated/hero_landing_pose_points.json`
 
 ## Motion Intent
 

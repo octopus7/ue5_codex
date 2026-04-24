@@ -155,6 +155,51 @@
         ["fps", "frameRate", "frame_rate", "config.fps", "config.frameRate", "meta.fps", "meta.frameRate"],
         1
       ));
+      const baseballBatSwingSource = window.mannyBaseballBatSwingKeyposes || {};
+      const baseballBatSwingRawKeys = selectShuffleDanceKeys(baseballBatSwingSource);
+      const baseballBatSwingFallbackFrameCount = baseballBatSwingRawKeys.length
+        ? baseballBatSwingRawKeys.reduce((maxFrame, key, index) => Math.max(maxFrame, readNaturalKeyFrame(key, index)), 0) + 1
+        : 36;
+      const baseballBatSwingFrameCount = Math.max(2, Math.round(readNumberOption(
+        baseballBatSwingSource,
+        ["frameCount", "frame_count", "totalFrames", "durationFrames", "numFrames", "config.frameCount", "meta.frameCount"],
+        baseballBatSwingFallbackFrameCount
+      )));
+      const baseballBatSwingFps = Math.max(1, readNumberOption(
+        baseballBatSwingSource,
+        ["fps", "frameRate", "frame_rate", "config.fps", "config.frameRate", "meta.fps", "meta.frameRate"],
+        24
+      ));
+      const seatedBottleDrinkSource = window.mannySeatedBottleDrinkKeyposes || {};
+      const seatedBottleDrinkRawKeys = selectShuffleDanceKeys(seatedBottleDrinkSource);
+      const seatedBottleDrinkFallbackFrameCount = seatedBottleDrinkRawKeys.length
+        ? seatedBottleDrinkRawKeys.reduce((maxFrame, key, index) => Math.max(maxFrame, readNaturalKeyFrame(key, index)), 0) + 1
+        : 72;
+      const seatedBottleDrinkFrameCount = Math.max(2, Math.round(readNumberOption(
+        seatedBottleDrinkSource,
+        ["frameCount", "frame_count", "totalFrames", "durationFrames", "numFrames", "config.frameCount", "meta.frameCount"],
+        seatedBottleDrinkFallbackFrameCount
+      )));
+      const seatedBottleDrinkFps = Math.max(1, readNumberOption(
+        seatedBottleDrinkSource,
+        ["fps", "frameRate", "frame_rate", "config.fps", "config.frameRate", "meta.fps", "meta.frameRate"],
+        24
+      ));
+      const archeryFullDrawSource = window.mannyArcheryFullDrawKeyposes || {};
+      const archeryFullDrawRawKeys = selectShuffleDanceKeys(archeryFullDrawSource);
+      const archeryFullDrawFallbackFrameCount = archeryFullDrawRawKeys.length
+        ? archeryFullDrawRawKeys.reduce((maxFrame, key, index) => Math.max(maxFrame, readNaturalKeyFrame(key, index)), 0) + 1
+        : 48;
+      const archeryFullDrawFrameCount = Math.max(2, Math.round(readNumberOption(
+        archeryFullDrawSource,
+        ["frameCount", "frame_count", "totalFrames", "durationFrames", "numFrames", "config.frameCount", "meta.frameCount"],
+        archeryFullDrawFallbackFrameCount
+      )));
+      const archeryFullDrawFps = Math.max(1, readNumberOption(
+        archeryFullDrawSource,
+        ["fps", "frameRate", "frame_rate", "config.fps", "config.frameRate", "meta.fps", "meta.frameRate"],
+        24
+      ));
       const sideKickSource = window.mannySideKickKeyposes || {};
       const sideKickRawKeys = selectShuffleDanceKeys(sideKickSource);
       const sideKickFallbackFrameCount = sideKickRawKeys.length
@@ -233,6 +278,9 @@
         boxOverheadLift: { frameCount: boxOverheadLiftFrameCount, fps: boxOverheadLiftFps, loop: boxOverheadLiftSource.loop !== false, descriptionKey: "boxOverheadLiftDescription" },
         hadoken: { frameCount: hadokenFrameCount, fps: hadokenFps, loop: hadokenSource.loop !== false, descriptionKey: "hadokenDescription" },
         heroLandingPose: { frameCount: heroLandingPoseFrameCount, fps: heroLandingPoseFps, loop: false, descriptionKey: "heroLandingPoseDescription" },
+        baseballBatSwing: { frameCount: baseballBatSwingFrameCount, fps: baseballBatSwingFps, loop: baseballBatSwingSource.loop !== false, descriptionKey: "baseballBatSwingDescription" },
+        seatedBottleDrink: { frameCount: seatedBottleDrinkFrameCount, fps: seatedBottleDrinkFps, loop: seatedBottleDrinkSource.loop !== false, descriptionKey: "seatedBottleDrinkDescription" },
+        archeryFullDraw: { frameCount: archeryFullDrawFrameCount, fps: archeryFullDrawFps, loop: archeryFullDrawSource.loop !== false, descriptionKey: "archeryFullDrawDescription" },
         sideKick: { frameCount: sideKickFrameCount, fps: sideKickFps, loop: sideKickSource.loop !== false, descriptionKey: "sideKickDescription" },
         roundhouseKick: { frameCount: roundhouseKickFrameCount, fps: roundhouseKickFps, loop: roundhouseKickSource.loop !== false, descriptionKey: "roundhouseKickDescription" },
         jumpingRoundhouseKick: { frameCount: jumpingRoundhouseKickFrameCount, fps: jumpingRoundhouseKickFps, loop: jumpingRoundhouseKickSource.loop !== false, descriptionKey: "jumpingRoundhouseKickDescription" }
@@ -268,6 +316,9 @@
           boxOverheadLiftMode: "Box Overhead Lift",
           hadokenMode: "Hadoken",
           heroLandingPoseMode: "◆ Pose: Hero Landing",
+          baseballBatSwingMode: "Baseball Bat Swing",
+          seatedBottleDrinkMode: "Seated Bottle Drink",
+          archeryFullDrawMode: "Archery Full Draw",
           basicWalkDescription: "24 frames at 24 fps, Manny-proportioned skeleton, forward-axis walk.",
           feminineWalkDescription: "24 frames at 24 fps, graceful pelvis yaw and roll with lighter steps.",
           runningDescription: "16 frames at 32 fps, fast forward-axis run with clear airborne phases, heavier landings, and aggressive fist pumps.",
@@ -285,6 +336,9 @@
           boxOverheadLiftDescription: "Key-pose action where Manny squats to grip a floor box, lifts it close to the body, and presses it overhead with both hands.",
           hadokenDescription: "Key-pose energy projectile action: grounded charge, both-palms thrust, blue projectile release, recoil, and guard recovery.",
           heroLandingPoseDescription: "Single-frame static pose derived from the imagegen hero landing reference.",
+          baseballBatSwingDescription: "36 key-pose frames at 24 fps, heavy right-handed baseball bat swing with planted feet, rear-foot pivot, fast contact, and wrapped follow-through.",
+          seatedBottleDrinkDescription: "72 key-pose frames at 24 fps, generated-image-based seated scene: pick up a bottle drink from a table, drink, then return it.",
+          archeryFullDrawDescription: "48 key-pose frames at 24 fps, right-handed archery shot with planted stance, full draw, release, follow-through, bow, string, and arrow prop.",
           sideKickMode: "Side Kick",
           sideKickDescription: "32 key-pose frames at 24 fps, heavy realistic right-leg side kick with planted support foot, chamber, impact hold, recoil, and recovery.",
           roundhouseKickMode: "Roundhouse Kick",
@@ -330,6 +384,8 @@
           boxOverheadLiftMode: "상자 머리위로 들기",
           hadokenMode: "파동권",
           heroLandingPoseMode: "◆ 포즈: 히어로 랜딩",
+          baseballBatSwingMode: "야구 배트 스윙",
+          seatedBottleDrinkMode: "앉아서 병음료 마시기",
           basicWalkDescription: "24fps 기준 24프레임, Manny 비율의 전방축 보행입니다.",
           feminineWalkDescription: "24fps 기준 24프레임, 우아한 골반 yaw/roll과 가벼운 보행입니다.",
           runningDescription: "32fps 기준 16프레임, 체공 구간과 묵직한 착지, 강한 주먹 스윙을 가진 빠른 전방축 뛰기입니다.",
@@ -347,6 +403,8 @@
           boxOverheadLiftDescription: "키포즈 기반 액션입니다. Manny가 바닥에 놓인 어깨 폭 정도의 상자를 숙여 잡고 몸 가까이 들어 올린 뒤 머리 위로 고정합니다.",
           hadokenDescription: "키포즈 기반 에너지 발사 액션입니다. 지면을 딛고 기를 모은 뒤 양손을 뻗어 푸른 투사체를 발사하고 회복합니다.",
           heroLandingPoseDescription: "이미지젠 히어로 랜딩 참고 이미지에서 추출한 1프레임 정적 포즈입니다.",
+          baseballBatSwingDescription: "24fps 기준 36개 키포즈 프레임, 발을 고정하고 뒷발 피벗으로 몸이 먼저 배트를 끌고 나가는 묵직한 오른손 타자 스윙입니다.",
+          seatedBottleDrinkDescription: "24fps 기준 72개 키포즈 프레임, 생성 이미지 기반으로 의자에 앉아 테이블의 병음료를 들어 마신 뒤 다시 내려놓는 장면입니다.",
           sideKickMode: "옆차기",
           sideKickDescription: "24fps 기준 32개 키포즈 프레임, 지지발 고정과 챔버, 타격 홀드, 회수, 회복이 있는 묵직하고 사실적인 오른발 옆차기입니다.",
           roundhouseKickMode: "돌려차기",
@@ -427,7 +485,9 @@
       renderer.outputEncoding = THREE.sRGBEncoding;
 
       const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 1200);
-      const target = new THREE.Vector3(0, 105, 0);
+      const defaultTargetY = 105;
+      const lowPoseTargetY = 70;
+      const target = new THREE.Vector3(0, defaultTargetY, 0);
       const orbit = { theta: -1.05, phi: 1.28, radius: 360 };
       const viewDirections = {
         xPlus: new THREE.Vector3(1, 0, 0),
@@ -661,6 +721,130 @@
       });
       hadokenGroup.visible = false;
       scene.add(hadokenGroup);
+
+      const baseballBatGroup = new THREE.Group();
+      const baseballBatHandle = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.72, 0.9, 1, 14),
+        new THREE.MeshStandardMaterial({
+          color: 0x5f3a1e,
+          roughness: 0.66,
+          metalness: 0.02
+        })
+      );
+      const baseballBatBarrel = new THREE.Mesh(
+        new THREE.CylinderGeometry(2.05, 1.2, 1, 18),
+        new THREE.MeshStandardMaterial({
+          color: 0xb67a3a,
+          roughness: 0.58,
+          metalness: 0.02
+        })
+      );
+      const baseballBatKnob = new THREE.Mesh(
+        new THREE.SphereGeometry(1.9, 16, 10),
+        new THREE.MeshStandardMaterial({
+          color: 0x4b2c18,
+          roughness: 0.64,
+          metalness: 0.02
+        })
+      );
+      [baseballBatHandle, baseballBatBarrel, baseballBatKnob].forEach((mesh) => {
+        mesh.renderOrder = 3;
+        baseballBatGroup.add(mesh);
+      });
+      baseballBatGroup.visible = false;
+      scene.add(baseballBatGroup);
+
+      const seatedDrinkGroup = new THREE.Group();
+      const seatedDrinkChairMaterial = new THREE.MeshStandardMaterial({
+        color: 0x6d4d32,
+        roughness: 0.72,
+        metalness: 0.02
+      });
+      const seatedDrinkMetalMaterial = new THREE.MeshStandardMaterial({
+        color: 0x303743,
+        roughness: 0.48,
+        metalness: 0.18
+      });
+      const seatedDrinkTableMaterial = new THREE.MeshStandardMaterial({
+        color: 0x8d6038,
+        roughness: 0.66,
+        metalness: 0.02
+      });
+      const seatedDrinkBottleMaterial = new THREE.MeshStandardMaterial({
+        color: 0xb36b23,
+        transparent: true,
+        opacity: 0.78,
+        roughness: 0.24,
+        metalness: 0.02
+      });
+      const seatedDrinkCapMaterial = new THREE.MeshStandardMaterial({
+        color: 0x1d232b,
+        roughness: 0.45,
+        metalness: 0.08
+      });
+      function addSceneBox(group, center, size, material) {
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), material);
+        mesh.position.set(center[0], center[1], center[2]);
+        mesh.scale.set(size[0], size[1], size[2]);
+        mesh.renderOrder = 1;
+        group.add(mesh);
+        return mesh;
+      }
+      function addSceneLeg(group, x, y, z, height, material) {
+        const mesh = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.15, 1, 10), material);
+        mesh.position.set(x, y + height * 0.5, z);
+        mesh.scale.set(1, height, 1);
+        mesh.renderOrder = 1;
+        group.add(mesh);
+        return mesh;
+      }
+      addSceneBox(seatedDrinkGroup, [0, 43, -18], [52, 5, 44], seatedDrinkChairMaterial);
+      addSceneBox(seatedDrinkGroup, [0, 76, -42], [52, 46, 5], seatedDrinkChairMaterial);
+      [[-22, -36], [22, -36], [-22, 0], [22, 0]].forEach(([x, z]) => addSceneLeg(seatedDrinkGroup, x, 0, z, 42, seatedDrinkMetalMaterial));
+      addSceneBox(seatedDrinkGroup, [48, 59, 30], [62, 5, 44], seatedDrinkTableMaterial);
+      [[22, 12], [74, 12], [22, 48], [74, 48]].forEach(([x, z]) => addSceneLeg(seatedDrinkGroup, x, 0, z, 58, seatedDrinkMetalMaterial));
+      const seatedDrinkBottleBody = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 3.2, 1, 18), seatedDrinkBottleMaterial);
+      const seatedDrinkBottleCap = new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.3, 1, 14), seatedDrinkCapMaterial);
+      seatedDrinkBottleBody.renderOrder = 3;
+      seatedDrinkBottleCap.renderOrder = 4;
+      seatedDrinkGroup.add(seatedDrinkBottleBody, seatedDrinkBottleCap);
+      seatedDrinkGroup.visible = false;
+      scene.add(seatedDrinkGroup);
+
+      const archeryGroup = new THREE.Group();
+      const archeryBowMaterial = new THREE.MeshStandardMaterial({
+        color: 0x8a5a2b,
+        roughness: 0.58,
+        metalness: 0.02
+      });
+      const archeryStringMaterial = new THREE.LineBasicMaterial({
+        color: 0xe6edf4,
+        transparent: true,
+        opacity: 0.86
+      });
+      const archeryArrowMaterial = new THREE.MeshStandardMaterial({
+        color: 0xd7dde3,
+        roughness: 0.36,
+        metalness: 0.18
+      });
+      const archeryBowUpper = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.25, 1, 14), archeryBowMaterial);
+      const archeryBowLower = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 0.9, 1, 14), archeryBowMaterial);
+      const archeryGrip = new THREE.Mesh(
+        new THREE.SphereGeometry(2.2, 16, 10),
+        new THREE.MeshStandardMaterial({ color: 0x4a2c18, roughness: 0.66, metalness: 0.02 })
+      );
+      const archeryString = new THREE.Line(new THREE.BufferGeometry(), archeryStringMaterial);
+      const archeryArrow = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 1, 10), archeryArrowMaterial);
+      const archeryArrowHead = new THREE.Mesh(
+        new THREE.ConeGeometry(1.35, 4.0, 14),
+        new THREE.MeshStandardMaterial({ color: 0xaeb8c2, roughness: 0.32, metalness: 0.34 })
+      );
+      [archeryBowUpper, archeryBowLower, archeryGrip, archeryString, archeryArrow, archeryArrowHead].forEach((mesh) => {
+        mesh.renderOrder = 3;
+        archeryGroup.add(mesh);
+      });
+      archeryGroup.visible = false;
+      scene.add(archeryGroup);
 
       const segments = [
         ["pelvis", "spine_01", "center"],
@@ -2084,7 +2268,16 @@
           return buildGenericDancePose(index, hadokenRawKeys);
         }
         if (currentMode === "heroLandingPose") {
-          return buildGenericDancePose(index, heroLandingPoseRawKeys);
+          return buildStaticPointPose(heroLandingPoseRawKeys) || buildGenericDancePose(index, heroLandingPoseRawKeys);
+        }
+        if (currentMode === "baseballBatSwing") {
+          return buildGenericDancePose(index, baseballBatSwingRawKeys);
+        }
+        if (currentMode === "seatedBottleDrink") {
+          return buildGenericDancePose(index, seatedBottleDrinkRawKeys);
+        }
+        if (currentMode === "archeryFullDraw") {
+          return buildGenericDancePose(index, archeryFullDrawRawKeys);
         }
         if (currentMode === "sideKick") {
           return buildGenericDancePose(index, sideKickRawKeys);
@@ -2838,6 +3031,34 @@
         return interpolateShuffleDanceKey(pair.from.key, pair.to.key, pair.t);
       }
 
+      function buildStaticPointPose(rawKeys) {
+        const key = Array.isArray(rawKeys) && rawKeys.length ? rawKeys[0] : null;
+        const source = naturalRunPointSource(key);
+        if (!source) {
+          return null;
+        }
+        const points = {};
+        for (const name of jointNames) {
+          const value = naturalRunArray(source[name], 3, null);
+          if (!value) {
+            return null;
+          }
+          points[name] = v(value[0], value[1], value[2]);
+        }
+        const right = new THREE.Vector3().subVectors(points.clavicle_r, points.clavicle_l).normalize();
+        const up = new THREE.Vector3().subVectors(points.head, points.neck_01).normalize();
+        let forward = new THREE.Vector3().crossVectors(right, up);
+        if (forward.lengthSq() < 0.001) {
+          forward = v(0, 0, 1);
+        }
+        points._faceRight = right;
+        points._faceUp = up;
+        points._faceForward = forward.normalize();
+        points._leftPlanted = Boolean(key.leftPlanted ?? key.contacts?.leftFoot ?? key.contacts?.foot_l ?? true);
+        points._rightPlanted = Boolean(key.rightPlanted ?? key.contacts?.rightFoot ?? key.contacts?.foot_r ?? true);
+        return points;
+      }
+
       function buildGenericDancePose(index, rawKeys) {
         const key = sampleGenericDanceKey(rawKeys, index);
         const deg = THREE.MathUtils.degToRad;
@@ -2875,7 +3096,7 @@
         function placeArm(side, clavicleName, upperName, lowerName, handName, targetArray, upperOffset, lowerOffset, handOffset) {
           const clavicle = points[clavicleName];
           if (targetArray) {
-            const useWorldTarget = currentMode === "heroLandingPose" || Math.abs(targetArray[1]) > 35;
+            const useWorldTarget = currentMode === "heroLandingPose" || currentMode === "boxOverheadLift" || Math.abs(targetArray[1]) > 35;
             const rawTarget = useWorldTarget
               ? v(targetArray[0], targetArray[1], targetArray[2])
               : points.spine_05.clone().add(chestLocal(targetArray[0], targetArray[1], targetArray[2]));
@@ -3419,6 +3640,12 @@
         mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), diff.normalize());
       }
 
+      function updateLine(line, points) {
+        line.geometry.dispose();
+        line.geometry = new THREE.BufferGeometry().setFromPoints(points);
+        line.geometry.computeBoundingSphere();
+      }
+
       function updateEnvelopeCylinder(mesh, a, b, radius) {
         const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
         const diff = new THREE.Vector3().subVectors(b, a);
@@ -3524,6 +3751,191 @@
         liftBoxGroup.scale.set(width, height, depth);
       }
 
+      function seatedBottleFrameDataFromKey(key, fallback = null) {
+        const bottle = key?.bottle || key?.prop?.bottle || key?.props?.bottle || {};
+        const bottom = readBoxVector(bottle, ["bottom", "base"], fallback?.bottom || null);
+        const top = readBoxVector(bottle, ["top", "cap", "mouth"], fallback?.top || null);
+        const center = readBoxVector(bottle, ["center", "position", "pos"], fallback?.center || null);
+        return bottom || top || center ? { bottom, top, center } : fallback;
+      }
+
+      function sampleSeatedBottle(index) {
+        if (!Array.isArray(seatedBottleDrinkRawKeys) || seatedBottleDrinkRawKeys.length === 0) {
+          return null;
+        }
+        if (seatedBottleDrinkRawKeys.length === 1) {
+          return seatedBottleFrameDataFromKey(seatedBottleDrinkRawKeys[0], null);
+        }
+        const pair = keyposePair(seatedBottleDrinkRawKeys, index, frameCount);
+        if (!pair) {
+          return seatedBottleFrameDataFromKey(seatedBottleDrinkRawKeys[0], null);
+        }
+        const from = seatedBottleFrameDataFromKey(pair.from.key, null);
+        const to = seatedBottleFrameDataFromKey(pair.to.key, from);
+        const fallback = from || to;
+        if (!fallback) {
+          return null;
+        }
+        return {
+          bottom: from?.bottom && to?.bottom ? interpolateNaturalRunArray(from.bottom, to.bottom, pair.t) : fallback.bottom,
+          top: from?.top && to?.top ? interpolateNaturalRunArray(from.top, to.top, pair.t) : fallback.top,
+          center: from?.center && to?.center ? interpolateNaturalRunArray(from.center, to.center, pair.t) : fallback.center
+        };
+      }
+
+      function updateSeatedBottleDrinkProps(index) {
+        const visible = currentMode === "seatedBottleDrink";
+        seatedDrinkGroup.visible = visible;
+        if (!visible) {
+          return;
+        }
+        const sampled = sampleSeatedBottle(index);
+        const bottom = sampled?.bottom ? v(sampled.bottom[0], sampled.bottom[1], sampled.bottom[2]) : v(48, 62, 30);
+        const top = sampled?.top ? v(sampled.top[0], sampled.top[1], sampled.top[2]) : v(48, 94, 30);
+        const capBase = bottom.clone().lerp(top, 0.84);
+        updateCylinder(seatedDrinkBottleBody, bottom, capBase);
+        updateCylinder(seatedDrinkBottleCap, capBase, top);
+      }
+
+      function batFrameDataFromKey(key, fallback = null) {
+        const bat = key?.bat || key?.prop?.bat || key?.props?.bat || {};
+        const knob = readBoxVector(bat, ["knob", "pommel", "handle"], fallback?.knob || null);
+        const barrelStart = readBoxVector(bat, ["barrelStart", "barrel_start", "barrelBase"], fallback?.barrelStart || null);
+        const tip = readBoxVector(bat, ["tip", "barrelTip", "end"], fallback?.tip || null);
+        return knob || barrelStart || tip ? { knob, barrelStart, tip } : fallback;
+      }
+
+      function sampleBaseballBat(index) {
+        if (!Array.isArray(baseballBatSwingRawKeys) || baseballBatSwingRawKeys.length === 0) {
+          return null;
+        }
+        if (baseballBatSwingRawKeys.length === 1) {
+          return batFrameDataFromKey(baseballBatSwingRawKeys[0], null);
+        }
+        const pair = keyposePair(baseballBatSwingRawKeys, index, frameCount);
+        if (!pair) {
+          return batFrameDataFromKey(baseballBatSwingRawKeys[0], null);
+        }
+        const from = batFrameDataFromKey(pair.from.key, null);
+        const to = batFrameDataFromKey(pair.to.key, from);
+        const fallback = from || to;
+        if (!fallback) {
+          return null;
+        }
+        return {
+          knob: from?.knob && to?.knob ? interpolateNaturalRunArray(from.knob, to.knob, pair.t) : fallback.knob,
+          barrelStart: from?.barrelStart && to?.barrelStart ? interpolateNaturalRunArray(from.barrelStart, to.barrelStart, pair.t) : fallback.barrelStart,
+          tip: from?.tip && to?.tip ? interpolateNaturalRunArray(from.tip, to.tip, pair.t) : fallback.tip
+        };
+      }
+
+      function updateBaseballBatProp(pose, index) {
+        const visible = currentMode === "baseballBatSwing";
+        baseballBatGroup.visible = visible;
+        if (!visible) {
+          return;
+        }
+        const handCenter = new THREE.Vector3().addVectors(pose.hand_l, pose.hand_r).multiplyScalar(0.5);
+        const acrossHands = new THREE.Vector3().subVectors(pose.hand_l, pose.hand_r);
+        const right = (pose._faceRight || new THREE.Vector3().subVectors(pose.clavicle_r, pose.clavicle_l)).clone().normalize();
+        const up = (pose._faceUp || new THREE.Vector3().subVectors(pose.head, pose.neck_01)).clone().normalize();
+        const forward = (pose._faceForward || new THREE.Vector3().crossVectors(right, up)).clone().normalize();
+        const maxFrame = Math.max(1, frameCount - 1);
+        const phase = clamp(index / maxFrame, 0, 1);
+        const handSide = acrossHands.lengthSq() > 0.001 ? acrossHands.clone().normalize() : right.clone();
+        const knob = handCenter.clone().add(handSide.clone().multiplyScalar(-3.2));
+        const early = clamp(phase / 0.34, 0, 1);
+        const through = clamp((phase - 0.28) / 0.34, 0, 1);
+        const finish = clamp((phase - 0.58) / 0.42, 0, 1);
+        const backLift = 0.9 - early * 0.6;
+        const contactSweep = Math.sin(through * Math.PI);
+        const followWrap = smoothstep(finish);
+        const batDir = right.clone().multiplyScalar(-0.86 + followWrap * 0.72)
+          .add(forward.clone().multiplyScalar(-0.46 + through * 1.24 - followWrap * 0.72))
+          .add(up.clone().multiplyScalar(backLift - contactSweep * 0.34 + followWrap * 0.42))
+          .normalize();
+        const tip = knob.clone().add(batDir.multiplyScalar(70));
+        const barrelStart = knob.clone().lerp(tip, 0.42);
+        updateCylinder(baseballBatHandle, knob, barrelStart);
+        updateCylinder(baseballBatBarrel, barrelStart, tip);
+        baseballBatKnob.position.copy(knob);
+      }
+
+      function archeryFrameDataFromKey(key, fallback = null) {
+        const archery = key?.archery || key?.bow || key?.prop?.archery || key?.props?.archery || {};
+        const grip = readBoxVector(archery, ["grip", "handle", "bowGrip"], fallback?.grip || null);
+        const top = readBoxVector(archery, ["top", "bowTop", "upperTip"], fallback?.top || null);
+        const bottom = readBoxVector(archery, ["bottom", "bowBottom", "lowerTip"], fallback?.bottom || null);
+        const stringHand = readBoxVector(archery, ["stringHand", "nock", "drawHand"], fallback?.stringHand || null);
+        const arrowTip = readBoxVector(archery, ["arrowTip", "tip", "arrowEnd"], fallback?.arrowTip || null);
+        const released = Boolean(archery.released ?? fallback?.released);
+        return grip || top || bottom || stringHand || arrowTip
+          ? { grip, top, bottom, stringHand, arrowTip, released }
+          : fallback;
+      }
+
+      function sampleArcheryFullDraw(index) {
+        if (!Array.isArray(archeryFullDrawRawKeys) || archeryFullDrawRawKeys.length === 0) {
+          return null;
+        }
+        if (archeryFullDrawRawKeys.length === 1) {
+          return archeryFrameDataFromKey(archeryFullDrawRawKeys[0], null);
+        }
+        const pair = keyposePair(archeryFullDrawRawKeys, index, frameCount);
+        if (!pair) {
+          return archeryFrameDataFromKey(archeryFullDrawRawKeys[0], null);
+        }
+        const from = archeryFrameDataFromKey(pair.from.key, null);
+        const to = archeryFrameDataFromKey(pair.to.key, from);
+        const fallback = from || to;
+        if (!fallback) {
+          return null;
+        }
+        return {
+          grip: from?.grip && to?.grip ? interpolateNaturalRunArray(from.grip, to.grip, pair.t) : fallback.grip,
+          top: from?.top && to?.top ? interpolateNaturalRunArray(from.top, to.top, pair.t) : fallback.top,
+          bottom: from?.bottom && to?.bottom ? interpolateNaturalRunArray(from.bottom, to.bottom, pair.t) : fallback.bottom,
+          stringHand: from?.stringHand && to?.stringHand ? interpolateNaturalRunArray(from.stringHand, to.stringHand, pair.t) : fallback.stringHand,
+          arrowTip: from?.arrowTip && to?.arrowTip ? interpolateNaturalRunArray(from.arrowTip, to.arrowTip, pair.t) : fallback.arrowTip,
+          released: pair.t < 0.5 ? Boolean(from?.released) : Boolean(to?.released)
+        };
+      }
+
+      function updateArcheryProp(pose, index) {
+        const visible = currentMode === "archeryFullDraw";
+        archeryGroup.visible = visible;
+        if (!visible) {
+          return;
+        }
+        const sampled = sampleArcheryFullDraw(index);
+        const right = (pose._faceRight || new THREE.Vector3().subVectors(pose.clavicle_l, pose.clavicle_r)).clone().normalize();
+        const up = (pose._faceUp || new THREE.Vector3().subVectors(pose.head, pose.neck_01)).clone().normalize();
+        const forward = (pose._faceForward || new THREE.Vector3().crossVectors(right, up)).clone().normalize();
+        const grip = sampled?.grip ? v(sampled.grip[0], sampled.grip[1], sampled.grip[2]) : pose.hand_l.clone();
+        const top = sampled?.top ? v(sampled.top[0], sampled.top[1], sampled.top[2]) : grip.clone().add(up.clone().multiplyScalar(43));
+        const bottom = sampled?.bottom ? v(sampled.bottom[0], sampled.bottom[1], sampled.bottom[2]) : grip.clone().add(up.clone().multiplyScalar(-43));
+        const stringHand = sampled?.stringHand
+          ? v(sampled.stringHand[0], sampled.stringHand[1], sampled.stringHand[2])
+          : (sampled?.released ? grip.clone() : pose.hand_r.clone());
+        const arrowTip = sampled?.arrowTip
+          ? v(sampled.arrowTip[0], sampled.arrowTip[1], sampled.arrowTip[2])
+          : grip.clone().add(forward.clone().multiplyScalar(52)).add(right.clone().multiplyScalar(6));
+        const arrowNock = sampled?.released
+          ? arrowTip.clone().add(new THREE.Vector3().subVectors(grip, arrowTip).normalize().multiplyScalar(58))
+          : stringHand.clone();
+
+        updateCylinder(archeryBowUpper, grip, top);
+        updateCylinder(archeryBowLower, grip, bottom);
+        archeryGrip.position.copy(grip);
+        updateLine(archeryString, [top, stringHand, bottom]);
+        updateCylinder(archeryArrow, arrowNock, arrowTip);
+        archeryArrowHead.position.copy(arrowTip);
+        archeryArrowHead.quaternion.setFromUnitVectors(
+          new THREE.Vector3(0, 1, 0),
+          new THREE.Vector3().subVectors(arrowTip, arrowNock).normalize()
+        );
+      }
+
       function updateHadokenEffect(pose, index) {
         const releaseFrame = readNumberOption(hadokenSource, ["releaseFrame", "projectileFrame", "effect.releaseFrame", "effectTiming.releaseFrame", "effectTiming.projectileFrame"], 18);
         const visible = currentMode === "hadoken" && index >= releaseFrame - 2;
@@ -3589,10 +4001,13 @@
         const pose = buildPose(index);
         wallGroup.visible = currentMode === "wallPeek";
         wallClimbGroup.visible = currentMode === "wallClimb";
-        travelLine.visible = currentMode !== "wallPeek" && currentMode !== "wallClimb" && currentMode !== "proneCrawl" && currentMode !== "swordSlash" && currentMode !== "crouchTwerk" && currentMode !== "shuffleDance" && currentMode !== "longDance" && currentMode !== "playfulGirlWalk" && currentMode !== "boxOverheadLift" && currentMode !== "hadoken" && currentMode !== "heroLandingPose" && currentMode !== "sideKick" && currentMode !== "roundhouseKick" && currentMode !== "jumpingRoundhouseKick";
+        travelLine.visible = currentMode !== "wallPeek" && currentMode !== "wallClimb" && currentMode !== "proneCrawl" && currentMode !== "swordSlash" && currentMode !== "crouchTwerk" && currentMode !== "shuffleDance" && currentMode !== "longDance" && currentMode !== "playfulGirlWalk" && currentMode !== "boxOverheadLift" && currentMode !== "hadoken" && currentMode !== "heroLandingPose" && currentMode !== "baseballBatSwing" && currentMode !== "seatedBottleDrink" && currentMode !== "archeryFullDraw" && currentMode !== "sideKick" && currentMode !== "roundhouseKick" && currentMode !== "jumpingRoundhouseKick";
         updateSwordProp(pose);
         updateLiftBoxProp(pose, index);
         updateHadokenEffect(pose, index);
+        updateBaseballBatProp(pose, index);
+        updateSeatedBottleDrinkProps(index);
+        updateArcheryProp(pose, index);
         for (const item of envelopeMeshes) {
           updateEnvelopeCylinder(item.mesh, pose[item.from], pose[item.to], item.radius);
         }
@@ -3662,6 +4077,8 @@
         frameIndex = 0;
         modeSelect.value = currentMode;
         updateModeDescription();
+        target.y = currentMode === "heroLandingPose" || currentMode === "seatedBottleDrink" ? lowPoseTargetY : defaultTargetY;
+        updateCamera();
         timelineControls.setConfig(frameCount, modeConfig.fps, frameIndex, modeConfig.loop !== false);
         timelineControls.setPlaying(shouldPlayAfterSwitch);
       }

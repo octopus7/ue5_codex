@@ -13,13 +13,40 @@
     return [round(x), round(y), round(z)];
   }
 
+  const points = {
+    pelvis: vec(0.0, 66.5, 0.0),
+    spine_01: vec(4.0, 70.5, 8.0),
+    spine_02: vec(8.0, 76.0, 15.0),
+    spine_03: vec(12.0, 82.0, 22.0),
+    spine_04: vec(15.0, 88.0, 29.0),
+    spine_05: vec(17.0, 94.0, 35.0),
+    neck_01: vec(19.0, 105.0, 38.0),
+    head: vec(19.0, 125.0, 39.0),
+    clavicle_l: vec(-5.0, 100.0, 14.0),
+    clavicle_r: vec(29.0, 95.0, 47.0),
+    upperarm_l: vec(-35.0, 146.0, -35.0),
+    lowerarm_l: vec(-58.0, 142.0, -48.0),
+    hand_l: vec(-76.0, 134.0, -56.0),
+    upperarm_r: vec(45.0, 56.0, 60.0),
+    lowerarm_r: vec(43.0, 25.0, 72.0),
+    hand_r: vec(39.0, 3.2, 82.0),
+    thigh_l: vec(-19.0, 66.0, -5.0),
+    calf_l: vec(-53.0, 53.0, -28.0),
+    foot_l: vec(-74.0, 12.8, -49.0),
+    ball_l: vec(-87.0, 1.0, -60.0),
+    thigh_r: vec(17.0, 64.5, 5.0),
+    calf_r: vec(84.0, 27.0, 44.0),
+    foot_r: vec(104.0, 10.8, 66.0),
+    ball_r: vec(117.0, 6.0, 77.0)
+  };
+
   const pose = {
     frame: 0,
     name: "hero_landing_pose_static",
     type: "pose",
     source: {
-      referenceImage: "../imagegen/hero_landing_imagegen_reference.png",
-      extractedPose: "../imagegen/hero_landing_pose_extracted.png",
+      referenceImage: "../imagegen/generated/hero_landing_imagegen_reference.png",
+      extractedPose: "../imagegen/generated/hero_landing_pose_extracted.png",
       note: "Approximate 3D Manny key pose derived from the generated hero landing reference."
     },
     pelvis: vec(0.0, 42.0, 10.0).concat([round(-26.0), round(10.0), round(-8.0)]),
@@ -50,6 +77,7 @@
     },
     leftKneeBias: vec(8.0, -9.0, 13.0),
     rightKneeBias: vec(-8.0, -3.0, -8.0),
+    points,
     contacts: {
       leftFoot: true,
       rightFoot: true,
