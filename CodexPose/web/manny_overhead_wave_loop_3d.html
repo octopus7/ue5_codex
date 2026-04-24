@@ -484,40 +484,55 @@
         const reach = param.reach;
         const lift = param.lift;
         const depth = param.depth;
-        const pelvisX = sway * 7;
-        const chestX = sway * -8;
-        const handCenterX = reach * 44 + chestX * 0.45;
-        const handY = 202 + lift * 9;
-        const chestZ = depth * 8;
-        const armDepth = depth * 16;
+        const bodySway = sway * 0.75 + reach * 0.25;
+        const armDepth = depth * 12;
         const points = {};
+        const rotations = {};
 
-        points.pelvis = v(pelvisX, 96 + lift * 1.2, -chestZ * 0.15);
-        points.spine_01 = v(lerp(pelvisX, chestX, 0.18), 110, chestZ * 0.12);
-        points.spine_02 = v(lerp(pelvisX, chestX, 0.38), 123, chestZ * 0.24);
-        points.spine_03 = v(lerp(pelvisX, chestX, 0.60), 136, chestZ * 0.36);
-        points.spine_04 = v(lerp(pelvisX, chestX, 0.78), 146, chestZ * 0.48);
-        points.spine_05 = v(chestX, 155, chestZ * 0.60);
-        points.neck_01 = v(chestX + reach * 2, 168, chestZ * 0.38);
-        points.head = v(chestX + reach * 6, 184, chestZ * 0.20);
+        function q(x = 0, y = 0, z = 0) {
+          return new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z, "XYZ"));
+        }
 
-        points.clavicle_l = v(chestX + 15, 158, chestZ * 0.65);
-        points.clavicle_r = v(chestX - 15, 158, chestZ * 0.65);
-        points.upperarm_l = v(lerp(points.clavicle_l.x, handCenterX + 22, 0.38) + 16, 183 + lift * 3, armDepth + 5);
-        points.upperarm_r = v(lerp(points.clavicle_r.x, handCenterX - 22, 0.38) - 16, 183 + lift * 4, -armDepth - 5);
-        points.lowerarm_l = v(lerp(points.upperarm_l.x, handCenterX + 19, 0.62) + reach * 6, 201 + lift * 4, armDepth * 0.45 + 8);
-        points.lowerarm_r = v(lerp(points.upperarm_r.x, handCenterX - 19, 0.62) + reach * 6, 201 + lift * 4, -armDepth * 0.45 - 8);
-        points.hand_l = v(handCenterX + 22, handY + 2, armDepth * 0.20 + 10);
-        points.hand_r = v(handCenterX - 22, handY - 1, -armDepth * 0.20 - 10);
+        function place(parent, name, offset, localRotation = q()) {
+          points[name] = points[parent].clone().add(offset.clone().applyQuaternion(rotations[parent]));
+          rotations[name] = rotations[parent].clone().multiply(localRotation);
+        }
 
-        points.thigh_l = v(pelvisX + 12 + sway * 3, 91, 4);
-        points.calf_l = v(pelvisX + 17 + sway * 5, 50, 3);
-        points.foot_l = v(pelvisX + 20 + sway * 6, 10, 10);
-        points.ball_l = v(pelvisX + 24 + sway * 7, 2, 25);
-        points.thigh_r = v(pelvisX - 12 + sway * 3, 91, -4);
-        points.calf_r = v(pelvisX - 17 + sway * 5, 50, -3);
-        points.foot_r = v(pelvisX - 20 + sway * 6, 10, 10);
-        points.ball_r = v(pelvisX - 24 + sway * 7, 2, 25);
+        function plantLeg(thighName, calfName, footName, ballName, footPosition, ballPosition, side) {
+          points[footName] = footPosition.clone();
+          points[ballName] = ballPosition.clone();
+          const thigh = points[thighName];
+          const kneeBias = v(side * 4 + bodySway * 1.5, -4, -3);
+          points[calfName] = thigh.clone().lerp(points[footName], 0.52).add(kneeBias);
+          rotations[calfName] = rotations[thighName].clone();
+          rotations[footName] = rotations[calfName].clone();
+          rotations[ballName] = rotations[footName].clone();
+        }
+
+        points.pelvis = v(-bodySway * 3.5, 96 + lift * 0.7, depth * -2.0);
+        rotations.pelvis = q(depth * 0.04, depth * 0.05, -bodySway * 0.055);
+
+        place("pelvis", "spine_01", v(0, 13, 0), q(0, depth * 0.01, -bodySway * 0.020));
+        place("spine_01", "spine_02", v(0, 13, 0), q(0, depth * 0.012, -bodySway * 0.024));
+        place("spine_02", "spine_03", v(0, 13, 0), q(0, depth * 0.014, -bodySway * 0.028));
+        place("spine_03", "spine_04", v(0, 11, 0), q(0, depth * 0.016, -bodySway * 0.032));
+        place("spine_04", "spine_05", v(0, 9, 0), q(0, depth * 0.018, -bodySway * 0.036));
+        place("spine_05", "neck_01", v(0, 13 + lift * 0.4, 0), q(depth * 0.018, depth * 0.012, -bodySway * 0.025));
+        place("neck_01", "head", v(0, 16, 0), q(depth * 0.014, -depth * 0.010, -bodySway * 0.020));
+
+        place("spine_05", "clavicle_l", v(15, 3, 1), q(0, depth * 0.020, -0.10 - bodySway * 0.015));
+        place("spine_05", "clavicle_r", v(-15, 3, -1), q(0, -depth * 0.020, 0.10 - bodySway * 0.015));
+        place("clavicle_l", "upperarm_l", v(18 + reach * 11, 25 + lift * 3, 6 + armDepth), q(depth * 0.05, reach * 0.04, -0.12));
+        place("clavicle_r", "upperarm_r", v(-18 + reach * 11, 25 + lift * 3, -6 - armDepth), q(-depth * 0.05, reach * 0.04, 0.12));
+        place("upperarm_l", "lowerarm_l", v(10 + reach * 14, 23 + lift * 3, 4 + armDepth * 0.45), q(0, reach * 0.025, -0.06));
+        place("upperarm_r", "lowerarm_r", v(-10 + reach * 14, 23 + lift * 3, -4 - armDepth * 0.45), q(0, reach * 0.025, 0.06));
+        place("lowerarm_l", "hand_l", v(3 + reach * 8, 12 + lift * 2, 2), q());
+        place("lowerarm_r", "hand_r", v(-3 + reach * 8, 12 + lift * 2, -2), q());
+
+        place("pelvis", "thigh_l", v(12 + bodySway * 2, -5, 4), q(0, 0, bodySway * 0.025));
+        place("pelvis", "thigh_r", v(-12 + bodySway * 2, -5, -4), q(0, 0, bodySway * 0.025));
+        plantLeg("thigh_l", "calf_l", "foot_l", "ball_l", v(17, 10, 10), v(22, 2, 25), 1);
+        plantLeg("thigh_r", "calf_r", "foot_r", "ball_r", v(-17, 10, 10), v(-22, 2, 25), -1);
 
         return {
           name: param.name,

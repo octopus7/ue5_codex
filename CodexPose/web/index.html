@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CodexPose Web</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #5f6b7b;
+      --line: #d7e0ea;
+      --accent: #2276d2;
+      --accent-soft: #e8f1fc;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    main {
+      width: min(960px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 40px 0;
+    }
+
+    header {
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .item {
+      display: grid;
+      grid-template-columns: 132px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 16px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      text-decoration: none;
+      color: inherit;
+      box-shadow: 0 8px 22px rgba(21, 34, 52, 0.05);
+    }
+
+    .item:hover {
+      border-color: #a9c8eb;
+      background: #fbfdff;
+    }
+
+    .thumb {
+      height: 82px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--accent-soft);
+      overflow: hidden;
+    }
+
+    .thumb img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 28%;
+    }
+
+    .meta {
+      min-width: 0;
+    }
+
+    .meta strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 17px;
+      line-height: 1.25;
+    }
+
+    .meta span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .open {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 640px) {
+      main {
+        padding-top: 24px;
+      }
+
+      .item {
+        grid-template-columns: 96px minmax(0, 1fr);
+      }
+
+      .thumb {
+        height: 76px;
+      }
+
+      .open {
+        grid-column: 1 / -1;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>CodexPose Web</h1>
+      <p>Web previews and reference assets for Manny pose work.</p>
+    </header>
+
+    <section class="list" aria-label="Web pages">
+      <a class="item" href="manny_overhead_wave_loop_3d.html">
+        <div class="thumb">
+          <img src="manny_reference_front_pose.png" alt="">
+        </div>
+        <div class="meta">
+          <strong>Manny Overhead Wave Loop 3D</strong>
+          <span>Rotatable 3D preview, 8 frames at 8 fps, with view-axis shortcuts.</span>
+        </div>
+        <span class="open">Open</span>
+      </a>
+
+      <a class="item" href="manny_reference_front_pose.png">
+        <div class="thumb">
+          <img src="manny_reference_front_pose.png" alt="">
+        </div>
+        <div class="meta">
+          <strong>Manny Reference Front Pose PNG</strong>
+          <span>Static front-view bone reference image.</span>
+        </div>
+        <span class="open">Open</span>
+      </a>
+    </section>
+  </main>
+</body>
+</html>
