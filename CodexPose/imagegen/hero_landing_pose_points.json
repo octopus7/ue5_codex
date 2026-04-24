@@ -1,0 +1,151 @@
+﻿{
+    "source":  "hero_landing_imagegen_reference.png",
+    "imageSize":  [
+                      1536,
+                      1024
+                  ],
+    "points":  {
+                   "ankle_r":  [
+                                   1110,
+                                   715
+                               ],
+                   "elbow_r":  [
+                                   860,
+                                   555
+                               ],
+                   "ankle_l":  [
+                                   390,
+                                   707
+                               ],
+                   "hand_l":  [
+                                  415,
+                                  188
+                              ],
+                   "pelvis":  [
+                                  690,
+                                  462
+                              ],
+                   "head":  [
+                                760,
+                                245
+                            ],
+                   "neck":  [
+                                760,
+                                340
+                            ],
+                   "toe_r":  [
+                                 1160,
+                                 735
+                             ],
+                   "shoulder_l":  [
+                                      665,
+                                      332
+                                  ],
+                   "shoulder_r":  [
+                                      790,
+                                      360
+                                  ],
+                   "toe_l":  [
+                                 342,
+                                 760
+                             ],
+                   "chest":  [
+                                 735,
+                                 385
+                             ],
+                   "elbow_l":  [
+                                   545,
+                                   150
+                               ],
+                   "hand_r":  [
+                                  850,
+                                  772
+                              ],
+                   "knee_r":  [
+                                  1035,
+                                  645
+                              ],
+                   "knee_l":  [
+                                  470,
+                                  525
+                              ],
+                   "hip_r":  [
+                                 760,
+                                 470
+                             ],
+                   "hip_l":  [
+                                 610,
+                                 462
+                             ]
+               },
+    "bones":  [
+                  [
+                      "head",
+                      "neck"
+                  ],
+                  [
+                      "neck",
+                      "chest"
+                  ],
+                  [
+                      "chest",
+                      "pelvis"
+                  ],
+                  [
+                      "chest",
+                      "shoulder_l"
+                  ],
+                  [
+                      "shoulder_l",
+                      "elbow_l"
+                  ],
+                  [
+                      "elbow_l",
+                      "hand_l"
+                  ],
+                  [
+                      "chest",
+                      "shoulder_r"
+                  ],
+                  [
+                      "shoulder_r",
+                      "elbow_r"
+                  ],
+                  [
+                      "elbow_r",
+                      "hand_r"
+                  ],
+                  [
+                      "pelvis",
+                      "hip_l"
+                  ],
+                  [
+                      "hip_l",
+                      "knee_l"
+                  ],
+                  [
+                      "knee_l",
+                      "ankle_l"
+                  ],
+                  [
+                      "ankle_l",
+                      "toe_l"
+                  ],
+                  [
+                      "pelvis",
+                      "hip_r"
+                  ],
+                  [
+                      "hip_r",
+                      "knee_r"
+                  ],
+                  [
+                      "knee_r",
+                      "ankle_r"
+                  ],
+                  [
+                      "ankle_r",
+                      "toe_r"
+                  ]
+              ]
+}
