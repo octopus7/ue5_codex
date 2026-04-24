@@ -563,7 +563,10 @@
           <select class="walk-mode" id="walkModeSelect" aria-label="Walk mode">
             <option value="basic" data-i18n="basicWalk">Basic Walk</option>
             <option value="feminine" data-i18n="feminineWalk">Feminine Walk</option>
+            <option value="running" data-i18n="running">Run</option>
             <option value="overheadWave" data-i18n="overheadWaveMode">Overhead Wave</option>
+            <option value="idleShift" data-i18n="idleShiftMode">Idle Shift</option>
+            <option value="wallPeek" data-i18n="wallPeekMode">Wall Peek</option>
           </select>
           <button id="walkPlayButton" type="button">Pause</button>
         </div>
@@ -621,7 +624,10 @@
       const walkModes = {
         basic: { frameCount: 24, fps: 24, descriptionKey: "basicWalkDescription" },
         feminine: { frameCount: 24, fps: 24, descriptionKey: "feminineWalkDescription" },
-        overheadWave: { frameCount: 24, fps: 24, descriptionKey: "overheadWaveDescription" }
+        running: { frameCount: 16, fps: 32, descriptionKey: "runningDescription" },
+        overheadWave: { frameCount: 24, fps: 24, descriptionKey: "overheadWaveDescription" },
+        idleShift: { frameCount: 24, fps: 24, descriptionKey: "idleShiftDescription" },
+        wallPeek: { frameCount: 24, fps: 24, descriptionKey: "wallPeekDescription" }
       };
       let playing = true;
       let frameIndex = 0;
@@ -641,10 +647,16 @@
           walkDescription: "24 frames at 24 fps, Manny-proportioned skeleton, forward-axis walk.",
           basicWalk: "Basic Walk",
           feminineWalk: "Feminine Walk",
+          running: "Run",
           overheadWaveMode: "Overhead Wave",
+          idleShiftMode: "Idle Shift",
+          wallPeekMode: "Wall Peek",
           basicWalkDescription: "24 frames at 24 fps, Manny-proportioned skeleton, forward-axis walk.",
           feminineWalkDescription: "24 frames at 24 fps, graceful pelvis yaw and roll with lighter steps.",
+          runningDescription: "16 frames at 32 fps, fast forward-axis run with clear airborne phases, heavier landings, and aggressive fist pumps.",
           overheadWaveDescription: "24 frames at 24 fps, overhead hand wave loop in the same 3D view.",
+          idleShiftDescription: "24 frames at 24 fps, calm alternating weight shift with no walking translation.",
+          wallPeekDescription: "24 frames at 24 fps, leaning against a fixed-width wall before peeking around its right edge.",
           pause: "Pause",
           play: "Play",
           frame: "Frame",
@@ -668,10 +680,16 @@
           walkDescription: "24fps 기준 24프레임, Manny 비율의 스켈레톤과 전방축 보행입니다.",
           basicWalk: "기본 걸음",
           feminineWalk: "여성 걸음",
+          running: "뛰기",
           overheadWaveMode: "손 크게흔들기",
+          idleShiftMode: "짝다리 대기",
+          wallPeekMode: "벽 옆 빼꼼",
           basicWalkDescription: "24fps 기준 24프레임, Manny 비율의 스켈레톤과 전방축 보행입니다.",
           feminineWalkDescription: "24fps 기준 24프레임, 우아한 골반 yaw/roll과 사뿐한 보행입니다.",
+          runningDescription: "32fps 기준 16프레임, 확실한 체공구간과 묵직한 착지, 큰 주먹 펌프를 가진 빠른 전방축 뛰기입니다.",
           overheadWaveDescription: "24fps 기준 24프레임, 같은 3D 뷰에서 보는 손 크게흔들기 루프입니다.",
+          idleShiftDescription: "24fps 기준 24프레임, 걷기 이동 없이 짝다리 체중이 번갈아 이동하는 차분한 대기 자세입니다.",
+          wallPeekDescription: "24fps 기준 24프레임, 고정 폭 벽에 등을 기대고 있다가 벽 오른쪽으로 빼꼼 내미는 루프입니다.",
           pause: "일시정지",
           play: "재생",
           frame: "프레임",
@@ -771,6 +789,44 @@
       );
       scene.add(travelLine);
 
+      const wallPeekWall = {
+        centerX: -10,
+        rightEdgeX: 18,
+        y: 92,
+        z: -10,
+        width: 56,
+        height: 184,
+        thickness: 5
+      };
+      const wallGroup = new THREE.Group();
+      const wallMaterial = new THREE.MeshStandardMaterial({
+        color: 0x74a6d8,
+        transparent: true,
+        opacity: 0.96,
+        roughness: 0.76,
+        metalness: 0.01
+      });
+      const wallFace = new THREE.Mesh(
+        new THREE.BoxGeometry(wallPeekWall.width, wallPeekWall.height, wallPeekWall.thickness),
+        wallMaterial
+      );
+      wallFace.position.set(wallPeekWall.centerX, wallPeekWall.y, wallPeekWall.z);
+      wallGroup.add(wallFace);
+      const wallEdge = new THREE.Mesh(
+        new THREE.BoxGeometry(3, wallPeekWall.height, wallPeekWall.thickness + 1.2),
+        new THREE.MeshStandardMaterial({
+          color: 0x3f7fb8,
+          transparent: true,
+          opacity: 0.95,
+          roughness: 0.78,
+          metalness: 0.01
+        })
+      );
+      wallEdge.position.set(wallPeekWall.rightEdgeX, wallPeekWall.y, wallPeekWall.z + 0.1);
+      wallGroup.add(wallEdge);
+      wallGroup.visible = false;
+      scene.add(wallGroup);
+
       const segments = [
         ["pelvis", "spine_01", "center"],
         ["spine_01", "spine_02", "center"],
@@ -820,6 +876,10 @@
 
       function clamp(value, min, max) {
         return Math.max(min, Math.min(max, value));
+      }
+
+      function smoothstep(value) {
+        return value * value * (3 - value * 2);
       }
 
       function rotateYawRoll(offset, yaw, roll) {
@@ -878,33 +938,50 @@
           handSwing: 3.2,
           armOut: 0.86,
           armDrop: 1.2
+        },
+        running: {
+          bob: 0.35,
+          sideSway: 0.58,
+          chestTwist: -8.0,
+          pelvisYaw: 0.25,
+          pelvisRoll: 0.095,
+          chestYawCounter: -0.52,
+          chestRollCounter: -0.30,
+          stepLength: 42,
+          footLift: 34,
+          footSpacing: 8.6,
+          ballSpacing: 9.5,
+          ballForward: 18.4,
+          hipX: 9.8,
+          hipZ: 1.2,
+          upperArmSwing: 29,
+          lowerArmSwing: 18,
+          handSwing: 15,
+          fistLift: 5.6,
+          fistDrop: 4.4,
+          elbowPump: 3.1,
+          armOut: 0.78,
+          armDrop: -5.2,
+          stanceRatio: 0.22,
+          torsoLean: 12.2,
+          contactDrop: 3.8,
+          footContactDrop: 0.55,
+          reboundLift: 1.8,
+          flightRise: 8.4,
+          flightFootClearance: 10.5,
+          kneeCompression: 3.0
         }
       };
 
-      const overheadWaveParams = [
-        { sway: -0.45, reach: -0.62, lift: 0.40, depth: -0.15 },
-        { sway: -0.78, reach: -1.00, lift: 1.00, depth: 0.25 },
-        { sway: -0.28, reach: -0.35, lift: 0.20, depth: -0.35 },
-        { sway: 0.42, reach: 0.55, lift: 0.55, depth: 0.15 },
-        { sway: 0.82, reach: 1.00, lift: 1.00, depth: -0.25 },
-        { sway: 0.30, reach: 0.35, lift: 0.15, depth: 0.35 },
-        { sway: -0.62, reach: -0.82, lift: 0.75, depth: 0.10 },
-        { sway: 0.08, reach: 0.10, lift: 0.00, depth: -0.10 }
-      ];
-
-      function sampleOverheadWaveParam(index, count) {
-        const position = (index / count) * overheadWaveParams.length;
-        const baseIndex = Math.floor(position) % overheadWaveParams.length;
-        const nextIndex = (baseIndex + 1) % overheadWaveParams.length;
-        const blend = position - Math.floor(position);
-        const smooth = blend * blend * (3 - 2 * blend);
-        const from = overheadWaveParams[baseIndex];
-        const to = overheadWaveParams[nextIndex];
+      function overheadWaveParam(index, count) {
+        const phase = (index / count) * Math.PI * 2;
+        const reach = Math.sin(phase);
+        const secondary = Math.sin(phase * 2);
         return {
-          sway: lerp(from.sway, to.sway, smooth),
-          reach: lerp(from.reach, to.reach, smooth),
-          lift: lerp(from.lift, to.lift, smooth),
-          depth: lerp(from.depth, to.depth, smooth)
+          sway: reach * 0.66 + Math.sin(phase * 3) * 0.08,
+          reach,
+          lift: 0.74 + Math.cos(phase * 2) * 0.20,
+          depth: Math.cos(phase) * 0.28 + secondary * 0.04
         };
       }
 
@@ -918,6 +995,38 @@
           ankle: v(side * config.footSpacing, 8.3 + lift, z),
           ball: v(side * config.ballSpacing, 1.2 + lift * 0.28, z + config.ballForward),
           planted: stance
+        };
+      }
+
+      function runFootAt(phase, side, config) {
+        const cycle = phase % 1;
+        const stance = cycle < config.stanceRatio;
+        if (stance) {
+          const raw = cycle / config.stanceRatio;
+          const t = smoothstep(raw);
+          const z = lerp(config.stepLength * 0.82, -config.stepLength * 0.74, t);
+          const impact = Math.pow(1 - raw, 2.3);
+          const push = Math.pow(Math.sin(raw * Math.PI), 0.72);
+          return {
+            ankle: v(side * config.footSpacing, 8.15 - impact * config.footContactDrop, z),
+            ball: v(side * config.ballSpacing, 1.05, z + config.ballForward),
+            planted: true,
+            impact,
+            push
+          };
+        }
+
+        const t = (cycle - config.stanceRatio) / (1 - config.stanceRatio);
+        const swing = smoothstep(t);
+        const tuck = Math.sin(t * Math.PI);
+        const lift = Math.pow(tuck, 0.86) * config.footLift;
+        const z = lerp(-config.stepLength * 0.74, config.stepLength * 0.82, swing);
+        return {
+          ankle: v(side * config.footSpacing, 8.7 + lift, z),
+          ball: v(side * config.ballSpacing, 1.35 + lift * 0.24 + tuck * 1.2, z + config.ballForward),
+          planted: false,
+          impact: 0,
+          push: 0
         };
       }
 
@@ -942,6 +1051,15 @@
       function buildPose(index) {
         if (currentMode === "overheadWave") {
           return buildOverheadPose(index);
+        }
+        if (currentMode === "running") {
+          return buildRunPose(index, walkPoseModes.running);
+        }
+        if (currentMode === "idleShift") {
+          return buildIdleShiftPose(index);
+        }
+        if (currentMode === "wallPeek") {
+          return buildWallPeekPose(index);
         }
         return buildWalkPose(index, walkPoseModes[currentMode] || walkPoseModes.basic);
       }
@@ -993,8 +1111,220 @@
         return points;
       }
 
+      function buildRunPose(index, config) {
+        const phase = index / frameCount;
+        const leftFoot = runFootAt((phase + 0.5) % 1, 1, config);
+        const rightFoot = runFootAt(phase, -1, config);
+        const support = leftFoot.planted || rightFoot.planted;
+        const impact = Math.max(leftFoot.impact, rightFoot.impact);
+        const push = Math.max(leftFoot.push, rightFoot.push);
+        const flightArc = support ? 0 : Math.pow(Math.abs(Math.sin(phase * Math.PI * 4)), 0.82);
+        const pelvisHeight = 94.8
+          + Math.sin(phase * Math.PI * 4 + 0.35) * config.bob
+          - impact * config.contactDrop
+          + push * config.reboundLift
+          + flightArc * config.flightRise;
+        const sideSway = wave(phase + 0.25) * config.sideSway;
+        const chestTwist = wave(phase) * config.chestTwist;
+        const pelvisYaw = wave(phase) * config.pelvisYaw;
+        const pelvisRoll = wave(phase + 0.23) * config.pelvisRoll;
+        const chestYaw = pelvisYaw * config.chestYawCounter;
+        const chestRoll = pelvisRoll * config.chestRollCounter;
+        const pelvis = v(sideSway, pelvisHeight, 1.1 + push * 0.35);
+        const points = {};
+        const pelvisLocal = (x, y, z) => rotateYawRoll(v(x, y, z), pelvisYaw, pelvisRoll);
+        const chestLocal = (x, y, z) => rotateYawRoll(v(x, y, z), chestYaw, chestRoll);
+        const lean = config.torsoLean + flightArc * 1.2 - impact * 0.4;
+
+        points.pelvis = pelvis;
+        points.spine_01 = pelvis.clone().add(pelvisLocal(sideSway * 0.08, 12.2, lean * 0.30));
+        points.spine_02 = points.spine_01.clone().add(pelvisLocal(sideSway * 0.06, 12.8, lean * 0.32));
+        points.spine_03 = points.spine_02.clone().add(chestLocal(chestTwist * 0.05, 12.7, lean * 0.36));
+        points.spine_04 = points.spine_03.clone().add(chestLocal(chestTwist * 0.07, 10.0, lean * 0.30));
+        points.spine_05 = points.spine_04.clone().add(chestLocal(chestTwist * 0.11, 9.7, lean * 0.24));
+        points.neck_01 = points.spine_05.clone().add(chestLocal(chestTwist * 0.04, 12.0, lean * 0.20));
+        points.head = points.neck_01.clone().add(chestLocal(chestTwist * 0.03, 16.1, lean * 0.18));
+        points.clavicle_l = points.spine_05.clone().add(chestLocal(17.4, 2.8, 1.2));
+        points.clavicle_r = points.spine_05.clone().add(chestLocal(-17.4, 2.8, -1.2));
+
+        const armSwing = wave(phase);
+        const leftDrive = -armSwing;
+        const rightDrive = armSwing;
+        const elbowPump = Math.abs(armSwing) * config.elbowPump + push * 1.1;
+        const leftFistLift = Math.max(0, leftDrive) * config.fistLift - Math.max(0, -leftDrive) * config.fistDrop;
+        const rightFistLift = Math.max(0, rightDrive) * config.fistLift - Math.max(0, -rightDrive) * config.fistDrop;
+        points.upperarm_l = points.clavicle_l.clone().add(chestLocal(
+          12.4 * config.armOut,
+          -12.8 - config.armDrop + Math.max(0, leftDrive) * 0.8,
+          leftDrive * config.upperArmSwing + lean * 0.36
+        ));
+        points.lowerarm_l = points.upperarm_l.clone().add(chestLocal(
+          8.6 * config.armOut,
+          -17.4 - elbowPump + leftFistLift * 0.10,
+          leftDrive * config.lowerArmSwing + lean * 0.12
+        ));
+        points.hand_l = points.lowerarm_l.clone().add(chestLocal(
+          3.8 * config.armOut,
+          -13.2 + leftFistLift,
+          leftDrive * config.handSwing - 1.4
+        ));
+        points.upperarm_r = points.clavicle_r.clone().add(chestLocal(
+          -12.4 * config.armOut,
+          -12.8 - config.armDrop + Math.max(0, rightDrive) * 0.8,
+          rightDrive * config.upperArmSwing + lean * 0.36
+        ));
+        points.lowerarm_r = points.upperarm_r.clone().add(chestLocal(
+          -8.6 * config.armOut,
+          -17.4 - elbowPump + rightFistLift * 0.10,
+          rightDrive * config.lowerArmSwing + lean * 0.12
+        ));
+        points.hand_r = points.lowerarm_r.clone().add(chestLocal(
+          -3.8 * config.armOut,
+          -13.2 + rightFistLift,
+          rightDrive * config.handSwing - 1.4
+        ));
+
+        points.thigh_l = pelvis.clone().add(pelvisLocal(config.hipX + sideSway * 0.08, -3.7, config.hipZ));
+        points.thigh_r = pelvis.clone().add(pelvisLocal(-config.hipX + sideSway * 0.08, -3.7, -config.hipZ));
+        const airborneClearance = support ? 0 : config.flightFootClearance * Math.max(0.55, flightArc);
+        const airborneLift = v(0, airborneClearance, 0);
+        points.foot_l = leftFoot.ankle.clone().add(airborneLift);
+        points.ball_l = leftFoot.ball.clone().add(airborneLift);
+        points.foot_r = rightFoot.ankle.clone().add(airborneLift);
+        points.ball_r = rightFoot.ball.clone().add(airborneLift);
+        points.calf_l = solveKnee(points.thigh_l, points.foot_l, 1)
+          .add(v(0, -leftFoot.impact * config.kneeCompression, leftFoot.push * 1.4));
+        points.calf_r = solveKnee(points.thigh_r, points.foot_r, -1)
+          .add(v(0, -rightFoot.impact * config.kneeCompression, rightFoot.push * 1.4));
+        points._leftPlanted = leftFoot.planted;
+        points._rightPlanted = rightFoot.planted;
+        return points;
+      }
+
+      function buildIdleShiftPose(index) {
+        const phase = index / frameCount;
+        const weight = wave(phase);
+        const breath = Math.sin(phase * Math.PI * 4 + 0.35);
+        const pelvisSway = weight * 3.1;
+        const pelvisYaw = Math.sin(phase * Math.PI * 2 + 0.25) * 0.035;
+        const pelvisRoll = -weight * 0.075;
+        const chestYaw = -pelvisYaw * 0.35;
+        const chestRoll = -pelvisRoll * 0.45;
+        const leftFree = Math.max(0, -weight);
+        const rightFree = Math.max(0, weight);
+        const points = {};
+        const pelvisLocal = (x, y, z) => rotateYawRoll(v(x, y, z), pelvisYaw, pelvisRoll);
+        const chestLocal = (x, y, z) => rotateYawRoll(v(x, y, z), chestYaw, chestRoll);
+
+        const pelvis = v(pelvisSway, 94.6 + breath * 0.22, 0);
+        points.pelvis = pelvis;
+        points.spine_01 = pelvis.clone().add(pelvisLocal(pelvisSway * 0.08, 13.0, 0.4));
+        points.spine_02 = points.spine_01.clone().add(pelvisLocal(pelvisSway * 0.05, 13.2, 0.2));
+        points.spine_03 = points.spine_02.clone().add(chestLocal(-pelvisSway * 0.08, 13.0, 0.0));
+        points.spine_04 = points.spine_03.clone().add(chestLocal(-pelvisSway * 0.06, 10.2, -0.1));
+        points.spine_05 = points.spine_04.clone().add(chestLocal(-pelvisSway * 0.05, 10.0, -0.2));
+        points.neck_01 = points.spine_05.clone().add(chestLocal(0, 12.8, -0.1));
+        points.head = points.neck_01.clone().add(chestLocal(weight * 0.35, 16.8, 0.0));
+        points.clavicle_l = points.spine_05.clone().add(chestLocal(17.2, 2.8, 0.8));
+        points.clavicle_r = points.spine_05.clone().add(chestLocal(-17.2, 2.8, -0.8));
+
+        const armDrift = Math.sin(phase * Math.PI * 2 + 0.7);
+        points.upperarm_l = points.clavicle_l.clone().add(chestLocal(14.8, -17.8, -1.2 - armDrift * 1.0));
+        points.lowerarm_l = points.upperarm_l.clone().add(chestLocal(10.8, -27.0, 1.4 - armDrift * 0.7));
+        points.hand_l = points.lowerarm_l.clone().add(chestLocal(4.8, -22.0, 2.4 - armDrift * 0.5));
+        points.upperarm_r = points.clavicle_r.clone().add(chestLocal(-14.8, -17.8, 1.2 - armDrift * 1.0));
+        points.lowerarm_r = points.upperarm_r.clone().add(chestLocal(-10.8, -27.0, -1.4 - armDrift * 0.7));
+        points.hand_r = points.lowerarm_r.clone().add(chestLocal(-4.8, -22.0, -2.4 - armDrift * 0.5));
+
+        points.thigh_l = pelvis.clone().add(pelvisLocal(10.2 + pelvisSway * 0.08, -3.5, 1.0));
+        points.thigh_r = pelvis.clone().add(pelvisLocal(-10.2 + pelvisSway * 0.08, -3.5, -1.0));
+        points.foot_l = v(12.4, 8.3 + leftFree * 0.75, 7.2);
+        points.ball_l = v(13.7, 1.2, 22.0);
+        points.foot_r = v(-12.4, 8.3 + rightFree * 0.75, 7.2);
+        points.ball_r = v(-13.7, 1.2, 22.0);
+        points.calf_l = solveKnee(points.thigh_l, points.foot_l, 1).add(v(0, -leftFree * 0.25, leftFree * 2.8));
+        points.calf_r = solveKnee(points.thigh_r, points.foot_r, -1).add(v(0, -rightFree * 0.25, rightFree * 2.8));
+        points._leftPlanted = true;
+        points._rightPlanted = true;
+        return points;
+      }
+
+      function buildWallPeekPose(index) {
+        const phase = index / frameCount;
+        const basePeek = smoothstep(Math.max(0, Math.sin(phase * Math.PI)));
+        const opening = Math.max(0, Math.sin(phase * Math.PI * 2));
+        const closing = Math.max(0, -Math.sin(phase * Math.PI * 2));
+        const headPeek = clamp(basePeek * 1.12 + opening * 0.22 - closing * 0.04, 0, 1);
+        const neckPeek = clamp(basePeek * 1.04 + opening * 0.12 - closing * 0.03, 0, 1);
+        const chestPeek = clamp(Math.pow(basePeek, 1.1) + opening * 0.04, 0, 1);
+        const pelvisPeek = clamp(Math.pow(basePeek, 1.48), 0, 1);
+        const limbPeek = clamp(Math.pow(basePeek, 1.22) + opening * 0.03, 0, 1);
+        const settle = Math.sin(phase * Math.PI * 2);
+        const breath = Math.sin(phase * Math.PI * 4 + 0.7);
+        const points = {};
+        const pelvisYaw = pelvisPeek * 0.08;
+        const pelvisRoll = -pelvisPeek * 0.08 + settle * 0.010 * (1 - basePeek);
+        const chestYaw = chestPeek * 0.23;
+        const chestRoll = -chestPeek * 0.18 + settle * 0.008 * (1 - basePeek);
+        const neckYaw = neckPeek * 0.34;
+        const neckRoll = -neckPeek * 0.11;
+        const headYaw = headPeek * 0.50;
+        const headRoll = -headPeek * 0.13;
+        const pelvisLocal = (x, y, z) => rotateYawRoll(v(x, y, z), pelvisYaw, pelvisRoll);
+        const chestLocal = (x, y, z) => rotateYawRoll(v(x, y, z), chestYaw, chestRoll);
+        const headLocal = (x, y, z) => rotateYawRoll(v(x, y, z), headYaw, headRoll);
+
+        const pelvis = v(
+          -2.4 + pelvisPeek * 3.7 + settle * 0.28 * (1 - basePeek),
+          94.5 + breath * 0.20 - pelvisPeek * 0.35,
+          0.8 - pelvisPeek * 0.45
+        );
+        points.pelvis = pelvis;
+        points.spine_01 = pelvis.clone().add(pelvisLocal(pelvisPeek * 0.35, 13.0, -0.8));
+        points.spine_02 = points.spine_01.clone().add(pelvisLocal(pelvisPeek * 0.55, 13.2, -0.6));
+        points.spine_03 = points.spine_02.clone().add(chestLocal(chestPeek * 1.25, 13.0, -0.35));
+        points.spine_04 = points.spine_03.clone().add(chestLocal(chestPeek * 1.75, 10.2, -0.12));
+        points.spine_05 = points.spine_04.clone().add(chestLocal(chestPeek * 2.05, 10.0, 0.15));
+        points.neck_01 = points.spine_05.clone().add(chestLocal(neckPeek * 2.8, 12.8, 0.35));
+        points.head = points.neck_01.clone().add(headLocal(headPeek * 8.9, 16.8, 0.9));
+        points.clavicle_l = points.spine_05.clone().add(chestLocal(17.8 + chestPeek * 1.6, 3.0, 0.8 + chestPeek * 1.1));
+        points.clavicle_r = points.spine_05.clone().add(chestLocal(-17.8 + chestPeek * 0.7, 3.0, -0.8 - chestPeek * 0.9));
+
+        const armDrift = Math.sin(phase * Math.PI * 2 + 0.8) * (1 - basePeek);
+        const relaxedUpperL = points.clavicle_l.clone().add(chestLocal(14.4, -17.2, -1.0 - armDrift * 0.7));
+        const relaxedLowerL = relaxedUpperL.clone().add(chestLocal(10.8, -26.0, 1.3 - armDrift * 0.5));
+        const relaxedHandL = relaxedLowerL.clone().add(chestLocal(4.8, -22.0, 2.5 - armDrift * 0.4));
+        const braceElbowL = v(wallPeekWall.rightEdgeX + 8.4, 111.5, 5.5);
+        const braceUpperL = points.clavicle_l.clone().lerp(braceElbowL, 0.44).add(v(0, -1.8, 0));
+        const braceHandL = v(wallPeekWall.rightEdgeX + 1.6, 103.5, 4.8);
+        points.upperarm_l = relaxedUpperL.clone().lerp(braceUpperL, limbPeek);
+        points.lowerarm_l = relaxedLowerL.clone().lerp(braceElbowL, limbPeek);
+        points.hand_l = relaxedHandL.clone().lerp(braceHandL, limbPeek);
+
+        points.upperarm_r = points.clavicle_r.clone().add(chestLocal(-14.6 + limbPeek * 1.8, -17.5, 1.2 + limbPeek * 2.2));
+        points.lowerarm_r = points.upperarm_r.clone().add(chestLocal(-10.6 + limbPeek * 1.0, -26.4, -1.3 + limbPeek * 1.8));
+        points.hand_r = points.lowerarm_r.clone().add(chestLocal(-4.8 + limbPeek * 0.6, -22.0, -2.4 + limbPeek * 1.5));
+
+        points.thigh_l = pelvis.clone().add(pelvisLocal(10.1 + pelvisPeek * 0.7, -3.5, 1.0 + pelvisPeek * 0.4));
+        points.thigh_r = pelvis.clone().add(pelvisLocal(-10.1 + pelvisPeek * 0.3, -3.5, -1.0 - pelvisPeek * 0.3));
+        points.foot_l = v(10.8, 8.3, 8.6);
+        points.ball_l = v(12.2, 1.2, 23.4);
+        points.foot_r = v(-11.4, 8.3, 6.6);
+        points.ball_r = v(-12.7, 1.2, 21.2);
+        points.calf_l = solveKnee(points.thigh_l, points.foot_l, 1).add(v(pelvisPeek * 1.0, 0, pelvisPeek * 0.7));
+        points.calf_r = solveKnee(points.thigh_r, points.foot_r, -1).add(v(pelvisPeek * 0.4, 0, -pelvisPeek * 0.3));
+        const faceYaw = chestYaw + headYaw;
+        const faceRoll = chestRoll + headRoll;
+        points._faceRight = rotateYawRoll(v(1, 0, 0), faceYaw, faceRoll).normalize();
+        points._faceUp = rotateYawRoll(v(0, 1, 0), faceYaw, faceRoll).normalize();
+        points._faceForward = new THREE.Vector3().crossVectors(points._faceRight, points._faceUp).normalize();
+        points._leftPlanted = true;
+        points._rightPlanted = true;
+        return points;
+      }
+
       function buildOverheadPose(index) {
-        const param = sampleOverheadWaveParam(index, frameCount);
+        const param = overheadWaveParam(index, frameCount);
         const sway = param.sway;
         const reach = param.reach;
         const lift = param.lift;
@@ -1212,9 +1542,9 @@
       }
 
       function updateFaceMarkers(pose) {
-        const up = new THREE.Vector3().subVectors(pose.head, pose.neck_01).normalize();
-        const right = new THREE.Vector3().subVectors(pose.clavicle_l, pose.clavicle_r).normalize();
-        const forward = new THREE.Vector3().crossVectors(right, up).normalize();
+        const up = pose._faceUp || new THREE.Vector3().subVectors(pose.head, pose.neck_01).normalize();
+        const right = pose._faceRight || new THREE.Vector3().subVectors(pose.clavicle_l, pose.clavicle_r).normalize();
+        const forward = pose._faceForward || new THREE.Vector3().crossVectors(right, up).normalize();
         const center = pose.head.clone()
           .add(up.clone().multiplyScalar(2.1))
           .add(forward.clone().multiplyScalar(6.8));
@@ -1238,6 +1568,8 @@
 
       function applyFrame(index) {
         const pose = buildPose(index);
+        wallGroup.visible = currentMode === "wallPeek";
+        travelLine.visible = currentMode !== "wallPeek";
         for (const item of envelopeMeshes) {
           updateEnvelopeCylinder(item.mesh, pose[item.from], pose[item.to], item.radius);
         }

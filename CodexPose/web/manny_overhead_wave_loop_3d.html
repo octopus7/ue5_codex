@@ -445,31 +445,16 @@
         return;
       }
 
-      const frameParams = [
-        { name: "overhead_wave_01", sway: -0.45, reach: -0.62, lift: 0.40, depth: -0.15 },
-        { name: "overhead_wave_02", sway: -0.78, reach: -1.00, lift: 1.00, depth: 0.25 },
-        { name: "overhead_wave_03", sway: -0.28, reach: -0.35, lift: 0.20, depth: -0.35 },
-        { name: "overhead_wave_04", sway: 0.42, reach: 0.55, lift: 0.55, depth: 0.15 },
-        { name: "overhead_wave_05", sway: 0.82, reach: 1.00, lift: 1.00, depth: -0.25 },
-        { name: "overhead_wave_06", sway: 0.30, reach: 0.35, lift: 0.15, depth: 0.35 },
-        { name: "overhead_wave_07", sway: -0.62, reach: -0.82, lift: 0.75, depth: 0.10 },
-        { name: "overhead_wave_08", sway: 0.08, reach: 0.10, lift: 0.00, depth: -0.10 }
-      ];
-
-      function sampleFrameParam(index) {
-        const position = (index / frameCount) * frameParams.length;
-        const baseIndex = Math.floor(position) % frameParams.length;
-        const nextIndex = (baseIndex + 1) % frameParams.length;
-        const blend = position - Math.floor(position);
-        const smooth = blend * blend * (3 - 2 * blend);
-        const from = frameParams[baseIndex];
-        const to = frameParams[nextIndex];
+      function frameParam(index) {
+        const phase = (index / frameCount) * Math.PI * 2;
+        const reach = Math.sin(phase);
+        const secondary = Math.sin(phase * 2);
         return {
           name: `overhead_wave_${String(index + 1).padStart(2, "0")}`,
-          sway: lerp(from.sway, to.sway, smooth),
-          reach: lerp(from.reach, to.reach, smooth),
-          lift: lerp(from.lift, to.lift, smooth),
-          depth: lerp(from.depth, to.depth, smooth)
+          sway: reach * 0.66 + Math.sin(phase * 3) * 0.08,
+          reach,
+          lift: 0.74 + Math.cos(phase * 2) * 0.20,
+          depth: Math.cos(phase) * 0.28 + secondary * 0.04
         };
       }
 
@@ -576,7 +561,7 @@
         };
       }
 
-      const frames = Array.from({ length: frameCount }, (_, index) => buildFrame(sampleFrameParam(index)));
+      const frames = Array.from({ length: frameCount }, (_, index) => buildFrame(frameParam(index)));
       const ticks = frames.map(() => {
         const tick = document.createElement("div");
         tick.className = "tick";
