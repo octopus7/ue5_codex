@@ -12,390 +12,116 @@ window.mannyWallClimbKeyposes = {
     rotationUnits: "degrees"
   },
   wall: {
-    id: "wallClimbTestWall",
-    center: { x: 0, y: 58, z: 42 },
-    size: { width: 72, height: 116, thickness: 7 },
-    topY: 116,
-    surfaceZ: 38.5,
-    farFaceZ: 45.5,
-    topLandingZ: 69,
-    leftEdgeX: -36,
-    rightEdgeX: 36,
+    id: "wallClimbTallMantleWall",
+    center: { x: 0, y: 66, z: 43 },
+    size: { width: 76, height: 132, thickness: 8 },
+    topY: 132,
+    surfaceZ: 39,
+    farFaceZ: 47,
+    topLandingZ: 76,
+    leftEdgeX: -38,
+    rightEdgeX: 38,
     material: {
       color: 0x5d9bd3,
       edgeColor: 0x3377b1,
-      opacity: 0.88
+      opacity: 0.9
     }
   },
   builderHints: {
-    interpolation: "cubic ease between frames with contact-aware foot and hand locks",
-    body: "Drive pelvis/chest/head first, then solve limbs to hand and foot targets.",
-    contacts: "When a contact value is ground, wall, or top, hold that target unless the next frame changes contact.",
-    stance: "Keep X movement restrained; most travel is along +Z and then +Y over the wall."
+    interpolation: "cubic ease between frames with contact-aware hand and foot locks",
+    body: "Run, compress, jump, catch the high top edge with both hands, hook one leg, rotate sideways, then stand on the far/top side.",
+    contacts: "Use top for hand catches and the single hooked foot. Do not make both feet march on the wall.",
+    stance: "Most travel is along +Z; X offsets and yaw/roll sell the sideways mantle over the ledge."
   },
   frames: [
-    {
-      frame: 0,
-      name: "approach_gather",
-      key: true,
-      pelvis: { pos: { x: 0.0, y: 95.0, z: -70.0 }, rot: { pitch: -7.0, yaw: 0.0, roll: 0.0 } },
-      chest: { rot: { pitch: -14.0, yaw: 0.0, roll: 0.0 } },
-      head: { rot: { pitch: 8.0, yaw: 0.0, roll: 0.0 }, lookAt: { x: 0.0, y: 116.0, z: 38.5 } },
-      leftArm: { shoulder: { pitch: 18.0, yaw: 6.0, roll: 8.0 }, elbow: { bend: 70.0 }, wrist: { pitch: -8.0 } },
-      rightArm: { shoulder: { pitch: -28.0, yaw: -5.0, roll: -8.0 }, elbow: { bend: 82.0 }, wrist: { pitch: -8.0 } },
-      leftFoot: { ankle: { x: 8.8, y: 8.3, z: -57.0 }, ball: { x: 9.6, y: 1.2, z: -42.0 }, rot: { pitch: -4.0, yaw: 0.0, roll: 0.0 }, weight: 0.62 },
-      rightFoot: { ankle: { x: -8.6, y: 8.3, z: -81.0 }, ball: { x: -9.4, y: 1.2, z: -66.0 }, rot: { pitch: 5.0, yaw: 0.0, roll: 0.0 }, weight: 0.38 },
-      leftHand: { pos: { x: 24.0, y: 84.0, z: -58.0 }, rot: { pitch: -16.0, yaw: 6.0, roll: 18.0 }, grip: 0.0, weight: 0.0 },
-      rightHand: { pos: { x: -20.0, y: 72.0, z: -88.0 }, rot: { pitch: -14.0, yaw: -6.0, roll: -16.0 }, grip: 0.0, weight: 0.0 },
-      contacts: { leftFoot: "ground", rightFoot: "ground", leftHand: "air", rightHand: "air" }
-    },
-    {
-      frame: 1,
-      name: "approach_drive",
-      key: false,
-      pelvis: { pos: { x: -0.3, y: 95.8, z: -61.0 }, rot: { pitch: -9.0, yaw: -1.0, roll: 0.5 } },
-      chest: { rot: { pitch: -17.0, yaw: -1.5, roll: 0.4 } },
-      head: { rot: { pitch: 9.0, yaw: 0.5, roll: 0.0 }, lookAt: { x: 0.0, y: 116.0, z: 38.5 } },
-      leftArm: { shoulder: { pitch: -18.0, yaw: 7.0, roll: 7.0 }, elbow: { bend: 76.0 }, wrist: { pitch: -10.0 } },
-      rightArm: { shoulder: { pitch: 20.0, yaw: -6.0, roll: -8.0 }, elbow: { bend: 80.0 }, wrist: { pitch: -8.0 } },
-      leftFoot: { ankle: { x: 8.8, y: 8.3, z: -57.0 }, ball: { x: 9.6, y: 1.2, z: -42.0 }, rot: { pitch: -5.0, yaw: 0.0, roll: 0.0 }, weight: 0.82 },
-      rightFoot: { ankle: { x: -8.5, y: 13.8, z: -65.0 }, ball: { x: -9.3, y: 6.0, z: -50.0 }, rot: { pitch: 20.0, yaw: 0.0, roll: 0.0 }, weight: 0.0 },
-      leftHand: { pos: { x: 18.0, y: 76.0, z: -70.0 }, rot: { pitch: -20.0, yaw: 6.0, roll: 16.0 }, grip: 0.0, weight: 0.0 },
-      rightHand: { pos: { x: -16.0, y: 88.0, z: -54.0 }, rot: { pitch: -16.0, yaw: -5.0, roll: -15.0 }, grip: 0.0, weight: 0.0 },
-      contacts: { leftFoot: "ground", rightFoot: "air", leftHand: "air", rightHand: "air" }
-    },
-    {
-      frame: 2,
-      name: "approach_push",
-      key: true,
-      pelvis: { pos: { x: -0.4, y: 96.5, z: -50.0 }, rot: { pitch: -11.0, yaw: -1.4, roll: 0.8 } },
-      chest: { rot: { pitch: -20.0, yaw: -2.0, roll: 0.6 } },
-      head: { rot: { pitch: 10.0, yaw: 0.8, roll: 0.0 }, lookAt: { x: 0.0, y: 116.0, z: 38.5 } },
-      leftArm: { shoulder: { pitch: -30.0, yaw: 8.0, roll: 8.0 }, elbow: { bend: 76.0 }, wrist: { pitch: -12.0 } },
-      rightArm: { shoulder: { pitch: 32.0, yaw: -7.0, roll: -7.0 }, elbow: { bend: 78.0 }, wrist: { pitch: -8.0 } },
-      leftFoot: { ankle: { x: 8.8, y: 8.3, z: -57.0 }, ball: { x: 9.6, y: 1.2, z: -42.0 }, rot: { pitch: -9.0, yaw: 0.0, roll: 0.0 }, weight: 1.0 },
-      rightFoot: { ankle: { x: -7.8, y: 17.0, z: -42.0 }, ball: { x: -8.5, y: 9.0, z: -28.0 }, rot: { pitch: 28.0, yaw: 0.0, roll: 0.0 }, weight: 0.0 },
-      leftHand: { pos: { x: 12.0, y: 70.0, z: -78.0 }, rot: { pitch: -22.0, yaw: 7.0, roll: 15.0 }, grip: 0.0, weight: 0.0 },
-      rightHand: { pos: { x: -13.0, y: 98.0, z: -35.0 }, rot: { pitch: -14.0, yaw: -5.0, roll: -14.0 }, grip: 0.0, weight: 0.0 },
-      contacts: { leftFoot: "ground", rightFoot: "air", leftHand: "air", rightHand: "air" }
-    },
-    {
-      frame: 3,
-      name: "wall_step_commit",
-      key: false,
-      pelvis: { pos: { x: -0.2, y: 98.0, z: -36.0 }, rot: { pitch: -13.0, yaw: -0.8, roll: 0.5 } },
-      chest: { rot: { pitch: -23.0, yaw: -1.0, roll: 0.4 } },
-      head: { rot: { pitch: 11.0, yaw: 0.5, roll: 0.0 }, lookAt: { x: 0.0, y: 116.0, z: 38.5 } },
-      leftArm: { shoulder: { pitch: -36.0, yaw: 8.0, roll: 8.0 }, elbow: { bend: 78.0 }, wrist: { pitch: -12.0 } },
-      rightArm: { shoulder: { pitch: 42.0, yaw: -8.0, roll: -8.0 }, elbow: { bend: 76.0 }, wrist: { pitch: -9.0 } },
-      leftFoot: { ankle: { x: 8.8, y: 8.3, z: -57.0 }, ball: { x: 9.6, y: 1.2, z: -42.0 }, rot: { pitch: -14.0, yaw: 0.0, roll: 0.0 }, weight: 0.72 },
-      rightFoot: { ankle: { x: -7.4, y: 26.0, z: 15.5 }, ball: { x: -8.1, y: 28.0, z: 38.5 }, rot: { pitch: 62.0, yaw: 0.0, roll: 0.0 }, weight: 0.18 },
-      leftHand: { pos: { x: 8.0, y: 72.0, z: -66.0 }, rot: { pitch: -24.0, yaw: 7.0, roll: 14.0 }, grip: 0.0, weight: 0.0 },
-      rightHand: { pos: { x: -12.0, y: 108.0, z: -14.0 }, rot: { pitch: -12.0, yaw: -4.0, roll: -12.0 }, grip: 0.0, weight: 0.0 },
-      contacts: { leftFoot: "ground", rightFoot: "wall", leftHand: "air", rightHand: "air" }
-    },
-    {
-      frame: 4,
-      name: "first_wall_plant",
-      key: true,
-      pelvis: { pos: { x: -0.1, y: 101.5, z: -23.0 }, rot: { pitch: -17.0, yaw: 0.0, roll: 0.0 } },
-      chest: { rot: { pitch: -28.0, yaw: 0.0, roll: 0.0 } },
-      head: { rot: { pitch: 14.0, yaw: 0.0, roll: 0.0 }, lookAt: { x: 0.0, y: 116.0, z: 38.5 } },
-      leftArm: { shoulder: { pitch: -42.0, yaw: 8.0, roll: 8.0 }, elbow: { bend: 82.0 }, wrist: { pitch: -14.0 } },
-      rightArm: { shoulder: { pitch: 58.0, yaw: -8.0, roll: -8.0 }, elbow: { bend: 72.0 }, wrist: { pitch: -10.0 } },
-      leftFoot: { ankle: { x: 8.8, y: 8.3, z: -57.0 }, ball: { x: 9.6, y: 1.2, z: -42.0 }, rot: { pitch: -18.0, yaw: 0.0, roll: 0.0 }, weight: 0.35 },
-      rightFoot: { ankle: { x: -7.2, y: 39.0, z: 18.0 }, ball: { x: -7.8, y: 43.0, z: 38.5 }, rot: { pitch: 74.0, yaw: 0.0, roll: 0.0 }, weight: 0.85 },
-      leftHand: { pos: { x: 5.5, y: 80.0, z: -50.0 }, rot: { pitch: -26.0, yaw: 6.0, roll: 12.0 }, grip: 0.0, weight: 0.0 },
-      rightHand: { pos: { x: -9.8, y: 115.0, z: 8.0 }, rot: { pitch: -8.0, yaw: -4.0, roll: -10.0 }, grip: 0.0, weight: 0.0 },
-      contacts: { leftFoot: "ground", rightFoot: "wall", leftHand: "air", rightHand: "air" }
-    },
-    {
-      frame: 5,
-      name: "wall_drive_up",
-      key: false,
-      pelvis: { pos: { x: 0.1, y: 108.0, z: -9.0 }, rot: { pitch: -20.0, yaw: 1.0, roll: -0.5 } },
-      chest: { rot: { pitch: -31.0, yaw: 1.4, roll: -0.6 } },
-      head: { rot: { pitch: 17.0, yaw: 0.5, roll: 0.0 }, lookAt: { x: 0.0, y: 116.0, z: 38.5 } },
-      leftArm: { shoulder: { pitch: -20.0, yaw: 7.0, roll: 9.0 }, elbow: { bend: 88.0 }, wrist: { pitch: -12.0 } },
-      rightArm: { shoulder: { pitch: 72.0, yaw: -7.0, roll: -8.0 }, elbow: { bend: 66.0 }, wrist: { pitch: -8.0 } },
-      leftFoot: { ankle: { x: 8.0, y: 16.0, z: -28.0 }, ball: { x: 8.6, y: 8.0, z: -13.0 }, rot: { pitch: 24.0, yaw: 0.0, roll: 0.0 }, weight: 0.0 },
-      rightFoot: { ankle: { x: -7.2, y: 39.0, z: 18.0 }, ball: { x: -7.8, y: 43.0, z: 38.5 }, rot: { pitch: 76.0, yaw: 0.0, roll: 0.0 }, weight: 1.0 },
-      leftHand: { pos: { x: 6.0, y: 92.0, z: -30.0 }, rot: { pitch: -22.0, yaw: 5.0, roll: 10.0 }, grip: 0.0, weight: 0.0 },
-      rightHand: { pos: { x: -8.0, y: 121.0, z: 24.0 }, rot: { pitch: -4.0, yaw: -3.0, roll: -8.0 }, grip: 0.0, weight: 0.0 },
-      contacts: { leftFoot: "air", rightFoot: "wall", leftHand: "air", rightHand: "air" }
-    },
-    {
-      frame: 6,
-      name: "second_wall_touch",
-      key: true,
-      pelvis: { pos: { x: 0.2, y: 114.5, z: 3.0 }, rot: { pitch: -24.0, yaw: 1.5, roll: -0.8 } },
-      chest: { rot: { pitch: -35.0, yaw: 2.0, roll: -0.8 } },
-      head: { rot: { pitch: 20.0, yaw: 0.8, roll: 0.0 }, lookAt: { x: 0.0, y: 116.0, z: 38.5 } },
-      leftArm: { shoulder: { pitch: 8.0, yaw: 6.0, roll: 8.0 }, elbow: { bend: 88.0 }, wrist: { pitch: -8.0 } },
-      rightArm: { shoulder: { pitch: 85.0, yaw: -7.0, roll: -7.0 }, elbow: { bend: 58.0 }, wrist: { pitch: -5.0 } },
-      leftFoot: { ankle: { x: 7.4, y: 59.0, z: 19.0 }, ball: { x: 8.0, y: 63.0, z: 38.5 }, rot: { pitch: 72.0, yaw: 0.0, roll: 0.0 }, weight: 0.55 },
-      rightFoot: { ankle: { x: -7.2, y: 42.0, z: 18.0 }, ball: { x: -7.8, y: 46.0, z: 38.5 }, rot: { pitch: 77.0, yaw: 0.0, roll: 0.0 }, weight: 0.45 },
-      leftHand: { pos: { x: 6.5, y: 105.0, z: -8.0 }, rot: { pitch: -16.0, yaw: 4.0, roll: 9.0 }, grip: 0.0, weight: 0.0 },
-      rightHand: { pos: { x: -8.5, y: 124.0, z: 35.0 }, rot: { pitch: 0.0, yaw: -2.0, roll: -8.0 }, grip: 0.15, weight: 0.15 },
-      contacts: { leftFoot: "wall", rightFoot: "wall", leftHand: "air", rightHand: "wall" }
-    },
-    {
-      frame: 7,
-      name: "reach_for_edge",
-      key: false,
-      pelvis: { pos: { x: 0.1, y: 121.0, z: 13.0 }, rot: { pitch: -27.0, yaw: 1.2, roll: -0.6 } },
-      chest: { rot: { pitch: -39.0, yaw: 1.6, roll: -0.6 } },
-      head: { rot: { pitch: 23.0, yaw: 0.6, roll: 0.0 }, lookAt: { x: 0.0, y: 116.0, z: 45.5 } },
-      leftArm: { shoulder: { pitch: 46.0, yaw: 5.0, roll: 7.0 }, elbow: { bend: 70.0 }, wrist: { pitch: -4.0 } },
-      rightArm: { shoulder: { pitch: 96.0, yaw: -6.0, roll: -7.0 }, elbow: { bend: 46.0 }, wrist: { pitch: -2.0 } },
-      leftFoot: { ankle: { x: 7.4, y: 59.0, z: 19.0 }, ball: { x: 8.0, y: 63.0, z: 38.5 }, rot: { pitch: 73.0, yaw: 0.0, roll: 0.0 }, weight: 0.72 },
-      rightFoot: { ankle: { x: -7.1, y: 46.0, z: 18.0 }, ball: { x: -7.7, y: 50.0, z: 38.5 }, rot: { pitch: 76.0, yaw: 0.0, roll: 0.0 }, weight: 0.28 },
-      leftHand: { pos: { x: 8.5, y: 116.0, z: 31.0 }, rot: { pitch: -4.0, yaw: 3.0, roll: 8.0 }, grip: 0.1, weight: 0.1 },
-      rightHand: { pos: { x: -8.5, y: 116.0, z: 38.5 }, rot: { pitch: 0.0, yaw: -2.0, roll: -8.0 }, grip: 0.45, weight: 0.55 },
-      contacts: { leftFoot: "wall", rightFoot: "wall", leftHand: "wall", rightHand: "top" }
-    },
-    {
-      frame: 8,
-      name: "both_hands_catch_top",
-      key: true,
-      pelvis: { pos: { x: 0.0, y: 127.0, z: 22.0 }, rot: { pitch: -30.0, yaw: 0.6, roll: 0.0 } },
-      chest: { rot: { pitch: -43.0, yaw: 1.0, roll: 0.0 } },
-      head: { rot: { pitch: 25.0, yaw: 0.2, roll: 0.0 }, lookAt: { x: 0.0, y: 120.0, z: 60.0 } },
-      leftArm: { shoulder: { pitch: 104.0, yaw: 4.0, roll: 6.0 }, elbow: { bend: 36.0 }, wrist: { pitch: 0.0 } },
-      rightArm: { shoulder: { pitch: 104.0, yaw: -4.0, roll: -6.0 }, elbow: { bend: 36.0 }, wrist: { pitch: 0.0 } },
-      leftFoot: { ankle: { x: 7.4, y: 62.0, z: 19.0 }, ball: { x: 8.0, y: 66.0, z: 38.5 }, rot: { pitch: 74.0, yaw: 0.0, roll: 0.0 }, weight: 0.58 },
-      rightFoot: { ankle: { x: -7.1, y: 49.0, z: 18.0 }, ball: { x: -7.7, y: 53.0, z: 38.5 }, rot: { pitch: 76.0, yaw: 0.0, roll: 0.0 }, weight: 0.22 },
-      leftHand: { pos: { x: 10.5, y: 116.0, z: 38.5 }, rot: { pitch: 0.0, yaw: 2.0, roll: 8.0 }, grip: 0.85, weight: 0.9 },
-      rightHand: { pos: { x: -10.5, y: 116.0, z: 38.5 }, rot: { pitch: 0.0, yaw: -2.0, roll: -8.0 }, grip: 0.85, weight: 0.9 },
-      contacts: { leftFoot: "wall", rightFoot: "wall", leftHand: "top", rightHand: "top" }
-    },
-    {
-      frame: 9,
-      name: "loaded_hang",
-      key: false,
-      pelvis: { pos: { x: 0.0, y: 124.5, z: 28.0 }, rot: { pitch: -32.0, yaw: 0.0, roll: 0.0 } },
-      chest: { rot: { pitch: -47.0, yaw: 0.0, roll: 0.0 } },
-      head: { rot: { pitch: 28.0, yaw: 0.0, roll: 0.0 }, lookAt: { x: 0.0, y: 121.0, z: 67.0 } },
-      leftArm: { shoulder: { pitch: 108.0, yaw: 4.0, roll: 5.0 }, elbow: { bend: 48.0 }, wrist: { pitch: 2.0 } },
-      rightArm: { shoulder: { pitch: 108.0, yaw: -4.0, roll: -5.0 }, elbow: { bend: 48.0 }, wrist: { pitch: 2.0 } },
-      leftFoot: { ankle: { x: 7.2, y: 64.0, z: 19.0 }, ball: { x: 7.9, y: 68.0, z: 38.5 }, rot: { pitch: 74.0, yaw: 0.0, roll: 0.0 }, weight: 0.48 },
-      rightFoot: { ankle: { x: -6.9, y: 47.0, z: 17.0 }, ball: { x: -7.7, y: 51.0, z: 38.5 }, rot: { pitch: 77.0, yaw: 0.0, roll: 0.0 }, weight: 0.12 },
-      leftHand: { pos: { x: 10.5, y: 116.0, z: 38.5 }, rot: { pitch: 0.0, yaw: 2.0, roll: 8.0 }, grip: 1.0, weight: 1.0 },
-      rightHand: { pos: { x: -10.5, y: 116.0, z: 38.5 }, rot: { pitch: 0.0, yaw: -2.0, roll: -8.0 }, grip: 1.0, weight: 1.0 },
-      contacts: { leftFoot: "wall", rightFoot: "wall", leftHand: "top", rightHand: "top" }
-    },
-    {
-      frame: 10,
-      name: "pull_start",
-      key: true,
-      pelvis: { pos: { x: -0.2, y: 133.0, z: 35.0 }, rot: { pitch: -30.0, yaw: -1.0, roll: 0.5 } },
-      chest: { rot: { pitch: -40.0, yaw: -1.5, roll: 0.4 } },
-      head: { rot: { pitch: 23.0, yaw: -0.4, roll: 0.0 }, lookAt: { x: 0.0, y: 124.0, z: 74.0 } },
-      leftArm: { shoulder: { pitch: 98.0, yaw: 4.0, roll: 7.0 }, elbow: { bend: 78.0 }, wrist: { pitch: 6.0 } },
-      rightArm: { shoulder: { pitch: 98.0, yaw: -4.0, roll: -7.0 }, elbow: { bend: 78.0 }, wrist: { pitch: 6.0 } },
-      leftFoot: { ankle: { x: 7.1, y: 70.0, z: 20.0 }, ball: { x: 7.8, y: 74.0, z: 38.5 }, rot: { pitch: 76.0, yaw: 0.0, roll: 0.0 }, weight: 0.58 },
-      rightFoot: { ankle: { x: -6.5, y: 43.0, z: 16.0 }, ball: { x: -7.4, y: 47.0, z: 38.5 }, rot: { pitch: 78.0, yaw: 0.0, roll: 0.0 }, weight: 0.08 },
-      leftHand: { pos: { x: 10.5, y: 116.0, z: 38.5 }, rot: { pitch: 2.0, yaw: 2.0, roll: 9.0 }, grip: 1.0, weight: 1.0 },
-      rightHand: { pos: { x: -10.5, y: 116.0, z: 38.5 }, rot: { pitch: 2.0, yaw: -2.0, roll: -9.0 }, grip: 1.0, weight: 1.0 },
-      contacts: { leftFoot: "wall", rightFoot: "wall", leftHand: "top", rightHand: "top" }
-    },
-    {
-      frame: 11,
-      name: "chest_over_edge",
-      key: false,
-      pelvis: { pos: { x: -0.4, y: 143.0, z: 43.0 }, rot: { pitch: -26.0, yaw: -1.5, roll: 0.8 } },
-      chest: { rot: { pitch: -31.0, yaw: -2.0, roll: 0.8 } },
-      head: { rot: { pitch: 18.0, yaw: -0.5, roll: 0.0 }, lookAt: { x: 0.0, y: 128.0, z: 81.0 } },
-      leftArm: { shoulder: { pitch: 88.0, yaw: 5.0, roll: 8.0 }, elbow: { bend: 96.0 }, wrist: { pitch: 10.0 } },
-      rightArm: { shoulder: { pitch: 90.0, yaw: -5.0, roll: -8.0 }, elbow: { bend: 96.0 }, wrist: { pitch: 10.0 } },
-      leftFoot: { ankle: { x: 6.8, y: 78.0, z: 21.0 }, ball: { x: 7.6, y: 82.0, z: 38.5 }, rot: { pitch: 78.0, yaw: 0.0, roll: 0.0 }, weight: 0.42 },
-      rightFoot: { ankle: { x: -6.2, y: 38.0, z: 10.0 }, ball: { x: -7.0, y: 42.0, z: 32.0 }, rot: { pitch: 70.0, yaw: 0.0, roll: 0.0 }, weight: 0.0 },
-      leftHand: { pos: { x: 10.5, y: 116.0, z: 38.5 }, rot: { pitch: 8.0, yaw: 3.0, roll: 10.0 }, grip: 1.0, weight: 1.0 },
-      rightHand: { pos: { x: -10.5, y: 116.0, z: 38.5 }, rot: { pitch: 8.0, yaw: -3.0, roll: -10.0 }, grip: 1.0, weight: 1.0 },
-      contacts: { leftFoot: "wall", rightFoot: "air", leftHand: "top", rightHand: "top" }
-    },
-    {
-      frame: 12,
-      name: "hip_to_top",
-      key: true,
-      pelvis: { pos: { x: -0.5, y: 154.0, z: 52.0 }, rot: { pitch: -18.0, yaw: -1.8, roll: 1.0 } },
-      chest: { rot: { pitch: -20.0, yaw: -2.0, roll: 0.8 } },
-      head: { rot: { pitch: 11.0, yaw: -0.5, roll: 0.0 }, lookAt: { x: 0.0, y: 131.0, z: 87.0 } },
-      leftArm: { shoulder: { pitch: 74.0, yaw: 5.0, roll: 8.0 }, elbow: { bend: 112.0 }, wrist: { pitch: 13.0 } },
-      rightArm: { shoulder: { pitch: 78.0, yaw: -5.0, roll: -8.0 }, elbow: { bend: 112.0 }, wrist: { pitch: 13.0 } },
-      leftFoot: { ankle: { x: 6.3, y: 89.0, z: 24.0 }, ball: { x: 7.1, y: 93.0, z: 38.5 }, rot: { pitch: 79.0, yaw: 0.0, roll: 0.0 }, weight: 0.18 },
-      rightFoot: { ankle: { x: -7.0, y: 57.0, z: 28.0 }, ball: { x: -8.0, y: 61.0, z: 45.0 }, rot: { pitch: 62.0, yaw: 0.0, roll: 0.0 }, weight: 0.0 },
-      leftHand: { pos: { x: 10.5, y: 116.0, z: 38.5 }, rot: { pitch: 13.0, yaw: 3.0, roll: 10.0 }, grip: 1.0, weight: 1.0 },
-      rightHand: { pos: { x: -10.5, y: 116.0, z: 38.5 }, rot: { pitch: 13.0, yaw: -3.0, roll: -10.0 }, grip: 1.0, weight: 1.0 },
-      contacts: { leftFoot: "wall", rightFoot: "air", leftHand: "top", rightHand: "top" }
-    },
-    {
-      frame: 13,
-      name: "left_knee_search",
-      key: false,
-      pelvis: { pos: { x: -0.8, y: 162.0, z: 59.0 }, rot: { pitch: -12.0, yaw: -2.2, roll: 1.2 } },
-      chest: { rot: { pitch: -13.0, yaw: -2.5, roll: 1.0 } },
-      head: { rot: { pitch: 7.0, yaw: -0.6, roll: 0.0 }, lookAt: { x: 1.0, y: 134.0, z: 91.0 } },
-      leftArm: { shoulder: { pitch: 62.0, yaw: 6.0, roll: 9.0 }, elbow: { bend: 118.0 }, wrist: { pitch: 15.0 } },
-      rightArm: { shoulder: { pitch: 66.0, yaw: -6.0, roll: -9.0 }, elbow: { bend: 118.0 }, wrist: { pitch: 15.0 } },
-      leftFoot: { ankle: { x: 8.8, y: 112.0, z: 49.0 }, ball: { x: 9.6, y: 117.2, z: 62.0 }, rot: { pitch: 18.0, yaw: 2.0, roll: 0.0 }, weight: 0.18 },
-      rightFoot: { ankle: { x: -7.0, y: 72.0, z: 32.0 }, ball: { x: -8.0, y: 76.0, z: 48.0 }, rot: { pitch: 60.0, yaw: 0.0, roll: 0.0 }, weight: 0.0 },
-      leftHand: { pos: { x: 10.5, y: 116.0, z: 38.5 }, rot: { pitch: 16.0, yaw: 4.0, roll: 10.0 }, grip: 1.0, weight: 1.0 },
-      rightHand: { pos: { x: -10.5, y: 116.0, z: 38.5 }, rot: { pitch: 16.0, yaw: -4.0, roll: -10.0 }, grip: 1.0, weight: 1.0 },
-      contacts: { leftFoot: "top", rightFoot: "air", leftHand: "top", rightHand: "top" }
-    },
-    {
-      frame: 14,
-      name: "left_foot_load",
-      key: true,
-      pelvis: { pos: { x: -0.6, y: 171.0, z: 64.0 }, rot: { pitch: -7.0, yaw: -1.6, roll: 0.7 } },
-      chest: { rot: { pitch: -8.0, yaw: -2.0, roll: 0.5 } },
-      head: { rot: { pitch: 5.0, yaw: -0.4, roll: 0.0 }, lookAt: { x: 0.0, y: 138.0, z: 94.0 } },
-      leftArm: { shoulder: { pitch: 50.0, yaw: 5.0, roll: 8.0 }, elbow: { bend: 124.0 }, wrist: { pitch: 16.0 } },
-      rightArm: { shoulder: { pitch: 56.0, yaw: -6.0, roll: -8.0 }, elbow: { bend: 122.0 }, wrist: { pitch: 16.0 } },
-      leftFoot: { ankle: { x: 8.6, y: 124.3, z: 53.0 }, ball: { x: 9.5, y: 117.2, z: 68.0 }, rot: { pitch: -4.0, yaw: 1.0, roll: 0.0 }, weight: 0.58 },
-      rightFoot: { ankle: { x: -7.0, y: 88.0, z: 40.0 }, ball: { x: -8.0, y: 92.0, z: 55.0 }, rot: { pitch: 54.0, yaw: 0.0, roll: 0.0 }, weight: 0.0 },
-      leftHand: { pos: { x: 10.5, y: 116.0, z: 38.5 }, rot: { pitch: 18.0, yaw: 4.0, roll: 10.0 }, grip: 1.0, weight: 0.9 },
-      rightHand: { pos: { x: -10.5, y: 116.0, z: 38.5 }, rot: { pitch: 18.0, yaw: -4.0, roll: -10.0 }, grip: 1.0, weight: 0.95 },
-      contacts: { leftFoot: "top", rightFoot: "air", leftHand: "top", rightHand: "top" }
-    },
-    {
-      frame: 15,
-      name: "mantle_push",
-      key: false,
-      pelvis: { pos: { x: -0.2, y: 181.0, z: 69.0 }, rot: { pitch: -3.0, yaw: -1.0, roll: 0.2 } },
-      chest: { rot: { pitch: -4.0, yaw: -1.0, roll: 0.2 } },
-      head: { rot: { pitch: 3.0, yaw: -0.2, roll: 0.0 }, lookAt: { x: 0.0, y: 150.0, z: 100.0 } },
-      leftArm: { shoulder: { pitch: 38.0, yaw: 5.0, roll: 7.0 }, elbow: { bend: 116.0 }, wrist: { pitch: 18.0 } },
-      rightArm: { shoulder: { pitch: 44.0, yaw: -5.0, roll: -7.0 }, elbow: { bend: 116.0 }, wrist: { pitch: 18.0 } },
-      leftFoot: { ankle: { x: 8.6, y: 124.3, z: 53.0 }, ball: { x: 9.5, y: 117.2, z: 68.0 }, rot: { pitch: -5.0, yaw: 1.0, roll: 0.0 }, weight: 0.78 },
-      rightFoot: { ankle: { x: -8.6, y: 113.0, z: 53.0 }, ball: { x: -9.6, y: 117.2, z: 66.0 }, rot: { pitch: 18.0, yaw: -1.0, roll: 0.0 }, weight: 0.18 },
-      leftHand: { pos: { x: 10.5, y: 116.0, z: 38.5 }, rot: { pitch: 20.0, yaw: 4.0, roll: 10.0 }, grip: 0.85, weight: 0.72 },
-      rightHand: { pos: { x: -10.5, y: 116.0, z: 38.5 }, rot: { pitch: 20.0, yaw: -4.0, roll: -10.0 }, grip: 0.9, weight: 0.8 },
-      contacts: { leftFoot: "top", rightFoot: "top", leftHand: "top", rightHand: "top" }
-    },
-    {
-      frame: 16,
-      name: "right_foot_catches_top",
-      key: true,
-      pelvis: { pos: { x: 0.2, y: 190.0, z: 73.0 }, rot: { pitch: 1.0, yaw: -0.2, roll: -0.3 } },
-      chest: { rot: { pitch: 0.0, yaw: -0.3, roll: -0.2 } },
-      head: { rot: { pitch: 0.0, yaw: 0.0, roll: 0.0 }, lookAt: { x: 0.0, y: 164.0, z: 106.0 } },
-      leftArm: { shoulder: { pitch: 28.0, yaw: 4.0, roll: 6.0 }, elbow: { bend: 100.0 }, wrist: { pitch: 16.0 } },
-      rightArm: { shoulder: { pitch: 32.0, yaw: -4.0, roll: -6.0 }, elbow: { bend: 100.0 }, wrist: { pitch: 16.0 } },
-      leftFoot: { ankle: { x: 8.6, y: 124.3, z: 53.0 }, ball: { x: 9.5, y: 117.2, z: 68.0 }, rot: { pitch: -4.0, yaw: 1.0, roll: 0.0 }, weight: 0.72 },
-      rightFoot: { ankle: { x: -8.6, y: 124.3, z: 54.0 }, ball: { x: -9.6, y: 117.2, z: 69.0 }, rot: { pitch: -2.0, yaw: -1.0, roll: 0.0 }, weight: 0.58 },
-      leftHand: { pos: { x: 10.5, y: 116.0, z: 38.5 }, rot: { pitch: 18.0, yaw: 4.0, roll: 10.0 }, grip: 0.62, weight: 0.48 },
-      rightHand: { pos: { x: -10.5, y: 116.0, z: 38.5 }, rot: { pitch: 18.0, yaw: -4.0, roll: -10.0 }, grip: 0.66, weight: 0.5 },
-      contacts: { leftFoot: "top", rightFoot: "top", leftHand: "top", rightHand: "top" }
-    },
-    {
-      frame: 17,
-      name: "hands_release_start",
-      key: false,
-      pelvis: { pos: { x: 0.4, y: 197.0, z: 77.0 }, rot: { pitch: 3.0, yaw: 0.2, roll: -0.5 } },
-      chest: { rot: { pitch: 2.0, yaw: 0.3, roll: -0.4 } },
-      head: { rot: { pitch: -1.0, yaw: 0.0, roll: 0.0 }, lookAt: { x: 0.0, y: 174.0, z: 110.0 } },
-      leftArm: { shoulder: { pitch: 18.0, yaw: 3.0, roll: 5.0 }, elbow: { bend: 90.0 }, wrist: { pitch: 12.0 } },
-      rightArm: { shoulder: { pitch: 20.0, yaw: -3.0, roll: -5.0 }, elbow: { bend: 90.0 }, wrist: { pitch: 12.0 } },
-      leftFoot: { ankle: { x: 8.6, y: 124.3, z: 56.0 }, ball: { x: 9.5, y: 117.2, z: 71.0 }, rot: { pitch: -3.0, yaw: 1.0, roll: 0.0 }, weight: 0.62 },
-      rightFoot: { ankle: { x: -8.6, y: 124.3, z: 58.0 }, ball: { x: -9.6, y: 117.2, z: 73.0 }, rot: { pitch: -2.0, yaw: -1.0, roll: 0.0 }, weight: 0.74 },
-      leftHand: { pos: { x: 13.0, y: 122.0, z: 47.0 }, rot: { pitch: 12.0, yaw: 4.0, roll: 10.0 }, grip: 0.35, weight: 0.2 },
-      rightHand: { pos: { x: -13.0, y: 122.0, z: 47.0 }, rot: { pitch: 12.0, yaw: -4.0, roll: -10.0 }, grip: 0.35, weight: 0.2 },
-      contacts: { leftFoot: "top", rightFoot: "top", leftHand: "air", rightHand: "air" }
-    },
-    {
-      frame: 18,
-      name: "rise_from_crouch",
-      key: true,
-      pelvis: { pos: { x: 0.3, y: 202.0, z: 80.0 }, rot: { pitch: 4.0, yaw: 0.5, roll: -0.3 } },
-      chest: { rot: { pitch: 3.0, yaw: 0.6, roll: -0.2 } },
-      head: { rot: { pitch: -2.0, yaw: 0.2, roll: 0.0 }, lookAt: { x: 0.0, y: 184.0, z: 114.0 } },
-      leftArm: { shoulder: { pitch: 8.0, yaw: 3.0, roll: 4.0 }, elbow: { bend: 78.0 }, wrist: { pitch: 8.0 } },
-      rightArm: { shoulder: { pitch: 10.0, yaw: -3.0, roll: -4.0 }, elbow: { bend: 78.0 }, wrist: { pitch: 8.0 } },
-      leftFoot: { ankle: { x: 8.6, y: 124.3, z: 60.0 }, ball: { x: 9.5, y: 117.2, z: 75.0 }, rot: { pitch: -2.0, yaw: 1.0, roll: 0.0 }, weight: 0.6 },
-      rightFoot: { ankle: { x: -8.6, y: 124.3, z: 62.0 }, ball: { x: -9.6, y: 117.2, z: 77.0 }, rot: { pitch: -2.0, yaw: -1.0, roll: 0.0 }, weight: 0.82 },
-      leftHand: { pos: { x: 17.0, y: 135.0, z: 59.0 }, rot: { pitch: 4.0, yaw: 5.0, roll: 12.0 }, grip: 0.0, weight: 0.0 },
-      rightHand: { pos: { x: -17.0, y: 135.0, z: 59.0 }, rot: { pitch: 4.0, yaw: -5.0, roll: -12.0 }, grip: 0.0, weight: 0.0 },
-      contacts: { leftFoot: "top", rightFoot: "top", leftHand: "air", rightHand: "air" }
-    },
-    {
-      frame: 19,
-      name: "weight_settle",
-      key: false,
-      pelvis: { pos: { x: 0.1, y: 206.0, z: 82.0 }, rot: { pitch: 2.5, yaw: 0.4, roll: -0.1 } },
-      chest: { rot: { pitch: 1.6, yaw: 0.4, roll: 0.0 } },
-      head: { rot: { pitch: -1.2, yaw: 0.2, roll: 0.0 }, lookAt: { x: 0.0, y: 190.0, z: 116.0 } },
-      leftArm: { shoulder: { pitch: 0.0, yaw: 2.0, roll: 3.0 }, elbow: { bend: 68.0 }, wrist: { pitch: 4.0 } },
-      rightArm: { shoulder: { pitch: 1.0, yaw: -2.0, roll: -3.0 }, elbow: { bend: 68.0 }, wrist: { pitch: 4.0 } },
-      leftFoot: { ankle: { x: 8.8, y: 124.3, z: 63.0 }, ball: { x: 9.6, y: 117.2, z: 78.0 }, rot: { pitch: -1.0, yaw: 0.5, roll: 0.0 }, weight: 0.54 },
-      rightFoot: { ankle: { x: -8.8, y: 124.3, z: 64.0 }, ball: { x: -9.6, y: 117.2, z: 79.0 }, rot: { pitch: -1.0, yaw: -0.5, roll: 0.0 }, weight: 0.86 },
-      leftHand: { pos: { x: 18.0, y: 146.0, z: 66.0 }, rot: { pitch: 0.0, yaw: 5.0, roll: 12.0 }, grip: 0.0, weight: 0.0 },
-      rightHand: { pos: { x: -18.0, y: 146.0, z: 66.0 }, rot: { pitch: 0.0, yaw: -5.0, roll: -12.0 }, grip: 0.0, weight: 0.0 },
-      contacts: { leftFoot: "top", rightFoot: "top", leftHand: "air", rightHand: "air" }
-    },
-    {
-      frame: 20,
-      name: "stand_up",
-      key: true,
-      pelvis: { pos: { x: 0.0, y: 209.8, z: 84.0 }, rot: { pitch: 0.8, yaw: 0.1, roll: 0.0 } },
-      chest: { rot: { pitch: 0.2, yaw: 0.1, roll: 0.0 } },
-      head: { rot: { pitch: -0.4, yaw: 0.0, roll: 0.0 }, lookAt: { x: 0.0, y: 194.0, z: 120.0 } },
-      leftArm: { shoulder: { pitch: -7.0, yaw: 1.5, roll: 2.0 }, elbow: { bend: 56.0 }, wrist: { pitch: 0.0 } },
-      rightArm: { shoulder: { pitch: -6.0, yaw: -1.5, roll: -2.0 }, elbow: { bend: 56.0 }, wrist: { pitch: 0.0 } },
-      leftFoot: { ankle: { x: 9.0, y: 124.3, z: 66.0 }, ball: { x: 9.8, y: 117.2, z: 81.0 }, rot: { pitch: 0.0, yaw: 0.0, roll: 0.0 }, weight: 0.52 },
-      rightFoot: { ankle: { x: -9.0, y: 124.3, z: 66.0 }, ball: { x: -9.8, y: 117.2, z: 81.0 }, rot: { pitch: 0.0, yaw: 0.0, roll: 0.0 }, weight: 0.82 },
-      leftHand: { pos: { x: 18.0, y: 157.0, z: 72.0 }, rot: { pitch: -5.0, yaw: 4.0, roll: 10.0 }, grip: 0.0, weight: 0.0 },
-      rightHand: { pos: { x: -18.0, y: 157.0, z: 72.0 }, rot: { pitch: -5.0, yaw: -4.0, roll: -10.0 }, grip: 0.0, weight: 0.0 },
-      contacts: { leftFoot: "top", rightFoot: "top", leftHand: "air", rightHand: "air" }
-    },
-    {
-      frame: 21,
-      name: "recover_balance",
-      key: false,
-      pelvis: { pos: { x: 0.0, y: 211.0, z: 84.5 }, rot: { pitch: 0.0, yaw: 0.0, roll: 0.0 } },
-      chest: { rot: { pitch: -0.3, yaw: 0.0, roll: 0.0 } },
-      head: { rot: { pitch: 0.0, yaw: 0.0, roll: 0.0 }, lookAt: { x: 0.0, y: 196.0, z: 121.0 } },
-      leftArm: { shoulder: { pitch: -11.0, yaw: 1.0, roll: 1.5 }, elbow: { bend: 48.0 }, wrist: { pitch: -2.0 } },
-      rightArm: { shoulder: { pitch: -10.0, yaw: -1.0, roll: -1.5 }, elbow: { bend: 48.0 }, wrist: { pitch: -2.0 } },
-      leftFoot: { ankle: { x: 9.0, y: 124.3, z: 66.0 }, ball: { x: 9.8, y: 117.2, z: 81.0 }, rot: { pitch: 0.0, yaw: 0.0, roll: 0.0 }, weight: 0.5 },
-      rightFoot: { ankle: { x: -9.0, y: 124.3, z: 66.0 }, ball: { x: -9.8, y: 117.2, z: 81.0 }, rot: { pitch: 0.0, yaw: 0.0, roll: 0.0 }, weight: 0.82 },
-      leftHand: { pos: { x: 17.0, y: 150.0, z: 75.0 }, rot: { pitch: -8.0, yaw: 3.0, roll: 8.0 }, grip: 0.0, weight: 0.0 },
-      rightHand: { pos: { x: -17.0, y: 150.0, z: 75.0 }, rot: { pitch: -8.0, yaw: -3.0, roll: -8.0 }, grip: 0.0, weight: 0.0 },
-      contacts: { leftFoot: "top", rightFoot: "top", leftHand: "air", rightHand: "air" }
-    },
-    {
-      frame: 22,
-      name: "final_settle",
-      key: false,
-      pelvis: { pos: { x: 0.0, y: 210.6, z: 84.2 }, rot: { pitch: 0.0, yaw: 0.0, roll: 0.0 } },
-      chest: { rot: { pitch: 0.0, yaw: 0.0, roll: 0.0 } },
-      head: { rot: { pitch: 0.0, yaw: 0.0, roll: 0.0 }, lookAt: { x: 0.0, y: 196.0, z: 121.0 } },
-      leftArm: { shoulder: { pitch: -13.0, yaw: 0.6, roll: 1.0 }, elbow: { bend: 42.0 }, wrist: { pitch: -4.0 } },
-      rightArm: { shoulder: { pitch: -13.0, yaw: -0.6, roll: -1.0 }, elbow: { bend: 42.0 }, wrist: { pitch: -4.0 } },
-      leftFoot: { ankle: { x: 9.0, y: 124.3, z: 66.0 }, ball: { x: 9.8, y: 117.2, z: 81.0 }, rot: { pitch: 0.0, yaw: 0.0, roll: 0.0 }, weight: 0.5 },
-      rightFoot: { ankle: { x: -9.0, y: 124.3, z: 66.0 }, ball: { x: -9.8, y: 117.2, z: 81.0 }, rot: { pitch: 0.0, yaw: 0.0, roll: 0.0 }, weight: 0.78 },
-      leftHand: { pos: { x: 16.0, y: 139.0, z: 76.0 }, rot: { pitch: -10.0, yaw: 2.0, roll: 6.0 }, grip: 0.0, weight: 0.0 },
-      rightHand: { pos: { x: -16.0, y: 139.0, z: 76.0 }, rot: { pitch: -10.0, yaw: -2.0, roll: -6.0 }, grip: 0.0, weight: 0.0 },
-      contacts: { leftFoot: "top", rightFoot: "top", leftHand: "air", rightHand: "air" }
-    },
-    {
-      frame: 23,
-      name: "standing_on_top",
-      key: true,
-      pelvis: { pos: { x: 0.0, y: 210.2, z: 84.0 }, rot: { pitch: 0.0, yaw: 0.0, roll: 0.0 } },
-      chest: { rot: { pitch: 0.0, yaw: 0.0, roll: 0.0 } },
-      head: { rot: { pitch: 0.0, yaw: 0.0, roll: 0.0 }, lookAt: { x: 0.0, y: 196.0, z: 121.0 } },
-      leftArm: { shoulder: { pitch: -14.0, yaw: 0.0, roll: 0.0 }, elbow: { bend: 38.0 }, wrist: { pitch: -5.0 } },
-      rightArm: { shoulder: { pitch: -14.0, yaw: 0.0, roll: 0.0 }, elbow: { bend: 38.0 }, wrist: { pitch: -5.0 } },
-      leftFoot: { ankle: { x: 9.0, y: 124.3, z: 66.0 }, ball: { x: 9.8, y: 117.2, z: 81.0 }, rot: { pitch: 0.0, yaw: 0.0, roll: 0.0 }, weight: 0.5 },
-      rightFoot: { ankle: { x: -9.0, y: 124.3, z: 66.0 }, ball: { x: -9.8, y: 117.2, z: 81.0 }, rot: { pitch: 0.0, yaw: 0.0, roll: 0.0 }, weight: 0.5 },
-      leftHand: { pos: { x: 15.0, y: 132.0, z: 75.0 }, rot: { pitch: -12.0, yaw: 0.0, roll: 4.0 }, grip: 0.0, weight: 0.0 },
-      rightHand: { pos: { x: -15.0, y: 132.0, z: 75.0 }, rot: { pitch: -12.0, yaw: 0.0, roll: -4.0 }, grip: 0.0, weight: 0.0 },
-      contacts: { leftFoot: "top", rightFoot: "top", leftHand: "air", rightHand: "air" }
-    }
+    frame(0, "run_in_right_back", true, [0, 95, -86, -6, 0, 0], [-11, 0, 0], [8, 0, 0], [18, 8, 10], [-32, 72, -8], [-24, -6, -9], [82, 76, -8], [9, 8.3, -70], [9.8, 1.2, -55], [-9, 8.3, -96], [-9.8, 1.2, -81], [22, 78, -76], [-20, 92, -96], c("ground", "ground")),
+    frame(1, "run_in_left_drive", false, [-0.5, 96, -74, -9, -1, 0.5], [-16, -1, 0.5], [10, 0.5, 0], [-26, 76, 8], [20, 80, -8], [18, 78, -8], [-30, 74, -8], [8.8, 8.3, -70], [9.6, 1.2, -55], [-8.7, 15, -79], [-9.5, 7.5, -64], [16, 88, -82], [-18, 76, -70], c("ground", "air")),
+    frame(2, "low_compression", true, [-0.8, 91, -60, -18, -1.5, 1], [-27, -2, 0.8], [16, 1, 0], [-48, 82, 9], [86, 82, -8], [42, 82, -8], [-34, 78, -8], [8.6, 8.3, -54], [9.4, 1.2, -39], [-8.4, 11, -72], [-9.2, 4, -57], [12, 82, -70], [-12, 106, -58], c("ground", "ground")),
+    frame(3, "takeoff_push", false, [-0.6, 100, -43, -20, -1, 0.7], [-29, -1.5, 0.5], [18, 0.5, 0], [-58, 78, 8], [98, 78, -8], [58, 78, -8], [-42, 72, -8], [8.4, 8.3, -54], [9.2, 1.2, -39], [-8, 24, -47], [-8.8, 16, -32], [8, 96, -54], [-10, 116, -34], c("ground", "air")),
+    frame(4, "airborne_reach", true, [-0.2, 111, -22, -16, 0, 0], [-25, 0, 0], [18, 0, 0], [82, 54, 6], [122, 38, 0], [82, 54, -6], [122, 38, 0], [8, 31, -45], [8.8, 24, -30], [-8, 26, -55], [-8.8, 19, -40], [13, 129, 28], [-13, 130, 30], c("air", "air")),
+    frame(5, "hands_find_edge", false, [0, 118, 1, -20, 0.5, 0], [-33, 1, 0], [21, 0.4, 0], [104, 42, 4], [132, 30, 0], [104, 42, -4], [132, 30, 0], [7, 38, -30], [7.8, 31, -16], [-7, 35, -45], [-7.8, 28, -31], [12, 132, 39], [-12, 132, 39], c("air", "air", "top", "top")),
+    frame(6, "both_hands_catch_top", true, [0, 121, 18, -28, 0, 0], [-45, 0, 0], [29, 0, 0], [110, 36, 4], [126, 48, 2], [110, 36, -4], [126, 48, 2], [7, 39, -16], [7.8, 32, -2], [-7, 33, -33], [-7.8, 26, -19], [12, 132, 39], [-12, 132, 39], c("air", "air", "top", "top")),
+    frame(7, "loaded_hang", false, [0, 118, 27, -34, 0, 0], [-53, 0, 0], [33, 0, 0], [112, 48, 5], [122, 66, 3], [112, 48, -5], [122, 66, 3], [7, 36, -6], [7.8, 29, 8], [-7, 31, -24], [-7.8, 24, -10], [12, 132, 39], [-12, 132, 39], c("air", "air", "top", "top")),
+    frame(8, "pull_to_edge", true, [-1.5, 128, 38, -32, -8, 4], [-47, -10, 5], [27, -3, 0], [103, 66, 9], [104, 86, 6], [104, 68, -4], [104, 86, 5], [8, 44, 8], [8.8, 37, 22], [-8, 34, -14], [-8.8, 27, 0], [12, 132, 39], [-12, 132, 39], c("air", "air", "top", "top")),
+    frame(9, "left_knee_lifts_to_ledge", false, [-4, 139, 48, -27, -18, 8], [-35, -21, 9], [20, -6, 0], [92, 86, 12], [88, 104, 8], [96, 84, -2], [92, 100, 5], [13, 108, 43], [14, 116, 57], [-8, 42, -4], [-8.8, 35, 10], [12, 132, 39], [-12, 132, 39], c("air", "air", "top", "top")),
+    frame(10, "left_leg_hooks_top", true, [-7, 136, 56, -20, -31, 12], [-24, -34, 12], [13, -9, 0], [78, 100, 14], [78, 112, 10], [86, 94, -1], [82, 110, 5], [15, 137, 49], [16, 132, 66], [-8, 49, 7], [-8.8, 42, 21], [12, 132, 39], [-12, 132, 39], c("top", "air", "top", "top")),
+    frame(11, "hooked_leg_loads", false, [-10, 141, 62, -13, -43, 15], [-16, -44, 14], [8, -12, 0], [66, 108, 15], [70, 118, 10], [76, 98, -2], [76, 114, 5], [16, 138, 53], [17, 132, 69], [-7, 59, 17], [-7.8, 52, 31], [12, 132, 39], [-12, 132, 39], c("top", "air", "top", "top")),
+    frame(12, "sideways_pull_over", true, [-13, 146, 68, -6, -58, 18], [-8, -56, 15], [4, -15, 0], [54, 112, 14], [64, 122, 8], [62, 104, -4], [70, 118, 4], [16, 138, 59], [17, 132, 75], [-6, 72, 29], [-6.8, 65, 43], [11, 132, 42], [-12, 132, 39], c("top", "air", "top", "top")),
+    frame(13, "belly_over_edge", false, [-12, 160, 73, -1, -68, 16], [-2, -62, 12], [1, -16, 0], [44, 106, 10], [60, 120, 6], [52, 102, -6], [66, 116, 4], [15, 138, 65], [16, 132, 81], [-7, 91, 43], [-8, 84, 57], [9, 138, 50], [-10, 138, 50], c("top", "air", "air", "air")),
+    frame(14, "trailing_leg_steps_through", true, [-8, 184, 78, 4, -52, 8], [4, -44, 6], [-2, -10, 0], [32, 88, 7], [66, 104, 4], [40, 86, -7], [72, 104, 3], [13, 138, 70], [14, 132, 86], [-12, 122, 59], [-13, 132, 74], [7, 142, 56], [-8, 142, 56], c("top", "top", "air", "air")),
+    frame(15, "hands_begin_release", false, [-5, 198, 82, 7, -30, 3], [6, -23, 2], [-3, -5, 0], [18, 72, 5], [86, 86, 2], [22, 70, -5], [88, 86, 2], [12, 138, 73], [13, 132, 89], [-11, 138, 65], [-12, 132, 81], [14, 138, 53], [-14, 138, 53], c("top", "top", "air", "air")),
+    frame(16, "low_crouch_on_top", true, [-2, 205, 84, 8, -12, 0], [7, -8, 0], [-4, -2, 0], [8, 60, 3], [92, 74, 1], [10, 60, -3], [92, 74, 1], [10, 138, 75], [11, 132, 91], [-10, 138, 70], [-11, 132, 86], [18, 147, 62], [-18, 147, 62], c("top", "top", "air", "air")),
+    frame(17, "rise_from_crouch", false, [-0.5, 213, 86, 6, -5, 0], [5, -3, 0], [-3, -1, 0], [-3, 52, 2], [84, 68, 0], [-2, 52, -2], [84, 68, 0], [10, 138, 76], [11, 132, 92], [-10, 138, 72], [-11, 132, 88], [19, 156, 70], [-19, 156, 70], c("top", "top", "air", "air")),
+    frame(18, "stand_unfold", true, [0, 220, 88, 3, -1, 0], [2, -1, 0], [-1, 0, 0], [-10, 46, 1], [70, 62, 0], [-10, 46, -1], [70, 62, 0], [9.5, 138, 77], [10.5, 132, 93], [-9.5, 138, 74], [-10.5, 132, 90], [18, 162, 75], [-18, 162, 75], c("top", "top", "air", "air")),
+    frame(19, "balance_check", false, [0, 224, 90, 1, 0, 0], [0.8, 0, 0], [-0.5, 0, 0], [-13, 44, 1], [58, 58, 0], [-13, 44, -1], [58, 58, 0], [9.5, 138, 78], [10.5, 132, 94], [-9.5, 138, 76], [-10.5, 132, 92], [16, 158, 78], [-16, 158, 78], c("top", "top", "air", "air")),
+    frame(20, "upright_on_far_side", true, [0, 226, 92, 0, 0, 0], [0, 0, 0], [0, 0, 0], [-14, 40, 0], [48, 52, 0], [-14, 40, 0], [48, 52, 0], [9.3, 138, 79], [10.3, 132, 95], [-9.3, 138, 77], [-10.3, 132, 93], [15, 150, 80], [-15, 150, 80], c("top", "top", "air", "air")),
+    frame(21, "settle_step", false, [0, 226.5, 94, 0, 1, 0], [0, 0.5, 0], [0, 0.2, 0], [-13, 38, 0], [44, 50, 0], [-13, 38, 0], [44, 50, 0], [9.3, 138, 80], [10.3, 132, 96], [-9.3, 138, 80], [-10.3, 132, 96], [14, 144, 80], [-14, 144, 80], c("top", "top", "air", "air")),
+    frame(22, "final_recover", false, [0, 226.2, 95, 0, 0.5, 0], [0, 0.2, 0], [0, 0, 0], [-14, 38, 0], [40, 48, 0], [-14, 38, 0], [40, 48, 0], [9.3, 138, 81], [10.3, 132, 97], [-9.3, 138, 81], [-10.3, 132, 97], [13, 138, 80], [-13, 138, 80], c("top", "top", "air", "air")),
+    frame(23, "standing_after_mantle", true, [0, 226, 95, 0, 0, 0], [0, 0, 0], [0, 0, 0], [-14, 38, 0], [38, 46, 0], [-14, 38, 0], [38, 46, 0], [9.3, 138, 81], [10.3, 132, 97], [-9.3, 138, 81], [-10.3, 132, 97], [12, 132, 80], [-12, 132, 80], c("top", "top", "air", "air"))
   ]
 };
+
+function c(leftFoot = "air", rightFoot = "air", leftHand = "air", rightHand = "air") {
+  return { leftFoot, rightFoot, leftHand, rightHand };
+}
+
+function frame(frameIndex, name, key, pelvis, chest, head, leftArm, leftElbow, rightArm, rightElbow, leftAnkle, leftBall, rightAnkle, rightBall, leftHand, rightHand, contacts) {
+  return {
+    frame: frameIndex,
+    name,
+    key,
+    pelvis: { pos: p(pelvis[0], pelvis[1], pelvis[2]), rot: r(pelvis[3], pelvis[4], pelvis[5]) },
+    chest: { rot: r(chest[0], chest[1], chest[2]) },
+    head: { rot: r(head[0], head[1], head[2]), lookAt: p(0, 134, 48) },
+    leftArm: { shoulder: r(leftArm[0], leftArm[1], leftArm[2]), elbow: { bend: elbowBend(leftElbow) }, wrist: { pitch: wristPitch(leftElbow) } },
+    rightArm: { shoulder: r(rightArm[0], rightArm[1], rightArm[2]), elbow: { bend: elbowBend(rightElbow) }, wrist: { pitch: wristPitch(rightElbow) } },
+    leftFoot: { ankle: p(leftAnkle[0], leftAnkle[1], leftAnkle[2]), ball: p(leftBall[0], leftBall[1], leftBall[2]), rot: r(leftElbow[2], 0, 0), weight: contactWeight(contacts.leftFoot, frameIndex) },
+    rightFoot: { ankle: p(rightAnkle[0], rightAnkle[1], rightAnkle[2]), ball: p(rightBall[0], rightBall[1], rightBall[2]), rot: r(rightElbow[2], 0, 0), weight: contactWeight(contacts.rightFoot, frameIndex) },
+    leftHand: { pos: p(leftHand[0], leftHand[1], leftHand[2]), rot: r(0, 4, 9), grip: grip(contacts.leftHand), weight: handWeight(contacts.leftHand, frameIndex) },
+    rightHand: { pos: p(rightHand[0], rightHand[1], rightHand[2]), rot: r(0, -4, -9), grip: grip(contacts.rightHand), weight: handWeight(contacts.rightHand, frameIndex) },
+    contacts
+  };
+}
+
+function p(x, y, z) {
+  return { x, y, z };
+}
+
+function r(pitch, yaw, roll) {
+  return { pitch, yaw, roll };
+}
+
+function elbowBend(spec) {
+  return Math.max(36, Math.min(128, Math.abs(Number(spec[0]) || 0)));
+}
+
+function wristPitch(spec) {
+  return Math.max(-18, Math.min(18, Number(spec[1]) || 0));
+}
+
+function grip(contact) {
+  return contact === "top" ? 1 : 0;
+}
+
+function handWeight(contact, frameIndex) {
+  if (contact !== "top") {
+    return 0;
+  }
+  return frameIndex >= 15 ? 0.2 : 1;
+}
+
+function contactWeight(contact, frameIndex) {
+  if (contact === "air") {
+    return 0;
+  }
+  if (contact === "ground") {
+    return 0.9;
+  }
+  if (frameIndex >= 14) {
+    return 0.85;
+  }
+  return 0.72;
+}
 
 (function normalizeWallClimbRendererTargets(data) {
   if (!data || !Array.isArray(data.frames)) {
@@ -502,12 +228,12 @@ window.mannyWallClimbKeyposes = {
     return contact && contact !== "air" && Number(weight || 0) >= 0.25;
   }
 
-  data.frames.forEach((frame) => {
-    const pelvis = vec(frame.pelvis.pos.x, frame.pelvis.pos.y, frame.pelvis.pos.z);
-    const pelvisRot = frame.pelvis.rot || {};
-    const chestRot = frame.chest?.rot || {};
-    const neckRot = { pitch: (frame.head?.rot?.pitch || 0) * 0.35, yaw: (frame.head?.rot?.yaw || 0) * 0.35, roll: 0 };
-    const headRot = frame.head?.rot || {};
+  data.frames.forEach((frameData) => {
+    const pelvis = vec(frameData.pelvis.pos.x, frameData.pelvis.pos.y, frameData.pelvis.pos.z);
+    const pelvisRot = frameData.pelvis.rot || {};
+    const chestRot = frameData.chest?.rot || {};
+    const neckRot = { pitch: (frameData.head?.rot?.pitch || 0) * 0.35, yaw: (frameData.head?.rot?.yaw || 0) * 0.35, roll: 0 };
+    const headRot = frameData.head?.rot || {};
     const points = {};
 
     points.pelvis = pelvis;
@@ -525,7 +251,7 @@ window.mannyWallClimbKeyposes = {
       ["l", "left", 1, points.clavicle_l],
       ["r", "right", -1, points.clavicle_r]
     ].forEach(([shortName, sideName, side, clavicle]) => {
-      const handTarget = frame[`${sideName}Hand`]?.pos || add(clavicle, rotate(vec(side * 24, -37, -1), chestRot));
+      const handTarget = frameData[`${sideName}Hand`]?.pos || add(clavicle, rotate(vec(side * 24, -37, -1), chestRot));
       const hand = clampTarget(clavicle, vec(handTarget.x, handTarget.y, handTarget.z), armReach);
       const elbow = solveElbow(clavicle, hand, side);
       points[`upperarm_${shortName}`] = add(clavicle, mul(sub(elbow, clavicle), 0.48));
@@ -540,7 +266,7 @@ window.mannyWallClimbKeyposes = {
       ["l", "left", 1, points.thigh_l],
       ["r", "right", -1, points.thigh_r]
     ].forEach(([shortName, sideName, side, thigh]) => {
-      const foot = frame[`${sideName}Foot`];
+      const foot = frameData[`${sideName}Foot`];
       const ankle = clampTarget(thigh, vec(foot.ankle.x, foot.ankle.y, foot.ankle.z), legReach);
       const sourceBall = vec(foot.ball.x, foot.ball.y, foot.ball.z);
       const ankleToBall = clampTarget(ankle, sourceBall, 17.2);
@@ -549,23 +275,23 @@ window.mannyWallClimbKeyposes = {
       points[`calf_${shortName}`] = solveKnee(thigh, ankle, side);
     });
 
-    frame.points = Object.fromEntries(Object.entries(points).map(([name, point]) => [name, arr(point)]));
+    frameData.points = Object.fromEntries(Object.entries(points).map(([name, point]) => [name, arr(point)]));
 
     const contactTargets = {};
-    if (isLocked(frame.contacts?.leftHand, frame.leftHand?.weight)) {
-      contactTargets.hand_l = frame.points.hand_l;
+    if (isLocked(frameData.contacts?.leftHand, frameData.leftHand?.weight)) {
+      contactTargets.hand_l = frameData.points.hand_l;
     }
-    if (isLocked(frame.contacts?.rightHand, frame.rightHand?.weight)) {
-      contactTargets.hand_r = frame.points.hand_r;
+    if (isLocked(frameData.contacts?.rightHand, frameData.rightHand?.weight)) {
+      contactTargets.hand_r = frameData.points.hand_r;
     }
-    if (isLocked(frame.contacts?.leftFoot, frame.leftFoot?.weight)) {
-      contactTargets.foot_l = frame.points.foot_l;
-      contactTargets.ball_l = frame.points.ball_l;
+    if (isLocked(frameData.contacts?.leftFoot, frameData.leftFoot?.weight)) {
+      contactTargets.foot_l = frameData.points.foot_l;
+      contactTargets.ball_l = frameData.points.ball_l;
     }
-    if (isLocked(frame.contacts?.rightFoot, frame.rightFoot?.weight)) {
-      contactTargets.foot_r = frame.points.foot_r;
-      contactTargets.ball_r = frame.points.ball_r;
+    if (isLocked(frameData.contacts?.rightFoot, frameData.rightFoot?.weight)) {
+      contactTargets.foot_r = frameData.points.foot_r;
+      contactTargets.ball_r = frameData.points.ball_r;
     }
-    frame.contactTargets = contactTargets;
+    frameData.contactTargets = contactTargets;
   });
 })(window.mannyWallClimbKeyposes);

@@ -1,196 +1,151 @@
 (function (global) {
   "use strict";
 
-  const frames = [
-    {
-      frame: 0,
-      name: "right_support_left_ready",
-      pelvis: [0.0, 95.2, 0.0, -1.0, 2.0, 1.6],
-      chest: [1.0, -2.0, -1.0],
-      neck: [0.5, 0.0, 0.0],
-      head: [-1.0, 0.0, 0.0],
-      lUpper: [9.0, -15.0, -7.0],
-      lLower: [21.0, -18.0, -5.0],
-      lHand: [6.0, -13.0, -2.0],
-      rUpper: [-10.0, 14.0, 8.0],
-      rLower: [24.0, 14.0, 5.0],
-      rHand: [7.0, 10.0, 3.0],
-      leftFoot: { ankle: [9.6, 8.8, -10.0], ball: [10.1, 1.7, 4.8], planted: false },
-      rightFoot: { ankle: [-9.8, 8.3, -5.0], ball: [-10.2, 1.2, 9.8], planted: true },
-      leftKneeBias: [1.4, 0.2, 2.2],
-      rightKneeBias: [-0.8, -0.2, 0.8],
-      kneeBias: { left: [1.4, 0.2, 2.2], right: [-0.8, -0.2, 0.8] },
-      contacts: { leftFoot: "air", rightFoot: "ground" }
-    },
-    {
-      frame: 6,
-      name: "left_toe_touch_bouncy_up",
-      pelvis: [1.2, 96.8, 5.6, 0.4, 5.0, 3.2],
-      chest: [-0.5, -5.5, -2.2],
-      neck: [0.0, 1.0, -0.4],
-      head: [-1.5, 2.0, -0.8],
-      lUpper: [4.0, -19.0, -9.0],
-      lLower: [23.0, -21.0, -7.0],
-      lHand: [7.0, -15.0, -3.0],
-      rUpper: [-6.0, 18.0, 10.0],
-      rLower: [25.0, 17.0, 6.0],
-      rHand: [8.0, 13.0, 3.0],
-      leftFoot: { ankle: [10.4, 8.6, 7.4], ball: [11.0, 1.4, 22.2], planted: false },
-      rightFoot: { ankle: [-9.8, 8.3, -5.0], ball: [-10.2, 1.2, 9.8], planted: true },
-      leftKneeBias: [1.8, 0.0, 1.4],
-      rightKneeBias: [-1.0, -0.4, 0.6],
-      kneeBias: { left: [1.8, 0.0, 1.4], right: [-1.0, -0.4, 0.6] },
-      contacts: { leftFoot: "toe_brush", rightFoot: "ground" }
-    },
-    {
-      frame: 12,
-      name: "left_planted_side_step",
-      pelvis: [1.8, 94.7, 10.8, 1.2, 6.0, 4.0],
-      chest: [-1.0, -6.0, -2.8],
-      neck: [0.5, 0.5, -0.3],
-      head: [-0.5, 1.0, -0.5],
-      lUpper: [-6.0, -19.0, -8.0],
-      lLower: [25.0, -18.0, -5.0],
-      lHand: [8.0, -12.0, -2.0],
-      rUpper: [7.0, 16.0, 8.0],
-      rLower: [23.0, 13.0, 4.0],
-      rHand: [6.0, 9.0, 2.0],
-      leftFoot: { ankle: [10.8, 8.3, 10.8], ball: [11.4, 1.2, 25.6], planted: true },
-      rightFoot: { ankle: [-9.8, 8.3, -5.0], ball: [-10.2, 1.2, 9.8], planted: true },
-      leftKneeBias: [0.9, -0.3, 0.6],
-      rightKneeBias: [-0.8, -0.4, 0.7],
-      kneeBias: { left: [0.9, -0.3, 0.6], right: [-0.8, -0.4, 0.7] },
-      contacts: { leftFoot: "ground", rightFoot: "ground" }
-    },
-    {
-      frame: 18,
-      name: "right_knee_lift_cheerful",
-      pelvis: [0.8, 97.0, 16.2, 0.0, -1.5, -1.0],
-      chest: [0.0, 4.5, 1.2],
-      neck: [0.0, -0.5, 0.2],
-      head: [-1.2, -1.0, 0.4],
-      lUpper: [-12.0, -14.0, -5.0],
-      lLower: [22.0, -12.0, -3.0],
-      lHand: [5.0, -8.0, -1.0],
-      rUpper: [13.0, 20.0, 10.0],
-      rLower: [27.0, 20.0, 7.0],
-      rHand: [9.0, 15.0, 4.0],
-      leftFoot: { ankle: [10.8, 8.3, 10.8], ball: [11.4, 1.2, 25.6], planted: true },
-      rightFoot: { ankle: [-10.8, 12.8, 13.4], ball: [-11.3, 5.3, 27.0], planted: false },
-      leftKneeBias: [0.6, -0.2, 0.6],
-      rightKneeBias: [-2.2, 1.1, 2.8],
-      kneeBias: { left: [0.6, -0.2, 0.6], right: [-2.2, 1.1, 2.8] },
-      contacts: { leftFoot: "ground", rightFoot: "air" }
-    },
-    {
-      frame: 24,
-      name: "right_planted_soft_cross",
-      pelvis: [-1.0, 94.8, 22.0, -0.8, -5.5, -3.5],
-      chest: [1.2, 6.0, 2.4],
-      neck: [0.2, -0.5, 0.2],
-      head: [-0.8, -1.0, 0.5],
-      lUpper: [-13.0, -17.0, -7.0],
-      lLower: [24.0, -16.0, -5.0],
-      lHand: [6.0, -11.0, -2.0],
-      rUpper: [8.0, 18.0, 9.0],
-      rLower: [25.0, 16.0, 5.0],
-      rHand: [7.0, 12.0, 3.0],
-      leftFoot: { ankle: [10.8, 8.3, 10.8], ball: [11.4, 1.2, 25.6], planted: true },
-      rightFoot: { ankle: [-10.6, 8.3, 22.0], ball: [-11.1, 1.2, 36.8], planted: true },
-      leftKneeBias: [0.7, -0.3, 0.6],
-      rightKneeBias: [-0.9, -0.2, 0.8],
-      kneeBias: { left: [0.7, -0.3, 0.6], right: [-0.9, -0.2, 0.8] },
-      contacts: { leftFoot: "ground", rightFoot: "ground" }
-    },
-    {
-      frame: 30,
-      name: "left_knee_lift_light_skip",
-      pelvis: [-1.6, 96.9, 27.4, 0.5, -6.0, -4.2],
-      chest: [-0.2, 5.0, 2.7],
-      neck: [0.0, -1.0, 0.2],
-      head: [-1.4, -2.0, 0.7],
-      lUpper: [8.0, -21.0, -11.0],
-      lLower: [28.0, -22.0, -7.0],
-      lHand: [9.0, -16.0, -3.0],
-      rUpper: [-9.0, 14.0, 7.0],
-      rLower: [22.0, 12.0, 4.0],
-      rHand: [5.0, 8.0, 2.0],
-      leftFoot: { ankle: [10.2, 13.0, 29.6], ball: [10.8, 5.5, 43.2], planted: false },
-      rightFoot: { ankle: [-10.6, 8.3, 22.0], ball: [-11.1, 1.2, 36.8], planted: true },
-      leftKneeBias: [2.1, 1.2, 3.0],
-      rightKneeBias: [-0.7, -0.3, 0.6],
-      kneeBias: { left: [2.1, 1.2, 3.0], right: [-0.7, -0.3, 0.6] },
-      contacts: { leftFoot: "air", rightFoot: "ground" }
-    },
-    {
-      frame: 36,
-      name: "left_replant_loop_stride",
-      pelvis: [-0.4, 94.9, 32.8, 1.0, -2.0, -1.6],
-      chest: [0.8, 2.0, 1.2],
-      neck: [0.3, 0.0, 0.0],
-      head: [-0.8, 0.0, 0.0],
-      lUpper: [11.0, -17.0, -8.0],
-      lLower: [24.0, -17.0, -5.0],
-      lHand: [7.0, -12.0, -2.0],
-      rUpper: [-11.0, 15.0, 8.0],
-      rLower: [23.0, 13.0, 4.0],
-      rHand: [6.0, 9.0, 2.0],
-      leftFoot: { ankle: [9.6, 8.3, 32.8], ball: [10.1, 1.2, 47.6], planted: true },
-      rightFoot: { ankle: [-10.6, 8.3, 22.0], ball: [-11.1, 1.2, 36.8], planted: true },
-      leftKneeBias: [0.8, -0.3, 0.7],
-      rightKneeBias: [-0.8, -0.2, 0.7],
-      kneeBias: { left: [0.8, -0.3, 0.7], right: [-0.8, -0.2, 0.7] },
-      contacts: { leftFoot: "ground", rightFoot: "ground" }
-    },
-    {
-      frame: 42,
-      name: "right_release_loop_prep",
-      pelvis: [0.7, 96.7, 38.4, -0.2, 3.0, 1.8],
-      chest: [0.0, -3.5, -1.2],
-      neck: [0.0, 0.5, -0.2],
-      head: [-1.3, 1.0, -0.4],
-      lUpper: [6.0, -18.0, -9.0],
-      lLower: [24.0, -20.0, -6.0],
-      lHand: [8.0, -14.0, -3.0],
-      rUpper: [-7.0, 19.0, 10.0],
-      rLower: [26.0, 18.0, 6.0],
-      rHand: [8.0, 13.0, 3.0],
-      leftFoot: { ankle: [9.6, 8.3, 32.8], ball: [10.1, 1.2, 47.6], planted: true },
-      rightFoot: { ankle: [-9.8, 11.4, 40.2], ball: [-10.3, 4.2, 54.0], planted: false },
-      leftKneeBias: [0.7, -0.2, 0.6],
-      rightKneeBias: [-1.8, 0.8, 2.4],
-      kneeBias: { left: [0.7, -0.2, 0.6], right: [-1.8, 0.8, 2.4] },
-      contacts: { leftFoot: "ground", rightFoot: "air" }
-    },
-    {
-      frame: 47,
-      name: "loop_ready_right_forward",
-      pelvis: [0.0, 95.3, 44.0, -1.0, 2.0, 1.6],
-      chest: [1.0, -2.0, -1.0],
-      neck: [0.5, 0.0, 0.0],
-      head: [-1.0, 0.0, 0.0],
-      lUpper: [9.0, -15.0, -7.0],
-      lLower: [21.0, -18.0, -5.0],
-      lHand: [6.0, -13.0, -2.0],
-      rUpper: [-10.0, 14.0, 8.0],
-      rLower: [24.0, 14.0, 5.0],
-      rHand: [7.0, 10.0, 3.0],
-      leftFoot: { ankle: [9.6, 8.3, 32.8], ball: [10.1, 1.2, 47.6], planted: true },
-      rightFoot: { ankle: [-9.8, 8.5, 39.0], ball: [-10.2, 1.4, 53.8], planted: false },
-      leftKneeBias: [0.8, -0.2, 0.8],
-      rightKneeBias: [-1.2, 0.2, 1.8],
-      kneeBias: { left: [0.8, -0.2, 0.8], right: [-1.2, 0.2, 1.8] },
-      contacts: { leftFoot: "ground", rightFoot: "toe_brush" }
+  const frameCount = 48;
+  const fps = 30;
+  const durationSeconds = 1.6;
+  const tau = Math.PI * 2;
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function smoothstep(value) {
+    const t = clamp(value, 0, 1);
+    return t * t * (3 - t * 2);
+  }
+
+  function lerp(a, b, t) {
+    return a + (b - a) * t;
+  }
+
+  function round(value) {
+    return Number(value.toFixed(3));
+  }
+
+  function vec(x, y, z) {
+    return [round(x), round(y), round(z)];
+  }
+
+  function footAt(phase, side) {
+    const cycle = ((phase % 1) + 1) % 1;
+    const stanceRatio = 0.52;
+    const sideSway = Math.sin(phase * tau) * 0.9;
+    const x = side * 9.8 + sideSway * 0.38;
+    if (cycle < stanceRatio) {
+      const t = smoothstep(cycle / stanceRatio);
+      const z = lerp(9.2, -9.2, t);
+      return {
+        ankle: vec(x, 8.15, z),
+        ball: vec(x + side * 0.9, 1.05, z + 14.8),
+        planted: true,
+        locked: true,
+        contactWeight: round(1 - Math.sin(t * Math.PI) * 0.08)
+      };
     }
-  ];
+
+    const t = smoothstep((cycle - stanceRatio) / (1 - stanceRatio));
+    const lift = Math.sin(t * Math.PI);
+    const flick = Math.sin(t * Math.PI * 2);
+    const z = lerp(-9.2, 9.2, t);
+    return {
+      ankle: vec(x + side * lift * 1.35, 8.15 + lift * 12.4, z + flick * 1.0),
+      ball: vec(x + side * 1.05, 1.05 + lift * 4.0, z + 14.8 + flick * 1.25),
+      planted: false,
+      locked: false,
+      contactWeight: round(0.10 + Math.max(0, 1 - lift) * 0.36),
+      toeBrush: lift < 0.32
+    };
+  }
+
+  function armOffsets(side, drive, bounce, phaseOffset) {
+    const forward = drive;
+    const forwardLift = Math.max(0, forward);
+    const backLift = Math.max(0, -forward);
+    const wristFlick = Math.sin(phaseOffset * tau * 2 + side * 0.75) * 0.9;
+    const elbowPulse = Math.max(0, Math.sin(phaseOffset * tau * 2 + Math.PI * 0.2));
+    return {
+      upper: vec(side * (12.2 + elbowPulse * 0.9), -16.2 + forwardLift * 1.8 - backLift * 0.8, forward * 10.6),
+      lower: vec(side * (6.2 + wristFlick * 0.8), -21.0 + bounce * 0.65 + elbowPulse * 1.15, forward * 7.0 + wristFlick),
+      hand: vec(side * (2.6 + wristFlick * 0.65), -13.2 + forwardLift * 2.4 - backLift * 1.1 + elbowPulse * 0.8, forward * 5.2 + wristFlick * 1.2)
+    };
+  }
+
+  const keyNames = new Map([
+    [0, "right_support_left_swing"],
+    [6, "left_toe_brush"],
+    [12, "left_support_bouncy_up"],
+    [18, "right_swing_light_skip"],
+    [24, "left_support_right_forward"],
+    [30, "right_toe_brush"],
+    [36, "right_support_bouncy_up"],
+    [42, "left_swing_loop_prep"],
+    [47, "loop_settle"]
+  ]);
+
+  function makeFrame(frame) {
+    const phase = frame / frameCount;
+    const step = Math.sin(phase * tau);
+    const side = Math.sin(phase * tau + Math.PI * 0.18);
+    const bounce = (1 - Math.cos(phase * tau * 2)) * 0.5;
+    const hop = Math.max(0, Math.sin(phase * tau * 2 + Math.PI * 0.2));
+    const contactSettle = Math.max(0, Math.cos(phase * tau * 2));
+    const hipAccent = Math.sin(phase * tau * 2 - Math.PI * 0.12);
+    const pelvisX = side * 1.95 + hipAccent * 0.22;
+    const pelvisY = 93.9 + bounce * 2.25 + hop * 0.85 - contactSettle * 0.35;
+    const pelvisZ = Math.sin(phase * tau + Math.PI * 0.15) * 0.85 + hipAccent * 0.12;
+    const pelvisYaw = step * 8.2 + hipAccent * 1.1;
+    const pelvisRoll = -side * 6.1 - hipAccent * 0.85;
+    const pelvisPitch = -1.0 + bounce * 1.05 - contactSettle * 0.2;
+    const chestYaw = -pelvisYaw * 0.58 + hipAccent * 0.2;
+    const chestRoll = -pelvisRoll * 0.46;
+    const chestPitch = 0.55 - bounce * 0.7 + hop * 0.18;
+    const leftDrive = -step;
+    const rightDrive = step;
+    const leftArm = armOffsets(1, leftDrive, bounce, phase + 0.5);
+    const rightArm = armOffsets(-1, rightDrive, bounce, phase);
+    const leftFoot = footAt(phase + 0.5, 1);
+    const rightFoot = footAt(phase, -1);
+    const leftAir = leftFoot.planted ? 0 : 1;
+    const rightAir = rightFoot.planted ? 0 : 1;
+
+    return {
+      frame,
+      name: keyNames.get(frame) || "playful_walk_sample",
+      pelvis: vec(pelvisX, pelvisY, pelvisZ).concat([round(pelvisPitch), round(pelvisYaw), round(pelvisRoll)]),
+      chest: [round(chestPitch), round(chestYaw), round(chestRoll)],
+      neck: [round(-0.35 + bounce * 0.28), round(-chestYaw * 0.16), round(-chestRoll * 0.14)],
+      head: [round(-1.1 + bounce * 0.22), round(-chestYaw * 0.24), round(-chestRoll * 0.18)],
+      lUpper: leftArm.upper,
+      lLower: leftArm.lower,
+      lHand: leftArm.hand,
+      rUpper: rightArm.upper,
+      rLower: rightArm.lower,
+      rHand: rightArm.hand,
+      leftFoot,
+      rightFoot,
+      leftKneeBias: vec(1.0 + leftAir * 1.05, -0.3 + leftAir * 0.8, 0.9 + leftAir * 1.85 + bounce * 0.35),
+      rightKneeBias: vec(-1.0 - rightAir * 1.05, -0.3 + rightAir * 0.8, 0.9 + rightAir * 1.85 + bounce * 0.35),
+      kneeBias: {
+        left: vec(1.0 + leftAir * 1.05, -0.3 + leftAir * 0.8, 0.9 + leftAir * 1.85 + bounce * 0.35),
+        right: vec(-1.0 - rightAir * 1.05, -0.3 + rightAir * 0.8, 0.9 + rightAir * 1.85 + bounce * 0.35)
+      },
+      contacts: {
+        leftFoot: leftFoot.planted ? "ground" : (leftFoot.toeBrush ? "toe_brush" : "air"),
+        rightFoot: rightFoot.planted ? "ground" : (rightFoot.toeBrush ? "toe_brush" : "air")
+      }
+    };
+  }
+
+  const frames = Array.from({ length: frameCount }, (_, frame) => makeFrame(frame));
 
   const data = {
     id: "playfulGirlWalk",
     name: "Playful Girl Walk",
     koreanName: "발랄한 소녀 걸음",
-    frameCount: 48,
-    fps: 24,
-    durationSeconds: 2,
+    frameCount,
+    fps,
+    durationSeconds,
     loop: true,
     rotationUnits: "degrees",
     positionUnits: "Manny demo units",
@@ -200,23 +155,24 @@
       side: "X"
     },
     style: {
-      intent: "A light, cheerful, feminine walk that stays distinct from the existing Feminine Walk.",
+      intent: "A bright, bouncy, youthful skip-like walk that stays readable as walking instead of running.",
       notes: [
-        "Small side steps and soft cross-body placement keep the silhouette playful without becoming sexualized.",
-        "Pelvis yaw and roll are present but restrained; bounce comes from vertical pelvis timing and knee lift.",
-        "Arm swing is lively and opposite the stepping leg, with compact hand offsets."
+        "Arms stay below shoulder height and get their liveliness from elbow pulse and wrist flick instead of locked straight swings.",
+        "Pelvis timing has a clearer spring through the knees and ankles, with a small hop-like lift after each contact.",
+        "Pelvis yaw and roll are deliberately stronger, with subtle secondary hip timing and soft chest/head counter-balance for a feminine silhouette.",
+        "Footwork is compact and upbeat with toe-brush transitions, no run stride, and no accumulating root travel snap at the loop boundary."
       ]
     },
     contactNotes: {
-      interpolation: "Cubic or smoothstep interpolation is recommended between keys.",
-      plantedFeet: "When a foot is planted, hold both ankle and ball targets until the next lift key.",
-      loop: "Frame 47 anticipates frame 0 with matching upper-body attitude and continuous forward spacing."
+      interpolation: "Cubic or smoothstep interpolation is recommended between adjacent frame samples.",
+      plantedFeet: "The stance foot uses a compact treadmill-style path with locked planted samples; swing foot uses a light toe brush before lift and landing.",
+      loop: "Frame 47 flows back into frame 0 without forward root accumulation."
     },
+    keyposes: frames.filter((frame) => keyNames.has(frame.frame)),
     frames
   };
 
-  data.keyposes = frames;
   data.keys = frames;
 
-  window.mannyPlayfulGirlWalkKeyposes = data;
-})(window);
+  global.mannyPlayfulGirlWalkKeyposes = data;
+})(typeof window !== "undefined" ? window : globalThis);
