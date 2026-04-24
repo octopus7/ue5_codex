@@ -106,6 +106,7 @@
     .metric {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       min-height: 34px;
       padding: 0 10px;
       border: 1px solid var(--line);
@@ -115,13 +116,23 @@
       font-size: 13px;
     }
 
+    #frameReadout {
+      position: fixed;
+      right: 20px;
+      bottom: 42px;
+      flex: 0 0 104px;
+      width: 104px;
+      font-variant-numeric: tabular-nums;
+      z-index: 12;
+    }
+
     .strip {
       position: fixed;
       left: 20px;
       right: 20px;
       bottom: 18px;
       display: grid;
-      grid-template-columns: repeat(8, minmax(0, 1fr));
+      grid-template-columns: repeat(24, minmax(0, 1fr));
       gap: 8px;
       z-index: 10;
     }
@@ -337,6 +348,12 @@
         flex-wrap: wrap;
       }
 
+      #frameReadout {
+        display: inline-flex;
+        right: 12px;
+        bottom: 86px;
+      }
+
       .view-gizmo {
         left: min(252px, calc(100vw - 124px));
         right: auto;
@@ -372,14 +389,15 @@
   <div class="toolbar">
     <div class="title">
       <strong>Manny Overhead Wave Loop</strong>
-      <span>8 frames at 8 fps</span>
+      <span>24 frames at 24 fps</span>
     </div>
     <div class="controls">
       <button id="playButton" type="button">Pause</button>
-      <span class="metric" id="frameReadout">Frame 1 / 8</span>
-      <span class="metric">125 ms</span>
+      <span class="metric">42 ms</span>
     </div>
   </div>
+
+  <span class="metric" id="frameReadout">Frame 1 / 24</span>
 
   <div class="view-gizmo" aria-label="View shortcuts">
     <span class="gizmo-line x" aria-hidden="true"></span>
@@ -417,7 +435,8 @@
       const frameReadout = document.getElementById("frameReadout");
       const frameStrip = document.getElementById("frameStrip");
       const gizmoButtons = Array.from(document.querySelectorAll("[data-view]"));
-      const fps = 8;
+      const fps = 24;
+      const frameCount = 24;
       const frameDurationMs = 1000 / fps;
       const rootNames = ["pelvis", "spine_01", "spine_02", "spine_03", "spine_04", "spine_05", "neck_01", "head"];
 
@@ -436,6 +455,23 @@
         { name: "overhead_wave_07", sway: -0.62, reach: -0.82, lift: 0.75, depth: 0.10 },
         { name: "overhead_wave_08", sway: 0.08, reach: 0.10, lift: 0.00, depth: -0.10 }
       ];
+
+      function sampleFrameParam(index) {
+        const position = (index / frameCount) * frameParams.length;
+        const baseIndex = Math.floor(position) % frameParams.length;
+        const nextIndex = (baseIndex + 1) % frameParams.length;
+        const blend = position - Math.floor(position);
+        const smooth = blend * blend * (3 - 2 * blend);
+        const from = frameParams[baseIndex];
+        const to = frameParams[nextIndex];
+        return {
+          name: `overhead_wave_${String(index + 1).padStart(2, "0")}`,
+          sway: lerp(from.sway, to.sway, smooth),
+          reach: lerp(from.reach, to.reach, smooth),
+          lift: lerp(from.lift, to.lift, smooth),
+          depth: lerp(from.depth, to.depth, smooth)
+        };
+      }
 
       const colors = {
         left: 0x23aeea,
@@ -540,8 +576,8 @@
         };
       }
 
-      const frames = frameParams.map(buildFrame);
-      const ticks = frameParams.map(() => {
+      const frames = Array.from({ length: frameCount }, (_, index) => buildFrame(sampleFrameParam(index)));
+      const ticks = frames.map(() => {
         const tick = document.createElement("div");
         tick.className = "tick";
         frameStrip.appendChild(tick);
@@ -591,6 +627,7 @@
 
       const envelopeRenderOrder = 1;
       const boneRenderOrder = 2;
+      const faceRenderOrder = 3;
       const envelopeMaterial = new THREE.MeshBasicMaterial({
         color: colors.envelope,
         transparent: true,
@@ -598,11 +635,15 @@
         depthTest: true,
         depthWrite: false
       });
+      const headEnvelopeMaterial = envelopeMaterial.clone();
+      headEnvelopeMaterial.color.setHex(0xf2c7a5);
+      headEnvelopeMaterial.opacity = 0.7;
       const envelopeSegments = [
         ["pelvis", "spine_01", 8.1],
         ["spine_01", "spine_03", 9.0],
         ["spine_03", "spine_05", 8.6],
         ["spine_05", "neck_01", 5.5],
+        ["clavicle_l", "clavicle_r", 4.2],
         ["clavicle_l", "upperarm_l", 4.1],
         ["upperarm_l", "lowerarm_l", 3.3],
         ["lowerarm_l", "hand_l", 2.5],
@@ -623,19 +664,24 @@
         return { from, to, radius, mesh };
       });
       const envelopeJointGeometry = new THREE.SphereGeometry(1, 24, 16);
+      const pelvisEnvelopeGeometry = new THREE.CylinderGeometry(1, 1, 1, 24);
       const envelopeJoints = [
-        ["head", v(7.3, 9.4, 7.3)],
-        ["pelvis", v(9.7, 6.1, 7.9)],
+        ["head", v(10.95, 14.1, 10.95)],
+        ["pelvis", v(5.8, 20.2, 5.8), "pelvisCylinder"],
         ["spine_04", v(10.2, 11.5, 7.1)],
         ["hand_l", v(3.2, 3.4, 3.2)],
         ["hand_r", v(3.2, 3.4, 3.2)],
         ["foot_l", v(4.4, 2.2, 7.8)],
         ["foot_r", v(4.4, 2.2, 7.8)]
-      ].map(([name, scale]) => {
-        const mesh = new THREE.Mesh(envelopeJointGeometry, envelopeMaterial);
-        mesh.renderOrder = envelopeRenderOrder;
+      ].map(([name, scale, shape = "sphere"]) => {
+        const material = name === "head" ? headEnvelopeMaterial : envelopeMaterial;
+        const geometry = shape === "pelvisCylinder" ? pelvisEnvelopeGeometry : envelopeJointGeometry;
+        const mesh = new THREE.Mesh(geometry, material);
+        if (name !== "head") {
+          mesh.renderOrder = envelopeRenderOrder;
+        }
         figure.add(mesh);
-        return { name, scale, mesh };
+        return { name, scale, shape, mesh };
       });
 
       const segmentMeshes = segments.map((segment) => {
@@ -670,6 +716,22 @@
         return { name, mesh };
       });
 
+      const faceMaterial = new THREE.MeshBasicMaterial({
+        color: 0x202833,
+        depthTest: true,
+        depthWrite: true
+      });
+      const eyeGeometry = new THREE.SphereGeometry(1.0, 12, 8);
+      const faceMarkers = {
+        eyeL: new THREE.Mesh(eyeGeometry, faceMaterial),
+        eyeR: new THREE.Mesh(eyeGeometry, faceMaterial),
+        mouth: new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.55, 0.55), faceMaterial)
+      };
+      Object.values(faceMarkers).forEach((mesh) => {
+        mesh.renderOrder = faceRenderOrder;
+        figure.add(mesh);
+      });
+
       function updateCylinder(mesh, a, b) {
         const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
         const diff = new THREE.Vector3().subVectors(b, a);
@@ -688,6 +750,31 @@
         mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), diff.normalize());
       }
 
+      function updateFaceMarkers(points) {
+        const up = new THREE.Vector3().subVectors(points.head, points.neck_01).normalize();
+        const right = new THREE.Vector3().subVectors(points.clavicle_l, points.clavicle_r).normalize();
+        const forward = new THREE.Vector3().crossVectors(right, up).normalize();
+        const center = points.head.clone()
+          .add(up.clone().multiplyScalar(2.1))
+          .add(forward.clone().multiplyScalar(6.8));
+        const eyeOffset = right.clone().multiplyScalar(2.8);
+        const eyeLift = up.clone().multiplyScalar(1.55);
+        faceMarkers.eyeL.position.copy(center.clone().add(eyeOffset).add(eyeLift));
+        faceMarkers.eyeR.position.copy(center.clone().sub(eyeOffset).add(eyeLift));
+        faceMarkers.mouth.position.copy(center.clone().add(up.clone().multiplyScalar(-2.75)));
+        const basis = new THREE.Matrix4().makeBasis(right, up, forward);
+        faceMarkers.mouth.quaternion.setFromRotationMatrix(basis);
+      }
+
+      function updateEnvelopeJoint(item, points) {
+        item.mesh.position.copy(points[item.name]);
+        item.mesh.scale.copy(item.scale);
+        if (item.shape === "pelvisCylinder") {
+          const right = new THREE.Vector3().subVectors(points.thigh_l, points.thigh_r).normalize();
+          item.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), right);
+        }
+      }
+
       function applyFrame(index) {
         const frame = frames[index];
 
@@ -696,8 +783,7 @@
         }
 
         for (const item of envelopeJoints) {
-          item.mesh.position.copy(frame.points[item.name]);
-          item.mesh.scale.copy(item.scale);
+          updateEnvelopeJoint(item, frame.points);
         }
 
         for (const item of segmentMeshes) {
@@ -708,6 +794,7 @@
         for (const item of jointMeshes) {
           item.mesh.position.copy(frame.points[item.name]);
         }
+        updateFaceMarkers(frame.points);
 
         frameReadout.textContent = `Frame ${index + 1} / ${frames.length}`;
         ticks.forEach((tick, tickIndex) => tick.classList.toggle("active", tickIndex === index));

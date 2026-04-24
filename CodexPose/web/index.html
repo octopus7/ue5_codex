@@ -136,7 +136,8 @@
       white-space: nowrap;
     }
 
-    button {
+    button,
+    select {
       min-height: 34px;
       padding: 0 14px;
       border: 1px solid #bcc8d4;
@@ -148,13 +149,19 @@
       cursor: pointer;
     }
 
-    button:hover {
+    button:hover,
+    select:hover {
       background: #f0f5f8;
+    }
+
+    .walk-mode {
+      min-width: 144px;
     }
 
     .metric {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       min-height: 34px;
       padding: 0 10px;
       border: 1px solid var(--line);
@@ -162,6 +169,16 @@
       background: rgba(246, 248, 251, 0.82);
       color: var(--muted);
       font-size: 13px;
+    }
+
+    #walkFrameReadout {
+      position: absolute;
+      right: 16px;
+      bottom: 44px;
+      flex: 0 0 116px;
+      width: 116px;
+      font-variant-numeric: tabular-nums;
+      z-index: 4;
     }
 
     .walk-legend {
@@ -468,6 +485,11 @@
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       }
 
+      .walk-mode {
+        grid-column: 1 / -1;
+        width: 100%;
+      }
+
       .walk-controls > * {
         min-width: 0;
         justify-content: center;
@@ -486,6 +508,11 @@
         right: 12px;
         bottom: 44px;
         flex-wrap: wrap;
+      }
+
+      #walkFrameReadout {
+        right: 12px;
+        bottom: 88px;
       }
 
       .walk-strip {
@@ -530,13 +557,19 @@
       <div class="walk-toolbar">
         <div class="walk-title">
           <strong data-i18n="walkTitle">Manny Walk Cycle 3D</strong>
-          <span data-i18n="walkDescription">24 frames at 24 fps, Manny-proportioned skeleton, forward-axis walk.</span>
+          <span id="walkModeDescription" data-i18n="walkDescription">24 frames at 24 fps, Manny-proportioned skeleton, forward-axis walk.</span>
         </div>
         <div class="walk-controls">
+          <select class="walk-mode" id="walkModeSelect" aria-label="Walk mode">
+            <option value="basic" data-i18n="basicWalk">Basic Walk</option>
+            <option value="feminine" data-i18n="feminineWalk">Feminine Walk</option>
+            <option value="overheadWave" data-i18n="overheadWaveMode">Overhead Wave</option>
+          </select>
           <button id="walkPlayButton" type="button">Pause</button>
-          <span class="metric" id="walkFrameReadout">Frame 1 / 24</span>
         </div>
       </div>
+
+      <span class="metric" id="walkFrameReadout">Frame 1 / 24</span>
 
       <div class="view-gizmo" aria-label="View shortcuts">
         <span class="gizmo-line x" aria-hidden="true"></span>
@@ -560,17 +593,6 @@
     </section>
 
     <section class="list" aria-label="Web pages">
-      <a class="item" href="manny_overhead_wave_loop_3d.html">
-        <div class="thumb">
-          <img src="manny_reference_front_pose.png" alt="">
-        </div>
-        <div class="meta">
-          <strong data-i18n="overheadTitle">Manny Overhead Wave Loop 3D</strong>
-          <span data-i18n="overheadDescription">Rotatable 3D preview, 8 frames at 8 fps, with view-axis shortcuts.</span>
-        </div>
-        <span class="open" data-i18n="open">Open</span>
-      </a>
-
       <a class="item" href="manny_reference_front_pose.png">
         <div class="thumb">
           <img src="manny_reference_front_pose.png" alt="">
@@ -590,15 +612,22 @@
       const canvas = document.getElementById("walkCanvas");
       const fallback = document.getElementById("fallback");
       const languageToggle = document.getElementById("languageToggle");
+      const modeSelect = document.getElementById("walkModeSelect");
+      const walkModeDescription = document.getElementById("walkModeDescription");
       const playButton = document.getElementById("walkPlayButton");
       const frameReadout = document.getElementById("walkFrameReadout");
       const strip = document.getElementById("walkStrip");
       const gizmoButtons = Array.from(document.querySelectorAll("[data-view]"));
-      const fps = 24;
-      const frameCount = 24;
-      const frameDurationMs = 1000 / fps;
+      const walkModes = {
+        basic: { frameCount: 24, fps: 24, descriptionKey: "basicWalkDescription" },
+        feminine: { frameCount: 24, fps: 24, descriptionKey: "feminineWalkDescription" },
+        overheadWave: { frameCount: 24, fps: 24, descriptionKey: "overheadWaveDescription" }
+      };
       let playing = true;
       let frameIndex = 0;
+      let currentMode = "basic";
+      let frameCount = walkModes.basic.frameCount;
+      let frameDurationMs = 1000 / walkModes.basic.fps;
       let currentLanguage = "en";
       const copy = {
         en: {
@@ -610,6 +639,12 @@
           fallbackBody: "Connect to the internet or place a local Three.js build next to this HTML file.",
           walkTitle: "Manny Walk Cycle 3D",
           walkDescription: "24 frames at 24 fps, Manny-proportioned skeleton, forward-axis walk.",
+          basicWalk: "Basic Walk",
+          feminineWalk: "Feminine Walk",
+          overheadWaveMode: "Overhead Wave",
+          basicWalkDescription: "24 frames at 24 fps, Manny-proportioned skeleton, forward-axis walk.",
+          feminineWalkDescription: "24 frames at 24 fps, graceful pelvis yaw and roll with lighter steps.",
+          overheadWaveDescription: "24 frames at 24 fps, overhead hand wave loop in the same 3D view.",
           pause: "Pause",
           play: "Play",
           frame: "Frame",
@@ -617,7 +652,7 @@
           leftSide: "left side",
           centerChain: "center chain",
           overheadTitle: "Manny Overhead Wave Loop 3D",
-          overheadDescription: "Rotatable 3D preview, 8 frames at 8 fps, with view-axis shortcuts.",
+          overheadDescription: "Rotatable 3D preview, 24 frames at 24 fps, with view-axis shortcuts.",
           referenceTitle: "Manny Reference Front Pose PNG",
           referenceDescription: "Static front-view bone reference image.",
           open: "Open"
@@ -631,6 +666,12 @@
           fallbackBody: "인터넷에 연결하거나 이 HTML 파일 옆에 로컬 Three.js 빌드를 배치하세요.",
           walkTitle: "Manny 워킹 사이클 3D",
           walkDescription: "24fps 기준 24프레임, Manny 비율의 스켈레톤과 전방축 보행입니다.",
+          basicWalk: "기본 걸음",
+          feminineWalk: "여성 걸음",
+          overheadWaveMode: "손 크게흔들기",
+          basicWalkDescription: "24fps 기준 24프레임, Manny 비율의 스켈레톤과 전방축 보행입니다.",
+          feminineWalkDescription: "24fps 기준 24프레임, 우아한 골반 yaw/roll과 사뿐한 보행입니다.",
+          overheadWaveDescription: "24fps 기준 24프레임, 같은 3D 뷰에서 보는 손 크게흔들기 루프입니다.",
           pause: "일시정지",
           play: "재생",
           frame: "프레임",
@@ -638,7 +679,7 @@
           leftSide: "왼쪽",
           centerChain: "중앙 체인",
           overheadTitle: "Manny 머리 위 손 흔들기 3D",
-          overheadDescription: "8fps 기준 8프레임 회전형 3D 미리보기와 시점 축 바로가기입니다.",
+          overheadDescription: "24fps 기준 24프레임 회전형 3D 미리보기와 시점 축 바로가기입니다.",
           referenceTitle: "Manny 정면 기준 포즈 PNG",
           referenceDescription: "정적 정면 본 구성 참조 이미지입니다.",
           open: "열기"
@@ -665,6 +706,10 @@
         playButton.textContent = playing ? t("pause") : t("play");
       }
 
+      function updateModeDescription() {
+        walkModeDescription.textContent = t(walkModes[currentMode].descriptionKey);
+      }
+
       function setLanguage(language) {
         currentLanguage = language;
         document.documentElement.lang = language;
@@ -675,6 +720,7 @@
         languageToggle.textContent = t("languageButton");
         updatePlayButtonText();
         updateFrameReadout(frameIndex);
+        updateModeDescription();
       }
 
       languageToggle.addEventListener("click", () => {
@@ -790,15 +836,87 @@
         );
       }
 
-      function footAt(phase, side) {
+      const walkPoseModes = {
+        basic: {
+          bob: 1.25,
+          sideSway: 1.4,
+          chestTwist: -4.5,
+          pelvisYaw: 0.14,
+          pelvisRoll: 0.075,
+          chestYawCounter: -0.42,
+          chestRollCounter: -0.32,
+          stepLength: 26,
+          footLift: 15,
+          footSpacing: 9.97,
+          ballSpacing: 11.4,
+          ballForward: 15.4,
+          hipX: 9.97,
+          hipZ: 1.1,
+          upperArmSwing: 10.5,
+          lowerArmSwing: 8.0,
+          handSwing: 5.3,
+          armOut: 1.0,
+          armDrop: 0
+        },
+        feminine: {
+          bob: 0.8,
+          sideSway: 2.1,
+          chestTwist: -2.6,
+          pelvisYaw: 0.18,
+          pelvisRoll: 0.11,
+          chestYawCounter: -0.28,
+          chestRollCounter: -0.22,
+          stepLength: 20,
+          footLift: 10.5,
+          footSpacing: 7.1,
+          ballSpacing: 8.2,
+          ballForward: 13.2,
+          hipX: 9.2,
+          hipZ: 0.85,
+          upperArmSwing: 6.0,
+          lowerArmSwing: 4.7,
+          handSwing: 3.2,
+          armOut: 0.86,
+          armDrop: 1.2
+        }
+      };
+
+      const overheadWaveParams = [
+        { sway: -0.45, reach: -0.62, lift: 0.40, depth: -0.15 },
+        { sway: -0.78, reach: -1.00, lift: 1.00, depth: 0.25 },
+        { sway: -0.28, reach: -0.35, lift: 0.20, depth: -0.35 },
+        { sway: 0.42, reach: 0.55, lift: 0.55, depth: 0.15 },
+        { sway: 0.82, reach: 1.00, lift: 1.00, depth: -0.25 },
+        { sway: 0.30, reach: 0.35, lift: 0.15, depth: 0.35 },
+        { sway: -0.62, reach: -0.82, lift: 0.75, depth: 0.10 },
+        { sway: 0.08, reach: 0.10, lift: 0.00, depth: -0.10 }
+      ];
+
+      function sampleOverheadWaveParam(index, count) {
+        const position = (index / count) * overheadWaveParams.length;
+        const baseIndex = Math.floor(position) % overheadWaveParams.length;
+        const nextIndex = (baseIndex + 1) % overheadWaveParams.length;
+        const blend = position - Math.floor(position);
+        const smooth = blend * blend * (3 - 2 * blend);
+        const from = overheadWaveParams[baseIndex];
+        const to = overheadWaveParams[nextIndex];
+        return {
+          sway: lerp(from.sway, to.sway, smooth),
+          reach: lerp(from.reach, to.reach, smooth),
+          lift: lerp(from.lift, to.lift, smooth),
+          depth: lerp(from.depth, to.depth, smooth)
+        };
+      }
+
+      function footAt(phase, side, config) {
         const cycle = phase % 1;
         const stance = cycle < 0.5;
         const t = stance ? cycle / 0.5 : (cycle - 0.5) / 0.5;
-        const z = stance ? lerp(26, -26, t) : lerp(-26, 26, t);
-        const lift = stance ? 0 : Math.sin(t * Math.PI) * 15;
+        const z = stance ? lerp(config.stepLength, -config.stepLength, t) : lerp(-config.stepLength, config.stepLength, t);
+        const lift = stance ? 0 : Math.sin(t * Math.PI) * config.footLift;
         return {
-          ankle: v(side * 9.97, 8.3 + lift, z),
-          ball: v(side * 11.4, 1.2 + lift * 0.28, z + 15.4),
+          ankle: v(side * config.footSpacing, 8.3 + lift, z),
+          ball: v(side * config.ballSpacing, 1.2 + lift * 0.28, z + config.ballForward),
           planted: stance
         };
       }
@@ -822,14 +940,21 @@
       }
 
       function buildPose(index) {
+        if (currentMode === "overheadWave") {
+          return buildOverheadPose(index);
+        }
+        return buildWalkPose(index, walkPoseModes[currentMode] || walkPoseModes.basic);
+      }
+
+      function buildWalkPose(index, config) {
         const phase = index / frameCount;
-        const bob = (1 - Math.cos(phase * Math.PI * 4)) * 1.25;
-        const sideSway = wave(phase) * 1.4;
-        const chestTwist = wave(phase) * -4.5;
-        const pelvisYaw = wave(phase) * 0.14;
-        const pelvisRoll = wave(phase + 0.25) * 0.075;
-        const chestYaw = -pelvisYaw * 0.42;
-        const chestRoll = -pelvisRoll * 0.32;
+        const bob = (1 - Math.cos(phase * Math.PI * 4)) * config.bob;
+        const sideSway = wave(phase) * config.sideSway;
+        const chestTwist = wave(phase) * config.chestTwist;
+        const pelvisYaw = wave(phase) * config.pelvisYaw;
+        const pelvisRoll = wave(phase + 0.25) * config.pelvisRoll;
+        const chestYaw = pelvisYaw * config.chestYawCounter;
+        const chestRoll = pelvisRoll * config.chestRollCounter;
         const pelvis = v(sideSway, 94.5 + bob, 0);
         const points = {};
         const pelvisLocal = (x, y, z) => rotateYawRoll(v(x, y, z), pelvisYaw, pelvisRoll);
@@ -846,17 +971,17 @@
         points.clavicle_r = points.spine_05.clone().add(chestLocal(-17.8, 3.0, -0.8));
 
         const armSwing = wave(phase);
-        points.upperarm_l = points.clavicle_l.clone().add(chestLocal(16.4, -15.0, -armSwing * 10.5));
-        points.lowerarm_l = points.upperarm_l.clone().add(chestLocal(15.3, -25.2, -armSwing * 8.0));
-        points.hand_l = points.lowerarm_l.clone().add(chestLocal(7.0, -24.5, -armSwing * 5.3));
-        points.upperarm_r = points.clavicle_r.clone().add(chestLocal(-16.4, -15.0, armSwing * 10.5));
-        points.lowerarm_r = points.upperarm_r.clone().add(chestLocal(-15.3, -25.2, armSwing * 8.0));
-        points.hand_r = points.lowerarm_r.clone().add(chestLocal(-7.0, -24.5, armSwing * 5.3));
+        points.upperarm_l = points.clavicle_l.clone().add(chestLocal(16.4 * config.armOut, -15.0 - config.armDrop, -armSwing * config.upperArmSwing));
+        points.lowerarm_l = points.upperarm_l.clone().add(chestLocal(15.3 * config.armOut, -25.2, -armSwing * config.lowerArmSwing));
+        points.hand_l = points.lowerarm_l.clone().add(chestLocal(7.0 * config.armOut, -24.5, -armSwing * config.handSwing));
+        points.upperarm_r = points.clavicle_r.clone().add(chestLocal(-16.4 * config.armOut, -15.0 - config.armDrop, armSwing * config.upperArmSwing));
+        points.lowerarm_r = points.upperarm_r.clone().add(chestLocal(-15.3 * config.armOut, -25.2, armSwing * config.lowerArmSwing));
+        points.hand_r = points.lowerarm_r.clone().add(chestLocal(-7.0 * config.armOut, -24.5, armSwing * config.handSwing));
 
-        const leftFoot = footAt((phase + 0.5) % 1, 1);
-        const rightFoot = footAt(phase, -1);
-        points.thigh_l = pelvis.clone().add(pelvisLocal(9.97 + sideSway * 0.15, -3.5, 1.1));
-        points.thigh_r = pelvis.clone().add(pelvisLocal(-9.97 + sideSway * 0.15, -3.5, -1.1));
+        const leftFoot = footAt((phase + 0.5) % 1, 1, config);
+        const rightFoot = footAt(phase, -1, config);
+        points.thigh_l = pelvis.clone().add(pelvisLocal(config.hipX + sideSway * 0.15, -3.5, config.hipZ));
+        points.thigh_r = pelvis.clone().add(pelvisLocal(-config.hipX + sideSway * 0.15, -3.5, -config.hipZ));
         points.foot_l = leftFoot.ankle;
         points.ball_l = leftFoot.ball;
         points.foot_r = rightFoot.ankle;
@@ -868,11 +993,73 @@
         return points;
       }
 
+      function buildOverheadPose(index) {
+        const param = sampleOverheadWaveParam(index, frameCount);
+        const sway = param.sway;
+        const reach = param.reach;
+        const lift = param.lift;
+        const depth = param.depth;
+        const bodySway = sway * 0.75 + reach * 0.25;
+        const armDepth = depth * 12;
+        const points = {};
+        const rotations = {};
+
+        function q(x = 0, y = 0, z = 0) {
+          return new THREE.Quaternion().setFromEuler(new THREE.Euler(x, y, z, "XYZ"));
+        }
+
+        function place(parent, name, offset, localRotation = q()) {
+          points[name] = points[parent].clone().add(offset.clone().applyQuaternion(rotations[parent]));
+          rotations[name] = rotations[parent].clone().multiply(localRotation);
+        }
+
+        function plantLeg(thighName, calfName, footName, ballName, footPosition, ballPosition, side) {
+          points[footName] = footPosition.clone();
+          points[ballName] = ballPosition.clone();
+          const thigh = points[thighName];
+          const kneeBias = v(side * 4 + bodySway * 1.5, -4, -3);
+          points[calfName] = thigh.clone().lerp(points[footName], 0.52).add(kneeBias);
+          rotations[calfName] = rotations[thighName].clone();
+          rotations[footName] = rotations[calfName].clone();
+          rotations[ballName] = rotations[footName].clone();
+        }
+
+        points.pelvis = v(-bodySway * 3.5, 96 + lift * 0.7, depth * -2.0);
+        rotations.pelvis = q(depth * 0.04, depth * 0.05, -bodySway * 0.055);
+
+        place("pelvis", "spine_01", v(0, 13, 0), q(0, depth * 0.01, -bodySway * 0.020));
+        place("spine_01", "spine_02", v(0, 13, 0), q(0, depth * 0.012, -bodySway * 0.024));
+        place("spine_02", "spine_03", v(0, 13, 0), q(0, depth * 0.014, -bodySway * 0.028));
+        place("spine_03", "spine_04", v(0, 11, 0), q(0, depth * 0.016, -bodySway * 0.032));
+        place("spine_04", "spine_05", v(0, 9, 0), q(0, depth * 0.018, -bodySway * 0.036));
+        place("spine_05", "neck_01", v(0, 13 + lift * 0.4, 0), q(depth * 0.018, depth * 0.012, -bodySway * 0.025));
+        place("neck_01", "head", v(0, 16, 0), q(depth * 0.014, -depth * 0.010, -bodySway * 0.020));
+
+        place("spine_05", "clavicle_l", v(15, 3, 1), q(0, depth * 0.020, -0.10 - bodySway * 0.015));
+        place("spine_05", "clavicle_r", v(-15, 3, -1), q(0, -depth * 0.020, 0.10 - bodySway * 0.015));
+        place("clavicle_l", "upperarm_l", v(18 + reach * 11, 25 + lift * 3, 6 + armDepth), q(depth * 0.05, reach * 0.04, -0.12));
+        place("clavicle_r", "upperarm_r", v(-18 + reach * 11, 25 + lift * 3, -6 - armDepth), q(-depth * 0.05, reach * 0.04, 0.12));
+        place("upperarm_l", "lowerarm_l", v(10 + reach * 14, 23 + lift * 3, 4 + armDepth * 0.45), q(0, reach * 0.025, -0.06));
+        place("upperarm_r", "lowerarm_r", v(-10 + reach * 14, 23 + lift * 3, -4 - armDepth * 0.45), q(0, reach * 0.025, 0.06));
+        place("lowerarm_l", "hand_l", v(3 + reach * 8, 12 + lift * 2, 2), q());
+        place("lowerarm_r", "hand_r", v(-3 + reach * 8, 12 + lift * 2, -2), q());
+
+        place("pelvis", "thigh_l", v(12 + bodySway * 2, -5, 4), q(0, 0, bodySway * 0.025));
+        place("pelvis", "thigh_r", v(-12 + bodySway * 2, -5, -4), q(0, 0, bodySway * 0.025));
+        plantLeg("thigh_l", "calf_l", "foot_l", "ball_l", v(17, 10, 10), v(22, 2, 25), 1);
+        plantLeg("thigh_r", "calf_r", "foot_r", "ball_r", v(-17, 10, 10), v(-22, 2, 25), -1);
+
+        points._leftPlanted = true;
+        points._rightPlanted = true;
+        return points;
+      }
+
       const figure = new THREE.Group();
       scene.add(figure);
 
       const envelopeRenderOrder = 1;
       const boneRenderOrder = 2;
+      const faceRenderOrder = 3;
       const envelopeMaterial = new THREE.MeshBasicMaterial({
         color: colors.envelope,
         transparent: true,
@@ -880,11 +1067,15 @@
         depthTest: true,
         depthWrite: false
       });
+      const headEnvelopeMaterial = envelopeMaterial.clone();
+      headEnvelopeMaterial.color.setHex(0xf2c7a5);
+      headEnvelopeMaterial.opacity = 0.7;
       const envelopeSegments = [
         ["pelvis", "spine_01", 8.1],
         ["spine_01", "spine_03", 9.0],
         ["spine_03", "spine_05", 8.6],
         ["spine_05", "neck_01", 5.5],
+        ["clavicle_l", "clavicle_r", 4.2],
         ["clavicle_l", "upperarm_l", 4.1],
         ["upperarm_l", "lowerarm_l", 3.3],
         ["lowerarm_l", "hand_l", 2.5],
@@ -905,19 +1096,24 @@
         return { from, to, radius, mesh };
       });
       const envelopeJointGeometry = new THREE.SphereGeometry(1, 24, 16);
+      const pelvisEnvelopeGeometry = new THREE.CylinderGeometry(1, 1, 1, 24);
       const envelopeJoints = [
-        ["head", v(7.3, 9.4, 7.3)],
-        ["pelvis", v(9.7, 6.1, 7.9)],
+        ["head", v(10.95, 14.1, 10.95)],
+        ["pelvis", v(5.8, 20.2, 5.8), "pelvisCylinder"],
         ["spine_04", v(10.2, 11.5, 7.1)],
         ["hand_l", v(3.2, 3.4, 3.2)],
         ["hand_r", v(3.2, 3.4, 3.2)],
         ["foot_l", v(4.4, 2.2, 7.8)],
         ["foot_r", v(4.4, 2.2, 7.8)]
-      ].map(([name, scale]) => {
-        const mesh = new THREE.Mesh(envelopeJointGeometry, envelopeMaterial);
-        mesh.renderOrder = envelopeRenderOrder;
+      ].map(([name, scale, shape = "sphere"]) => {
+        const material = name === "head" ? headEnvelopeMaterial : envelopeMaterial;
+        const geometry = shape === "pelvisCylinder" ? pelvisEnvelopeGeometry : envelopeJointGeometry;
+        const mesh = new THREE.Mesh(geometry, material);
+        if (name !== "head") {
+          mesh.renderOrder = envelopeRenderOrder;
+        }
         figure.add(mesh);
-        return { name, scale, mesh };
+        return { name, scale, shape, mesh };
       });
 
       const segmentMeshes = segments.map((segment) => {
@@ -955,6 +1151,22 @@
         return { name, mesh };
       });
 
+      const faceMaterial = new THREE.MeshBasicMaterial({
+        color: 0x202833,
+        depthTest: true,
+        depthWrite: true
+      });
+      const eyeGeometry = new THREE.SphereGeometry(1.0, 12, 8);
+      const faceMarkers = {
+        eyeL: new THREE.Mesh(eyeGeometry, faceMaterial),
+        eyeR: new THREE.Mesh(eyeGeometry, faceMaterial),
+        mouth: new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.55, 0.55), faceMaterial)
+      };
+      Object.values(faceMarkers).forEach((mesh) => {
+        mesh.renderOrder = faceRenderOrder;
+        figure.add(mesh);
+      });
+
       const plantedMarkers = [
         new THREE.Mesh(
           new THREE.CylinderGeometry(5.5, 5.5, 0.8, 24),
@@ -968,11 +1180,17 @@
       plantedMarkers.forEach((marker) => scene.add(marker));
 
       const ticks = [];
-      for (let i = 0; i < frameCount; i += 1) {
-        const tick = document.createElement("div");
-        tick.className = "walk-tick";
-        strip.appendChild(tick);
-        ticks.push(tick);
+
+      function rebuildTicks() {
+        strip.textContent = "";
+        strip.style.gridTemplateColumns = `repeat(${frameCount}, minmax(0, 1fr))`;
+        ticks.length = 0;
+        for (let i = 0; i < frameCount; i += 1) {
+          const tick = document.createElement("div");
+          tick.className = "walk-tick";
+          strip.appendChild(tick);
+          ticks.push(tick);
+        }
       }
 
       function updateCylinder(mesh, a, b) {
@@ -993,14 +1211,38 @@
         mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), diff.normalize());
       }
 
+      function updateFaceMarkers(pose) {
+        const up = new THREE.Vector3().subVectors(pose.head, pose.neck_01).normalize();
+        const right = new THREE.Vector3().subVectors(pose.clavicle_l, pose.clavicle_r).normalize();
+        const forward = new THREE.Vector3().crossVectors(right, up).normalize();
+        const center = pose.head.clone()
+          .add(up.clone().multiplyScalar(2.1))
+          .add(forward.clone().multiplyScalar(6.8));
+        const eyeOffset = right.clone().multiplyScalar(2.8);
+        const eyeLift = up.clone().multiplyScalar(1.55);
+        faceMarkers.eyeL.position.copy(center.clone().add(eyeOffset).add(eyeLift));
+        faceMarkers.eyeR.position.copy(center.clone().sub(eyeOffset).add(eyeLift));
+        faceMarkers.mouth.position.copy(center.clone().add(up.clone().multiplyScalar(-2.75)));
+        const basis = new THREE.Matrix4().makeBasis(right, up, forward);
+        faceMarkers.mouth.quaternion.setFromRotationMatrix(basis);
+      }
+
+      function updateEnvelopeJoint(item, pose) {
+        item.mesh.position.copy(pose[item.name]);
+        item.mesh.scale.copy(item.scale);
+        if (item.shape === "pelvisCylinder") {
+          const right = new THREE.Vector3().subVectors(pose.thigh_l, pose.thigh_r).normalize();
+          item.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), right);
+        }
+      }
+
       function applyFrame(index) {
         const pose = buildPose(index);
         for (const item of envelopeMeshes) {
           updateEnvelopeCylinder(item.mesh, pose[item.from], pose[item.to], item.radius);
         }
         for (const item of envelopeJoints) {
-          item.mesh.position.copy(pose[item.name]);
-          item.mesh.scale.copy(item.scale);
+          updateEnvelopeJoint(item, pose);
         }
         for (const item of segmentMeshes) {
           const [from, to] = item.segment;
@@ -1009,6 +1251,7 @@
         for (const item of jointMeshes) {
           item.mesh.position.copy(pose[item.name]);
         }
+        updateFaceMarkers(pose);
 
         plantedMarkers[0].position.set(pose.foot_l.x, 0.45, pose.foot_l.z);
         plantedMarkers[0].visible = pose._leftPlanted;
@@ -1059,10 +1302,27 @@
       let dragging = false;
       let lastPointer = { x: 0, y: 0 };
 
+      function setWalkMode(mode) {
+        currentMode = walkModes[mode] ? mode : "basic";
+        const modeConfig = walkModes[currentMode];
+        frameCount = modeConfig.frameCount;
+        frameDurationMs = 1000 / modeConfig.fps;
+        frameIndex %= frameCount;
+        modeSelect.value = currentMode;
+        rebuildTicks();
+        updateModeDescription();
+        applyFrame(frameIndex);
+        lastFrameTime = performance.now();
+      }
+
       playButton.addEventListener("click", () => {
         playing = !playing;
         updatePlayButtonText();
         lastFrameTime = performance.now();
+      });
+
+      modeSelect.addEventListener("change", () => {
+        setWalkMode(modeSelect.value);
       });
 
       canvas.addEventListener("pointerdown", (event) => {
@@ -1118,7 +1378,7 @@
       window.addEventListener("resize", resize);
       resize();
       updateCamera();
-      applyFrame(frameIndex);
+      setWalkMode("basic");
       requestAnimationFrame(animate);
     })();
   </script>
