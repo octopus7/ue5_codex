@@ -441,7 +441,8 @@
         left: 0x23aeea,
         right: 0xf4a12d,
         center: 0x414a57,
-        joint: 0x1e2633
+        joint: 0x1e2633,
+        envelope: 0xb6c9d8
       };
 
       const segments = [
@@ -588,6 +589,52 @@
       const figure = new THREE.Group();
       scene.add(figure);
 
+      const envelopeMaterial = new THREE.MeshStandardMaterial({
+        color: colors.envelope,
+        transparent: true,
+        opacity: 0.24,
+        depthWrite: false,
+        roughness: 0.82,
+        metalness: 0.0
+      });
+      const envelopeSegments = [
+        ["pelvis", "spine_01", 7.4],
+        ["spine_01", "spine_03", 8.2],
+        ["spine_03", "spine_05", 7.8],
+        ["spine_05", "neck_01", 5.1],
+        ["clavicle_l", "upperarm_l", 4.1],
+        ["upperarm_l", "lowerarm_l", 3.3],
+        ["lowerarm_l", "hand_l", 2.5],
+        ["clavicle_r", "upperarm_r", 4.1],
+        ["upperarm_r", "lowerarm_r", 3.3],
+        ["lowerarm_r", "hand_r", 2.5],
+        ["thigh_l", "calf_l", 4.9],
+        ["calf_l", "foot_l", 3.8],
+        ["foot_l", "ball_l", 2.8],
+        ["thigh_r", "calf_r", 4.9],
+        ["calf_r", "foot_r", 3.8],
+        ["foot_r", "ball_r", 2.8]
+      ];
+      const envelopeMeshes = envelopeSegments.map(([from, to, radius]) => {
+        const mesh = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 20), envelopeMaterial);
+        figure.add(mesh);
+        return { from, to, radius, mesh };
+      });
+      const envelopeJointGeometry = new THREE.SphereGeometry(1, 24, 16);
+      const envelopeJoints = [
+        ["head", v(6.6, 8.6, 6.6)],
+        ["pelvis", v(8.8, 5.5, 7.2)],
+        ["spine_04", v(9.3, 10.6, 6.4)],
+        ["hand_l", v(3.2, 3.4, 3.2)],
+        ["hand_r", v(3.2, 3.4, 3.2)],
+        ["foot_l", v(4.4, 2.2, 7.8)],
+        ["foot_r", v(4.4, 2.2, 7.8)]
+      ].map(([name, scale]) => {
+        const mesh = new THREE.Mesh(envelopeJointGeometry, envelopeMaterial);
+        figure.add(mesh);
+        return { name, scale, mesh };
+      });
+
       const segmentMeshes = segments.map((segment) => {
         const material = new THREE.MeshStandardMaterial({
           color: colors[segment[2]],
@@ -619,8 +666,26 @@
         mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), diff.normalize());
       }
 
+      function updateEnvelopeCylinder(mesh, a, b, radius) {
+        const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
+        const diff = new THREE.Vector3().subVectors(b, a);
+        const length = Math.max(diff.length(), 0.001);
+        mesh.position.copy(mid);
+        mesh.scale.set(radius, length, radius);
+        mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), diff.normalize());
+      }
+
       function applyFrame(index) {
         const frame = frames[index];
+
+        for (const item of envelopeMeshes) {
+          updateEnvelopeCylinder(item.mesh, frame.points[item.from], frame.points[item.to], item.radius);
+        }
+
+        for (const item of envelopeJoints) {
+          item.mesh.position.copy(frame.points[item.name]);
+          item.mesh.scale.copy(item.scale);
+        }
 
         for (const item of segmentMeshes) {
           const [from, to] = item.segment;
