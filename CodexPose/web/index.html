@@ -8,34 +8,54 @@
     :root {
       color-scheme: light;
       --bg: #f6f8fb;
-      --panel: #ffffff;
+      --panel: rgba(255, 255, 255, 0.92);
       --text: #172033;
       --muted: #5f6b7b;
       --line: #d7e0ea;
       --accent: #2276d2;
-      --accent-soft: #e8f1fc;
+      --left: #23aeea;
+      --right: #f4a12d;
+      --center: #414a57;
     }
 
     * {
       box-sizing: border-box;
     }
 
+    html,
     body {
+      width: 100%;
+      min-height: 100%;
       margin: 0;
-      min-height: 100vh;
+      overflow-x: hidden;
       background: var(--bg);
       color: var(--text);
       font-family: "Segoe UI", Arial, sans-serif;
     }
 
     main {
-      width: min(960px, calc(100vw - 32px));
+      width: min(1120px, calc(100vw - 32px));
       margin: 0 auto;
-      padding: 40px 0;
+      padding: 32px 0 40px;
     }
 
     header {
-      margin-bottom: 22px;
+      margin-bottom: 16px;
+    }
+
+    .site-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .site-title {
+      min-width: 0;
+    }
+
+    .language-toggle {
+      flex: 0 0 auto;
     }
 
     h1 {
@@ -52,6 +72,276 @@
       line-height: 1.55;
     }
 
+    .walk-scene {
+      position: relative;
+      height: min(640px, calc(100vh - 154px));
+      min-height: 500px;
+      margin-bottom: 18px;
+      overflow: hidden;
+      background: #f8fafc;
+    }
+
+    #walkCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    #walkCanvas.dragging {
+      cursor: grabbing;
+    }
+
+    .walk-toolbar {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      top: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 12px 30px rgba(18, 28, 43, 0.08);
+      z-index: 2;
+    }
+
+    .walk-title {
+      min-width: 0;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      white-space: nowrap;
+    }
+
+    .walk-title strong {
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .walk-title span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .walk-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    button {
+      min-height: 34px;
+      padding: 0 14px;
+      border: 1px solid #bcc8d4;
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--text);
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #f0f5f8;
+    }
+
+    .metric {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(246, 248, 251, 0.82);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .walk-legend {
+      position: absolute;
+      left: 16px;
+      bottom: 44px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--muted);
+      font-size: 12px;
+      z-index: 2;
+    }
+
+    .swatch {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      margin-right: 6px;
+      border-radius: 50%;
+      vertical-align: -1px;
+    }
+
+    .swatch.left {
+      background: var(--left);
+    }
+
+    .swatch.right {
+      background: var(--right);
+    }
+
+    .swatch.center {
+      background: var(--center);
+    }
+
+    .walk-strip {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 16px;
+      display: grid;
+      grid-template-columns: repeat(24, minmax(0, 1fr));
+      gap: 4px;
+      z-index: 2;
+    }
+
+    .walk-tick {
+      height: 7px;
+      border-radius: 4px;
+      background: #d4dce5;
+    }
+
+    .walk-tick.active {
+      background: linear-gradient(90deg, var(--right), var(--left));
+    }
+
+    .view-gizmo {
+      position: absolute;
+      right: 16px;
+      top: 92px;
+      width: 132px;
+      height: 132px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 12px 30px rgba(18, 28, 43, 0.08);
+      z-index: 3;
+    }
+
+    .gizmo-core {
+      position: absolute;
+      left: 60px;
+      top: 60px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #3f4856;
+      box-shadow: 0 0 0 3px rgba(63, 72, 86, 0.12);
+    }
+
+    .gizmo-line {
+      position: absolute;
+      left: 30px;
+      top: 65px;
+      width: 72px;
+      height: 2px;
+      border-radius: 1px;
+      transform-origin: 50% 50%;
+      opacity: 0.42;
+    }
+
+    .gizmo-line.x {
+      background: #dd5555;
+      transform: rotate(35deg);
+    }
+
+    .gizmo-line.y {
+      background: #35a853;
+      transform: rotate(-35deg);
+    }
+
+    .gizmo-line.z {
+      background: #3b82f6;
+      transform: rotate(90deg);
+    }
+
+    .gizmo-axis {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      min-height: 0;
+      padding: 0;
+      border: 2px solid rgba(255, 255, 255, 0.95);
+      border-radius: 50%;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1;
+      box-shadow: 0 6px 14px rgba(18, 28, 43, 0.14);
+    }
+
+    .gizmo-axis:hover,
+    .gizmo-axis.active {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+
+    .gizmo-axis.x {
+      background: #dd5555;
+    }
+
+    .gizmo-axis.y {
+      background: #35a853;
+    }
+
+    .gizmo-axis.z {
+      background: #3b82f6;
+    }
+
+    .gizmo-axis.negative {
+      opacity: 0.72;
+    }
+
+    .gizmo-z-plus {
+      left: 50px;
+      top: 6px;
+    }
+
+    .gizmo-y-plus {
+      left: 88px;
+      top: 28px;
+    }
+
+    .gizmo-x-plus {
+      left: 88px;
+      top: 72px;
+    }
+
+    .gizmo-z-minus {
+      left: 50px;
+      top: 94px;
+    }
+
+    .gizmo-y-minus {
+      left: 12px;
+      top: 72px;
+    }
+
+    .gizmo-x-minus {
+      left: 12px;
+      top: 28px;
+    }
+
     .list {
       display: grid;
       gap: 12px;
@@ -65,7 +355,7 @@
       padding: 14px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: var(--panel);
+      background: #ffffff;
       text-decoration: none;
       color: inherit;
       box-shadow: 0 8px 22px rgba(21, 34, 52, 0.05);
@@ -80,7 +370,7 @@
       height: 82px;
       border: 1px solid var(--line);
       border-radius: 6px;
-      background: var(--accent-soft);
+      background: #e8f1fc;
       overflow: hidden;
     }
 
@@ -122,9 +412,85 @@
       white-space: nowrap;
     }
 
-    @media (max-width: 640px) {
+    .fallback {
+      position: absolute;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 28px;
+      background: #f7f9fb;
+      color: #172033;
+      text-align: center;
+      z-index: 20;
+    }
+
+    @media (max-width: 720px) {
       main {
+        width: min(330px, calc(100vw - 24px));
+        margin-left: 12px;
+        margin-right: 0;
         padding-top: 24px;
+      }
+
+      .site-header {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .language-toggle {
+        width: 100%;
+      }
+
+      .walk-scene {
+        height: 620px;
+        min-height: 620px;
+      }
+
+      .walk-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+        left: 12px;
+        right: 12px;
+      }
+
+      .walk-title {
+        flex-direction: column;
+        gap: 2px;
+        white-space: normal;
+      }
+
+      .walk-title span {
+        overflow-wrap: anywhere;
+      }
+
+      .walk-controls {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+
+      .walk-controls > * {
+        min-width: 0;
+        justify-content: center;
+      }
+
+      .view-gizmo {
+        left: auto;
+        right: 12px;
+        top: 142px;
+        transform: scale(0.74);
+        transform-origin: top right;
+      }
+
+      .walk-legend {
+        left: 12px;
+        right: 12px;
+        bottom: 44px;
+        flex-wrap: wrap;
+      }
+
+      .walk-strip {
+        left: 12px;
+        right: 12px;
       }
 
       .item {
@@ -144,10 +510,54 @@
 </head>
 <body>
   <main>
-    <header>
-      <h1>CodexPose Web</h1>
-      <p>Web previews and reference assets for Manny pose work.</p>
+    <header class="site-header">
+      <div class="site-title">
+        <h1 data-i18n="pageTitle">CodexPose Web</h1>
+        <p data-i18n="pageDescription">UE5 Manny-based demo for web previews and reference assets.</p>
+      </div>
+      <button class="language-toggle" id="languageToggle" type="button">한국어</button>
     </header>
+
+    <section class="walk-scene" aria-label="Manny 24 frame walk cycle 3D preview">
+      <canvas id="walkCanvas" aria-label="Rotatable 3D Manny walk cycle"></canvas>
+      <div class="fallback" id="fallback">
+        <div>
+          <h1 data-i18n="fallbackTitle">Three.js did not load.</h1>
+          <p data-i18n="fallbackBody">Connect to the internet or place a local Three.js build next to this HTML file.</p>
+        </div>
+      </div>
+
+      <div class="walk-toolbar">
+        <div class="walk-title">
+          <strong data-i18n="walkTitle">Manny Walk Cycle 3D</strong>
+          <span data-i18n="walkDescription">24 frames at 24 fps, Manny-proportioned skeleton, forward-axis walk.</span>
+        </div>
+        <div class="walk-controls">
+          <button id="walkPlayButton" type="button">Pause</button>
+          <span class="metric" id="walkFrameReadout">Frame 1 / 24</span>
+        </div>
+      </div>
+
+      <div class="view-gizmo" aria-label="View shortcuts">
+        <span class="gizmo-line x" aria-hidden="true"></span>
+        <span class="gizmo-line y" aria-hidden="true"></span>
+        <span class="gizmo-line z" aria-hidden="true"></span>
+        <span class="gizmo-core" aria-hidden="true"></span>
+        <button class="gizmo-axis z gizmo-z-plus" type="button" data-view="zPlus" title="Top view">Z</button>
+        <button class="gizmo-axis y gizmo-y-plus" type="button" data-view="yPlus" title="Front view">Y</button>
+        <button class="gizmo-axis x gizmo-x-plus" type="button" data-view="xPlus" title="Right view">X</button>
+        <button class="gizmo-axis z negative gizmo-z-minus" type="button" data-view="zMinus" title="Bottom view">-Z</button>
+        <button class="gizmo-axis y negative gizmo-y-minus" type="button" data-view="yMinus" title="Back view">-Y</button>
+        <button class="gizmo-axis x negative gizmo-x-minus" type="button" data-view="xMinus" title="Left view">-X</button>
+      </div>
+
+      <div class="walk-legend">
+        <span><i class="swatch right"></i><span data-i18n="rightSide">right side</span></span>
+        <span><i class="swatch left"></i><span data-i18n="leftSide">left side</span></span>
+        <span><i class="swatch center"></i><span data-i18n="centerChain">center chain</span></span>
+      </div>
+      <div class="walk-strip" id="walkStrip" aria-hidden="true"></div>
+    </section>
 
     <section class="list" aria-label="Web pages">
       <a class="item" href="manny_overhead_wave_loop_3d.html">
@@ -155,10 +565,10 @@
           <img src="manny_reference_front_pose.png" alt="">
         </div>
         <div class="meta">
-          <strong>Manny Overhead Wave Loop 3D</strong>
-          <span>Rotatable 3D preview, 8 frames at 8 fps, with view-axis shortcuts.</span>
+          <strong data-i18n="overheadTitle">Manny Overhead Wave Loop 3D</strong>
+          <span data-i18n="overheadDescription">Rotatable 3D preview, 8 frames at 8 fps, with view-axis shortcuts.</span>
         </div>
-        <span class="open">Open</span>
+        <span class="open" data-i18n="open">Open</span>
       </a>
 
       <a class="item" href="manny_reference_front_pose.png">
@@ -166,12 +576,450 @@
           <img src="manny_reference_front_pose.png" alt="">
         </div>
         <div class="meta">
-          <strong>Manny Reference Front Pose PNG</strong>
-          <span>Static front-view bone reference image.</span>
+          <strong data-i18n="referenceTitle">Manny Reference Front Pose PNG</strong>
+          <span data-i18n="referenceDescription">Static front-view bone reference image.</span>
         </div>
-        <span class="open">Open</span>
+        <span class="open" data-i18n="open">Open</span>
       </a>
     </section>
   </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    (() => {
+      const canvas = document.getElementById("walkCanvas");
+      const fallback = document.getElementById("fallback");
+      const languageToggle = document.getElementById("languageToggle");
+      const playButton = document.getElementById("walkPlayButton");
+      const frameReadout = document.getElementById("walkFrameReadout");
+      const strip = document.getElementById("walkStrip");
+      const gizmoButtons = Array.from(document.querySelectorAll("[data-view]"));
+      const fps = 24;
+      const frameCount = 24;
+      const frameDurationMs = 1000 / fps;
+      let playing = true;
+      let frameIndex = 0;
+      let currentLanguage = "en";
+      const copy = {
+        en: {
+          documentTitle: "CodexPose Web",
+          languageButton: "한국어",
+          pageTitle: "CodexPose Web",
+          pageDescription: "UE5 Manny-based demo for web previews and reference assets.",
+          fallbackTitle: "Three.js did not load.",
+          fallbackBody: "Connect to the internet or place a local Three.js build next to this HTML file.",
+          walkTitle: "Manny Walk Cycle 3D",
+          walkDescription: "24 frames at 24 fps, Manny-proportioned skeleton, forward-axis walk.",
+          pause: "Pause",
+          play: "Play",
+          frame: "Frame",
+          rightSide: "right side",
+          leftSide: "left side",
+          centerChain: "center chain",
+          overheadTitle: "Manny Overhead Wave Loop 3D",
+          overheadDescription: "Rotatable 3D preview, 8 frames at 8 fps, with view-axis shortcuts.",
+          referenceTitle: "Manny Reference Front Pose PNG",
+          referenceDescription: "Static front-view bone reference image.",
+          open: "Open"
+        },
+        ko: {
+          documentTitle: "CodexPose 웹",
+          languageButton: "English",
+          pageTitle: "CodexPose 웹",
+          pageDescription: "웹 미리보기와 참조 에셋을 위한 UE5 Manny 기반 데모입니다.",
+          fallbackTitle: "Three.js를 불러오지 못했습니다.",
+          fallbackBody: "인터넷에 연결하거나 이 HTML 파일 옆에 로컬 Three.js 빌드를 배치하세요.",
+          walkTitle: "Manny 워킹 사이클 3D",
+          walkDescription: "24fps 기준 24프레임, Manny 비율의 스켈레톤과 전방축 보행입니다.",
+          pause: "일시정지",
+          play: "재생",
+          frame: "프레임",
+          rightSide: "오른쪽",
+          leftSide: "왼쪽",
+          centerChain: "중앙 체인",
+          overheadTitle: "Manny 머리 위 손 흔들기 3D",
+          overheadDescription: "8fps 기준 8프레임 회전형 3D 미리보기와 시점 축 바로가기입니다.",
+          referenceTitle: "Manny 정면 기준 포즈 PNG",
+          referenceDescription: "정적 정면 본 구성 참조 이미지입니다.",
+          open: "열기"
+        }
+      };
+      const colors = {
+        left: 0x23aeea,
+        right: 0xf4a12d,
+        center: 0x414a57,
+        joint: 0x2f3a49,
+        footPlant: 0x1f9d55
+      };
+
+      function t(key) {
+        return copy[currentLanguage][key] || copy.en[key] || key;
+      }
+
+      function updateFrameReadout(index) {
+        frameReadout.textContent = `${t("frame")} ${index + 1} / ${frameCount}`;
+      }
+
+      function updatePlayButtonText() {
+        playButton.textContent = playing ? t("pause") : t("play");
+      }
+
+      function setLanguage(language) {
+        currentLanguage = language;
+        document.documentElement.lang = language;
+        document.title = t("documentTitle");
+        document.querySelectorAll("[data-i18n]").forEach((node) => {
+          node.textContent = t(node.dataset.i18n);
+        });
+        languageToggle.textContent = t("languageButton");
+        updatePlayButtonText();
+        updateFrameReadout(frameIndex);
+      }
+
+      languageToggle.addEventListener("click", () => {
+        setLanguage(currentLanguage === "en" ? "ko" : "en");
+      });
+      setLanguage("en");
+
+      if (!window.THREE) {
+        fallback.style.display = "grid";
+        return;
+      }
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xf8fafc);
+      scene.fog = null;
+
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 3));
+      renderer.outputEncoding = THREE.sRGBEncoding;
+
+      const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 1200);
+      const target = new THREE.Vector3(0, 105, 0);
+      const orbit = { theta: -1.05, phi: 1.28, radius: 360 };
+      const viewDirections = {
+        xPlus: new THREE.Vector3(1, 0, 0),
+        xMinus: new THREE.Vector3(-1, 0, 0),
+        yPlus: new THREE.Vector3(0, 0, 1),
+        yMinus: new THREE.Vector3(0, 0, -1),
+        zPlus: new THREE.Vector3(0, 1, 0),
+        zMinus: new THREE.Vector3(0, -1, 0)
+      };
+
+      const hemi = new THREE.HemisphereLight(0xffffff, 0xd8e1ea, 1.28);
+      scene.add(hemi);
+      const key = new THREE.DirectionalLight(0xffffff, 1.7);
+      key.position.set(90, 180, 130);
+      scene.add(key);
+
+      const grid = new THREE.GridHelper(160, 16, 0xcdd6df, 0xe6ecf2);
+      scene.add(grid);
+
+      const travelLine = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(0, 0.5, -48),
+          new THREE.Vector3(0, 0.5, 48)
+        ]),
+        new THREE.LineBasicMaterial({ color: 0xb7c5d3, transparent: true, opacity: 0.7 })
+      );
+      scene.add(travelLine);
+
+      const segments = [
+        ["pelvis", "spine_01", "center"],
+        ["spine_01", "spine_02", "center"],
+        ["spine_02", "spine_03", "center"],
+        ["spine_03", "spine_04", "center"],
+        ["spine_04", "spine_05", "center"],
+        ["spine_05", "neck_01", "center"],
+        ["neck_01", "head", "center"],
+        ["spine_05", "clavicle_l", "center"],
+        ["spine_05", "clavicle_r", "center"],
+        ["clavicle_l", "upperarm_l", "left"],
+        ["upperarm_l", "lowerarm_l", "left"],
+        ["lowerarm_l", "hand_l", "left"],
+        ["clavicle_r", "upperarm_r", "right"],
+        ["upperarm_r", "lowerarm_r", "right"],
+        ["lowerarm_r", "hand_r", "right"],
+        ["pelvis", "thigh_l", "left"],
+        ["thigh_l", "calf_l", "left"],
+        ["calf_l", "foot_l", "left"],
+        ["foot_l", "ball_l", "left"],
+        ["pelvis", "thigh_r", "right"],
+        ["thigh_r", "calf_r", "right"],
+        ["calf_r", "foot_r", "right"],
+        ["foot_r", "ball_r", "right"]
+      ];
+
+      const jointNames = [
+        "pelvis", "spine_01", "spine_02", "spine_03", "spine_04", "spine_05",
+        "neck_01", "head", "clavicle_l", "clavicle_r", "upperarm_l", "upperarm_r",
+        "lowerarm_l", "lowerarm_r", "hand_l", "hand_r", "thigh_l", "thigh_r",
+        "calf_l", "calf_r", "foot_l", "foot_r", "ball_l", "ball_r"
+      ];
+
+      function v(x, y, z) {
+        return new THREE.Vector3(x, y, z);
+      }
+
+      function lerp(a, b, t) {
+        return a + (b - a) * t;
+      }
+
+      function wave(phase) {
+        return Math.sin(phase * Math.PI * 2);
+      }
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function footAt(phase, side) {
+        const cycle = phase % 1;
+        const stance = cycle < 0.5;
+        const t = stance ? cycle / 0.5 : (cycle - 0.5) / 0.5;
+        const z = stance ? lerp(26, -26, t) : lerp(-26, 26, t);
+        const lift = stance ? 0 : Math.sin(t * Math.PI) * 15;
+        return {
+          ankle: v(side * 9.97, 8.3 + lift, z),
+          ball: v(side * 11.4, 1.2 + lift * 0.28, z + 15.4),
+          planted: stance
+        };
+      }
+
+      function solveKnee(hip, ankle, side) {
+        const l1 = 43.3;
+        const l2 = 42.2;
+        const delta = ankle.clone().sub(hip);
+        const distance = clamp(delta.length(), 1, l1 + l2 - 0.25);
+        const direction = delta.clone().normalize();
+        const along = (l1 * l1 - l2 * l2 + distance * distance) / (2 * distance);
+        const height = Math.sqrt(Math.max(0, l1 * l1 - along * along));
+        const bend = new THREE.Vector3(0, -direction.z, direction.y).normalize();
+        if (bend.z < 0) {
+          bend.multiplyScalar(-1);
+        }
+        return hip.clone()
+          .add(direction.multiplyScalar(along))
+          .add(bend.multiplyScalar(height * 0.72))
+          .add(new THREE.Vector3(side * 0.8, 0, 0));
+      }
+
+      function buildPose(index) {
+        const phase = index / frameCount;
+        const bob = (1 - Math.cos(phase * Math.PI * 4)) * 1.25;
+        const sideSway = wave(phase) * 1.4;
+        const chestTwist = wave(phase) * -4.5;
+        const pelvis = v(sideSway, 94.5 + bob, 0);
+        const points = {};
+        points.pelvis = pelvis;
+        points.spine_01 = pelvis.clone().add(v(sideSway * 0.15, 13.0, 0.5));
+        points.spine_02 = points.spine_01.clone().add(v(sideSway * 0.14, 13.2, 0.3));
+        points.spine_03 = points.spine_02.clone().add(v(chestTwist * 0.05, 13.0, 0.1));
+        points.spine_04 = points.spine_03.clone().add(v(chestTwist * 0.07, 10.2, -0.1));
+        points.spine_05 = points.spine_04.clone().add(v(chestTwist * 0.11, 10.0, -0.3));
+        points.neck_01 = points.spine_05.clone().add(v(chestTwist * 0.04, 12.8, -0.2));
+        points.head = points.neck_01.clone().add(v(chestTwist * 0.03, 16.8, 0.0));
+        points.clavicle_l = points.spine_05.clone().add(v(17.8, 3.0, 0.8));
+        points.clavicle_r = points.spine_05.clone().add(v(-17.8, 3.0, -0.8));
+
+        const armSwing = wave(phase);
+        points.upperarm_l = points.clavicle_l.clone().add(v(16.4, -15.0, -armSwing * 10.5));
+        points.lowerarm_l = points.upperarm_l.clone().add(v(15.3, -25.2, -armSwing * 8.0));
+        points.hand_l = points.lowerarm_l.clone().add(v(7.0, -24.5, -armSwing * 5.3));
+        points.upperarm_r = points.clavicle_r.clone().add(v(-16.4, -15.0, armSwing * 10.5));
+        points.lowerarm_r = points.upperarm_r.clone().add(v(-15.3, -25.2, armSwing * 8.0));
+        points.hand_r = points.lowerarm_r.clone().add(v(-7.0, -24.5, armSwing * 5.3));
+
+        const leftFoot = footAt((phase + 0.5) % 1, 1);
+        const rightFoot = footAt(phase, -1);
+        points.thigh_l = pelvis.clone().add(v(9.97 + sideSway * 0.15, -3.5, 0.8));
+        points.thigh_r = pelvis.clone().add(v(-9.97 + sideSway * 0.15, -3.5, -0.8));
+        points.foot_l = leftFoot.ankle;
+        points.ball_l = leftFoot.ball;
+        points.foot_r = rightFoot.ankle;
+        points.ball_r = rightFoot.ball;
+        points.calf_l = solveKnee(points.thigh_l, points.foot_l, 1);
+        points.calf_r = solveKnee(points.thigh_r, points.foot_r, -1);
+        points._leftPlanted = leftFoot.planted;
+        points._rightPlanted = rightFoot.planted;
+        return points;
+      }
+
+      const figure = new THREE.Group();
+      scene.add(figure);
+
+      const segmentMeshes = segments.map((segment) => {
+        const material = new THREE.MeshStandardMaterial({
+          color: colors[segment[2]],
+          roughness: 0.55,
+          metalness: 0.04
+        });
+        const radius = segment[2] === "center" ? 1.45 : 1.75;
+        const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, 1, 16), material);
+        figure.add(mesh);
+        return { segment, mesh };
+      });
+
+      const jointGeometry = new THREE.SphereGeometry(2.75, 18, 12);
+      const jointMeshes = jointNames.map((name) => {
+        const mesh = new THREE.Mesh(
+          jointGeometry,
+          new THREE.MeshStandardMaterial({ color: colors.joint, roughness: 0.48 })
+        );
+        figure.add(mesh);
+        return { name, mesh };
+      });
+
+      const plantedMarkers = [
+        new THREE.Mesh(
+          new THREE.CylinderGeometry(5.5, 5.5, 0.8, 24),
+          new THREE.MeshBasicMaterial({ color: colors.footPlant, transparent: true, opacity: 0.18 })
+        ),
+        new THREE.Mesh(
+          new THREE.CylinderGeometry(5.5, 5.5, 0.8, 24),
+          new THREE.MeshBasicMaterial({ color: colors.footPlant, transparent: true, opacity: 0.18 })
+        )
+      ];
+      plantedMarkers.forEach((marker) => scene.add(marker));
+
+      const ticks = [];
+      for (let i = 0; i < frameCount; i += 1) {
+        const tick = document.createElement("div");
+        tick.className = "walk-tick";
+        strip.appendChild(tick);
+        ticks.push(tick);
+      }
+
+      function updateCylinder(mesh, a, b) {
+        const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
+        const diff = new THREE.Vector3().subVectors(b, a);
+        const length = Math.max(diff.length(), 0.001);
+        mesh.position.copy(mid);
+        mesh.scale.set(1, length, 1);
+        mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), diff.normalize());
+      }
+
+      function applyFrame(index) {
+        const pose = buildPose(index);
+        for (const item of segmentMeshes) {
+          const [from, to] = item.segment;
+          updateCylinder(item.mesh, pose[from], pose[to]);
+        }
+        for (const item of jointMeshes) {
+          item.mesh.position.copy(pose[item.name]);
+        }
+
+        plantedMarkers[0].position.set(pose.foot_l.x, 0.45, pose.foot_l.z);
+        plantedMarkers[0].visible = pose._leftPlanted;
+        plantedMarkers[1].position.set(pose.foot_r.x, 0.45, pose.foot_r.z);
+        plantedMarkers[1].visible = pose._rightPlanted;
+        updateFrameReadout(index);
+        ticks.forEach((tick, tickIndex) => tick.classList.toggle("active", tickIndex === index));
+      }
+
+      function updateCamera() {
+        const sinPhi = Math.sin(orbit.phi);
+        camera.position.set(
+          target.x + orbit.radius * sinPhi * Math.sin(orbit.theta),
+          target.y + orbit.radius * Math.cos(orbit.phi),
+          target.z + orbit.radius * sinPhi * Math.cos(orbit.theta)
+        );
+        camera.lookAt(target);
+      }
+
+      function clearGizmoActive() {
+        gizmoButtons.forEach((button) => button.classList.remove("active"));
+      }
+
+      function snapCameraToView(viewKey) {
+        const direction = viewDirections[viewKey];
+        if (!direction) {
+          return;
+        }
+        const normalized = direction.clone().normalize();
+        orbit.theta = Math.atan2(normalized.x, normalized.z);
+        orbit.phi = Math.acos(THREE.MathUtils.clamp(normalized.y, -0.995, 0.995));
+        updateCamera();
+        gizmoButtons.forEach((button) => {
+          button.classList.toggle("active", button.dataset.view === viewKey);
+        });
+      }
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        const width = Math.max(1, Math.floor(rect.width));
+        const height = Math.max(1, Math.floor(rect.height));
+        renderer.setSize(width, height, false);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+      }
+
+      let lastFrameTime = performance.now();
+      let dragging = false;
+      let lastPointer = { x: 0, y: 0 };
+
+      playButton.addEventListener("click", () => {
+        playing = !playing;
+        updatePlayButtonText();
+        lastFrameTime = performance.now();
+      });
+
+      canvas.addEventListener("pointerdown", (event) => {
+        dragging = true;
+        canvas.classList.add("dragging");
+        canvas.setPointerCapture(event.pointerId);
+        lastPointer = { x: event.clientX, y: event.clientY };
+      });
+
+      canvas.addEventListener("pointermove", (event) => {
+        if (!dragging) {
+          return;
+        }
+        const dx = event.clientX - lastPointer.x;
+        const dy = event.clientY - lastPointer.y;
+        orbit.theta -= dx * 0.008;
+        orbit.phi = Math.min(Math.PI - 0.18, Math.max(0.22, orbit.phi + dy * 0.006));
+        lastPointer = { x: event.clientX, y: event.clientY };
+        clearGizmoActive();
+        updateCamera();
+      });
+
+      canvas.addEventListener("pointerup", (event) => {
+        dragging = false;
+        canvas.classList.remove("dragging");
+        if (canvas.hasPointerCapture(event.pointerId)) {
+          canvas.releasePointerCapture(event.pointerId);
+        }
+      });
+
+      canvas.addEventListener("wheel", (event) => {
+        event.preventDefault();
+        orbit.radius = Math.min(440, Math.max(170, orbit.radius + event.deltaY * 0.24));
+        updateCamera();
+      }, { passive: false });
+
+      gizmoButtons.forEach((button) => {
+        button.addEventListener("click", () => snapCameraToView(button.dataset.view));
+      });
+
+      function animate(now) {
+        if (playing && now - lastFrameTime >= frameDurationMs) {
+          const elapsedFrames = Math.floor((now - lastFrameTime) / frameDurationMs);
+          frameIndex = (frameIndex + elapsedFrames) % frameCount;
+          lastFrameTime += elapsedFrames * frameDurationMs;
+          applyFrame(frameIndex);
+        }
+
+        renderer.render(scene, camera);
+        requestAnimationFrame(animate);
+      }
+
+      window.addEventListener("resize", resize);
+      resize();
+      updateCamera();
+      applyFrame(frameIndex);
+      requestAnimationFrame(animate);
+    })();
+  </script>
 </body>
 </html>
