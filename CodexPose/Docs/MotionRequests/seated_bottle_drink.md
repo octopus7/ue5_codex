@@ -23,3 +23,8 @@ The motion should read as a small seated interaction scene: Manny is seated on a
 - Right hand drives the bottle while the left hand rests near the lap.
 - Bottle starts and ends on the table.
 - Generated and extracted image assets must live under `imagegen/generated/`; preview captures belong under ignored `imagegen/previews/`.
+
+## Revision Notes
+
+- The motion now includes explicit point-based joint positions for the seated frames so the pelvis stays on the chair and the legs read as sitting rather than standing.
+- Chair and table props were moved closer to the seated body so the reach and bottle contact remain plausible.

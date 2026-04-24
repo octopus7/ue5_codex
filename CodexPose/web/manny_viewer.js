@@ -405,6 +405,8 @@
           heroLandingPoseDescription: "이미지젠 히어로 랜딩 참고 이미지에서 추출한 1프레임 정적 포즈입니다.",
           baseballBatSwingDescription: "24fps 기준 36개 키포즈 프레임, 발을 고정하고 뒷발 피벗으로 몸이 먼저 배트를 끌고 나가는 묵직한 오른손 타자 스윙입니다.",
           seatedBottleDrinkDescription: "24fps 기준 72개 키포즈 프레임, 생성 이미지 기반으로 의자에 앉아 테이블의 병음료를 들어 마신 뒤 다시 내려놓는 장면입니다.",
+          archeryFullDrawMode: "활 당기기",
+          archeryFullDrawDescription: "24fps 기준 48개 키포즈 프레임, 오른손으로 시위를 당기고 오른쪽 어깨가 뒤로 빠지는 활쏘기 모션입니다.",
           sideKickMode: "옆차기",
           sideKickDescription: "24fps 기준 32개 키포즈 프레임, 지지발 고정과 챔버, 타격 홀드, 회수, 회복이 있는 묵직하고 사실적인 오른발 옆차기입니다.",
           roundhouseKickMode: "돌려차기",
@@ -798,11 +800,11 @@
         group.add(mesh);
         return mesh;
       }
-      addSceneBox(seatedDrinkGroup, [0, 43, -18], [52, 5, 44], seatedDrinkChairMaterial);
-      addSceneBox(seatedDrinkGroup, [0, 76, -42], [52, 46, 5], seatedDrinkChairMaterial);
-      [[-22, -36], [22, -36], [-22, 0], [22, 0]].forEach(([x, z]) => addSceneLeg(seatedDrinkGroup, x, 0, z, 42, seatedDrinkMetalMaterial));
-      addSceneBox(seatedDrinkGroup, [48, 59, 30], [62, 5, 44], seatedDrinkTableMaterial);
-      [[22, 12], [74, 12], [22, 48], [74, 48]].forEach(([x, z]) => addSceneLeg(seatedDrinkGroup, x, 0, z, 58, seatedDrinkMetalMaterial));
+      addSceneBox(seatedDrinkGroup, [0, 47, -12], [52, 6, 44], seatedDrinkChairMaterial);
+      addSceneBox(seatedDrinkGroup, [0, 79, -35], [52, 62, 6], seatedDrinkChairMaterial);
+      [[-22, -30], [22, -30], [-22, 6], [22, 6]].forEach(([x, z]) => addSceneLeg(seatedDrinkGroup, x, 0, z, 47, seatedDrinkMetalMaterial));
+      addSceneBox(seatedDrinkGroup, [36, 62, 24], [48, 5, 40], seatedDrinkTableMaterial);
+      [[16, 8], [56, 8], [16, 40], [56, 40]].forEach(([x, z]) => addSceneLeg(seatedDrinkGroup, x, 0, z, 61, seatedDrinkMetalMaterial));
       const seatedDrinkBottleBody = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 3.2, 1, 18), seatedDrinkBottleMaterial);
       const seatedDrinkBottleCap = new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.3, 1, 14), seatedDrinkCapMaterial);
       seatedDrinkBottleBody.renderOrder = 3;
@@ -2274,7 +2276,7 @@
           return buildGenericDancePose(index, baseballBatSwingRawKeys);
         }
         if (currentMode === "seatedBottleDrink") {
-          return buildGenericDancePose(index, seatedBottleDrinkRawKeys);
+          return buildGenericPointPose(index, seatedBottleDrinkRawKeys) || buildGenericDancePose(index, seatedBottleDrinkRawKeys);
         }
         if (currentMode === "archeryFullDraw") {
           return buildGenericDancePose(index, archeryFullDrawRawKeys);
@@ -3056,6 +3058,50 @@
         points._faceForward = forward.normalize();
         points._leftPlanted = Boolean(key.leftPlanted ?? key.contacts?.leftFoot ?? key.contacts?.foot_l ?? true);
         points._rightPlanted = Boolean(key.rightPlanted ?? key.contacts?.rightFoot ?? key.contacts?.foot_r ?? true);
+        return points;
+      }
+
+      function buildGenericPointPose(index, rawKeys) {
+        if (!Array.isArray(rawKeys) || rawKeys.length === 0) {
+          return null;
+        }
+        if (rawKeys.length === 1) {
+          return buildStaticPointPose(rawKeys);
+        }
+        const pair = keyposePair(rawKeys, index, frameCount);
+        if (!pair) {
+          return null;
+        }
+        const fromPoints = naturalRunPointSource(pair.from.key);
+        const toPoints = naturalRunPointSource(pair.to.key);
+        if (!fromPoints || !toPoints) {
+          return null;
+        }
+        const points = {};
+        for (const name of jointNames) {
+          const a = naturalRunArray(fromPoints[name], 3, null);
+          const b = naturalRunArray(toPoints[name], 3, null);
+          if (!a || !b) {
+            return null;
+          }
+          const value = interpolateNaturalRunArray(a, b, pair.t);
+          points[name] = v(value[0], value[1], value[2]);
+        }
+        const right = new THREE.Vector3().subVectors(points.clavicle_r, points.clavicle_l).normalize();
+        const up = new THREE.Vector3().subVectors(points.head, points.neck_01).normalize();
+        let forward = new THREE.Vector3().crossVectors(right, up);
+        if (forward.lengthSq() < 0.001) {
+          forward = v(0, 0, 1);
+        }
+        points._faceRight = right;
+        points._faceUp = up;
+        points._faceForward = forward.normalize();
+        points._leftPlanted = Boolean(pair.t < 0.5
+          ? pair.from.key.leftPlanted ?? pair.from.key.contacts?.leftFoot ?? pair.from.key.contacts?.foot_l ?? true
+          : pair.to.key.leftPlanted ?? pair.to.key.contacts?.leftFoot ?? pair.to.key.contacts?.foot_l ?? true);
+        points._rightPlanted = Boolean(pair.t < 0.5
+          ? pair.from.key.rightPlanted ?? pair.from.key.contacts?.rightFoot ?? pair.from.key.contacts?.foot_r ?? true
+          : pair.to.key.rightPlanted ?? pair.to.key.contacts?.rightFoot ?? pair.to.key.contacts?.foot_r ?? true);
         return points;
       }
 
