@@ -396,3 +396,176 @@ window.mannyWallClimbKeyposes = {
     }
   ]
 };
+
+(function normalizeWallClimbRendererTargets(data) {
+  if (!data || !Array.isArray(data.frames)) {
+    return;
+  }
+
+  const degToRad = Math.PI / 180;
+  const armReach = 58.0;
+  const legReach = 82.0;
+
+  function vec(x, y, z) {
+    return { x: Number(x) || 0, y: Number(y) || 0, z: Number(z) || 0 };
+  }
+
+  function add(a, b) {
+    return vec(a.x + b.x, a.y + b.y, a.z + b.z);
+  }
+
+  function sub(a, b) {
+    return vec(a.x - b.x, a.y - b.y, a.z - b.z);
+  }
+
+  function mul(a, scale) {
+    return vec(a.x * scale, a.y * scale, a.z * scale);
+  }
+
+  function len(a) {
+    return Math.hypot(a.x, a.y, a.z);
+  }
+
+  function norm(a) {
+    const length = len(a) || 1;
+    return mul(a, 1 / length);
+  }
+
+  function arr(a) {
+    return [
+      Number(a.x.toFixed(3)),
+      Number(a.y.toFixed(3)),
+      Number(a.z.toFixed(3))
+    ];
+  }
+
+  function rotate(offset, rot) {
+    const yaw = (rot?.yaw || 0) * degToRad;
+    const pitch = (rot?.pitch || 0) * degToRad;
+    const roll = (rot?.roll || 0) * degToRad;
+    const cy = Math.cos(yaw);
+    const sy = Math.sin(yaw);
+    const cp = Math.cos(pitch);
+    const sp = Math.sin(pitch);
+    const cr = Math.cos(roll);
+    const sr = Math.sin(roll);
+
+    const py = offset.y * cp - offset.z * sp;
+    const pz = offset.y * sp + offset.z * cp;
+    const rx = offset.x * cr - py * sr;
+    const ry = offset.x * sr + py * cr;
+
+    return vec(
+      rx * cy + pz * sy,
+      ry,
+      -rx * sy + pz * cy
+    );
+  }
+
+  function clampTarget(origin, target, maxDistance) {
+    const delta = sub(target, origin);
+    const distance = len(delta);
+    if (distance <= maxDistance) {
+      return target;
+    }
+    return add(origin, mul(delta, maxDistance / distance));
+  }
+
+  function solveElbow(shoulder, hand, side) {
+    const upper = 31.5;
+    const lower = 29.5;
+    const delta = sub(hand, shoulder);
+    const distance = Math.max(1, Math.min(len(delta), upper + lower - 0.25));
+    const direction = norm(delta);
+    const along = (upper * upper - lower * lower + distance * distance) / (2 * distance);
+    const height = Math.sqrt(Math.max(0, upper * upper - along * along));
+    const bend = norm(vec(side * 0.82, -0.35, -direction.z * 0.45));
+    return add(add(shoulder, mul(direction, along)), mul(bend, height * 0.62));
+  }
+
+  function solveKnee(hip, ankle, side) {
+    const upper = 43.3;
+    const lower = 42.2;
+    const delta = sub(ankle, hip);
+    const distance = Math.max(1, Math.min(len(delta), upper + lower - 0.25));
+    const direction = norm(delta);
+    const along = (upper * upper - lower * lower + distance * distance) / (2 * distance);
+    const height = Math.sqrt(Math.max(0, upper * upper - along * along));
+    let bend = norm(vec(0, -direction.z, direction.y));
+    if (bend.z < 0) {
+      bend = mul(bend, -1);
+    }
+    return add(add(add(hip, mul(direction, along)), mul(bend, height * 0.72)), vec(side * 0.8, 0, 0));
+  }
+
+  function isLocked(contact, weight) {
+    return contact && contact !== "air" && Number(weight || 0) >= 0.25;
+  }
+
+  data.frames.forEach((frame) => {
+    const pelvis = vec(frame.pelvis.pos.x, frame.pelvis.pos.y, frame.pelvis.pos.z);
+    const pelvisRot = frame.pelvis.rot || {};
+    const chestRot = frame.chest?.rot || {};
+    const neckRot = { pitch: (frame.head?.rot?.pitch || 0) * 0.35, yaw: (frame.head?.rot?.yaw || 0) * 0.35, roll: 0 };
+    const headRot = frame.head?.rot || {};
+    const points = {};
+
+    points.pelvis = pelvis;
+    points.spine_01 = add(pelvis, rotate(vec(0, 12.4, 1.2), pelvisRot));
+    points.spine_02 = add(points.spine_01, rotate(vec(0.1, 12.8, 1.4), pelvisRot));
+    points.spine_03 = add(points.spine_02, rotate(vec(0.2, 12.8, 1.5), chestRot));
+    points.spine_04 = add(points.spine_03, rotate(vec(0.4, 10.0, 1.2), chestRot));
+    points.spine_05 = add(points.spine_04, rotate(vec(0.5, 9.7, 0.9), chestRot));
+    points.neck_01 = add(add(points.spine_05, rotate(vec(0.2, 12.2, 0.4), chestRot)), rotate(vec(0, 0.5, 0.1), neckRot));
+    points.head = add(points.neck_01, rotate(vec(0.1, 16.2, 0.3), headRot));
+    points.clavicle_l = add(points.spine_05, rotate(vec(17.4, 2.8, 1.1), chestRot));
+    points.clavicle_r = add(points.spine_05, rotate(vec(-17.4, 2.8, -1.1), chestRot));
+
+    [
+      ["l", "left", 1, points.clavicle_l],
+      ["r", "right", -1, points.clavicle_r]
+    ].forEach(([shortName, sideName, side, clavicle]) => {
+      const handTarget = frame[`${sideName}Hand`]?.pos || add(clavicle, rotate(vec(side * 24, -37, -1), chestRot));
+      const hand = clampTarget(clavicle, vec(handTarget.x, handTarget.y, handTarget.z), armReach);
+      const elbow = solveElbow(clavicle, hand, side);
+      points[`upperarm_${shortName}`] = add(clavicle, mul(sub(elbow, clavicle), 0.48));
+      points[`lowerarm_${shortName}`] = elbow;
+      points[`hand_${shortName}`] = hand;
+    });
+
+    points.thigh_l = add(pelvis, rotate(vec(10.1, -3.8, 1.2), pelvisRot));
+    points.thigh_r = add(pelvis, rotate(vec(-10.1, -3.8, -1.2), pelvisRot));
+
+    [
+      ["l", "left", 1, points.thigh_l],
+      ["r", "right", -1, points.thigh_r]
+    ].forEach(([shortName, sideName, side, thigh]) => {
+      const foot = frame[`${sideName}Foot`];
+      const ankle = clampTarget(thigh, vec(foot.ankle.x, foot.ankle.y, foot.ankle.z), legReach);
+      const sourceBall = vec(foot.ball.x, foot.ball.y, foot.ball.z);
+      const ankleToBall = clampTarget(ankle, sourceBall, 17.2);
+      points[`foot_${shortName}`] = ankle;
+      points[`ball_${shortName}`] = ankleToBall;
+      points[`calf_${shortName}`] = solveKnee(thigh, ankle, side);
+    });
+
+    frame.points = Object.fromEntries(Object.entries(points).map(([name, point]) => [name, arr(point)]));
+
+    const contactTargets = {};
+    if (isLocked(frame.contacts?.leftHand, frame.leftHand?.weight)) {
+      contactTargets.hand_l = frame.points.hand_l;
+    }
+    if (isLocked(frame.contacts?.rightHand, frame.rightHand?.weight)) {
+      contactTargets.hand_r = frame.points.hand_r;
+    }
+    if (isLocked(frame.contacts?.leftFoot, frame.leftFoot?.weight)) {
+      contactTargets.foot_l = frame.points.foot_l;
+      contactTargets.ball_l = frame.points.ball_l;
+    }
+    if (isLocked(frame.contacts?.rightFoot, frame.rightFoot?.weight)) {
+      contactTargets.foot_r = frame.points.foot_r;
+      contactTargets.ball_r = frame.points.ball_r;
+    }
+    frame.contactTargets = contactTargets;
+  });
+})(window.mannyWallClimbKeyposes);

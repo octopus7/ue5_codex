@@ -250,6 +250,7 @@
       leftHand: {
         planted: leftArm.planted,
         point: leftArm.handPoint,
+        position: leftArm.handPoint,
         contact: leftArm.planted ? "ground" : "air",
         contactWeight: leftArm.contactWeight,
         dragLock: leftArm.planted
@@ -257,6 +258,7 @@
       rightHand: {
         planted: rightArm.planted,
         point: rightArm.handPoint,
+        position: rightArm.handPoint,
         contact: rightArm.planted ? "ground" : "air",
         contactWeight: rightArm.contactWeight,
         dragLock: rightArm.planted
@@ -264,18 +266,21 @@
       leftElbow: {
         planted: leftArm.planted,
         point: leftArm.elbowPoint,
+        position: leftArm.elbowPoint,
         contact: leftArm.planted ? "ground" : "air",
         contactWeight: leftArm.forearmContactWeight
       },
       rightElbow: {
         planted: rightArm.planted,
         point: rightArm.elbowPoint,
+        position: rightArm.elbowPoint,
         contact: rightArm.planted ? "ground" : "air",
         contactWeight: rightArm.forearmContactWeight
       },
       leftKnee: {
         planted: leftLeg.planted,
         point: leftLeg.kneePoint,
+        position: leftLeg.kneePoint,
         contact: leftLeg.planted ? "ground" : "air",
         contactWeight: leftLeg.contactWeight,
         pushWeight: leftLeg.pushWeight
@@ -283,6 +288,7 @@
       rightKnee: {
         planted: rightLeg.planted,
         point: rightLeg.kneePoint,
+        position: rightLeg.kneePoint,
         contact: rightLeg.planted ? "ground" : "air",
         contactWeight: rightLeg.contactWeight,
         pushWeight: rightLeg.pushWeight
