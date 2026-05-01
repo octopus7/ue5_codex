@@ -1,0 +1,41 @@
+# Unreal Engine 5
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Plugin-generated artifacts
+Plugins/*/Binaries/
+Plugins/*/Intermediate/
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+.vscode/
+
+# Generated project files
+*.sln
+*.VC.db
+*.VC.opendb
+*.opensdf
+*.sdf
+*.suo
+*.user
+*.userprefs
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+
+# Unreal generated files
+*.code-workspace
+*.xcodeproj
+*.xcworkspace
+
+# Crash dumps and logs
+*.log
+*.dmp
+*.tmp
+
+# Per-user editor content
+Collections/
+Developers/
