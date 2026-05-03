@@ -45,7 +45,7 @@ ATemporaryTigerCharacter::ATemporaryTigerCharacter()
 
 	HeadBone = CreateDefaultSubobject<USceneComponent>(TEXT("HeadBone"));
 	HeadBone->SetupAttachment(BodyBone);
-	HeadBone->SetRelativeLocation(FVector(0.0f, 0.0f, 95.0f));
+	HeadBone->SetRelativeLocation(FVector(46.0f, 0.0f, 70.0f));
 
 	LeftArmBone = CreateDefaultSubobject<USceneComponent>(TEXT("LeftArmBone"));
 	LeftArmBone->SetupAttachment(BodyBone);
@@ -67,12 +67,12 @@ ATemporaryTigerCharacter::ATemporaryTigerCharacter()
 
 	BodyMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BodyMesh"));
 	BodyMesh->SetupAttachment(BodyBone);
-	BodyMesh->SetRelativeScale3D(FVector(0.65f, 0.45f, 0.85f));
+	BodyMesh->SetRelativeScale3D(FVector(0.7f, 0.5f, 0.7f));
 	BodyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	HeadMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HeadMesh"));
 	HeadMesh->SetupAttachment(HeadBone);
-	HeadMesh->SetRelativeScale3D(FVector(0.42f, 0.42f, 0.42f));
+	HeadMesh->SetRelativeScale3D(FVector(0.44f, 0.42f, 0.38f));
 	HeadMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	LeftArmMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LeftArmMesh"));
@@ -87,20 +87,22 @@ ATemporaryTigerCharacter::ATemporaryTigerCharacter()
 
 	LeftEarMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LeftEarMesh"));
 	LeftEarMesh->SetupAttachment(HeadBone);
-	LeftEarMesh->SetRelativeLocation(FVector(-12.0f, -30.0f, 38.0f));
-	LeftEarMesh->SetRelativeScale3D(FVector(0.16f, 0.12f, 0.24f));
+	LeftEarMesh->SetRelativeLocation(FVector(-12.0f, -23.0f, 34.0f));
+	LeftEarMesh->SetRelativeRotation(FRotator(0.0f, 0.0f, -24.0f));
+	LeftEarMesh->SetRelativeScale3D(FVector(0.16f, 0.09f, 0.2f));
 	LeftEarMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	RightEarMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RightEarMesh"));
 	RightEarMesh->SetupAttachment(HeadBone);
-	RightEarMesh->SetRelativeLocation(FVector(-12.0f, 30.0f, 38.0f));
-	RightEarMesh->SetRelativeScale3D(FVector(0.16f, 0.12f, 0.24f));
+	RightEarMesh->SetRelativeLocation(FVector(-12.0f, 23.0f, 34.0f));
+	RightEarMesh->SetRelativeRotation(FRotator(0.0f, 0.0f, 24.0f));
+	RightEarMesh->SetRelativeScale3D(FVector(0.16f, 0.09f, 0.2f));
 	RightEarMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	SnoutMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SnoutMesh"));
 	SnoutMesh->SetupAttachment(HeadBone);
-	SnoutMesh->SetRelativeLocation(FVector(34.0f, 0.0f, -4.0f));
-	SnoutMesh->SetRelativeScale3D(FVector(0.22f, 0.2f, 0.14f));
+	SnoutMesh->SetRelativeLocation(FVector(30.0f, 0.0f, -8.0f));
+	SnoutMesh->SetRelativeScale3D(FVector(0.2f, 0.18f, 0.12f));
 	SnoutMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	TailMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TailMesh"));
@@ -111,29 +113,29 @@ ATemporaryTigerCharacter::ATemporaryTigerCharacter()
 
 	BodyStripeA = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BodyStripeA"));
 	BodyStripeA->SetupAttachment(BodyBone);
-	BodyStripeA->SetRelativeLocation(FVector(35.0f, -18.0f, 25.0f));
+	BodyStripeA->SetRelativeLocation(FVector(38.0f, -24.0f, 26.0f));
 	BodyStripeA->SetRelativeRotation(FRotator(0.0f, 0.0f, 18.0f));
-	BodyStripeA->SetRelativeScale3D(FVector(0.055f, 0.12f, 0.5f));
+	BodyStripeA->SetRelativeScale3D(FVector(0.045f, 0.08f, 0.42f));
 	BodyStripeA->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	BodyStripeB = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BodyStripeB"));
 	BodyStripeB->SetupAttachment(BodyBone);
-	BodyStripeB->SetRelativeLocation(FVector(36.0f, 10.0f, 5.0f));
+	BodyStripeB->SetRelativeLocation(FVector(39.0f, 0.0f, 2.0f));
 	BodyStripeB->SetRelativeRotation(FRotator(0.0f, 0.0f, -14.0f));
-	BodyStripeB->SetRelativeScale3D(FVector(0.055f, 0.12f, 0.45f));
+	BodyStripeB->SetRelativeScale3D(FVector(0.045f, 0.08f, 0.38f));
 	BodyStripeB->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	BodyStripeC = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BodyStripeC"));
 	BodyStripeC->SetupAttachment(BodyBone);
-	BodyStripeC->SetRelativeLocation(FVector(36.0f, 24.0f, 30.0f));
+	BodyStripeC->SetRelativeLocation(FVector(38.0f, 24.0f, 24.0f));
 	BodyStripeC->SetRelativeRotation(FRotator(0.0f, 0.0f, -24.0f));
-	BodyStripeC->SetRelativeScale3D(FVector(0.055f, 0.12f, 0.42f));
+	BodyStripeC->SetRelativeScale3D(FVector(0.045f, 0.08f, 0.42f));
 	BodyStripeC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	HeadStripe = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HeadStripe"));
 	HeadStripe->SetupAttachment(HeadBone);
-	HeadStripe->SetRelativeLocation(FVector(32.0f, 0.0f, 28.0f));
-	HeadStripe->SetRelativeScale3D(FVector(0.045f, 0.28f, 0.06f));
+	HeadStripe->SetRelativeLocation(FVector(32.0f, 0.0f, 18.0f));
+	HeadStripe->SetRelativeScale3D(FVector(0.04f, 0.26f, 0.045f));
 	HeadStripe->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	if (CubeMesh.Succeeded())

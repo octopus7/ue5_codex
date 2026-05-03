@@ -147,7 +147,7 @@ void ATigerShopPlayerController::BuildClickerWidget()
 	ClickerWidget = CreateWidget<UTigerClickerWidget>(this, UTigerClickerWidget::StaticClass());
 	if (ClickerWidget)
 	{
-		ClickerWidget->AddToViewport();
+		ClickerWidget->AddToViewport(100);
 		ClickerWidget->InitializeForPlayer(this);
 	}
 }
