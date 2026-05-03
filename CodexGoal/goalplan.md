@@ -206,3 +206,7 @@
 - 2026-05-03: `CodexGoalEditor Win64 Development` 빌드 성공으로 UHT와 C++ 컴파일을 검증함.
 - 2026-05-03: `UnrealEditor-Cmd`를 `-game -NullRHI`로 실행해 `/Game/Maps/BasicMap` 런타임 로드와 정상 종료를 확인함. 로그에서 Game class가 `TigerShopGameMode`로 잡혔고, `Error`, `Fatal`, `Ensure condition failed` 항목은 발견되지 않음.
 - 2026-05-03: `CodexGoal.TigerShop.CurrencyUpgrade` 자동화 테스트를 추가하고 실행함. 클릭 생산량 누적, 업그레이드 구매, 비용 증가, 저장 상태 복원용 상태 설정 로직이 `Success`로 검증됨.
+- 2026-05-03: 첫 화면이 너무 빈 기능 검증용 씬에 가까워 보여, 코드 생성 primitive만으로도 떡집 느낌이 나도록 바닥, 벽, 간판, 소품, 채색된 작업대, 떡, 떡메, 줄무늬가 있는 임시 호랑이 표현을 추가함.
+- 2026-05-03: 게임뷰에서 작업대 텍스트가 카메라를 바라보지 않는 문제를 수정함. `ARiceCakeWorkstation`이 매 Tick마다 플레이어 카메라 위치를 기준으로 `TextRenderComponent`의 월드 회전을 갱신하도록 변경하고 빌드 성공을 확인함.
+- 2026-05-03: 카메라가 떡집 벽 뒤쪽에서 장면을 바라보는 배치 문제를 수정함. `ATigerShopCameraRig`의 기본 yaw를 `-42`에서 `138`로 변경해 벽과 간판은 뒤쪽에 두고 열린 앞쪽에서 작업장과 캐릭터를 보도록 조정하고 빌드 성공을 확인함.
+- 2026-05-03: 게임뷰에서 작업장과 소품이 프레임에 너무 크게 잡혀 `ATigerShopCameraRig`의 스프링암 길이를 `900`에서 `1300`으로 늘림. 렌즈 왜곡을 키우지 않고 카메라를 실제로 뒤로 빼는 방식으로 조정하고 빌드 성공을 확인함.

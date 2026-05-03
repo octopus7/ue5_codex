@@ -10,6 +10,7 @@ class ARiceCakeWorkstation;
 class ATemporaryTigerCharacter;
 class ATigerShopCameraRig;
 class UStaticMesh;
+class UStaticMeshComponent;
 
 UCLASS()
 class CODEXGOAL_API ATigerShopGameMode : public AGameModeBase
@@ -24,7 +25,8 @@ protected:
 
 private:
 	void SpawnPrototypeScene();
-	void SpawnStaticMeshProp(UStaticMesh* Mesh, const FVector& Location, const FRotator& Rotation, const FVector& Scale);
+	void SpawnStaticMeshProp(UStaticMesh* Mesh, const FVector& Location, const FRotator& Rotation, const FVector& Scale, const FLinearColor& Color);
+	void SpawnTextProp(const FString& Text, const FVector& Location, const FRotator& Rotation, float WorldSize, const FColor& Color);
 
 	UPROPERTY()
 	TObjectPtr<ATigerShopCameraRig> CameraRig;

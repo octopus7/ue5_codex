@@ -38,6 +38,9 @@ private:
 	TObjectPtr<USceneComponent> RightArmBone;
 
 	UPROPERTY(VisibleAnywhere, Category="Tiger Shop")
+	TObjectPtr<USceneComponent> TailBone;
+
+	UPROPERTY(VisibleAnywhere, Category="Tiger Shop")
 	TObjectPtr<UStaticMeshComponent> BodyMesh;
 
 	UPROPERTY(VisibleAnywhere, Category="Tiger Shop")
@@ -48,6 +51,30 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category="Tiger Shop")
 	TObjectPtr<UStaticMeshComponent> RightArmMesh;
+
+	UPROPERTY(VisibleAnywhere, Category="Tiger Shop")
+	TObjectPtr<UStaticMeshComponent> LeftEarMesh;
+
+	UPROPERTY(VisibleAnywhere, Category="Tiger Shop")
+	TObjectPtr<UStaticMeshComponent> RightEarMesh;
+
+	UPROPERTY(VisibleAnywhere, Category="Tiger Shop")
+	TObjectPtr<UStaticMeshComponent> SnoutMesh;
+
+	UPROPERTY(VisibleAnywhere, Category="Tiger Shop")
+	TObjectPtr<UStaticMeshComponent> TailMesh;
+
+	UPROPERTY(VisibleAnywhere, Category="Tiger Shop")
+	TObjectPtr<UStaticMeshComponent> BodyStripeA;
+
+	UPROPERTY(VisibleAnywhere, Category="Tiger Shop")
+	TObjectPtr<UStaticMeshComponent> BodyStripeB;
+
+	UPROPERTY(VisibleAnywhere, Category="Tiger Shop")
+	TObjectPtr<UStaticMeshComponent> BodyStripeC;
+
+	UPROPERTY(VisibleAnywhere, Category="Tiger Shop")
+	TObjectPtr<UStaticMeshComponent> HeadStripe;
 
 	FVector DefaultHeadLocation = FVector::ZeroVector;
 	FRotator DefaultLeftArmRotation = FRotator::ZeroRotator;

@@ -15,8 +15,8 @@ ATigerShopCameraRig::ATigerShopCameraRig()
 
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
 	SpringArmComponent->SetupAttachment(RigRoot);
-	SpringArmComponent->TargetArmLength = 900.0f;
-	SpringArmComponent->SetRelativeRotation(FRotator(-36.0f, -42.0f, 0.0f));
+	SpringArmComponent->TargetArmLength = 1300.0f;
+	SpringArmComponent->SetRelativeRotation(FRotator(-36.0f, 138.0f, 0.0f));
 	SpringArmComponent->bDoCollisionTest = false;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
